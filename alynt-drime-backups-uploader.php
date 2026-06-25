@@ -110,6 +110,7 @@ $alynt_drime_backups_uploader_includes = array(
 	'includes/class-uploader.php',
 	'includes/class-remote-retention.php',
 	'includes/class-cron-health.php',
+	'includes/class-health-summary.php',
 	'includes/class-cron.php',
 	'includes/class-admin-page.php',
 	'includes/class-activator.php',

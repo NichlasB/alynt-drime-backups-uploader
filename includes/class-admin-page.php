@@ -148,6 +148,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 		$events        = $this->plugin->logger()->get_events();
 		$diagnostics   = $this->plugin->logger()->stats();
 		$cron_health   = $this->plugin->cron_health();
+		$health        = $this->plugin->health_summary()->status( wp_next_scheduled( Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT ) );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Notice rendering is read-only.
 		$notice = isset( $_GET['alynt_notice'] ) ? sanitize_key( wp_unslash( $_GET['alynt_notice'] ) ) : '';
 
@@ -161,6 +162,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 			$this->render_settings_form( $settings, $detected_path );
 			$this->render_manual_actions();
 			$this->render_status_summary( $queue, $uploaded, $failed );
+			$this->render_health_summary( $health );
 			$this->render_scan_state( $settings, $events, $cron_health );
 			$this->render_active_upload_state( $active );
 			$this->render_failed_uploads( $failed );

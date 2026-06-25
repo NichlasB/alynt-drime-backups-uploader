@@ -9,38 +9,24 @@ use PHPUnit\Framework\TestCase;
 
 class CLICommandTest extends TestCase {
 	public function test_status_data_reports_queue_registry_and_settings_counts() {
-		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
-		$settings->method( 'get' )->willReturn(
+		$summary = $this->createMock( Alynt_Drime_Backups_Uploader_Health_Summary::class );
+		$summary->expects( $this->once() )
+			->method( 'status' )
+			->with( false, true )
+			->willReturn(
 			array(
+				'queue_count'          => 2,
+				'uploaded_count'       => 1,
+				'failed_count'         => 2,
+				'active_upload'        => true,
 				'auto_scan_enabled'    => true,
 				'server_cron_expected' => true,
 				'server_outbox_path'   => '/var/www/example/private/backups',
-				'backup_path_override' => '',
-			)
-		);
-
-		$queue = $this->createMock( Alynt_Drime_Backups_Uploader_Queue::class );
-		$queue->method( 'all' )->willReturn(
-			array(
-				'sig-one' => array( 'name' => 'one.zip' ),
-				'sig-two' => array( 'name' => 'two.zip' ),
-			)
-		);
-		$queue->method( 'get_active' )->willReturn( array( 'signature' => 'sig-one' ) );
-
-		$registry = $this->createMock( Alynt_Drime_Backups_Uploader_Backup_Registry::class );
-		$registry->method( 'get_uploaded' )->willReturn( array( 'sig-uploaded' => array() ) );
-		$registry->method( 'get_failed' )->willReturn(
-			array(
-				'sig-failed-one' => array(),
-				'sig-failed-two' => array(),
 			)
 		);
 
 		$plugin = $this->createMock( Alynt_Drime_Backups_Uploader_Plugin::class );
-		$plugin->method( 'settings' )->willReturn( $settings );
-		$plugin->method( 'queue' )->willReturn( $queue );
-		$plugin->method( 'registry' )->willReturn( $registry );
+		$plugin->method( 'health_summary' )->willReturn( $summary );
 
 		$command = new Alynt_Drime_Backups_Uploader_CLI_Command( $plugin );
 		$status  = $command->status_data();

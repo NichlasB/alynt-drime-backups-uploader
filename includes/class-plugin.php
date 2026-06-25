@@ -139,6 +139,13 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	private $cron_health;
 
 	/**
+	 * Health summary.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Health_Summary
+	 */
+	private $health_summary;
+
+	/**
 
 	 * Admin page.
 	 *
@@ -182,6 +189,8 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 		$this->retention = new Alynt_Drime_Backups_Uploader_Remote_Retention( $this->settings, $this->client, $this->registry, $this->logger );
 
 		$this->cron_health = new Alynt_Drime_Backups_Uploader_Cron_Health();
+
+		$this->health_summary = new Alynt_Drime_Backups_Uploader_Health_Summary( $this->settings, $this->queue, $this->registry, $this->cron_health );
 
 		$this->admin_page = new Alynt_Drime_Backups_Uploader_Admin_Page( $this );
 
@@ -424,5 +433,17 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	public function cron_health() {
 
 		return $this->cron_health;
+	}
+
+	/**
+	 * Health summary getter.
+	 *
+	 * @return Alynt_Drime_Backups_Uploader_Health_Summary
+	 *
+	 * @since 0.1.0
+	 */
+	public function health_summary() {
+
+		return $this->health_summary;
 	}
 }

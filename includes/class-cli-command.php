@@ -180,19 +180,7 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 	 * @return array<string,mixed>
 	 */
 	public function status_data() {
-		$settings = $this->plugin->settings()->get();
-		$active   = $this->plugin->queue()->get_active();
-
-		return array(
-			'queue_count'          => count( $this->plugin->queue()->all() ),
-			'uploaded_count'       => count( $this->plugin->registry()->get_uploaded() ),
-			'failed_count'         => count( $this->plugin->registry()->get_failed() ),
-			'active_upload'        => ! empty( $active ),
-			'auto_scan_enabled'    => ! empty( $settings['auto_scan_enabled'] ),
-			'server_cron_expected' => ! empty( $settings['server_cron_expected'] ),
-			'server_outbox_path'   => isset( $settings['server_outbox_path'] ) ? (string) $settings['server_outbox_path'] : '',
-			'backup_path_override' => isset( $settings['backup_path_override'] ) ? (string) $settings['backup_path_override'] : '',
-		);
+		return $this->plugin->health_summary()->status( false, true );
 	}
 
 	/**
