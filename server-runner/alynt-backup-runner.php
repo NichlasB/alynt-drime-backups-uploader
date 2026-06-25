@@ -50,6 +50,10 @@ class Alynt_Server_Backup_Runner {
 				return $this->list_packages();
 			case 'verify':
 				return $this->verify_command( $options );
+			case 'inspect':
+				return $this->inspect_command( $options );
+			case 'stage-restore':
+				return $this->stage_restore_command( $options );
 			default:
 				$this->error( 'Unknown command: ' . $command );
 				$this->usage();
@@ -188,6 +192,108 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Inspects a verified package without extracting it.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function inspect_command( array $options ) {
+		$package = isset( $options['package'] ) ? (string) $options['package'] : '';
+		if ( '' === $package ) {
+			$this->error( 'Missing --package=/path/to/archive.tar.gz.' );
+			return 1;
+		}
+
+		if ( ! $this->verify_package( $package ) ) {
+			return 1;
+		}
+
+		$manifest = $this->read_package_manifest( $package );
+		if ( empty( $manifest ) ) {
+			return 1;
+		}
+
+		$this->line( 'Package ID: ' . $this->manifest_value( $manifest, 'package_id' ) );
+		$this->line( 'Producer: ' . $this->manifest_value( $manifest, 'producer' ) );
+		$this->line( 'Created At: ' . $this->manifest_value( $manifest, 'created_at' ) );
+		$this->line( 'Site URL: ' . $this->manifest_value( $manifest, 'site_url' ) );
+		$this->line( 'Archive Format: ' . $this->manifest_value( $manifest, 'archive_format' ) );
+		$this->line( 'File Root: ' . $this->manifest_value( $manifest, 'file_root' ) );
+		$this->line( 'Database Dump: ' . $this->manifest_value( $manifest, 'database_dump' ) );
+		$this->line( 'Archive Preview:' );
+
+		foreach ( $this->archive_preview( $package ) as $entry ) {
+			$this->line( '  ' . $entry );
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Extracts a verified package into a non-destructive restore staging directory.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function stage_restore_command( array $options ) {
+		$package = isset( $options['package'] ) ? (string) $options['package'] : '';
+		if ( '' === $package ) {
+			$this->error( 'Missing --package=/path/to/archive.tar.gz.' );
+			return 1;
+		}
+
+		if ( ! $this->verify_package( $package ) ) {
+			return 1;
+		}
+
+		$manifest = $this->read_package_manifest( $package );
+		if ( empty( $manifest['package_id'] ) ) {
+			$this->error( 'Manifest package ID is missing.' );
+			return 1;
+		}
+
+		$restore_base = isset( $options['restore-path'] ) ? $this->normalize_path( (string) $options['restore-path'] ) : $this->restore_path();
+		if ( ! $this->ensure_directory( $restore_base ) || ! is_writable( $restore_base ) ) {
+			$this->error( 'Restore path is not writable.' );
+			return 1;
+		}
+
+		$restore_dir = $restore_base . DIRECTORY_SEPARATOR . $this->safe_slug( (string) $manifest['package_id'] );
+		if ( file_exists( $restore_dir ) ) {
+			$this->error( 'Restore directory already exists; refusing to overwrite: ' . $restore_dir );
+			return 1;
+		}
+
+		if ( ! mkdir( $restore_dir, 0750, true ) ) {
+			$this->error( 'Could not create restore directory.' );
+			return 1;
+		}
+
+		$command = 'tar -xzf ' . escapeshellarg( $package ) . ' -C ' . escapeshellarg( $restore_dir );
+		$result  = $this->run_shell_command( $command );
+		if ( 0 !== $result['exit_code'] ) {
+			$this->error( 'Package extraction failed.' );
+			$this->error( implode( "\n", $result['output'] ) );
+			return 1;
+		}
+
+		$notes = array(
+			'Package staged for inspection only.',
+			'No database import was performed.',
+			'No live WordPress files were overwritten.',
+			'Package ID: ' . (string) $manifest['package_id'],
+			'Created At: ' . $this->manifest_value( $manifest, 'created_at' ),
+			'Site URL: ' . $this->manifest_value( $manifest, 'site_url' ),
+		);
+
+		$this->write_file( $restore_dir . DIRECTORY_SEPARATOR . 'RESTORE_NOTES.txt', implode( "\n", $notes ) . "\n" );
+		$this->line( 'Package staged at: ' . $restore_dir );
+		$this->line( 'No database import or production overwrite was performed.' );
+
+		return 0;
+	}
+
+	/**
 	 * Verifies one package checksum and manifest sidecar.
 	 *
 	 * @param string $package Package path.
@@ -226,6 +332,69 @@ class Alynt_Server_Backup_Runner {
 
 		$this->line( 'Package verified: ' . $package );
 		return true;
+	}
+
+	/**
+	 * Reads a package manifest sidecar.
+	 *
+	 * @param string $package Package path.
+	 * @return array<string,mixed>
+	 */
+	private function read_package_manifest( $package ) {
+		$manifest_path = $package . '.manifest.json';
+		if ( ! is_readable( $manifest_path ) ) {
+			$this->error( 'Package manifest sidecar is missing or unreadable.' );
+			return array();
+		}
+
+		$manifest = json_decode( (string) file_get_contents( $manifest_path ), true );
+		if ( ! is_array( $manifest ) ) {
+			$this->error( 'Package manifest is invalid JSON.' );
+			return array();
+		}
+
+		return $manifest;
+	}
+
+	/**
+	 * Returns a printable manifest value.
+	 *
+	 * @param array<string,mixed> $manifest Manifest.
+	 * @param string              $key Key.
+	 * @return string
+	 */
+	private function manifest_value( array $manifest, $key ) {
+		return isset( $manifest[ $key ] ) && is_scalar( $manifest[ $key ] ) ? (string) $manifest[ $key ] : '';
+	}
+
+	/**
+	 * Returns a small archive listing preview.
+	 *
+	 * @param string $package Package path.
+	 * @return array<int,string>
+	 */
+	private function archive_preview( $package ) {
+		$handle = popen( 'tar -tzf ' . escapeshellarg( $package ) . ' 2>&1', 'r' );
+		if ( false === $handle ) {
+			return array();
+		}
+
+		$entries = array();
+		while ( ! feof( $handle ) && count( $entries ) < 40 ) {
+			$line = fgets( $handle );
+			if ( false === $line ) {
+				break;
+			}
+
+			$line = trim( $line );
+			if ( '' !== $line ) {
+				$entries[] = $line;
+			}
+		}
+
+		pclose( $handle );
+
+		return $entries;
 	}
 
 	/**
@@ -361,6 +530,17 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Returns restore staging path.
+	 *
+	 * @return string
+	 */
+	private function restore_path() {
+		$configured = $this->config_string( 'restore_path' );
+
+		return '' !== $configured ? $this->normalize_path( $configured ) : dirname( $this->wordpress_path() ) . DIRECTORY_SEPARATOR . 'restores';
+	}
+
+	/**
 	 * Returns WP-CLI executable.
 	 *
 	 * @return string
@@ -448,6 +628,19 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		return ( '' !== $prefix ? $prefix : 'wordpress-site' ) . '-' . gmdate( 'Ymd-His' );
+	}
+
+	/**
+	 * Builds a filesystem-safe slug.
+	 *
+	 * @param string $value Value.
+	 * @return string
+	 */
+	private function safe_slug( $value ) {
+		$slug = preg_replace( '/[^a-zA-Z0-9._-]+/', '-', $value );
+		$slug = trim( (string) $slug, '.-' );
+
+		return '' !== $slug ? $slug : 'restore-package';
 	}
 
 	/**
@@ -613,7 +806,7 @@ class Alynt_Server_Backup_Runner {
 	 * @return void
 	 */
 	private function usage() {
-		$this->line( 'Usage: php alynt-backup-runner.php <health|run|list|verify> --config=/path/to/config.json [--package=/path/to/archive.tar.gz]' );
+		$this->line( 'Usage: php alynt-backup-runner.php <health|run|list|verify|inspect|stage-restore> --config=/path/to/config.json [--package=/path/to/archive.tar.gz] [--restore-path=/path/to/restores]' );
 	}
 }
 
@@ -664,7 +857,7 @@ function alynt_runner_load_config( $path ) {
 $parsed = alynt_runner_parse_args( $argv );
 
 if ( 'help' === $parsed['command'] || '--help' === $parsed['command'] ) {
-	fwrite( STDOUT, "Usage: php alynt-backup-runner.php <health|run|list|verify> --config=/path/to/config.json [--package=/path/to/archive.tar.gz]\n" );
+	fwrite( STDOUT, "Usage: php alynt-backup-runner.php <health|run|list|verify|inspect|stage-restore> --config=/path/to/config.json [--package=/path/to/archive.tar.gz] [--restore-path=/path/to/restores]\n" );
 	exit( 0 );
 }
 

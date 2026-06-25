@@ -18,6 +18,8 @@ php alynt-backup-runner.php health --config=/path/to/config.json
 php alynt-backup-runner.php run --config=/path/to/config.json
 php alynt-backup-runner.php list --config=/path/to/config.json
 php alynt-backup-runner.php verify --config=/path/to/config.json --package=/path/to/package.tar.gz
+php alynt-backup-runner.php inspect --config=/path/to/config.json --package=/path/to/package.tar.gz
+php alynt-backup-runner.php stage-restore --config=/path/to/config.json --package=/path/to/package.tar.gz
 ```
 
 Use server cron to call `run`, then call the plugin WP-CLI workflow to scan/upload the resulting package, for example:
@@ -34,6 +36,7 @@ For a GridPane site, keep the outbox outside the public web root when possible:
 ```text
 /var/www/example.com/private/alynt-drime-backups/outbox
 /var/www/example.com/private/alynt-drime-backups/work
+/var/www/example.com/restores/alynt-drime-backups
 ```
 
 The WordPress plugin setting `server_outbox_path` should point at the same outbox path.
@@ -51,3 +54,9 @@ example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
 ```
 
 The plugin can detect the archive and read the manifest/checksum sidecars.
+
+## Restore Staging
+
+The first restore flow is intentionally non-destructive. `stage-restore` verifies the package and sidecars, creates a new directory under `restore_path`, extracts the archive there, and writes `RESTORE_NOTES.txt`.
+
+It does not import `database.sql`, does not overwrite the live WordPress path, and refuses to use an existing restore directory.

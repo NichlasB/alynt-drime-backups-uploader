@@ -4,6 +4,7 @@
   "wordpress_path": "/var/www/example.com/htdocs",
   "outbox_path": "/var/www/example.com/private/alynt-drime-backups/outbox",
   "work_path": "/var/www/example.com/private/alynt-drime-backups/work",
+  "restore_path": "/var/www/example.com/restores/alynt-drime-backups",
   "archive_format": "tar.gz",
   "package_prefix": "example-com",
   "wp_cli_path": "wp",
