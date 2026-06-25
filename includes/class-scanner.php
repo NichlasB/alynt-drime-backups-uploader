@@ -44,6 +44,7 @@ class Alynt_Drime_Backups_Uploader_Scanner {
 		if ( empty( $producers ) ) {
 			$producers = array(
 				new Alynt_Drime_Backups_Uploader_WPvivid_Producer( $settings, $detector, $logger ),
+				new Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer( $settings, $logger ),
 			);
 		}
 

@@ -40,6 +40,7 @@ class Alynt_Drime_Backups_Uploader_Settings {
 			'parent_folder_display_path' => '',
 			'relative_path'              => '',
 			'backup_path_override'       => '',
+			'server_outbox_path'         => '',
 			'duplicate_mode'             => 'skip',
 			'auto_scan_enabled'          => false,
 			'server_cron_expected'       => false,
@@ -159,6 +160,10 @@ class Alynt_Drime_Backups_Uploader_Settings {
 
 		if ( isset( $raw['backup_path_override'] ) ) {
 			$settings['backup_path_override'] = sanitize_text_field( wp_unslash( $raw['backup_path_override'] ) );
+		}
+
+		if ( isset( $raw['server_outbox_path'] ) ) {
+			$settings['server_outbox_path'] = sanitize_text_field( wp_unslash( $raw['server_outbox_path'] ) );
 		}
 
 		$duplicate_mode             = isset( $raw['duplicate_mode'] ) ? sanitize_key( wp_unslash( $raw['duplicate_mode'] ) ) : 'skip';

@@ -100,6 +100,7 @@ $alynt_drime_backups_uploader_includes = array(
 	'includes/class-failure-notifier.php',
 	'includes/class-wpvivid-detector.php',
 	'includes/class-wpvivid-producer.php',
+	'includes/class-generic-outbox-producer.php',
 	'includes/class-scanner.php',
 	'includes/class-backup-registry.php',
 	'includes/class-queue.php',

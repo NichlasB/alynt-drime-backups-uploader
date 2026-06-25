@@ -154,6 +154,19 @@ class SettingsTest extends TestCase {
 		$this->assertFalse( $disabled['server_cron_expected'] );
 	}
 
+	public function test_server_outbox_path_is_sanitized() {
+		$options  = array();
+		$settings = $this->settings_with_options( $options );
+
+		$saved = $settings->update(
+			array(
+				'server_outbox_path' => ' /var/www/example.com/private/backups ',
+			)
+		);
+
+		$this->assertSame( ' /var/www/example.com/private/backups ', $saved['server_outbox_path'] );
+	}
+
 	public function test_folder_browser_metadata_is_sanitized_and_cleared_with_empty_parent() {
 		$options  = array();
 		$settings = $this->settings_with_options( $options );
