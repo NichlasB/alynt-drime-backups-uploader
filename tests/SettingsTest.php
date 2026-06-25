@@ -167,6 +167,35 @@ class SettingsTest extends TestCase {
 		$this->assertSame( ' /var/www/example.com/private/backups ', $saved['server_outbox_path'] );
 	}
 
+	public function test_site_uuid_is_generated_and_persisted() {
+		$options  = array();
+		$settings = $this->settings_with_options( $options );
+
+		$uuid = $settings->site_uuid();
+
+		$this->assertMatchesRegularExpression( '/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/', $uuid );
+		$this->assertSame( $uuid, $options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['site_uuid'] );
+		$this->assertSame( $uuid, $settings->site_uuid() );
+	}
+
+	public function test_update_preserves_existing_site_uuid() {
+		$uuid    = '12345678-1234-4234-9234-123456789abc';
+		$options = array(
+			Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME => array(
+				'site_uuid' => $uuid,
+			),
+		);
+		$settings = $this->settings_with_options( $options );
+
+		$saved = $settings->update(
+			array(
+				'api_token' => 'new-token',
+			)
+		);
+
+		$this->assertSame( $uuid, $saved['site_uuid'] );
+	}
+
 	public function test_folder_browser_metadata_is_sanitized_and_cleared_with_empty_parent() {
 		$options  = array();
 		$settings = $this->settings_with_options( $options );

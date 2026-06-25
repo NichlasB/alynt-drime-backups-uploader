@@ -41,6 +41,7 @@ class Alynt_Drime_Backups_Uploader_Settings {
 			'relative_path'              => '',
 			'backup_path_override'       => '',
 			'server_outbox_path'         => '',
+			'site_uuid'                  => '',
 			'duplicate_mode'             => 'skip',
 			'auto_scan_enabled'          => false,
 			'server_cron_expected'       => false,
@@ -126,7 +127,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	 * @since 0.1.0
 	 */
 	public function sanitize( array $raw, array $current ) {
-		$settings = self::defaults();
+		$settings              = self::defaults();
+		$settings['site_uuid'] = $this->sanitize_uuid( isset( $current['site_uuid'] ) ? (string) $current['site_uuid'] : '' );
 
 		$incoming_token = isset( $raw['api_token'] ) ? trim( (string) wp_unslash( $raw['api_token'] ) ) : '';
 		if ( '' === $incoming_token || '************' === $incoming_token ) {
@@ -202,6 +204,26 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	}
 
 	/**
+	 * Returns a stable non-secret site UUID, generating it when missing.
+	 *
+	 * @return string
+	 */
+	public function site_uuid() {
+		$settings = $this->get();
+		$uuid     = $this->sanitize_uuid( isset( $settings['site_uuid'] ) ? (string) $settings['site_uuid'] : '' );
+
+		if ( '' !== $uuid ) {
+			return $uuid;
+		}
+
+		$uuid                  = $this->generate_site_uuid();
+		$settings['site_uuid'] = $uuid;
+		update_option( self::OPTION_NAME, $settings, false );
+
+		return $uuid;
+	}
+
+	/**
 	 * Returns severity levels in ascending order.
 	 *
 	 * @return array<string,int>
@@ -260,6 +282,59 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		$path = preg_replace( '#/+#', '/', $path );
 
 		return trim( (string) $path, '/' );
+	}
+
+	/**
+	 * Sanitizes a UUID v4 style identifier.
+	 *
+	 * @param string $uuid UUID.
+	 * @return string
+	 */
+	private function sanitize_uuid( $uuid ) {
+		$uuid = strtolower( trim( (string) $uuid ) );
+
+		return preg_match( '/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/', $uuid ) ? $uuid : '';
+	}
+
+	/**
+	 * Generates a UUID.
+	 *
+	 * @return string
+	 */
+	private function generate_site_uuid() {
+		if ( function_exists( 'wp_generate_uuid4' ) ) {
+			$uuid = $this->sanitize_uuid( wp_generate_uuid4() );
+			if ( '' !== $uuid ) {
+				return $uuid;
+			}
+		}
+
+		if ( function_exists( 'random_bytes' ) ) {
+			$data    = random_bytes( 16 );
+			$data[6] = chr( ( ord( $data[6] ) & 0x0f ) | 0x40 );
+			$data[8] = chr( ( ord( $data[8] ) & 0x3f ) | 0x80 );
+			$hex     = bin2hex( $data );
+
+			return sprintf(
+				'%s-%s-%s-%s-%s',
+				substr( $hex, 0, 8 ),
+				substr( $hex, 8, 4 ),
+				substr( $hex, 12, 4 ),
+				substr( $hex, 16, 4 ),
+				substr( $hex, 20, 12 )
+			);
+		}
+
+		$hash = md5( uniqid( 'alynt-drime-backups-', true ) );
+
+		return sprintf(
+			'%s-%s-4%s-%s-%s',
+			substr( $hash, 0, 8 ),
+			substr( $hash, 8, 4 ),
+			substr( $hash, 13, 3 ),
+			substr( '89ab', absint( hexdec( substr( $hash, 16, 1 ) ) ) % 4, 1 ) . substr( $hash, 17, 3 ),
+			substr( $hash, 20, 12 )
+		);
 	}
 
 	/**

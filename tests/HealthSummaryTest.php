@@ -14,6 +14,7 @@ class HealthSummaryTest extends TestCase {
 		$status  = $summary->status( 1234567890 );
 
 		$this->assertSame( 1, $status['schema_version'] );
+		$this->assertSame( '12345678-1234-4234-9234-123456789abc', $status['site_uuid'] );
 		$this->assertSame( ALYNT_DRIME_BACKUPS_UPLOADER_VERSION, $status['plugin_version'] );
 		$this->assertSame( 2, $status['queue_count'] );
 		$this->assertSame( 1, $status['uploaded_count'] );
@@ -54,6 +55,7 @@ class HealthSummaryTest extends TestCase {
 	 */
 	private function summary( $outbox_path ) {
 		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
+		$settings->method( 'site_uuid' )->willReturn( '12345678-1234-4234-9234-123456789abc' );
 		$settings->method( 'get' )->willReturn(
 			array(
 				'auto_scan_enabled'    => true,

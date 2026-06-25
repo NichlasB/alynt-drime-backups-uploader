@@ -67,6 +67,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 			<caption class="screen-reader-text"><?php esc_html_e( 'Server runner and uploader health summary', 'alynt-drime-backups-uploader' ); ?></caption>
 			<tbody>
 				<tr><th scope="row"><?php esc_html_e( 'Health Schema', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( number_format_i18n( isset( $health['schema_version'] ) ? absint( $health['schema_version'] ) : 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Site UUID', 'alynt-drime-backups-uploader' ); ?></th><td><code><?php echo esc_html( isset( $health['site_uuid'] ) ? (string) $health['site_uuid'] : '' ); ?></code></td></tr>
 				<tr><th scope="row"><?php esc_html_e( 'Server Outbox Configured', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo ! empty( $health['server_outbox_configured'] ) ? esc_html__( 'Yes', 'alynt-drime-backups-uploader' ) : esc_html__( 'No', 'alynt-drime-backups-uploader' ); ?></td></tr>
 				<tr><th scope="row"><?php esc_html_e( 'Server Outbox Readable', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo ! empty( $health['server_outbox_readable'] ) ? esc_html__( 'Yes', 'alynt-drime-backups-uploader' ) : esc_html__( 'No', 'alynt-drime-backups-uploader' ); ?></td></tr>
 				<tr><th scope="row"><?php esc_html_e( 'Active Upload', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo ! empty( $health['active_upload'] ) ? esc_html__( 'Yes', 'alynt-drime-backups-uploader' ) : esc_html__( 'No', 'alynt-drime-backups-uploader' ); ?></td></tr>

@@ -77,6 +77,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 
 		$status = array(
 			'schema_version'              => self::SCHEMA_VERSION,
+			'site_uuid'                   => $this->settings->site_uuid(),
 			'plugin_version'              => ALYNT_DRIME_BACKUPS_UPLOADER_VERSION,
 			'queue_count'                 => count( $this->queue->all() ),
 			'uploaded_count'              => count( $this->registry->get_uploaded() ),
