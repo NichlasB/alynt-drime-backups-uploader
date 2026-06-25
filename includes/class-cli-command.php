@@ -167,7 +167,7 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 		foreach ( $status as $key => $value ) {
 			$rows[] = array(
 				'key'   => $key,
-				'value' => is_bool( $value ) ? ( $value ? 'yes' : 'no' ) : (string) $value,
+				'value' => $this->format_value( $value ),
 			);
 		}
 
@@ -191,6 +191,24 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 	 */
 	private function log( $message ) {
 		WP_CLI::log( $message );
+	}
+
+	/**
+	 * Formats a status value for table output.
+	 *
+	 * @param mixed $value Value.
+	 * @return string
+	 */
+	private function format_value( $value ) {
+		if ( is_bool( $value ) ) {
+			return $value ? 'yes' : 'no';
+		}
+
+		if ( is_array( $value ) ) {
+			return (string) wp_json_encode( $value );
+		}
+
+		return (string) $value;
 	}
 
 	/**
