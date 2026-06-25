@@ -101,6 +101,7 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	public function update( array $raw ) {
 		$sanitized = $this->sanitize( $raw, $this->get() );
 		update_option( self::OPTION_NAME, $sanitized, false );
+		$this->sync_option_cache( $sanitized );
 
 		return $sanitized;
 	}
@@ -219,8 +220,24 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		$uuid                  = $this->generate_site_uuid();
 		$settings['site_uuid'] = $uuid;
 		update_option( self::OPTION_NAME, $settings, false );
+		$this->sync_option_cache( $settings );
 
 		return $uuid;
+	}
+
+	/**
+	 * Syncs the settings option cache after mutation.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return void
+	 */
+	private function sync_option_cache( array $settings ) {
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( self::OPTION_NAME, 'options' );
+		}
+		if ( function_exists( 'wp_cache_set' ) ) {
+			wp_cache_set( self::OPTION_NAME, $settings, 'options' );
+		}
 	}
 
 	/**

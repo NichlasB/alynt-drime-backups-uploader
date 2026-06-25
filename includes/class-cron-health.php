@@ -78,6 +78,7 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 		}
 
 		update_option( self::OPTION_NAME, $state, false );
+		$this->sync_option_cache( $state );
 
 		return $runner;
 	}
@@ -96,6 +97,22 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 		$state['last_manual_scan_at'] = $now;
 
 		update_option( self::OPTION_NAME, $state, false );
+		$this->sync_option_cache( $state );
+	}
+
+	/**
+	 * Syncs the cron health option cache after mutation.
+	 *
+	 * @param array<string,mixed> $state State.
+	 * @return void
+	 */
+	private function sync_option_cache( array $state ) {
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( self::OPTION_NAME, 'options' );
+		}
+		if ( function_exists( 'wp_cache_set' ) ) {
+			wp_cache_set( self::OPTION_NAME, $state, 'options' );
+		}
 	}
 
 	/**

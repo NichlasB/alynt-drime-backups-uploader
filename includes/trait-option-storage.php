@@ -37,7 +37,7 @@ trait Alynt_Drime_Backups_Uploader_Option_Storage {
 	 */
 	private function persist_array_option( $option, array $value ) {
 		update_option( $option, $value, false );
-		$this->flush_array_option_cache( $option );
+		$this->sync_array_option_cache( $option, $value );
 
 		return get_option( $option, array() ) === $value;
 	}
@@ -50,18 +50,34 @@ trait Alynt_Drime_Backups_Uploader_Option_Storage {
 	 */
 	private function delete_array_option( $option ) {
 		delete_option( $option );
-		$this->flush_array_option_cache( $option );
+		$this->delete_array_option_cache( $option );
 
 		return array() === get_option( $option, array() );
 	}
 
 	/**
-	 * Clears a cached option after mutation.
+	 * Syncs a cached option after mutation.
+	 *
+	 * @param string              $option Option name.
+	 * @param array<string,mixed> $value Value.
+	 * @return void
+	 */
+	private function sync_array_option_cache( $option, array $value ) {
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( $option, 'options' );
+		}
+		if ( function_exists( 'wp_cache_set' ) ) {
+			wp_cache_set( $option, $value, 'options' );
+		}
+	}
+
+	/**
+	 * Clears a cached option after deletion.
 	 *
 	 * @param string $option Option name.
 	 * @return void
 	 */
-	private function flush_array_option_cache( $option ) {
+	private function delete_array_option_cache( $option ) {
 		if ( function_exists( 'wp_cache_delete' ) ) {
 			wp_cache_delete( $option, 'options' );
 		}

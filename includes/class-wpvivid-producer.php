@@ -173,8 +173,24 @@ class Alynt_Drime_Backups_Uploader_WPvivid_Producer implements Alynt_Drime_Backu
 		}
 
 		update_option( self::SNAPSHOT_OPTION, $new_snapshots, false );
+		$this->sync_snapshot_cache( $new_snapshots );
 
 		return $file_infos;
+	}
+
+	/**
+	 * Syncs the snapshot option cache after mutation.
+	 *
+	 * @param array<string,array<string,int>> $snapshots Snapshots.
+	 * @return void
+	 */
+	private function sync_snapshot_cache( array $snapshots ) {
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( self::SNAPSHOT_OPTION, 'options' );
+		}
+		if ( function_exists( 'wp_cache_set' ) ) {
+			wp_cache_set( self::SNAPSHOT_OPTION, $snapshots, 'options' );
+		}
 	}
 
 	/**

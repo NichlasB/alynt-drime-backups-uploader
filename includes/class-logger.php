@@ -91,6 +91,7 @@ class Alynt_Drime_Backups_Uploader_Logger {
 		$retention = isset( $settings['diagnostics_retention'] ) ? absint( $settings['diagnostics_retention'] ) : 100;
 		$events    = array_slice( $events, 0, max( 25, min( 500, $retention ) ) );
 		update_option( self::OPTION_NAME, $events, false );
+		$this->sync_option_cache( $events );
 	}
 
 	/**
@@ -115,6 +116,33 @@ class Alynt_Drime_Backups_Uploader_Logger {
 	 */
 	public function clear() {
 		delete_option( self::OPTION_NAME );
+		$this->flush_option_cache();
+	}
+
+	/**
+	 * Syncs the diagnostics option cache after mutation.
+	 *
+	 * @param array<int,array<string,mixed>> $events Events.
+	 * @return void
+	 */
+	private function sync_option_cache( array $events ) {
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( self::OPTION_NAME, 'options' );
+		}
+		if ( function_exists( 'wp_cache_set' ) ) {
+			wp_cache_set( self::OPTION_NAME, $events, 'options' );
+		}
+	}
+
+	/**
+	 * Clears the diagnostics option cache after deletion.
+	 *
+	 * @return void
+	 */
+	private function flush_option_cache() {
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( self::OPTION_NAME, 'options' );
+		}
 	}
 
 	/**

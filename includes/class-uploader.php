@@ -328,9 +328,10 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 
 		if ( ! empty( $lock ) ) {
 			delete_option( self::UPLOAD_LOCK_OPTION );
+			$this->flush_upload_lock_cache();
 		}
 
-		return add_option(
+		$acquired = add_option(
 			self::UPLOAD_LOCK_OPTION,
 			array(
 				'expires' => time() + self::UPLOAD_LOCK_TTL,
@@ -338,6 +339,18 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			'',
 			false
 		);
+		$this->flush_upload_lock_cache();
+		if ( $acquired && function_exists( 'wp_cache_set' ) ) {
+			wp_cache_set(
+				self::UPLOAD_LOCK_OPTION,
+				array(
+					'expires' => time() + self::UPLOAD_LOCK_TTL,
+				),
+				'options'
+			);
+		}
+
+		return $acquired;
 	}
 
 	/**
@@ -347,6 +360,18 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	 */
 	private function release_upload_lock() {
 		delete_option( self::UPLOAD_LOCK_OPTION );
+		$this->flush_upload_lock_cache();
+	}
+
+	/**
+	 * Clears the upload lock option cache after mutation.
+	 *
+	 * @return void
+	 */
+	private function flush_upload_lock_cache() {
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( self::UPLOAD_LOCK_OPTION, 'options' );
+		}
 	}
 
 	/**

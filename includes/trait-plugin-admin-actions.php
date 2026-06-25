@@ -217,7 +217,7 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Admin_Actions {
 
 		header( 'Content-Type: application/json; charset=utf-8' );
 
-		header( 'Content-Disposition: attachment; filename="alynt-drime-wpvivid-diagnostics-' . gmdate( 'Ymd-His' ) . '.json"' );
+		header( 'Content-Disposition: attachment; filename="alynt-drime-backups-diagnostics-' . gmdate( 'Ymd-His' ) . '.json"' );
 
 		$json = wp_json_encode( $this->logger->export_payload(), JSON_PRETTY_PRINT );
 
