@@ -6,6 +6,7 @@
   "work_path": "/var/www/example.com/private/alynt-drime-backups/work",
   "restore_path": "/var/www/example.com/restores/alynt-drime-backups",
   "archive_format": "tar.gz",
+  "minimum_free_space_bytes": 1073741824,
   "package_prefix": "example-com",
   "wp_cli_path": "wp",
   "database": {

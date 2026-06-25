@@ -51,6 +51,7 @@ Before running a restore inspection:
 - Confirm there is enough free disk space for at least one extracted copy of the package.
 - Confirm `restore_path` points outside the public web root.
 - Confirm the action is inspection-only unless a separate manual restore approval is given.
+- Run the runner `health` command and confirm all resource checks pass.
 
 For GridPane sites, the preferred restore staging path is:
 

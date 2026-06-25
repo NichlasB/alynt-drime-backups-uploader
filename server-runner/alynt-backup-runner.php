@@ -67,14 +67,23 @@ class Alynt_Server_Backup_Runner {
 	 * @return int Exit code.
 	 */
 	private function health() {
+		$work_path    = $this->work_path();
+		$outbox_path  = $this->outbox_path();
+		$restore_path = $this->restore_path();
+
 		$checks = array(
-			'php_cli'        => PHP_SAPI === 'cli',
-			'archive_format' => 'tar.gz' === $this->archive_format(),
-			'wordpress_path' => is_dir( $this->wordpress_path() ) && is_readable( $this->wordpress_path() ),
-			'outbox_path'    => $this->ensure_directory( $this->outbox_path() ) && is_writable( $this->outbox_path() ),
-			'work_path'      => $this->ensure_directory( $this->work_path() ) && is_writable( $this->work_path() ),
-			'tar_available'  => $this->command_available( 'tar' ),
-			'wp_cli'         => ! $this->database_enabled() || $this->command_available( $this->wp_cli_path() ),
+			'php_cli'                  => PHP_SAPI === 'cli',
+			'archive_format'           => 'tar.gz' === $this->archive_format(),
+			'wordpress_path'           => is_dir( $this->wordpress_path() ) && is_readable( $this->wordpress_path() ),
+			'outbox_path'              => $this->ensure_directory( $outbox_path ) && is_writable( $outbox_path ),
+			'work_path'                => $this->ensure_directory( $work_path ) && is_writable( $work_path ),
+			'restore_path'             => $this->ensure_directory( $restore_path ) && is_writable( $restore_path ),
+			'work_free_space'          => $this->has_minimum_free_space( $work_path ),
+			'outbox_free_space'        => $this->has_minimum_free_space( $outbox_path ),
+			'restore_free_space'       => $this->has_minimum_free_space( $restore_path ),
+			'work_outbox_same_device'  => $this->same_filesystem_device( $work_path, $outbox_path ),
+			'tar_available'            => $this->command_available( 'tar' ),
+			'wp_cli'                   => ! $this->database_enabled() || $this->command_available( $this->wp_cli_path() ),
 		);
 
 		$ok = true;
@@ -403,14 +412,24 @@ class Alynt_Server_Backup_Runner {
 	 * @return int Exit code.
 	 */
 	private function health_quiet() {
+		$work_path    = $this->work_path();
+		$outbox_path  = $this->outbox_path();
+		$restore_path = $this->restore_path();
+
 		return (
 			is_dir( $this->wordpress_path() )
 			&& 'tar.gz' === $this->archive_format()
 			&& is_readable( $this->wordpress_path() )
-			&& $this->ensure_directory( $this->outbox_path() )
-			&& is_writable( $this->outbox_path() )
-			&& $this->ensure_directory( $this->work_path() )
-			&& is_writable( $this->work_path() )
+			&& $this->ensure_directory( $outbox_path )
+			&& is_writable( $outbox_path )
+			&& $this->ensure_directory( $work_path )
+			&& is_writable( $work_path )
+			&& $this->ensure_directory( $restore_path )
+			&& is_writable( $restore_path )
+			&& $this->has_minimum_free_space( $work_path )
+			&& $this->has_minimum_free_space( $outbox_path )
+			&& $this->has_minimum_free_space( $restore_path )
+			&& $this->same_filesystem_device( $work_path, $outbox_path )
 			&& $this->command_available( 'tar' )
 			&& ( ! $this->database_enabled() || $this->command_available( $this->wp_cli_path() ) )
 		) ? 0 : 1;
@@ -613,6 +632,64 @@ class Alynt_Server_Backup_Runner {
 	 */
 	private function config_string( $key ) {
 		return isset( $this->config[ $key ] ) ? trim( (string) $this->config[ $key ] ) : '';
+	}
+
+	/**
+	 * Returns the configured minimum free space required for package operations.
+	 *
+	 * @return int
+	 */
+	private function minimum_free_space_bytes() {
+		if ( ! isset( $this->config['minimum_free_space_bytes'] ) ) {
+			return 1073741824;
+		}
+
+		$value = (int) $this->config['minimum_free_space_bytes'];
+
+		return max( 0, $value );
+	}
+
+	/**
+	 * Checks whether a path has the configured minimum free disk space.
+	 *
+	 * @param string $path Directory path.
+	 * @return bool
+	 */
+	private function has_minimum_free_space( $path ) {
+		if ( '' === $path || ! is_dir( $path ) ) {
+			return false;
+		}
+
+		$minimum = $this->minimum_free_space_bytes();
+		if ( 0 === $minimum ) {
+			return true;
+		}
+
+		$free = disk_free_space( $path );
+
+		return false !== $free && $free >= $minimum;
+	}
+
+	/**
+	 * Checks whether two directories are on the same filesystem device.
+	 *
+	 * @param string $left First directory path.
+	 * @param string $right Second directory path.
+	 * @return bool
+	 */
+	private function same_filesystem_device( $left, $right ) {
+		if ( '' === $left || '' === $right || ! is_dir( $left ) || ! is_dir( $right ) ) {
+			return false;
+		}
+
+		$left_stat  = stat( $left );
+		$right_stat = stat( $right );
+
+		if ( false === $left_stat || false === $right_stat ) {
+			return false;
+		}
+
+		return isset( $left_stat['dev'], $right_stat['dev'] ) && $left_stat['dev'] === $right_stat['dev'];
 	}
 
 	/**

@@ -43,6 +43,12 @@ The WordPress plugin setting `server_outbox_path` should point at the same outbo
 
 This runner currently supports `tar.gz` only. Additional archive formats should be added after live GridPane validation proves the first flow.
 
+## Resource Safety
+
+The runner health check verifies that `work_path`, `outbox_path`, and `restore_path` are writable and have at least `minimum_free_space_bytes` available. The default minimum is 1 GB when the setting is omitted.
+
+The health check also verifies that `work_path` and `outbox_path` are on the same filesystem device, because completed archives are renamed from the work directory into the outbox. Keep both paths on the same mounted filesystem for atomic completion.
+
 ## Package Artifacts
 
 A completed package writes:
