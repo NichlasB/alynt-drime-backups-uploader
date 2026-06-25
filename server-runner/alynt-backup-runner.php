@@ -142,6 +142,10 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
+		if ( ! $this->remove_directory( $work_dir ) ) {
+			$this->error( 'Warning: package was created, but the work directory could not be removed.' );
+		}
+
 		$this->line( 'Created package: ' . $final_archive );
 		$this->line( 'Checksum: ' . $checksum );
 
@@ -541,6 +545,36 @@ class Alynt_Server_Backup_Runner {
 		$temp_path = $path . '.tmp';
 
 		return $this->write_file( $temp_path, $contents ) && rename( $temp_path, $path );
+	}
+
+	/**
+	 * Removes a generated work directory.
+	 *
+	 * @param string $path Directory path.
+	 * @return bool
+	 */
+	private function remove_directory( $path ) {
+		$work_path = $this->work_path();
+		if ( '' === $path || '' === $work_path || 0 !== strpos( $path, $work_path . DIRECTORY_SEPARATOR ) || ! is_dir( $path ) ) {
+			return false;
+		}
+
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $path, FilesystemIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ( $iterator as $item ) {
+			if ( $item->isDir() ) {
+				if ( ! rmdir( $item->getPathname() ) ) {
+					return false;
+				}
+			} elseif ( ! unlink( $item->getPathname() ) ) {
+				return false;
+			}
+		}
+
+		return rmdir( $path );
 	}
 
 	/**
