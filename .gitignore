@@ -1,0 +1,14 @@
+node_modules/
+vendor/
+composer.phar
+coverage/
+.phpunit.result.cache
+.env
+.env.local
+.DS_Store
+Thumbs.db
+deploy.sh
+session-context.tmp.md
+session-handoff.tmp.md
+assets/dist/
+*.map

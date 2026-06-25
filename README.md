@@ -1,0 +1,113 @@
+# Alynt Drime Backups Uploader
+
+Companion WordPress plugin that scans completed local WPvivid backup archives and uploads them to Drime.
+
+## Features
+
+- Detects the local WPvivid backup folder, including verified Free/Pro path options.
+- Scans only stable backup files so in-progress archives are not queued.
+- Handles WPvivid-listed split archives such as `.part001.zip` and `.part002.zip` as complete sets.
+- Queues uploads, tracks attempts, enforces retry limits, and prevents duplicate queue entries.
+- Uploads small files through Drime direct upload and larger files through resumable multipart upload.
+- Shows failed uploads with per-file retry actions when the local file is still readable.
+- Lets administrators load Drime workspaces, browse existing Drime folders, and preview the resolved upload destination before backups run.
+- Caches resolved Drime parent folder IDs so remote duplicate checks work after relative-path uploads.
+- Supports duplicate handling by skipping existing remote files or asking Drime for an available filename.
+- Provides manual admin actions for connection testing, scanning, upload, diagnostics export, diagnostics clearing, and active-upload recovery.
+- Provides manual remote-retention preview and cleanup for plugin-owned Drime uploads, moving eligible remote files to Drime trash only.
+- Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
+- Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
+- Stores bounded, redacted diagnostics when diagnostics are explicitly enabled.
+- Keeps local backups after upload by default; deletion requires explicit opt-in.
+
+## Requirements
+
+- WordPress 6.0 or later.
+- PHP 7.4 or later.
+- WPvivid Backup Plugin with local backup files available on the same site.
+- A Drime API token.
+
+## Installation
+
+1. Upload the plugin folder to `wp-content/plugins/alynt-drime-backups-uploader`.
+2. Activate **Alynt Drime Backups Uploader** from the WordPress Plugins screen.
+3. Open **Tools > Drime Backups**.
+4. Enter a Drime API token and destination settings.
+5. Use **Test Drime Connection** before scanning or uploading.
+
+For development and release validation, use the packaged zip and the documented LocalWP confirmation gate before touching `plugin-tester.local`.
+
+## Updates
+
+The plugin includes `GitHub Plugin URI: NichlasB/alynt-drime-backups-uploader` for Alynt Plugin Updater compatibility. Updates are distributed from public GitHub releases using the attached WordPress-installable zip asset.
+
+## Configuration
+
+The settings screen controls:
+
+- Drime API token, workspace ID with optional workspace picker, selected or manually entered parent folder ID, and optional relative subpath.
+- Optional WPvivid backup path override.
+- Duplicate handling mode: skip existing files or rename new uploads.
+- Automatic WP-Cron scanning.
+- Optional server-cron expectation reminders for WP-CLI-driven scheduled scans.
+- Minimum file age before queueing.
+- Multipart chunk size for large Drime uploads.
+- Optional local deletion after confirmed upload.
+- Optional manual remote retention for old plugin-owned Drime uploads.
+- Optional failed upload email notifications and recipient list.
+- Maximum retry count.
+- Diagnostics enablement, minimum severity, and retention.
+
+See [docs/SETTINGS.md](docs/SETTINGS.md) for the full option schema.
+
+## Diagnostics
+
+Diagnostics are disabled by default. When enabled, the plugin stores a bounded event log in WordPress options and exposes a health summary, recent events table, JSON export, and clear action to administrators.
+
+Diagnostics redact bearer tokens, authorization headers, cookies, nonces, passwords, request bodies, presigned URLs, and HTTP URLs embedded in scalar values.
+
+## Cron Health
+
+The Scan State panel shows the current UTC time, the next automated scan, the last scheduled scan, the last detected scan runner, whether `DISABLE_WP_CRON` is active, and a server-cron health summary. The plugin records runtime evidence from WordPress; it does not read server cron files such as `/etc/cron.d/wp-cron-sites`.
+
+## Frequently Asked Questions
+
+### Does this delete local WPvivid backups?
+
+No. Local deletion is disabled by default and only runs after confirmed upload when the administrator enables **Delete Local Files**. For WPvivid-listed split backup sets, the plugin waits until every listed part has uploaded successfully before deleting the local parts.
+
+### Does this permanently delete Drime files?
+
+No. Remote retention is disabled by default, runs only from manual admin actions, and moves eligible plugin-owned Drime uploads to trash. It does not permanently delete remote files.
+
+### How are failed upload emails delivered?
+
+Failure emails are disabled by default and use WordPress `wp_mail()`, so the active site mail stack or SMTP plugin handles delivery. Emails are plain text and include only safe operational details such as site URL, backup filename, sanitized reason, attempt count, timestamp, and the admin page URL.
+
+### Can a failed upload be retried?
+
+Yes. Failed uploads appear in the admin status area with a retry action when the failed registry still points to a readable local backup file. Retrying puts that file back at the front of the queue with attempts reset to zero.
+
+### How do the Drime base folder and relative path work?
+
+Select an existing Drime base folder, then enter the site folder or subpath in **Relative Path**. For example, selecting `General/Files/Backups` and entering `site1.com` resolves uploads to `General/Files/Backups/site1.com`. Browsing and previewing are read-only; missing subfolders are created only when an upload needs them.
+
+### How does workspace selection work?
+
+Use **Load Drime Workspaces** to retrieve workspaces available to the saved API token. Choosing a workspace updates the numeric **Workspace ID** field and clears the selected base folder so folders from another workspace are not reused accidentally. Save settings after choosing a workspace.
+
+### Does this upload incomplete WPvivid files?
+
+The scanner waits until files are old enough and their size is stable across scans. WPvivid-listed split sets are queued only when every listed part is present and stable.
+
+### Does this expose developer hooks?
+
+No public custom actions or filters are exposed. See [docs/HOOKS.md](docs/HOOKS.md).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+GPL-2.0-or-later. See [LICENSE](LICENSE).

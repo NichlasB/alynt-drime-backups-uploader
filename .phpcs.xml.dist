@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<ruleset name="Alynt Drime Backups Uploader">
+	<description>WordPress Coding Standards for Alynt Drime Backups Uploader.</description>
+	<rule ref="WordPress"/>
+	<rule ref="PHPCompatibilityWP"/>
+	<config name="testVersion" value="7.4-"/>
+	<file>.</file>
+	<exclude-pattern>vendor/*</exclude-pattern>
+	<exclude-pattern>node_modules/*</exclude-pattern>
+</ruleset>
