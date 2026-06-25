@@ -136,14 +136,33 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 	 */
 	private function render_source_settings( array $settings, $detected_path ) {
 		?>
-		<h2><?php esc_html_e( 'WPvivid Source', 'alynt-drime-backups-uploader' ); ?></h2>
+		<h2><?php esc_html_e( 'Backup Sources', 'alynt-drime-backups-uploader' ); ?></h2>
 		<table class="form-table" role="presentation">
 			<tr>
-				<th scope="row"><?php esc_html_e( 'Detected Backup Path', 'alynt-drime-backups-uploader' ); ?></th>
+				<th scope="row"><label for="alynt-server-outbox-path"><?php esc_html_e( 'Server Outbox Path', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<input id="alynt-server-outbox-path" name="alynt_drime_backups_settings[server_outbox_path]" type="text" class="large-text code" value="<?php echo esc_attr( (string) $settings['server_outbox_path'] ); ?>" aria-describedby="alynt-server-outbox-path-description">
+					<p id="alynt-server-outbox-path-description" class="description"><?php esc_html_e( 'Directory where the server backup runner writes completed backup packages.', 'alynt-drime-backups-uploader' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="alynt-wp-cli-run-command"><?php esc_html_e( 'WP-CLI Runner Command', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<input id="alynt-wp-cli-run-command" type="text" class="large-text code" readonly value="<?php echo esc_attr( $this->wp_cli_command( 'run --max-uploads=1' ) ); ?>">
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="alynt-wp-cli-status-command"><?php esc_html_e( 'WP-CLI Status Command', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<input id="alynt-wp-cli-status-command" type="text" class="large-text code" readonly value="<?php echo esc_attr( $this->wp_cli_command( 'status --format=json' ) ); ?>">
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'WPvivid Detected Path', 'alynt-drime-backups-uploader' ); ?></th>
 				<td><code><?php echo esc_html( $detected_path ); ?></code></td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="alynt-backup-path-override"><?php esc_html_e( 'Backup Path Override', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<th scope="row"><label for="alynt-backup-path-override"><?php esc_html_e( 'WPvivid Path Override', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
 					<input id="alynt-backup-path-override" name="alynt_drime_backups_settings[backup_path_override]" type="text" class="large-text code" value="<?php echo esc_attr( (string) $settings['backup_path_override'] ); ?>" aria-describedby="alynt-backup-path-override-description">
 					<p id="alynt-backup-path-override-description" class="description"><?php esc_html_e( 'Optional. Use only if WPvivid stores local backups outside the detected path.', 'alynt-drime-backups-uploader' ); ?></p>
@@ -151,6 +170,16 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 			</tr>
 		</table>
 		<?php
+	}
+
+	/**
+	 * Builds a WP-CLI command for the current site path.
+	 *
+	 * @param string $subcommand Plugin subcommand.
+	 * @return string
+	 */
+	private function wp_cli_command( $subcommand ) {
+		return 'wp --path=' . escapeshellarg( untrailingslashit( ABSPATH ) ) . ' alynt-drime-backups ' . $subcommand;
 	}
 
 	/**
