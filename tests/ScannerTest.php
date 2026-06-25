@@ -86,7 +86,13 @@ class ScannerTest extends TestCase {
 		$result = $scanner->scan();
 
 		$this->assertCount( 2, $result['candidates'] );
+		$this->assertArrayHasKey( 'wpvivid', $result['producers'] );
+		$this->assertSame( 'wpvivid', $result['candidates'][0]['producer_key'] );
+		$this->assertSame( 'WPvivid', $result['candidates'][0]['producer_label'] );
+		$this->assertSame( basename( $db ), $result['candidates'][0]['filename'] );
+		$this->assertSame( $result['candidates'][0]['signature'], $result['candidates'][0]['package_id'] );
 		$this->assertTrue( $result['candidates'][0]['wpvivid']['from_list'] );
+		$this->assertTrue( $result['candidates'][0]['metadata']['wpvivid']['from_list'] );
 	}
 
 	public function test_complete_wpvivid_listed_split_set_is_returned() {
