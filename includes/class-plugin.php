@@ -248,7 +248,8 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 			return $result;
 		}
 
-		$queued = $this->queue_scan_candidates( $result['candidates'] );
+		$queued           = $this->queue_scan_candidates( $result['candidates'] );
+		$result['queued'] = $queued;
 		$this->logger->event(
 			'scanner',
 			'info',

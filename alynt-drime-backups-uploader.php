@@ -115,6 +115,7 @@ $alynt_drime_backups_uploader_includes = array(
 	'includes/class-activator.php',
 	'includes/class-deactivator.php',
 	'includes/class-plugin.php',
+	'includes/class-cli-command.php',
 );
 
 foreach ( $alynt_drime_backups_uploader_includes as $alynt_drime_backups_uploader_include ) {
@@ -155,3 +156,18 @@ function alynt_drime_backups_uploader() {
 }
 
 add_action( 'plugins_loaded', 'alynt_drime_backups_uploader' );
+
+/**
+ * Registers WP-CLI commands.
+ *
+ * @return void
+ */
+function alynt_drime_backups_uploader_register_cli_commands() {
+	if ( ! defined( 'WP_CLI' ) || ! WP_CLI || ! class_exists( 'WP_CLI' ) ) {
+		return;
+	}
+
+	WP_CLI::add_command( 'alynt-drime-backups', new Alynt_Drime_Backups_Uploader_CLI_Command( alynt_drime_backups_uploader() ) );
+}
+
+alynt_drime_backups_uploader_register_cli_commands();
