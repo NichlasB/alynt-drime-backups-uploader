@@ -72,6 +72,8 @@ The `server-runner/` directory contains a standalone PHP CLI runner for GridPane
 
 See [server-runner/README.md](server-runner/README.md) for the runner config shape and commands.
 
+For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: it verifies and stages packages for inspection, but it does not download from Drime, import databases, or overwrite live site files.
+
 ## Diagnostics
 
 Diagnostics are disabled by default. When enabled, the plugin stores a bounded event log in WordPress options and exposes a health summary, recent events table, JSON export, and clear action to administrators.
