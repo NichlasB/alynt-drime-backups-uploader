@@ -1,0 +1,22 @@
+{
+  "site_id": "example.com",
+  "site_url": "https://example.com",
+  "wordpress_path": "/var/www/example.com/htdocs",
+  "outbox_path": "/var/www/example.com/private/alynt-drime-backups/outbox",
+  "work_path": "/var/www/example.com/private/alynt-drime-backups/work",
+  "archive_format": "tar.gz",
+  "package_prefix": "example-com",
+  "wp_cli_path": "wp",
+  "database": {
+    "enabled": true
+  },
+  "exclude_paths": [
+    ".git",
+    "wp-content/cache",
+    "wp-content/debug.log",
+    "wp-content/uploads/wpvividbackups",
+    "wp-content/updraft",
+    "wp-content/ai1wm-backups",
+    "wp-content/backup-*"
+  ]
+}

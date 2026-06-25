@@ -13,6 +13,8 @@ Option name: `alynt_drime_backups_settings`
 | `parent_folder_display_path` | string | `''` | `sanitize_text_field`, slash normalization; cleared when `parent_folder_id` is empty or workspace changes | Drime | Optional non-secret display breadcrumb for the selected base folder. |
 | `relative_path` | string | `''` | `sanitize_text_field`, slash normalization, rejects `..` | Drime | Optional subpath under the selected base folder. Missing folders may be created only by the upload path when needed. |
 | `backup_path_override` | string | `''` | `sanitize_text_field` | WPvivid Source | Optional local WPvivid backup path override. |
+| `server_outbox_path` | string | `''` | `sanitize_text_field` | Generic Outbox Source | Optional local directory scanned for completed backup packages produced by the server runner or another backup producer. |
+| `site_uuid` | string | `''` | Generated internally and sanitized as UUID | Internal | Stable non-secret site identifier used in health/status payloads for future centralized monitoring. |
 | `duplicate_mode` | string | `skip` | `sanitize_key`, allowlist `skip` or `rename` | Behavior | Controls whether existing Drime filenames are skipped or renamed. |
 | `auto_scan_enabled` | boolean | `false` | boolean cast from checkbox presence | Behavior | Enables scheduled WP-Cron scanning. |
 | `server_cron_expected` | boolean | `false` | boolean cast from checkbox presence | Behavior | Enables admin reminders when scheduled scans should be driven by WP-CLI but no WP-CLI scan evidence has been observed. |
@@ -43,6 +45,7 @@ These options are owned by the plugin and are removed on uninstall.
 | `alynt_drime_backups_failure_notifications` | array | `array()` | `Alynt_Drime_Backups_Uploader_Failure_Notifier` | Sent-notification ledger keyed by backup signature and failure state to suppress duplicate failure emails. |
 | `alynt_drime_backups_cron_health` | array | `array()` | `Alynt_Drime_Backups_Uploader_Cron_Health` | Scheduled-scan runner evidence used to report whether scans have been observed from WP-CLI, HTTP WP-Cron, manual admin actions, or an unknown runtime. |
 | `alynt_drime_backups_file_snapshots` | array | `array()` | `Alynt_Drime_Backups_Uploader_Scanner` | File size/modified-time snapshots used to verify stability across scans. |
+| `alynt_drime_backups_outbox_file_snapshots` | array | `array()` | `Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer` | File size/modified-time snapshots used to verify generic outbox package stability across scans. |
 | `alynt_drime_backups_logs` | array | `array()` | `Alynt_Drime_Backups_Uploader_Logger` | Redacted diagnostics events when diagnostics are enabled. |
 | `alynt_drime_backups_upload_lock` | array | `array()` | `Alynt_Drime_Backups_Uploader_Uploader` | Short-lived upload worker lock to prevent concurrent queue processing. |
 

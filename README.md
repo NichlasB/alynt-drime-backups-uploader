@@ -1,10 +1,12 @@
 # Alynt Drime Backups Uploader
 
-Companion WordPress plugin that scans completed local WPvivid backup archives and uploads them to Drime.
+Companion WordPress plugin that scans completed local backup packages and uploads them to Drime. It currently supports WPvivid backup archives and a generic server outbox for packages produced by a server-side runner or another backup producer.
 
 ## Features
 
+- Scans configured backup producers through an adapter layer.
 - Detects the local WPvivid backup folder, including verified Free/Pro path options.
+- Scans a configured generic server outbox for completed archive packages with optional manifest and checksum sidecars.
 - Scans only stable backup files so in-progress archives are not queued.
 - Handles WPvivid-listed split archives such as `.part001.zip` and `.part002.zip` as complete sets.
 - Queues uploads, tracks attempts, enforces retry limits, and prevents duplicate queue entries.
@@ -17,6 +19,8 @@ Companion WordPress plugin that scans completed local WPvivid backup archives an
 - Provides manual remote-retention preview and cleanup for plugin-owned Drime uploads, moving eligible remote files to Drime trash only.
 - Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
 - Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
+- Provides WP-CLI commands for server-driven scan/upload/status workflows.
+- Includes a first-pass PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox.
 - Stores bounded, redacted diagnostics when diagnostics are explicitly enabled.
 - Keeps local backups after upload by default; deletion requires explicit opt-in.
 
@@ -24,7 +28,7 @@ Companion WordPress plugin that scans completed local WPvivid backup archives an
 
 - WordPress 6.0 or later.
 - PHP 7.4 or later.
-- WPvivid Backup Plugin with local backup files available on the same site.
+- At least one local backup producer: WPvivid local backups, the included server runner, or another process that writes completed packages to the generic outbox.
 - A Drime API token.
 
 ## Installation
@@ -33,7 +37,8 @@ Companion WordPress plugin that scans completed local WPvivid backup archives an
 2. Activate **Alynt Drime Backups Uploader** from the WordPress Plugins screen.
 3. Open **Tools > Drime Backups**.
 4. Enter a Drime API token and destination settings.
-5. Use **Test Drime Connection** before scanning or uploading.
+5. Configure the WPvivid path override and/or server outbox path for the backup producer in use.
+6. Use **Test Drime Connection** before scanning or uploading.
 
 For development and release validation, use the packaged zip and the documented LocalWP confirmation gate before touching `plugin-tester.local`.
 
@@ -47,6 +52,7 @@ The settings screen controls:
 
 - Drime API token, workspace ID with optional workspace picker, selected or manually entered parent folder ID, and optional relative subpath.
 - Optional WPvivid backup path override.
+- Optional server outbox path for generic packages produced outside WordPress.
 - Duplicate handling mode: skip existing files or rename new uploads.
 - Automatic WP-Cron scanning.
 - Optional server-cron expectation reminders for WP-CLI-driven scheduled scans.
@@ -59,6 +65,12 @@ The settings screen controls:
 - Diagnostics enablement, minimum severity, and retention.
 
 See [docs/SETTINGS.md](docs/SETTINGS.md) for the full option schema.
+
+## Server Runner
+
+The `server-runner/` directory contains a standalone PHP CLI runner for GridPane-style servers. It exports the WordPress database with WP-CLI, archives the WordPress files with `tar`, writes manifest/checksum sidecars, and atomically places completed packages in the configured outbox.
+
+See [server-runner/README.md](server-runner/README.md) for the runner config shape and commands.
 
 ## Diagnostics
 
@@ -99,6 +111,10 @@ Use **Load Drime Workspaces** to retrieve workspaces available to the saved API 
 ### Does this upload incomplete WPvivid files?
 
 The scanner waits until files are old enough and their size is stable across scans. WPvivid-listed split sets are queued only when every listed part is present and stable.
+
+### Does this upload incomplete server-runner packages?
+
+The generic outbox producer ignores temporary files and waits until archive size is stable across scans. The included server runner writes to temporary paths first and only renames completed package artifacts into the outbox.
 
 ### Does this expose developer hooks?
 
