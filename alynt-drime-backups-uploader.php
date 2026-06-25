@@ -168,7 +168,10 @@ function alynt_drime_backups_uploader_register_cli_commands() {
 		return;
 	}
 
-	WP_CLI::add_command( 'alynt-drime-backups', new Alynt_Drime_Backups_Uploader_CLI_Command( alynt_drime_backups_uploader() ) );
+	$alynt_drime_backups_uploader_command = new Alynt_Drime_Backups_Uploader_CLI_Command( alynt_drime_backups_uploader() );
+
+	WP_CLI::add_command( 'alynt-drime-backups', $alynt_drime_backups_uploader_command );
+	WP_CLI::add_command( 'alynt-drime-backups upload-next', array( $alynt_drime_backups_uploader_command, 'upload_next' ) );
 }
 
 alynt_drime_backups_uploader_register_cli_commands();
