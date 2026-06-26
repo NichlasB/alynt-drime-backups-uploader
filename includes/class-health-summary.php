@@ -88,6 +88,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 			'server_outbox_configured'    => ! empty( $settings['server_outbox_path'] ),
 			'server_outbox_readable'      => $this->server_outbox_readable( $settings ),
 			'wpvivid_override_configured' => ! empty( $settings['backup_path_override'] ),
+			'old_wpvivid_uploader_active' => $this->old_wpvivid_uploader_active(),
 			'wp_cron_disabled'            => $this->cron_health->is_wp_cron_disabled(),
 			'cron_status'                 => isset( $cron_status['status'] ) ? (string) $cron_status['status'] : '',
 			'cron_reason'                 => isset( $cron_status['reason'] ) ? (string) $cron_status['reason'] : '',
@@ -136,6 +137,13 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 			);
 		}
 
+		if ( $this->old_wpvivid_uploader_active() && ( ! empty( $settings['auto_scan_enabled'] ) || ! empty( $settings['backup_path_override'] ) ) ) {
+			$warnings[] = array(
+				'code'    => 'old_wpvivid_uploader_active',
+				'message' => __( 'The old Alynt Drime WPvivid Uploader plugin is active. Disable automatic uploads in one uploader before using the WPvivid source here to avoid duplicate uploads.', 'alynt-drime-backups-uploader' ),
+			);
+		}
+
 		return $warnings;
 	}
 
@@ -149,5 +157,30 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 		$path = isset( $settings['server_outbox_path'] ) ? trim( (string) $settings['server_outbox_path'] ) : '';
 
 		return '' !== $path && is_dir( $path ) && is_readable( $path );
+	}
+
+	/**
+	 * Returns whether the previous WPvivid-specific uploader line is active.
+	 *
+	 * @return bool
+	 */
+	private function old_wpvivid_uploader_active() {
+		$basename = 'alynt-drime-wpvivid-uploader/alynt-drime-wpvivid-uploader.php';
+
+		if ( ! function_exists( 'get_option' ) ) {
+			return false;
+		}
+
+		$active = get_option( 'active_plugins', array() );
+		if ( is_array( $active ) && in_array( $basename, $active, true ) ) {
+			return true;
+		}
+
+		if ( function_exists( 'get_site_option' ) ) {
+			$network_active = get_site_option( 'active_sitewide_plugins', array() );
+			return is_array( $network_active ) && isset( $network_active[ $basename ] );
+		}
+
+		return false;
 	}
 }

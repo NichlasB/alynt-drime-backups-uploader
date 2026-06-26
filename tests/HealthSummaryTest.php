@@ -5,9 +5,23 @@
  * @package Alynt_Drime_Backups_Uploader
  */
 
+use Brain\Monkey;
+use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
 
 class HealthSummaryTest extends TestCase {
+	protected function setUp(): void {
+		parent::setUp();
+		Monkey\setUp();
+
+		Functions\when( 'get_option' )->justReturn( array() );
+	}
+
+	protected function tearDown(): void {
+		Monkey\tearDown();
+		parent::tearDown();
+	}
+
 	public function test_status_returns_redacted_health_payload_by_default() {
 		$outbox  = $this->create_outbox();
 		$summary = $this->summary( $outbox );
@@ -23,6 +37,7 @@ class HealthSummaryTest extends TestCase {
 		$this->assertTrue( $status['server_outbox_configured'] );
 		$this->assertTrue( $status['server_outbox_readable'] );
 		$this->assertTrue( $status['wpvivid_override_configured'] );
+		$this->assertFalse( $status['old_wpvivid_uploader_active'] );
 		$this->assertSame( 0, $status['warning_count'] );
 		$this->assertSame( Alynt_Drime_Backups_Uploader_Cron_Health::STATUS_LIKELY_CONFIGURED, $status['cron_status'] );
 		$this->assertArrayNotHasKey( 'server_outbox_path', $status );
@@ -46,6 +61,29 @@ class HealthSummaryTest extends TestCase {
 		$this->assertFalse( $status['server_outbox_readable'] );
 		$this->assertSame( 1, $status['warning_count'] );
 		$this->assertSame( 'server_outbox_unreadable', $status['warnings'][0]['code'] );
+	}
+
+	public function test_status_warns_when_old_wpvivid_uploader_is_active_for_wpvivid_source() {
+		$outbox = $this->create_outbox();
+
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) {
+				if ( 'active_plugins' === $name ) {
+					return array( 'alynt-drime-wpvivid-uploader/alynt-drime-wpvivid-uploader.php' );
+				}
+
+				return $default;
+			}
+		);
+
+		$summary = $this->summary( $outbox );
+		$status  = $summary->status();
+
+		$this->assertTrue( $status['old_wpvivid_uploader_active'] );
+		$this->assertSame( 1, $status['warning_count'] );
+		$this->assertSame( 'old_wpvivid_uploader_active', $status['warnings'][0]['code'] );
+
+		rmdir( $outbox );
 	}
 
 	/**

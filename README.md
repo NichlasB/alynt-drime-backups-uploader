@@ -122,6 +122,10 @@ Use **Load Drime Workspaces** to retrieve workspaces available to the saved API 
 
 The scanner waits until files are old enough and their size is stable across scans. WPvivid-listed split sets are queued only when every listed part is present and stable.
 
+### Can this run beside the old Alynt Drime WPvivid Uploader?
+
+During migration, yes, but do not leave both plugins automatically uploading the same WPvivid backup folder. The health summary warns when the old WPvivid-specific uploader is active and this plugin is configured to use the WPvivid source.
+
 ### Does this upload incomplete server-runner packages?
 
 The generic outbox producer ignores temporary files and waits until archive size is stable across scans. The included server runner writes to temporary paths first and only renames completed package artifacts into the outbox.

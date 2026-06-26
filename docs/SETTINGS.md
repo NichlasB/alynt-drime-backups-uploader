@@ -49,6 +49,14 @@ These options are owned by the plugin and are removed on uninstall.
 | `alynt_drime_backups_logs` | array | `array()` | `Alynt_Drime_Backups_Uploader_Logger` | Redacted diagnostics events when diagnostics are enabled. |
 | `alynt_drime_backups_upload_lock` | array | `array()` | `Alynt_Drime_Backups_Uploader_Uploader` | Short-lived upload worker lock to prevent concurrent queue processing. |
 
+## Health Payload Fields
+
+The health summary includes these non-secret migration/coexistence fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `old_wpvivid_uploader_active` | boolean | Whether the previous `alynt-drime-wpvivid-uploader` plugin line is currently active. When true and this plugin is configured to use the WPvivid source, the health summary adds an `old_wpvivid_uploader_active` warning to help avoid duplicate uploads during migration. |
+
 ## External Options Read
 
 The plugin reads these WPvivid options and does not write them:
@@ -58,3 +66,10 @@ The plugin reads these WPvivid options and does not write them:
 | `wpvivid_common_setting` | Detects custom local backup folder configuration. |
 | `wpvivid_local_setting` | Detects Free/Pro local backup path and Pro outside-folder mode. |
 | `wpvivid_backup_list` | Reads WPvivid backup-set metadata for complete-set scanning. |
+
+The plugin also reads these WordPress core options for coexistence warnings and does not write them:
+
+| Option Key | Purpose |
+| --- | --- |
+| `active_plugins` | Detects whether the previous Alynt Drime WPvivid Uploader plugin is active on the site. |
+| `active_sitewide_plugins` | Detects whether the previous Alynt Drime WPvivid Uploader plugin is network-active on multisite. |

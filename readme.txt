@@ -38,6 +38,10 @@ No. Remote retention is disabled by default, runs only from manual admin actions
 
 The scanner waits until files are old enough and their size is stable across scans. WPvivid-listed split sets are queued only when every listed part is present and stable. Generic outbox packages are queued only after the final archive is stable.
 
+= Can this run beside the old Alynt Drime WPvivid Uploader? =
+
+During migration, yes, but do not leave both plugins automatically uploading the same WPvivid backup folder. The health summary warns when the old WPvivid-specific uploader is active and this plugin is configured to use the WPvivid source.
+
 = Does this store diagnostics? =
 
 Diagnostics are disabled by default. When enabled, diagnostics are redacted and stored in a bounded WordPress option.
@@ -66,6 +70,7 @@ No public custom actions or filters are exposed.
 
 = Unreleased =
 * Added producer-adapter documentation for future backup-source support.
+* Added a health warning for old WPvivid-specific uploader coexistence during migration.
 
 = 0.6.0 =
 * Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.
