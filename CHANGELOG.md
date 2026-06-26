@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - Moved text-domain loading to early `plugins_loaded`.
 - Shared verified array-option storage through `Alynt_Drime_Backups_Uploader_Option_Storage`.
 - Changed the server runner to exclude symlink entries from new archives before restore staging.
+- Changed the server runner to treat GNU tar live file-change warnings as recoverable only when a non-empty archive was produced.
 - Changed the build script to regenerate the served admin JavaScript and CSS files that WordPress enqueues.
 
 ### Fixed
@@ -40,6 +41,7 @@ All notable changes to this project will be documented in this file.
 - Multipart signed upload URLs are validated before backup bytes are sent.
 - Invalid-token uploads stop at connection preflight before duplicate checks or byte upload.
 - HTTP `429` and malformed multipart response paths have regression coverage.
+- Server Runner Status now uses the same admin table width as the other status panels.
 
 ### Security
 

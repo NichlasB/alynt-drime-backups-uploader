@@ -9,7 +9,7 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] WP Plugin Toolkit Add Build Tooling Prompt: completed. Composer/npm dependencies, PHPCS/WPCS, PHPUnit, lint, build, and packaging scripts are in place.
 - [x] WP Plugin Toolkit Add Observability Tooling Prompt: completed. Redacted diagnostics, export, settings controls, and runtime status reporting are implemented.
 - [x] WP Plugin Toolkit Feature Bloat And Structure Review Prompt: completed for implemented feature slices. Large runtime classes were split into focused traits where useful.
-- [x] WP Plugin Toolkit Documentation Sync Audit Prompt: completed for the `0.1.0` release line; update again after any new release-facing behavior changes.
+- [x] WP Plugin Toolkit Documentation Sync Audit Prompt: completed for the `0.1.0` release line and refreshed after the GridPane runner hardening/admin UI polish pass.
 - [x] Alynt Plugin Updater Compatibility Guide: completed. GitHub release asset install and Alynt Plugin Updater detection/update validation passed for `v0.1.0`.
 
 ## Pre-Release Review Sequence
@@ -64,4 +64,4 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 
 - [x] Decide whether to remove old staging outbox packages to reclaim disk space. Completed on 2026-06-26; current outbox retains only the newest verified package set totaling about `1.7G`.
 - [x] Push commit `90a1de2` after final review if the release branch should advance on GitHub. Completed with `64e5dc5` on `origin/master`.
-- [ ] Run a final documentation sync audit if additional release-facing behavior changes before the next release.
+- [x] Run a final documentation sync audit if additional release-facing behavior changes before the next release. Completed on 2026-06-26 after the GridPane runner hardening/admin UI polish pass.
