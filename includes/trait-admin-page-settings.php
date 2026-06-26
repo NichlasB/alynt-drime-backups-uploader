@@ -153,6 +153,13 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 				</td>
 			</tr>
 			<tr>
+				<th scope="row"><label for="alynt-server-runner-install-commands"><?php esc_html_e( 'Server Runner Install Commands', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<textarea id="alynt-server-runner-install-commands" class="large-text code alynt-drime-command-snippet" readonly rows="8" aria-describedby="alynt-server-runner-install-commands-description"><?php echo esc_textarea( $this->server_runner_install_commands( $settings ) ); ?></textarea>
+					<p id="alynt-server-runner-install-commands-description" class="description"><?php esc_html_e( 'Run these as the site user after reviewing the generated config. They install the runner script and directories only; they do not add cron or run a backup.', 'alynt-drime-backups-uploader' ); ?></p>
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><label for="alynt-server-runner-health-command"><?php esc_html_e( 'Server Runner Health Command', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
 					<input id="alynt-server-runner-health-command" type="text" class="large-text code" readonly value="<?php echo esc_attr( $this->server_runner_command( 'health', $settings ) ); ?>">
@@ -267,6 +274,35 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 		}
 
 		return json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+	}
+
+	/**
+	 * Builds conservative server runner install commands.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_runner_install_commands( array $settings ) {
+		$runner_base    = $this->runner_base_path( $settings );
+		$runner_dir     = $runner_base . '/runner';
+		$outbox_path    = $runner_base . '/outbox';
+		$work_path      = $runner_base . '/work';
+		$restore_path   = dirname( untrailingslashit( ABSPATH ) ) . '/restores/alynt-drime-backups';
+		$source_runner  = untrailingslashit( ALYNT_DRIME_BACKUPS_UPLOADER_PATH ) . '/server-runner/alynt-backup-runner.php';
+		$target_runner  = $runner_dir . '/alynt-backup-runner.php';
+		$target_config  = $runner_dir . '/config.json';
+		$health_command = $this->server_runner_command( 'health', $settings );
+
+		return implode(
+			"\n",
+			array(
+				'mkdir -p ' . $this->posix_shell_arg( $runner_dir ) . ' ' . $this->posix_shell_arg( $outbox_path ) . ' ' . $this->posix_shell_arg( $work_path ) . ' ' . $this->posix_shell_arg( $restore_path ),
+				'cp ' . $this->posix_shell_arg( $source_runner ) . ' ' . $this->posix_shell_arg( $target_runner ),
+				'chmod 750 ' . $this->posix_shell_arg( $target_runner ),
+				'chmod 640 ' . $this->posix_shell_arg( $target_config ) . ' # after saving the generated config.json',
+				$health_command,
+			)
+		);
 	}
 
 	/**

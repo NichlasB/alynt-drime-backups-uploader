@@ -71,6 +71,27 @@ class AdminPageSettingsTest extends TestCase {
 		$this->assertSame( "php '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' health --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $command );
 	}
 
+	public function test_server_runner_install_commands_install_runner_without_cron_or_backup_run() {
+		$page     = $this->admin_page();
+		$commands = $this->call_private(
+			$page,
+			'server_runner_install_commands',
+			array(
+				array(
+					'server_outbox_path' => '/var/www/example.com/private/alynt-drime-backups/outbox',
+				),
+			)
+		);
+
+		$this->assertStringContainsString( "mkdir -p '/var/www/example.com/private/alynt-drime-backups/runner'", $commands );
+		$this->assertStringContainsString( "cp '" . untrailingslashit( ALYNT_DRIME_BACKUPS_UPLOADER_PATH ) . "/server-runner/alynt-backup-runner.php' '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php'", $commands );
+		$this->assertStringContainsString( "chmod 750 '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php'", $commands );
+		$this->assertStringContainsString( "chmod 640 '/var/www/example.com/private/alynt-drime-backups/runner/config.json' # after saving the generated config.json", $commands );
+		$this->assertStringContainsString( "php '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' health --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $commands );
+		$this->assertStringNotContainsString( 'crontab', $commands );
+		$this->assertStringNotContainsString( ' run --config=', $commands );
+	}
+
 	public function test_gridpane_cron_snippet_falls_back_to_gridpane_private_path() {
 		$page    = $this->admin_page();
 		$snippet = $this->call_private(

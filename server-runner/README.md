@@ -41,7 +41,7 @@ For a GridPane site, keep the outbox outside the public web root when possible:
 
 The WordPress plugin setting `server_outbox_path` should point at the same outbox path.
 
-The plugin settings screen can generate a non-secret `config.json` snippet for the current site. Review the generated paths, save it beside `alynt-backup-runner.php`, then run the generated health command before adding cron.
+The plugin settings screen can generate a non-secret `config.json` snippet and conservative install commands for the current site. Review the generated paths, run the install commands as the site user, save the config beside `alynt-backup-runner.php`, then run the generated health command before adding cron.
 
 This runner currently supports `tar.gz` only. Additional archive formats should be added after live GridPane validation proves the first flow.
 
