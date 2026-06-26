@@ -127,6 +127,7 @@
 	overflow-wrap: anywhere;
 }
 
+.alynt-drime-wpvivid .form-table td > textarea.alynt-drime-command-snippet,
 .alynt-drime-wpvivid .form-table td > textarea.alynt-drime-cron-snippet {
 	font-family: Consolas, Monaco, monospace;
 	max-width: var(--alynt-drime-panel-width);

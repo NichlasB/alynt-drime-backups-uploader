@@ -146,6 +146,19 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 				</td>
 			</tr>
 			<tr>
+				<th scope="row"><label for="alynt-server-runner-config"><?php esc_html_e( 'Server Runner Config', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<textarea id="alynt-server-runner-config" class="large-text code alynt-drime-command-snippet" readonly rows="18" aria-describedby="alynt-server-runner-config-description"><?php echo esc_textarea( $this->server_runner_config_json( $settings ) ); ?></textarea>
+					<p id="alynt-server-runner-config-description" class="description"><?php esc_html_e( 'Save this as config.json beside the server runner script for this site. It does not include Drime credentials.', 'alynt-drime-backups-uploader' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="alynt-server-runner-health-command"><?php esc_html_e( 'Server Runner Health Command', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<input id="alynt-server-runner-health-command" type="text" class="large-text code" readonly value="<?php echo esc_attr( $this->server_runner_command( 'health', $settings ) ); ?>">
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><label for="alynt-wp-cli-run-command"><?php esc_html_e( 'WP-CLI Runner Command', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
 					<input id="alynt-wp-cli-run-command" type="text" class="large-text code" readonly value="<?php echo esc_attr( $this->wp_cli_command( 'run --max-uploads=1' ) ); ?>">
@@ -214,6 +227,49 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 	}
 
 	/**
+	 * Builds server runner config JSON for the current site.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_runner_config_json( array $settings ) {
+		$runner_base    = $this->runner_base_path( $settings );
+		$wordpress_path = untrailingslashit( ABSPATH );
+		$site_url       = untrailingslashit( $this->site_url_for_runner() );
+		$site_host      = $this->site_host_for_runner( $site_url );
+		$config         = array(
+			'site_id'                  => $site_host,
+			'site_url'                 => $site_url,
+			'wordpress_path'           => $wordpress_path,
+			'outbox_path'              => $runner_base . '/outbox',
+			'work_path'                => $runner_base . '/work',
+			'restore_path'             => dirname( $wordpress_path ) . '/restores/alynt-drime-backups',
+			'archive_format'           => 'tar.gz',
+			'minimum_free_space_bytes' => 1073741824,
+			'package_prefix'           => $this->package_prefix_for_runner( $site_host ),
+			'wp_cli_path'              => 'wp',
+			'database'                 => array(
+				'enabled' => true,
+			),
+			'exclude_paths'            => array(
+				'.git',
+				'wp-content/cache',
+				'wp-content/debug.log',
+				'wp-content/uploads/wpvividbackups',
+				'wp-content/updraft',
+				'wp-content/ai1wm-backups',
+				'wp-content/backup-*',
+			),
+		);
+
+		if ( function_exists( 'wp_json_encode' ) ) {
+			return wp_json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		}
+
+		return json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+	}
+
+	/**
 	 * Builds a server runner command.
 	 *
 	 * @param string              $command Runner command.
@@ -243,6 +299,49 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 		}
 
 		return untrailingslashit( dirname( untrailingslashit( ABSPATH ) ) . '/private/alynt-drime-backups' );
+	}
+
+	/**
+	 * Returns the site URL used for generated runner config.
+	 *
+	 * @return string
+	 */
+	private function site_url_for_runner() {
+		if ( function_exists( 'home_url' ) ) {
+			return (string) home_url( '/' );
+		}
+
+		if ( function_exists( 'site_url' ) ) {
+			return (string) site_url( '/' );
+		}
+
+		return 'https://example.test';
+	}
+
+	/**
+	 * Returns the host part for generated runner config.
+	 *
+	 * @param string $site_url Site URL.
+	 * @return string
+	 */
+	private function site_host_for_runner( $site_url ) {
+		$host = parse_url( $site_url, PHP_URL_HOST );
+		$host = is_string( $host ) ? strtolower( $host ) : '';
+
+		return '' !== $host ? $host : 'wordpress-site';
+	}
+
+	/**
+	 * Returns a filesystem-safe package prefix for generated runner config.
+	 *
+	 * @param string $site_host Site host.
+	 * @return string
+	 */
+	private function package_prefix_for_runner( $site_host ) {
+		$prefix = preg_replace( '/[^a-z0-9]+/', '-', strtolower( (string) $site_host ) );
+		$prefix = trim( (string) $prefix, '-' );
+
+		return '' !== $prefix ? $prefix : 'wordpress-site';
 	}
 
 	/**

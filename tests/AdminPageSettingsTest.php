@@ -28,6 +28,49 @@ class AdminPageSettingsTest extends TestCase {
 		$this->assertStringNotContainsString( 'secret-token', $snippet );
 	}
 
+	public function test_server_runner_config_json_uses_configured_server_outbox_base() {
+		$page = $this->admin_page();
+		$json = $this->call_private(
+			$page,
+			'server_runner_config_json',
+			array(
+				array(
+					'server_outbox_path' => '/var/www/example.com/private/alynt-drime-backups/outbox',
+					'api_token'          => 'secret-token',
+				),
+			)
+		);
+		$data = json_decode( $json, true );
+
+		$this->assertSame( 'example.test', $data['site_id'] );
+		$this->assertSame( 'https://example.test', $data['site_url'] );
+		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups/outbox', $data['outbox_path'] );
+		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups/work', $data['work_path'] );
+		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups', $this->call_private( $page, 'runner_base_path', array( array( 'server_outbox_path' => '/var/www/example.com/private/alynt-drime-backups/outbox' ) ) ) );
+		$this->assertSame( 1073741824, $data['minimum_free_space_bytes'] );
+		$this->assertSame( 'example-test', $data['package_prefix'] );
+		$this->assertSame( 'wp', $data['wp_cli_path'] );
+		$this->assertTrue( $data['database']['enabled'] );
+		$this->assertContains( 'wp-content/cache', $data['exclude_paths'] );
+		$this->assertStringNotContainsString( 'secret-token', $json );
+	}
+
+	public function test_server_runner_health_command_uses_runner_config_path() {
+		$page    = $this->admin_page();
+		$command = $this->call_private(
+			$page,
+			'server_runner_command',
+			array(
+				'health',
+				array(
+					'server_outbox_path' => '/var/www/example.com/private/alynt-drime-backups/outbox',
+				),
+			)
+		);
+
+		$this->assertSame( "php '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' health --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $command );
+	}
+
 	public function test_gridpane_cron_snippet_falls_back_to_gridpane_private_path() {
 		$page    = $this->admin_page();
 		$snippet = $this->call_private(

@@ -72,7 +72,7 @@ The `server-runner/` directory contains a standalone PHP CLI runner for GridPane
 
 See [server-runner/README.md](server-runner/README.md) for the runner config shape and commands.
 
-The plugin settings screen generates a GridPane cron snippet for the current site. The snippet creates one daily server-runner package, scans/uploads completed packages every 15 minutes through WP-CLI, and includes a lightweight status check line.
+The plugin settings screen generates a GridPane runner config, runner health command, and cron snippet for the current site. The config is non-secret and can be saved as `config.json` beside the runner script. The cron snippet creates one daily server-runner package, scans/uploads completed packages every 15 minutes through WP-CLI, and includes a lightweight status check line.
 
 For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: it verifies and stages packages for inspection, but it does not download from Drime, import databases, or overwrite live site files.
 
