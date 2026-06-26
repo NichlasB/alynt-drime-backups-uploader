@@ -12,12 +12,12 @@ Covered now:
 - Manifest and checksum sidecars.
 - Restore-stage archive safety validation.
 - Recommended private server paths.
+- CLI fetch and restore-staging boundaries.
 - Drime upload and retention boundaries.
 - Encryption status for the MVP.
 
 Not covered yet:
 
-- Automated download from Drime.
 - Automated production restore.
 - End-to-end package signing.
 - Backup encryption and key recovery.
@@ -104,6 +104,8 @@ The runner health check verifies writable paths, minimum free disk space, and sa
 The plugin uploads package bytes to the configured Drime workspace and destination folder. For generic server-runner packages, it also uploads the manifest and checksum sidecars to the same Drime folder. It does not currently upload a separate signed inventory or restore index.
 
 See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the current manual discovery path and future remote index option.
+
+The server runner's CLI `fetch` command reads the Drime bearer token from an environment variable, downloads exact package/sidecar matches, and verifies the package before restore staging. If Drime returns a redirected download URL, the runner validates that redirect target as HTTPS and repeats the download without forwarding the bearer token.
 
 Remote retention is disabled by default and only runs from manual administrator actions. It moves eligible plugin-owned remote files to Drime trash and does not permanently delete files.
 

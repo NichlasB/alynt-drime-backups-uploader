@@ -620,37 +620,27 @@ class Alynt_Server_Backup_Runner {
 			return false;
 		}
 
-		$handle = fopen( $temp_path, 'wb' );
-		if ( false === $handle ) {
-			$this->error( 'Could not create temporary download file.' );
-			return false;
+		$result = $this->download_url_to_temp_path(
+			$this->drime_api_url( '/file-entries/download/' . rawurlencode( $hash ) ),
+			$temp_path,
+			$token
+		);
+
+		if ( '' !== $result['redirect'] ) {
+			$redirect_url = $this->validate_download_redirect_url( $result['redirect'] );
+			if ( '' === $redirect_url ) {
+				$this->error( 'Drime download redirect target is not a safe HTTPS URL.' );
+				unlink( $temp_path );
+				return false;
+			}
+
+			$result = $this->download_url_to_temp_path( $redirect_url, $temp_path, '' );
 		}
 
-		$curl = curl_init( $this->drime_api_url( '/file-entries/download/' . rawurlencode( $hash ) ) );
-		if ( false === $curl ) {
-			fclose( $handle );
-			unlink( $temp_path );
-			$this->error( 'Could not initialize Drime download request.' );
-			return false;
-		}
-
-		curl_setopt( $curl, CURLOPT_HTTPHEADER, array( 'Authorization: Bearer ' . $token ) );
-		curl_setopt( $curl, CURLOPT_FILE, $handle );
-		curl_setopt( $curl, CURLOPT_FOLLOWLOCATION, true );
-		curl_setopt( $curl, CURLOPT_CONNECTTIMEOUT, 15 );
-		curl_setopt( $curl, CURLOPT_TIMEOUT, 0 );
-
-		$ok   = curl_exec( $curl );
-		$code = (int) curl_getinfo( $curl, CURLINFO_RESPONSE_CODE );
-		$error = curl_error( $curl );
-
-		$this->close_curl( $curl );
-		fclose( $handle );
-
-		if ( true !== $ok || $code < 200 || $code >= 300 ) {
-			$this->error( 'Drime download failed with HTTP status ' . $code . '.' );
-			if ( '' !== $error ) {
-				$this->error( $error );
+		if ( ! $result['ok'] || $result['status'] < 200 || $result['status'] >= 300 ) {
+			$this->error( 'Drime download failed with HTTP status ' . $result['status'] . '.' );
+			if ( '' !== $result['error'] ) {
+				$this->error( $result['error'] );
 			}
 
 			unlink( $temp_path );
@@ -676,6 +666,108 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Downloads a URL to a temporary path without automatically following redirects.
+	 *
+	 * @param string $url URL.
+	 * @param string $temp_path Temporary path.
+	 * @param string $token Optional bearer token for first-party Drime API requests.
+	 * @return array{ok:bool,status:int,error:string,redirect:string}
+	 */
+	private function download_url_to_temp_path( $url, $temp_path, $token ) {
+		if ( file_exists( $temp_path ) && ! unlink( $temp_path ) ) {
+			return array(
+				'ok'       => false,
+				'status'   => 0,
+				'error'    => 'Could not remove stale temporary download file.',
+				'redirect' => '',
+			);
+		}
+
+		$handle = fopen( $temp_path, 'wb' );
+		if ( false === $handle ) {
+			return array(
+				'ok'       => false,
+				'status'   => 0,
+				'error'    => 'Could not create temporary download file.',
+				'redirect' => '',
+			);
+		}
+
+		$headers = array();
+		$curl    = curl_init( $url );
+		if ( false === $curl ) {
+			fclose( $handle );
+			unlink( $temp_path );
+			return array(
+				'ok'       => false,
+				'status'   => 0,
+				'error'    => 'Could not initialize Drime download request.',
+				'redirect' => '',
+			);
+		}
+
+		$http_headers = array();
+		if ( '' !== $token ) {
+			$http_headers[] = 'Authorization: Bearer ' . $token;
+		}
+
+		curl_setopt( $curl, CURLOPT_HTTPHEADER, $http_headers );
+		curl_setopt( $curl, CURLOPT_FILE, $handle );
+		curl_setopt( $curl, CURLOPT_FOLLOWLOCATION, false );
+		curl_setopt( $curl, CURLOPT_CONNECTTIMEOUT, 15 );
+		curl_setopt( $curl, CURLOPT_TIMEOUT, 0 );
+		curl_setopt(
+			$curl,
+			CURLOPT_HEADERFUNCTION,
+			function ( $curl_handle, $header ) use ( &$headers ) {
+				unset( $curl_handle );
+
+				$length = strlen( $header );
+				$parts  = explode( ':', $header, 2 );
+				if ( 2 === count( $parts ) ) {
+					$headers[ strtolower( trim( $parts[0] ) ) ] = trim( $parts[1] );
+				}
+
+				return $length;
+			}
+		);
+
+		$ok     = curl_exec( $curl );
+		$status = (int) curl_getinfo( $curl, CURLINFO_RESPONSE_CODE );
+		$error  = curl_error( $curl );
+
+		$this->close_curl( $curl );
+		fclose( $handle );
+
+		return array(
+			'ok'       => true === $ok,
+			'status'   => $status,
+			'error'    => $error,
+			'redirect' => $status >= 300 && $status < 400 && isset( $headers['location'] ) ? $headers['location'] : '',
+		);
+	}
+
+	/**
+	 * Validates a Drime download redirect target.
+	 *
+	 * @param string $url Redirect URL.
+	 * @return string Safe URL or empty string.
+	 */
+	private function validate_download_redirect_url( $url ) {
+		$url    = trim( $url );
+		$scheme = parse_url( $url, PHP_URL_SCHEME );
+		$host   = parse_url( $url, PHP_URL_HOST );
+		$user   = parse_url( $url, PHP_URL_USER );
+		$pass   = parse_url( $url, PHP_URL_PASS );
+
+		if ( 'https' !== strtolower( (string) $scheme ) || '' === (string) $host || null !== $user || null !== $pass ) {
+			return '';
+		}
+
+		return false !== filter_var( $url, FILTER_VALIDATE_URL ) ? $url : '';
 	}
 
 	/**

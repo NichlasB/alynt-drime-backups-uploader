@@ -45,6 +45,7 @@ All notable changes to this project will be documented in this file.
 
 - Sensitive diagnostics values are redacted, including bearer tokens, authorization headers, cookies, nonces, passwords, request bodies, presigned URLs, and HTTP URLs embedded in scalar values.
 - Server-runner restore staging rejects unsafe archive paths and verifies manifest/checksum sidecars before extraction.
+- Server-runner Drime fetch now validates HTTPS redirect targets and does not forward the bearer token to redirected download URLs.
 
 ### Notes
 
