@@ -67,6 +67,8 @@ The plugin can detect the archive and read the manifest/checksum sidecars.
 
 The first restore flow is intentionally non-destructive. `stage-restore` verifies the package and sidecars, creates a new directory under `restore_path`, extracts the archive there, and writes `RESTORE_NOTES.txt`.
 
+Before extraction, `stage-restore` lists the archive and rejects unsafe member paths, including absolute paths, parent-directory traversal, empty path segments, and archive links. This keeps restore staging focused on runner-created packages and prevents a malformed archive from writing outside the new staging directory.
+
 It does not import `database.sql`, does not overwrite the live WordPress path, and refuses to use an existing restore directory.
 
 See [docs/RESTORE_RUNBOOK.md](../docs/RESTORE_RUNBOOK.md) for the operator runbook, GridPane staging checks, and the currently gated manual disaster restore outline.

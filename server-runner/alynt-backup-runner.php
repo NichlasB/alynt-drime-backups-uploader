@@ -278,6 +278,12 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
+		if ( ! $this->validate_archive_members( $package ) ) {
+			$this->error( 'Package failed restore safety validation.' );
+			rmdir( $restore_dir );
+			return 1;
+		}
+
 		$command = 'tar -xzf ' . escapeshellarg( $package ) . ' -C ' . escapeshellarg( $restore_dir );
 		$result  = $this->run_shell_command( $command );
 		if ( 0 !== $result['exit_code'] ) {
@@ -404,6 +410,70 @@ class Alynt_Server_Backup_Runner {
 		pclose( $handle );
 
 		return $entries;
+	}
+
+	/**
+	 * Validates archive members before restore extraction.
+	 *
+	 * @param string $package Package path.
+	 * @return bool
+	 */
+	private function validate_archive_members( $package ) {
+		$list_result = $this->run_shell_command( 'tar -tzf ' . escapeshellarg( $package ) );
+		if ( 0 !== $list_result['exit_code'] ) {
+			$this->error( 'Could not list package archive members.' );
+			$this->error( implode( "\n", $list_result['output'] ) );
+			return false;
+		}
+
+		foreach ( $list_result['output'] as $entry ) {
+			if ( ! $this->is_safe_archive_member_name( $entry ) ) {
+				$this->error( 'Unsafe archive member path: ' . $entry );
+				return false;
+			}
+		}
+
+		$verbose_result = $this->run_shell_command( 'tar -tvzf ' . escapeshellarg( $package ) );
+		if ( 0 !== $verbose_result['exit_code'] ) {
+			$this->error( 'Could not inspect package archive member types.' );
+			$this->error( implode( "\n", $verbose_result['output'] ) );
+			return false;
+		}
+
+		foreach ( $verbose_result['output'] as $entry ) {
+			if ( preg_match( '/^[lh]/', ltrim( $entry ) ) ) {
+				$this->error( 'Archive links are not allowed in restore staging: ' . $entry );
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks whether an archive member name is safe to extract into a staging directory.
+	 *
+	 * @param string $entry Archive member name.
+	 * @return bool
+	 */
+	private function is_safe_archive_member_name( $entry ) {
+		$entry = trim( str_replace( '\\', '/', $entry ) );
+		if ( '' === $entry || false !== strpos( $entry, "\0" ) ) {
+			return false;
+		}
+
+		if ( '/' === $entry[0] || preg_match( '/^[A-Za-z]:\//', $entry ) ) {
+			return false;
+		}
+
+		$parts = explode( '/', rtrim( $entry, '/' ) );
+		foreach ( $parts as $part ) {
+			if ( '' === $part || '.' === $part || '..' === $part ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

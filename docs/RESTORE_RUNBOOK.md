@@ -107,6 +107,8 @@ The runner creates:
 
 It refuses to overwrite an existing restore directory with the same package ID.
 
+Before extracting, the runner validates archive member names and refuses packages with absolute paths, parent-directory traversal, empty path segments, or symlink/hardlink entries. If this safety validation fails, stop and treat the package as unsuitable for restore staging until its source is understood.
+
 After staging, check:
 
 ```bash

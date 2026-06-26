@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Added scanner-level validation and defaulting for normalized producer package records.
 - Added a health warning when the old Alynt Drime WPvivid Uploader plugin is active while this plugin is configured to use the WPvivid source.
 - Added status payload contract documentation and redaction guard tests for future dashboard readiness.
+- Added restore staging archive-member safety validation before server-runner extraction.
 
 ## [0.6.0] - 2026-06-22
 
