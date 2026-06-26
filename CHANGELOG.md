@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added producer-adapter documentation for future backup-source support.
+
 ## [0.6.0] - 2026-06-22
 
 ### Changed

@@ -66,6 +66,12 @@ The settings screen controls:
 
 See [docs/SETTINGS.md](docs/SETTINGS.md) for the full option schema.
 
+## Producer Adapters
+
+Backup sources are implemented as producer adapters. A producer discovers completed local packages and returns normalized package records; the shared queue and Drime uploader handle the upload lifecycle.
+
+See [docs/PRODUCER_ADAPTERS.md](docs/PRODUCER_ADAPTERS.md) for the adapter contract, package record shape, stability rules, and test expectations for future producers.
+
 ## Server Runner
 
 The `server-runner/` directory contains a standalone PHP CLI runner for GridPane-style servers. It exports the WordPress database with WP-CLI, archives the WordPress files with `tar`, writes manifest/checksum sidecars, and atomically places completed packages in the configured outbox.

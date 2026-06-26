@@ -12,9 +12,9 @@ Upload completed backup packages to Drime.
 
 == Description ==
 
-Alynt Drime Backups Uploader is a companion plugin that scans completed local WPvivid backup archives, queues stable backup files, and uploads them to Drime.
+Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection, folder browsing and read-only destination preview, WPvivid path detection, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -36,7 +36,7 @@ No. Remote retention is disabled by default, runs only from manual admin actions
 
 = Does this upload incomplete backups? =
 
-The scanner waits until files are old enough and their size is stable across scans. WPvivid-listed split sets are queued only when every listed part is present and stable.
+The scanner waits until files are old enough and their size is stable across scans. WPvivid-listed split sets are queued only when every listed part is present and stable. Generic outbox packages are queued only after the final archive is stable.
 
 = Does this store diagnostics? =
 
@@ -65,6 +65,7 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+* Added producer-adapter documentation for future backup-source support.
 
 = 0.6.0 =
 * Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.
