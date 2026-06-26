@@ -11,6 +11,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Handles WPvivid-listed split archives such as `.part001.zip` and `.part002.zip` as complete sets.
 - Queues uploads, tracks attempts, enforces retry limits, and prevents duplicate queue entries.
 - Uploads small files through Drime direct upload and larger files through resumable multipart upload.
+- Uploads generic server-runner manifest and checksum sidecars with the main archive so fetched packages can be verified before restore staging.
 - Shows failed uploads with per-file retry actions when the local file is still readable.
 - Lets administrators load Drime workspaces, browse existing Drime folders, and preview the resolved upload destination before backups run.
 - Caches resolved Drime parent folder IDs so remote duplicate checks work after relative-path uploads.

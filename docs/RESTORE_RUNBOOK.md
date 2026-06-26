@@ -76,6 +76,8 @@ php /path/to/alynt-backup-runner.php fetch \
 
 `fetch` requires exact remote matches for the archive, `.manifest.json`, and `.sha256` sidecar. It downloads into temporary files, refuses to overwrite existing files unless `--overwrite=1` is supplied, and verifies the package immediately after download. The Drime token must come from the environment variable named by `--token-env`, defaulting to `ALYNT_DRIME_TOKEN`.
 
+For server-runner packages uploaded through the generic outbox producer, the plugin uploads the manifest and checksum sidecars to the same Drime folder as the archive. If `fetch` reports a missing sidecar, stop and repair the remote package set before treating the backup as restorable.
+
 Run verification before inspecting or extracting:
 
 ```bash

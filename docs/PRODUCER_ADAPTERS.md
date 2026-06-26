@@ -84,7 +84,7 @@ Use the same safety model as the existing producers unless the source format giv
 - Require the size to remain unchanged across scans.
 - Prefer atomic producer completion, where the backup tool writes to a temporary path and renames only completed files into the scanned directory.
 
-If a producer has manifest/checksum sidecars, read them only after the archive itself is stable.
+If a producer has manifest/checksum sidecars, read them only after the archive itself is stable. The generic outbox uploader sends valid manifest/checksum sidecars to Drime with the main archive so server-runner packages remain fetchable and verifiable.
 
 ## Registration
 

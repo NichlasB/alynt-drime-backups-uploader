@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Added logical backup consistency documentation and server-runner manifest timing fields.
 - Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
 - Added CLI-only server-runner fetch support for known Drime packages and sidecars.
+- Added generic-outbox sidecar uploads so server-runner manifest and checksum files travel to Drime with the archive.
 
 ## [0.6.0] - 2026-06-22
 

@@ -106,6 +106,82 @@ class UploaderTest extends TestCase {
 		$this->assertSame( 'tar.gz', $record['metadata']['generic_outbox']['archive_format'] );
 	}
 
+	public function test_successful_generic_outbox_upload_uploads_sidecars() {
+		$manifest            = $this->file . '.manifest.json';
+		$checksum            = $this->file . '.sha256';
+		$this->extra_files[] = $manifest;
+		$this->extra_files[] = $checksum;
+		file_put_contents( $manifest, '{"package_id":"test"}' );
+		file_put_contents( $checksum, 'abc123  ' . basename( $this->file ) );
+		$options  = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key'  => 'generic_outbox',
+				'manifest_path' => $manifest,
+				'checksum_path' => $checksum,
+			)
+		);
+
+		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertSame(
+			array(
+				basename( $manifest ),
+				basename( $checksum ),
+			),
+			$client->simple_upload_names
+		);
+		$this->assertCount( 2, $record['sidecars'] );
+		$this->assertSame( 'manifest', $record['sidecars'][0]['type'] );
+		$this->assertSame( basename( $manifest ), $record['sidecars'][0]['remote_name'] );
+		$this->assertSame( 'checksum', $record['sidecars'][1]['type'] );
+		$this->assertSame( basename( $checksum ), $record['sidecars'][1]['remote_name'] );
+	}
+
+	public function test_duplicate_generic_outbox_archive_can_upload_missing_sidecars() {
+		$manifest            = $this->file . '.manifest.json';
+		$checksum            = $this->file . '.sha256';
+		$this->extra_files[] = $manifest;
+		$this->extra_files[] = $checksum;
+		file_put_contents( $manifest, '{"package_id":"test"}' );
+		file_put_contents( $checksum, 'abc123  ' . basename( $this->file ) );
+		$options  = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key'  => 'generic_outbox',
+				'manifest_path' => $manifest,
+				'checksum_path' => $checksum,
+			)
+		);
+
+		$client                    = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$client->duplicate_names[] = basename( $this->file );
+		$uploader                  = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertSame( 0, $client->create_multipart_calls );
+		$this->assertSame(
+			array(
+				basename( $manifest ),
+				basename( $checksum ),
+			),
+			$client->simple_upload_names
+		);
+		$this->assertTrue( $record['drime']['duplicate_skipped'] );
+		$this->assertCount( 2, $record['sidecars'] );
+		$this->assertArrayNotHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+	}
+
 	public function test_multipart_resume_uses_existing_active_state_and_remote_parts() {
 		$options = $this->base_options();
 		$options[ Alynt_Drime_Backups_Uploader_Queue::ACTIVE_OPTION ] = array(
@@ -625,6 +701,8 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	public $abort_result           = array( 'status' => 'success' );
 	public $children               = array();
 	public $created_folders        = array();
+	public $simple_upload_names    = array();
+	public $duplicate_names        = array();
 
 	public function test_connection() {
 		return $this->connection_result;
@@ -635,7 +713,26 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 		$this->validate_files     = $files;
 		$this->validate_parent_id = $parent_id;
 
-		return array( 'duplicates' => array() );
+		$duplicates = array();
+		foreach ( $files as $file ) {
+			if ( is_array( $file ) && isset( $file['name'] ) && in_array( (string) $file['name'], $this->duplicate_names, true ) ) {
+				$duplicates[] = $file;
+			}
+		}
+
+		return array( 'duplicates' => $duplicates );
+	}
+
+	public function simple_upload( $path, $remote_name, $parent_id = null ) {
+		unset( $path, $parent_id );
+		$this->simple_upload_names[] = $remote_name;
+
+		return array(
+			'fileEntry' => array(
+				'id'   => 456,
+				'name' => $remote_name,
+			),
+		);
 	}
 
 	public function create_multipart_upload( $filename, $size, $extension, $parent_id = null ) {

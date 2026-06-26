@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -87,6 +87,7 @@ No public custom actions or filters are exposed.
 * Added logical backup consistency documentation and server-runner manifest timing fields.
 * Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
 * Added CLI-only server-runner fetch support for known Drime packages and sidecars.
+* Added generic-outbox sidecar uploads for server-runner manifest and checksum files.
 
 = 0.6.0 =
 * Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.
