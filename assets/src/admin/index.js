@@ -6,8 +6,8 @@ import './style.css';
 	const config = window.alyntDrimeWPvivid || {};
 	const i18n = config.i18n || {};
 
-	function text(key, fallback) {
-		return i18n[key] || fallback;
+	function text(key) {
+		return i18n[key] || '';
 	}
 
 	function request(action, data) {
@@ -26,7 +26,7 @@ import './style.css';
 			body: formData,
 		}).then((response) => response.json()).then((payload) => {
 			if (!payload || !payload.success) {
-				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : text('requestFailed', 'The request failed. Check your connection and try again.'));
+				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : text('requestFailed'));
 			}
 
 			return payload.data;
@@ -78,8 +78,8 @@ import './style.css';
 			const emptyRow = document.createElement('tr'), emptyCell = document.createElement('td'), emptyTitle = document.createElement('strong'), emptyHint = document.createElement('span');
 			emptyCell.colSpan = 3;
 			emptyCell.className = 'alynt-drime-folder-empty';
-			emptyTitle.textContent = text('noFolders', 'No folders found.');
-			emptyHint.textContent = text('noFoldersHint', 'Folders matching this view will appear here.');
+			emptyTitle.textContent = text('noFolders');
+			emptyHint.textContent = text('noFoldersHint');
 			emptyCell.appendChild(emptyTitle);
 			emptyCell.appendChild(emptyHint);
 			emptyRow.appendChild(emptyCell);
@@ -95,13 +95,13 @@ import './style.css';
 
 			open.type = 'button';
 			open.className = 'button button-small';
-			open.textContent = text('open', 'Open');
+			open.textContent = text('open');
 			open.disabled = !folder.hash;
 			open.setAttribute('data-alynt-folder-open', folder.hash || '');
 
 			use.type = 'button';
 			use.className = 'button button-small';
-			use.textContent = text('useBase', 'Use as Base Folder');
+			use.textContent = text('useBase');
 			use.setAttribute('data-alynt-folder-use', '1');
 			use.setAttribute('data-folder-id', folder.id || '');
 			use.setAttribute('data-folder-hash', folder.hash || '');
@@ -127,7 +127,7 @@ import './style.css';
 		}
 
 		setBusy(container, true);
-		setStatus(status, text('loading', 'Loading...'));
+		setStatus(status, text('loading'));
 
 		request('alynt_drime_backups_list_folders', {
 			folder_hash: folderHash || '',
@@ -136,7 +136,7 @@ import './style.css';
 			renderFolders(container, data.folders || []);
 			setStatus(status, '');
 		}).catch((error) => {
-			setStatus(status, error.message || text('loadFailed', 'Could not load Drime folders.'));
+			setStatus(status, error.message || text('loadFailed'));
 		}).finally(() => {
 			setBusy(container, false);
 		});
@@ -162,7 +162,7 @@ import './style.css';
 		}
 
 		if (selected) {
-			selected.textContent = `${text('selectedPrefix', 'Selected base folder:')} ${path}`;
+			selected.textContent = `${text('selectedPrefix')} ${path}`;
 		}
 	}
 
@@ -173,7 +173,7 @@ import './style.css';
 		const status = container.querySelector('[data-alynt-destination-status]');
 
 		setBusy(container, true);
-		setStatus(status, text('previewing', 'Previewing...'));
+		setStatus(status, text('previewing'));
 
 		request('alynt_drime_backups_preview_destination', {
 			parent_folder_id: parentId ? parentId.value : '',
@@ -181,12 +181,12 @@ import './style.css';
 			relative_path: relativePath ? relativePath.value : '',
 		}).then((data) => {
 			const message = data.exists
-				? `${text('exists', 'Destination exists:')} ${data.destination_path}`
-				: `${text('missing', 'Missing folders:')} ${(data.missing_segments || []).join('/')} (${data.destination_path})`;
+				? `${text('exists')} ${data.destination_path}`
+				: `${text('missing')} ${(data.missing_segments || []).join('/')} (${data.destination_path})`;
 
 			setStatus(status, message);
 		}).catch((error) => {
-			setStatus(status, error.message || text('previewFailed', 'Could not preview the Drime destination.'));
+			setStatus(status, error.message || text('previewFailed'));
 		}).finally(() => {
 			setBusy(container, false);
 		});

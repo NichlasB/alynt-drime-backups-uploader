@@ -16,7 +16,7 @@ Updated: 2026-06-26
 - Pre-release Performance Review workflow is complete. Scan queuing batches uploaded-registry reads and queue writes, cron clearing skips unscheduled hooks, multipart uploads batch-sign missing part URLs, queue duplicate checks use in-memory lookup indexes, generic outbox sidecars are read only after a file is stable, and direct upload cURL handles are explicitly closed.
 - Pre-release Edge Cases Review workflow is complete. Upload workers use a short option-backed lock, clear-active reports abort/state failures honestly, delete-local-after-upload performs post-upload local cleanup, changed queued files are removed for fresh rescans, generic outbox stem sidecars are trusted consistently, relative-path folder creation is bounded, generic outbox scans handle directory volatility, and the server backup runner now uses a run lock.
 - Pre-release Uninstall Review workflow is complete. Uninstall cleanup includes the upload worker lock option, removes plugin-owned per-site options and cron hooks across multisite installs, and now has static regression coverage for the full uninstall inventory and the decision not to delete local backup or runner files.
-- Pre-release I18N Review workflow is complete. Text-domain loading now runs early on `plugins_loaded`, all visible diagnostics severity labels and the relative-path placeholder are translatable, and a POT template was generated with WP-CLI.
+- Pre-release I18N Review workflow is complete. Text-domain loading runs early on `plugins_loaded`, visible diagnostics severity labels and placeholders are translatable, JavaScript UI copy now depends on localized strings instead of hardcoded fallbacks, countable seconds/days labels use plural forms, and the POT template was regenerated with WP-CLI.
 - Pre-release Accessibility Review workflow is complete. Admin notices now expose live roles, diagnostic data tables have screen-reader captions and scoped headers, and the recent-events empty-state heading follows the page hierarchy.
 - Pre-release Code Quality Review workflow is complete. Queue and registry array-option persistence now use a shared storage trait, runtime method inventory has no methods over 50 lines, and the final lint/test/build gate passes.
 - Pre-release Documentation Review workflow is complete. Runtime PHPDoc now includes `@since 0.1.0` coverage for class/trait/public-method declarations, README/readme/changelog/settings docs are current, and `docs/HOOKS.md` documents that version `0.1.0` exposes no public custom hooks.
@@ -686,7 +686,7 @@ Status:
 
 - `@01-CODE_CLEANUP_PROMPT.md run` through `@13-SECURITY_AUDIT_PROMPT.md run` completed on 2026-06-20 and are recorded in `PRE_RELEASE_CHECKLIST.md`.
 - Final release validation lint/test/build rows completed on 2026-06-20 and are recorded in `PRE_RELEASE_CHECKLIST.md`.
-- Current pre-release rerun on 2026-06-26 is complete through `@08-UNINSTALL_REVIEW_PROMPT.md run`; record each rerun step in `PRE_RELEASE_CHECKLIST.md` after its verification gate passes.
+- Current pre-release rerun on 2026-06-26 is complete through `@09-I18N_REVIEW_PROMPT.md run`; record each rerun step in `PRE_RELEASE_CHECKLIST.md` after its verification gate passes.
 
 ## Acceptance Criteria For MVP
 

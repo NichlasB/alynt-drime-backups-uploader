@@ -45,7 +45,9 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Cron_Health {
 				<tr><th scope="row"><?php esc_html_e( 'Server Cron Expected', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo ! empty( $settings['server_cron_expected'] ) ? esc_html__( 'Yes', 'alynt-drime-backups-uploader' ) : esc_html__( 'No', 'alynt-drime-backups-uploader' ); ?></td></tr>
 				<tr><th scope="row"><?php esc_html_e( 'WP-Cron Disabled', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo $cron_health->is_wp_cron_disabled() ? esc_html__( 'Yes', 'alynt-drime-backups-uploader' ) : esc_html__( 'No', 'alynt-drime-backups-uploader' ); ?></td></tr>
 				<tr><th scope="row"><?php esc_html_e( 'Server Cron Health', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( $this->cron_health_status_label( $health_status['status'] ) ); ?> - <?php echo esc_html( $health_status['reason'] ); ?></td></tr>
-				<tr><th scope="row"><?php esc_html_e( 'Minimum File Age', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( number_format_i18n( absint( $settings['min_file_age_seconds'] ) ) ); ?> <?php esc_html_e( 'seconds', 'alynt-drime-backups-uploader' ); ?></td></tr>
+				<?php $minimum_file_age_seconds = absint( $settings['min_file_age_seconds'] ); ?>
+				<?php /* translators: %s: minimum file age in seconds. */ ?>
+				<tr><th scope="row"><?php esc_html_e( 'Minimum File Age', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( sprintf( _n( '%s second', '%s seconds', $minimum_file_age_seconds, 'alynt-drime-backups-uploader' ), number_format_i18n( $minimum_file_age_seconds ) ) ); ?></td></tr>
 			</tbody>
 		</table>
 		<p class="description"><?php esc_html_e( 'WP-Cron runs due scans when WordPress receives a cron trigger; a due or overdue time can wait until the next cron run.', 'alynt-drime-backups-uploader' ); ?></p>

@@ -4,8 +4,8 @@
 	const config = window.alyntDrimeWPvivid || {};
 	const i18n = config.i18n || {};
 
-	function text(key, fallback) {
-		return i18n[key] || fallback;
+	function text(key) {
+		return i18n[key] || '';
 	}
 
 	function request(action) {
@@ -19,7 +19,7 @@
 			body: formData,
 		}).then((response) => response.json()).then((payload) => {
 			if (!payload || !payload.success) {
-				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : text('workspacesLoadFailed', 'Could not load Drime workspaces.'));
+				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : text('workspacesLoadFailed'));
 			}
 
 			return payload.data || {};
@@ -57,7 +57,7 @@
 		}
 
 		if (workspace.members_count) {
-			details.push(workspace.members_count === 1 ? text('workspaceMemberSingular', '1 member') : text('workspaceMembers', '%d members').replace('%d', workspace.members_count));
+			details.push(workspace.members_count === 1 ? text('workspaceMemberSingular') : text('workspaceMembers').replace('%d', workspace.members_count));
 		}
 
 		return details.length ? `${workspace.name} (${details.join(', ')})` : workspace.name;
@@ -71,7 +71,7 @@
 		}
 
 		select.textContent = '';
-		select.appendChild(new window.Option(text('personalWorkspace', 'Personal/default workspace'), '0'));
+		select.appendChild(new window.Option(text('personalWorkspace'), '0'));
 
 		workspaces.forEach((workspace) => {
 			select.appendChild(new window.Option(optionLabel(workspace), String(workspace.id)));
@@ -80,7 +80,7 @@
 		const input = document.getElementById('alynt-workspace-id');
 		const currentValue = input ? input.value || '0' : '0';
 		if (currentValue !== '0' && !workspaces.some((workspace) => String(workspace.id) === currentValue)) {
-			select.appendChild(new window.Option(`${text('workspaceIdPrefix', 'Workspace ID')} ${currentValue}`, currentValue));
+			select.appendChild(new window.Option(`${text('workspaceIdPrefix')} ${currentValue}`, currentValue));
 		}
 
 		select.hidden = false;
@@ -106,20 +106,20 @@
 		}
 
 		if (selected) {
-			selected.textContent = text('selectedRootFolder', 'Selected base folder: Drime root or manually entered folder ID.');
+			selected.textContent = text('selectedRootFolder');
 		}
 	}
 
 	function loadWorkspaces(container) {
 		setBusy(container, true);
-		setStatus(container, text('loading', 'Loading...'));
+		setStatus(container, text('loading'));
 
 		request('alynt_drime_backups_list_workspaces').then((data) => {
 			const workspaces = data.workspaces || [];
 			renderOptions(container, workspaces);
-			setStatus(container, workspaces.length ? text('workspacesLoaded', 'Workspaces loaded. Choose one, then save settings.') : text('noWorkspaces', 'No team workspaces found. The personal/default workspace remains available.'));
+			setStatus(container, workspaces.length ? text('workspacesLoaded') : text('noWorkspaces'));
 		}).catch((error) => {
-			setStatus(container, error.message || text('workspacesLoadFailed', 'Could not load Drime workspaces.'));
+			setStatus(container, error.message || text('workspacesLoadFailed'));
 		}).finally(() => {
 			setBusy(container, false);
 		});
@@ -142,6 +142,6 @@
 
 		input.value = select.value || '0';
 		clearSelectedFolder();
-		setStatus(select.closest('[data-alynt-workspace-browser]'), `${text('workspaceSelectedPrefix', 'Selected workspace:')} ${select.options[select.selectedIndex].text}`);
+		setStatus(select.closest('[data-alynt-workspace-browser]'), `${text('workspaceSelectedPrefix')} ${select.options[select.selectedIndex].text}`);
 	});
 }());

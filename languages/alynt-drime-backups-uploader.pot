@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-26T11:20:50+00:00\n"
+"POT-Creation-Date: 2026-06-26T12:41:56+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: alynt-drime-backups-uploader\n"
@@ -147,7 +147,7 @@ msgid "You do not have permission to manage this plugin."
 msgstr ""
 
 #: includes/class-cron-health.php:180
-#: includes/trait-admin-page-cron-health.php:135
+#: includes/trait-admin-page-cron-health.php:137
 msgid "Automatic scanning is disabled."
 msgstr ""
 
@@ -245,24 +245,28 @@ msgstr ""
 msgid "There are no queued backups to upload."
 msgstr ""
 
-#: includes/class-uploader.php:220
+#: includes/class-uploader.php:238
 #: includes/trait-uploader-retry-state.php:51
 msgid "The queued backup reached the retry limit."
 msgstr ""
 
-#: includes/class-uploader.php:344
+#: includes/class-uploader.php:362
 msgid "The upload state could not be saved. Check that the WordPress database is writable, then try again."
 msgstr ""
 
-#: includes/class-uploader.php:416
+#: includes/class-uploader.php:434
 msgid "The queued backup file is no longer readable."
 msgstr ""
 
-#: includes/class-uploader.php:425
+#: includes/class-uploader.php:444
 msgid "The queued backup file is empty."
 msgstr ""
 
-#: includes/class-uploader.php:455
+#: includes/class-uploader.php:448
+msgid "The queued backup file changed after it was scanned. Run a new scan before uploading it."
+msgstr ""
+
+#: includes/class-uploader.php:478
 msgid "A file with this name already exists in Drime, so the upload was skipped."
 msgstr ""
 
@@ -315,7 +319,7 @@ msgid "Last Scan Finished"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:41
-#: includes/trait-admin-page-cron-health.php:90
+#: includes/trait-admin-page-cron-health.php:92
 msgid "None recorded"
 msgstr ""
 
@@ -343,8 +347,8 @@ msgstr ""
 #: includes/trait-admin-page-status.php:72
 #: includes/trait-admin-page-status.php:73
 #: includes/trait-admin-page-status.php:133
-#: includes/trait-admin-page-status.php:181
-#: includes/trait-admin-page-status.php:184
+#: includes/trait-admin-page-status.php:185
+#: includes/trait-admin-page-status.php:188
 msgid "Yes"
 msgstr ""
 
@@ -354,8 +358,8 @@ msgstr ""
 #: includes/trait-admin-page-status.php:72
 #: includes/trait-admin-page-status.php:73
 #: includes/trait-admin-page-status.php:133
-#: includes/trait-admin-page-status.php:181
-#: includes/trait-admin-page-status.php:184
+#: includes/trait-admin-page-status.php:185
+#: includes/trait-admin-page-status.php:188
 msgid "No"
 msgstr ""
 
@@ -367,65 +371,70 @@ msgstr ""
 msgid "Server Cron Health"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:48
+#. translators: %s: minimum file age in seconds.
+#: includes/trait-admin-page-cron-health.php:50
 #: includes/trait-admin-page-upload-settings.php:53
 msgid "Minimum File Age"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:48
-msgid "seconds"
-msgstr ""
+#. translators: %s: minimum file age in seconds.
+#: includes/trait-admin-page-cron-health.php:50
+#, php-format
+msgid "%s second"
+msgid_plural "%s seconds"
+msgstr[0] ""
+msgstr[1] ""
 
-#: includes/trait-admin-page-cron-health.php:51
+#: includes/trait-admin-page-cron-health.php:53
 msgid "WP-Cron runs due scans when WordPress receives a cron trigger; a due or overdue time can wait until the next cron run."
 msgstr ""
 
 #. translators: %s: cron health reason.
-#: includes/trait-admin-page-cron-health.php:74
+#: includes/trait-admin-page-cron-health.php:76
 #, php-format
 msgid "Drime Backups server cron attention needed: %s"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:101
+#: includes/trait-admin-page-cron-health.php:103
 msgid "WP-CLI"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:102
+#: includes/trait-admin-page-cron-health.php:104
 msgid "HTTP WP-Cron"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:103
+#: includes/trait-admin-page-cron-health.php:105
 msgid "Manual Admin Action"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:104
+#: includes/trait-admin-page-cron-health.php:106
 msgid "Unknown"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:118
+#: includes/trait-admin-page-cron-health.php:120
 msgid "Likely configured"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:119
+#: includes/trait-admin-page-cron-health.php:121
 msgid "Not confirmed"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:120
+#: includes/trait-admin-page-cron-health.php:122
 msgid "Attention needed"
 msgstr ""
 
-#: includes/trait-admin-page-cron-health.php:139
+#: includes/trait-admin-page-cron-health.php:141
 msgid "Not scheduled."
 msgstr ""
 
 #. translators: %s: UTC scan time.
-#: includes/trait-admin-page-cron-health.php:148
+#: includes/trait-admin-page-cron-health.php:150
 #, php-format
 msgid "%s (due now or waiting for WP-Cron)"
 msgstr ""
 
 #. translators: 1: UTC scan time, 2: relative time until scan.
-#: includes/trait-admin-page-cron-health.php:155
+#: includes/trait-admin-page-cron-health.php:157
 #, php-format
 msgid "%1$s (in %2$s)"
 msgstr ""
@@ -525,7 +534,7 @@ msgstr ""
 
 #: includes/trait-admin-page-failed-uploads.php:36
 #: includes/trait-admin-page-status.php:108
-#: includes/trait-admin-page-status.php:144
+#: includes/trait-admin-page-status.php:146
 msgid "File"
 msgstr ""
 
@@ -677,7 +686,7 @@ msgid "Critical"
 msgstr ""
 
 #: includes/trait-admin-page-notification-settings.php:61
-#: includes/trait-admin-page-status.php:170
+#: includes/trait-admin-page-status.php:174
 msgid "Diagnostics"
 msgstr ""
 
@@ -899,132 +908,137 @@ msgstr ""
 msgid "Remote retention summary"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:134
+#. translators: %s: number of days.
+#: includes/trait-admin-page-status.php:136
 msgid "Retention Age"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:134
-#: includes/trait-admin-page-status.php:152
-msgid "days"
-msgstr ""
+#. translators: %s: number of days.
+#: includes/trait-admin-page-status.php:136
+#: includes/trait-admin-page-status.php:156
+#, php-format
+msgid "%s day"
+msgid_plural "%s days"
+msgstr[0] ""
+msgstr[1] ""
 
-#: includes/trait-admin-page-status.php:135
+#: includes/trait-admin-page-status.php:137
 msgid "Eligible Files"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:136
+#: includes/trait-admin-page-status.php:138
 msgid "Cleanup Mode"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:136
+#: includes/trait-admin-page-status.php:138
 msgid "Move to Drime trash only"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:141
+#: includes/trait-admin-page-status.php:143
 msgid "Remote retention candidates"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:145
+#: includes/trait-admin-page-status.php:147
 msgid "Age"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:172
+#: includes/trait-admin-page-status.php:176
 msgid "Export Diagnostics"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:173
+#: includes/trait-admin-page-status.php:177
 msgid "Clear Diagnostics"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:176
+#: includes/trait-admin-page-status.php:180
 msgid "Diagnostics health summary"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:178
+#: includes/trait-admin-page-status.php:182
 msgid "Plugin Version"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:179
+#: includes/trait-admin-page-status.php:183
 msgid "WordPress Version"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:180
+#: includes/trait-admin-page-status.php:184
 msgid "PHP Version"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:181
+#: includes/trait-admin-page-status.php:185
 msgid "Diagnostics Enabled"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:182
+#: includes/trait-admin-page-status.php:186
 msgid "Stored Events"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:183
+#: includes/trait-admin-page-status.php:187
 msgid "Last Event"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:183
+#: includes/trait-admin-page-status.php:187
 msgid "None"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:184
+#: includes/trait-admin-page-status.php:188
 msgid "Scan Cron Scheduled"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:198
+#: includes/trait-admin-page-status.php:202
 msgid "Recent Events"
 msgstr ""
 
 #. translators: %s: Current UTC time.
-#: includes/trait-admin-page-status.php:202
+#: includes/trait-admin-page-status.php:206
 #, php-format
 msgid "Current UTC time: %s"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:224
+#: includes/trait-admin-page-status.php:228
 msgid "No events yet"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:225
+#: includes/trait-admin-page-status.php:229
 msgid "Scans, uploads, and connection checks will appear here."
 msgstr ""
 
-#: includes/trait-admin-page-status.php:239
+#: includes/trait-admin-page-status.php:243
 msgid "Recent diagnostic events"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:242
+#: includes/trait-admin-page-status.php:246
 msgid "#"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:243
+#: includes/trait-admin-page-status.php:247
 msgid "Time"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:244
+#: includes/trait-admin-page-status.php:248
 msgid "Level"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:245
+#: includes/trait-admin-page-status.php:249
 msgid "Category"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:246
+#: includes/trait-admin-page-status.php:250
 msgid "Code"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:247
+#: includes/trait-admin-page-status.php:251
 msgid "Message"
 msgstr ""
 
 #. translators: %s: Button label.
-#: includes/trait-admin-page-status.php:279
+#: includes/trait-admin-page-status.php:283
 #, php-format
 msgid "%s..."
 msgstr ""
 
-#: includes/trait-admin-page-status.php:291
+#: includes/trait-admin-page-status.php:295
 msgid "Clear all diagnostics events? This cannot be undone."
 msgstr ""
 
@@ -1118,11 +1132,11 @@ msgstr ""
 msgid "The direct upload request could not be initialized."
 msgstr ""
 
-#: includes/trait-drime-client-direct-upload.php:114
+#: includes/trait-drime-client-direct-upload.php:115
 msgid "The direct upload request failed. Check the server network connection and try again."
 msgstr ""
 
-#: includes/trait-drime-client-direct-upload.php:133
+#: includes/trait-drime-client-direct-upload.php:134
 msgid "Drime rejected the direct upload request."
 msgstr ""
 
@@ -1200,8 +1214,8 @@ msgstr ""
 msgid "Selected Drime folder"
 msgstr ""
 
-#: includes/trait-folder-browser-normalization.php:286
-#: includes/trait-folder-browser-normalization.php:289
+#: includes/trait-folder-browser-normalization.php:297
+#: includes/trait-folder-browser-normalization.php:300
 #: includes/trait-folder-browser-preview.php:48
 msgid "Drime root"
 msgstr ""
@@ -1234,15 +1248,15 @@ msgstr ""
 msgid "Could not open the backup file for upload."
 msgstr ""
 
-#: includes/trait-uploader-multipart-parts.php:118
+#: includes/trait-uploader-multipart-parts.php:141
 msgid "Could not seek to the next backup chunk."
 msgstr ""
 
-#: includes/trait-uploader-multipart-parts.php:123
+#: includes/trait-uploader-multipart-parts.php:146
 msgid "Could not read the next backup chunk."
 msgstr ""
 
-#: includes/trait-uploader-multipart-parts.php:146
+#: includes/trait-uploader-multipart-parts.php:169
 msgid "The configured multipart chunk size is too large for the current PHP memory limit. Reduce the chunk size or raise the PHP memory limit before uploading."
 msgstr ""
 

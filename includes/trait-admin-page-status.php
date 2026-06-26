@@ -128,10 +128,12 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 		?>
 		<h3><?php esc_html_e( 'Remote Retention', 'alynt-drime-backups-uploader' ); ?></h3>
 		<table class="widefat striped alynt-drime-wpvivid-retention">
-			<caption class="screen-reader-text"><?php esc_html_e( 'Remote retention summary', 'alynt-drime-backups-uploader' ); ?></caption>
+				<caption class="screen-reader-text"><?php esc_html_e( 'Remote retention summary', 'alynt-drime-backups-uploader' ); ?></caption>
 			<tbody>
 				<tr><th scope="row"><?php esc_html_e( 'Enabled', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo ! empty( $settings['remote_retention_enabled'] ) ? esc_html__( 'Yes', 'alynt-drime-backups-uploader' ) : esc_html__( 'No', 'alynt-drime-backups-uploader' ); ?></td></tr>
-				<tr><th scope="row"><?php esc_html_e( 'Retention Age', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( number_format_i18n( absint( $settings['remote_retention_days'] ) ) ); ?> <?php esc_html_e( 'days', 'alynt-drime-backups-uploader' ); ?></td></tr>
+				<?php $remote_retention_days = absint( $settings['remote_retention_days'] ); ?>
+				<?php /* translators: %s: number of days. */ ?>
+				<tr><th scope="row"><?php esc_html_e( 'Retention Age', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( sprintf( _n( '%s day', '%s days', $remote_retention_days, 'alynt-drime-backups-uploader' ), number_format_i18n( $remote_retention_days ) ) ); ?></td></tr>
 				<tr><th scope="row"><?php esc_html_e( 'Eligible Files', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( number_format_i18n( count( $candidates ) ) ); ?></td></tr>
 				<tr><th scope="row"><?php esc_html_e( 'Cleanup Mode', 'alynt-drime-backups-uploader' ); ?></th><td><?php esc_html_e( 'Move to Drime trash only', 'alynt-drime-backups-uploader' ); ?></td></tr>
 			</tbody>
@@ -149,7 +151,9 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 					<?php foreach ( $candidates as $candidate ) : ?>
 						<tr>
 							<td><?php echo esc_html( isset( $candidate['remote_name'] ) ? (string) $candidate['remote_name'] : '' ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( isset( $candidate['age_days'] ) ? absint( $candidate['age_days'] ) : 0 ) ); ?> <?php esc_html_e( 'days', 'alynt-drime-backups-uploader' ); ?></td>
+							<?php $candidate_age_days = isset( $candidate['age_days'] ) ? absint( $candidate['age_days'] ) : 0; ?>
+							<?php /* translators: %s: number of days. */ ?>
+							<td><?php echo esc_html( sprintf( _n( '%s day', '%s days', $candidate_age_days, 'alynt-drime-backups-uploader' ), number_format_i18n( $candidate_age_days ) ) ); ?></td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
