@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-26
+
 ### Added
 
 - Initial Alynt Drime Backups Uploader plugin line with clean plugin identity, settings, queue storage, upload registry storage, failed registry storage, active upload recovery, and uninstall cleanup.

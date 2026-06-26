@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,7 +84,7 @@ No public custom actions or filters are exposed.
 
 == Changelog ==
 
-= Unreleased =
+= 0.1.1 =
 * Initial Alynt Drime Backups Uploader plugin line with Drime settings, queue/registry storage, WPvivid source support, generic server-outbox support, direct and multipart uploads, duplicate handling, retry limits, diagnostics, uninstall cleanup, and build/test tooling.
 * Added producer-adapter documentation for future backup-source support.
 * Added a health warning for old WPvivid-specific uploader coexistence during migration.
@@ -104,6 +104,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.1.1 =
+No breaking changes. Includes server-runner hardening, admin UI polish, release validation, and documentation sync updates.
 
 = 0.1.0 =
 Initial development version for the new Alynt Drime Backups Uploader plugin line.
