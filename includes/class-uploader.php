@@ -167,6 +167,24 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			)
 		);
 
+		if ( 'alynt_drime_file_changed' === $result->get_error_code() ) {
+			if ( ! $this->queue->remove( (string) $item['signature'] ) ) {
+				return $this->state_persistence_error();
+			}
+
+			$this->logger->event(
+				'upload',
+				'warning',
+				'changed_file_queue_item_removed',
+				'A changed backup file was removed from the queue so a fresh scan can requeue it.',
+				array(
+					'file' => basename( (string) $item['path'] ),
+				)
+			);
+
+			return $result;
+		}
+
 		if ( $this->attempts_reached_limit( $attempts ) ) {
 			$removed = $this->remove_retry_limited_item( $item, $attempts );
 			if ( is_wp_error( $removed ) ) {
@@ -302,7 +320,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 				continue;
 			}
 
-			if ( dirname( $sidecar ) !== $package_dir || 0 !== strpos( basename( $sidecar ), $package_name . '.' ) ) {
+			if ( ! $this->is_package_sidecar_path( $sidecar, $path ) ) {
 				$this->logger->event( 'filesystem', 'warning', 'local_delete_sidecar_skipped', 'Local backup sidecar deletion was skipped because the path did not match the deleted package.', array( 'file' => basename( $sidecar ) ) );
 				continue;
 			}
@@ -418,11 +436,16 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 
 		$settings    = $this->settings->get();
 		$size        = filesize( $path );
+		$mtime       = filemtime( $path );
 		$remote_name = basename( $path );
 		$parent_id   = $this->prepare_upload_parent_id( $settings );
 
-		if ( false === $size || $size <= 0 ) {
+		if ( false === $size || false === $mtime || $size <= 0 ) {
 			return new WP_Error( 'alynt_drime_empty_file', __( 'The queued backup file is empty.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		if ( ! $this->queued_file_state_matches( $item, (int) $size, (int) $mtime ) ) {
+			return new WP_Error( 'alynt_drime_file_changed', __( 'The queued backup file changed after it was scanned. Run a new scan before uploading it.', 'alynt-drime-backups-uploader' ) );
 		}
 
 		if ( is_wp_error( $parent_id ) ) {
@@ -473,6 +496,25 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Checks whether a queued item still matches the scanned file state.
+	 *
+	 * @param array<string,mixed> $item Queue item.
+	 * @param int                 $size Current file size.
+	 * @param int                 $mtime Current modified timestamp.
+	 * @return bool
+	 */
+	private function queued_file_state_matches( array $item, $size, $mtime ) {
+		$queued_size  = isset( $item['size'] ) ? absint( $item['size'] ) : 0;
+		$queued_mtime = isset( $item['mtime'] ) ? absint( $item['mtime'] ) : 0;
+
+		if ( $queued_size > 0 && $queued_size !== (int) $size ) {
+			return false;
+		}
+
+		return 0 === $queued_mtime || $queued_mtime === (int) $mtime;
 	}
 
 	/**

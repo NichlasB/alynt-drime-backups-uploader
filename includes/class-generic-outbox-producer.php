@@ -159,18 +159,29 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 	private function list_archives( $directory ) {
 		$files = array();
 
-		foreach ( new DirectoryIterator( $directory ) as $file_info ) {
-			if ( ! $file_info->isFile() ) {
-				continue;
-			}
+		try {
+			$iterator = new DirectoryIterator( $directory );
+		} catch ( UnexpectedValueException $e ) {
+			$this->diagnostic( 'error', 'outbox_directory_scan_failed', 'The backup outbox directory could not be scanned.', array( 'reason' => $e->getMessage() ) );
+			return $files;
+		}
 
-			$path = $file_info->getPathname();
-			$name = $file_info->getFilename();
-			if ( $this->looks_temporary( $name ) || ! $this->is_supported_archive( $name ) || ! is_readable( $path ) ) {
-				continue;
-			}
+		foreach ( $iterator as $file_info ) {
+			try {
+				if ( ! $file_info->isFile() ) {
+					continue;
+				}
 
-			$files[] = $path;
+				$path = $file_info->getPathname();
+				$name = $file_info->getFilename();
+				if ( $this->looks_temporary( $name ) || ! $this->is_supported_archive( $name ) || ! is_readable( $path ) ) {
+					continue;
+				}
+
+				$files[] = $path;
+			} catch ( RuntimeException $e ) {
+				$this->diagnostic( 'warning', 'outbox_file_scan_skipped', 'A backup outbox file could not be inspected during scan.', array( 'reason' => $e->getMessage() ) );
+			}
 		}
 
 		sort( $files );

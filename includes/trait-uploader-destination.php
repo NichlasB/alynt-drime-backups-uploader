@@ -70,12 +70,12 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Destination {
 
 		foreach ( explode( '/', trim( str_replace( '\\', '/', $path ), '/' ) ) as $segment ) {
 			$segment = sanitize_text_field( $segment );
-			if ( '' !== $segment && false === strpos( $segment, '..' ) ) {
+			if ( '' !== $segment && false === strpos( $segment, '..' ) && strlen( $segment ) <= Alynt_Drime_Backups_Uploader_Settings::MAX_RELATIVE_PATH_SEGMENT_CHARS ) {
 				$segments[] = $segment;
 			}
 		}
 
-		return $segments;
+		return array_slice( $segments, 0, Alynt_Drime_Backups_Uploader_Settings::MAX_RELATIVE_PATH_SEGMENTS );
 	}
 
 	/**

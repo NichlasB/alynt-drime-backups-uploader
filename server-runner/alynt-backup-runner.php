@@ -108,6 +108,13 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
+		$lock = $this->acquire_run_lock();
+		if ( false === $lock ) {
+			$this->error( 'Another backup runner process is already running.' );
+			return 1;
+		}
+
+		try {
 		$package_started_at = gmdate( 'c' );
 		$package_id         = $this->package_id();
 		$work_dir           = $this->work_path() . DIRECTORY_SEPARATOR . $package_id;
@@ -180,6 +187,9 @@ class Alynt_Server_Backup_Runner {
 		$this->line( 'Checksum: ' . $checksum );
 
 		return 0;
+		} finally {
+			$this->release_run_lock( $lock );
+		}
 	}
 
 	/**
@@ -1184,6 +1194,40 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		return is_dir( $path ) || mkdir( $path, 0750, true );
+	}
+
+	/**
+	 * Acquires the runner-level package creation lock.
+	 *
+	 * @return resource|false
+	 */
+	private function acquire_run_lock() {
+		$path   = $this->work_path() . DIRECTORY_SEPARATOR . '.alynt-backup-runner.lock';
+		$handle = fopen( $path, 'c' );
+		if ( false === $handle ) {
+			return false;
+		}
+
+		if ( ! flock( $handle, LOCK_EX | LOCK_NB ) ) {
+			fclose( $handle );
+			return false;
+		}
+
+		ftruncate( $handle, 0 );
+		fwrite( $handle, (string) getmypid() . "\n" );
+
+		return $handle;
+	}
+
+	/**
+	 * Releases the runner-level package creation lock.
+	 *
+	 * @param resource $handle Lock handle.
+	 * @return void
+	 */
+	private function release_run_lock( $handle ) {
+		flock( $handle, LOCK_UN );
+		fclose( $handle );
 	}
 
 	/**

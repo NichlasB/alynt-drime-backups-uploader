@@ -23,6 +23,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	const MIN_REMOTE_RETENTION_DAYS       = 1;
 	const MAX_REMOTE_RETENTION_DAYS       = 365;
 	const DEFAULT_REMOTE_RETENTION_DAYS   = 60;
+	const MAX_RELATIVE_PATH_SEGMENTS      = 20;
+	const MAX_RELATIVE_PATH_SEGMENT_CHARS = 120;
 
 	/**
 	 * Returns default settings.
@@ -339,7 +341,22 @@ class Alynt_Drime_Backups_Uploader_Settings {
 
 		$path = '/' . trim( $path, '/' );
 
-		return false === strpos( $path, '..' ) ? $path : '';
+		if ( false !== strpos( $path, '..' ) ) {
+			return '';
+		}
+
+		$segments = array_values( array_filter( explode( '/', trim( $path, '/' ) ), 'strlen' ) );
+		if ( count( $segments ) > self::MAX_RELATIVE_PATH_SEGMENTS ) {
+			return '';
+		}
+
+		foreach ( $segments as $segment ) {
+			if ( strlen( $segment ) > self::MAX_RELATIVE_PATH_SEGMENT_CHARS ) {
+				return '';
+			}
+		}
+
+		return $path;
 	}
 
 	/**

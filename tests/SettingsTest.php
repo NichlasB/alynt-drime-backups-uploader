@@ -249,6 +249,26 @@ class SettingsTest extends TestCase {
 		$this->assertSame( '', $saved['parent_folder_display_path'] );
 	}
 
+	public function test_relative_path_rejects_excessive_depth_or_segment_length() {
+		$options  = array();
+		$settings = $this->settings_with_options( $options );
+
+		$deep = $settings->update(
+			array(
+				'relative_path' => '/' . implode( '/', array_fill( 0, Alynt_Drime_Backups_Uploader_Settings::MAX_RELATIVE_PATH_SEGMENTS + 1, 'folder' ) ),
+			)
+		);
+
+		$long = $settings->update(
+			array(
+				'relative_path' => '/' . str_repeat( 'a', Alynt_Drime_Backups_Uploader_Settings::MAX_RELATIVE_PATH_SEGMENT_CHARS + 1 ),
+			)
+		);
+
+		$this->assertSame( '', $deep['relative_path'] );
+		$this->assertSame( '', $long['relative_path'] );
+	}
+
 	/**
 	 * Creates settings with mocked option storage.
 	 *

@@ -109,7 +109,30 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Sidecars {
 	private function is_package_sidecar_path( $sidecar_path, $package_path ) {
 		$package_dir  = dirname( $package_path );
 		$package_name = basename( $package_path );
+		$stem_name    = basename( $this->package_archive_stem( $package_path ) );
 
-		return dirname( $sidecar_path ) === $package_dir && 0 === strpos( basename( $sidecar_path ), $package_name . '.' );
+		return dirname( $sidecar_path ) === $package_dir
+			&& (
+				0 === strpos( basename( $sidecar_path ), $package_name . '.' )
+				|| ( '' !== $stem_name && 0 === strpos( basename( $sidecar_path ), $stem_name . '.' ) )
+			);
+	}
+
+	/**
+	 * Returns an archive path without a known archive extension.
+	 *
+	 * @param string $package_path Package path.
+	 * @return string
+	 */
+	private function package_archive_stem( $package_path ) {
+		$lower = strtolower( $package_path );
+
+		foreach ( array( '.tar.zst', '.tar.gz', '.tgz', '.zip', '.tar' ) as $extension ) {
+			if ( substr( $lower, -strlen( $extension ) ) === $extension ) {
+				return substr( $package_path, 0, -strlen( $extension ) );
+			}
+		}
+
+		return '';
 	}
 }

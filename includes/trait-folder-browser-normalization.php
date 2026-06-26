@@ -241,7 +241,18 @@ trait Alynt_Drime_Backups_Uploader_Folder_Browser_Normalization {
 			return '';
 		}
 
-		return '/' . trim( $path, '/' );
+		$segments = array_values( array_filter( explode( '/', trim( $path, '/' ) ), 'strlen' ) );
+		if ( count( $segments ) > 20 ) {
+			return '';
+		}
+
+		foreach ( $segments as $segment ) {
+			if ( strlen( $segment ) > 120 ) {
+				return '';
+			}
+		}
+
+		return '/' . implode( '/', $segments );
 	}
 
 	/**

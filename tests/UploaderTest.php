@@ -183,6 +183,39 @@ class UploaderTest extends TestCase {
 		$this->assertArrayNotHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
 	}
 
+	public function test_generic_outbox_upload_accepts_archive_stem_sidecars() {
+		$stem                = substr( $this->file, 0, -4 );
+		$manifest            = $stem . '.manifest.json';
+		$checksum            = $stem . '.sha256';
+		$this->extra_files[] = $manifest;
+		$this->extra_files[] = $checksum;
+		file_put_contents( $manifest, '{"package_id":"test"}' );
+		file_put_contents( $checksum, 'abc123  ' . basename( $this->file ) );
+		$options  = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key'  => 'generic_outbox',
+				'manifest_path' => $manifest,
+				'checksum_path' => $checksum,
+			)
+		);
+
+		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertSame(
+			array(
+				basename( $manifest ),
+				basename( $checksum ),
+			),
+			$client->simple_upload_names
+		);
+	}
+
 	public function test_multipart_resume_uses_existing_active_state_and_remote_parts() {
 		$options = $this->base_options();
 		$options[ Alynt_Drime_Backups_Uploader_Queue::ACTIVE_OPTION ] = array(
@@ -360,6 +393,25 @@ class UploaderTest extends TestCase {
 		$this->assertSame( 0, $client->validate_calls );
 		$this->assertSame( 0, $client->create_multipart_calls );
 		$this->assertSame( 1, $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['attempts'] );
+	}
+
+	public function test_changed_queued_file_is_removed_for_rescan() {
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['size']  = filesize( $this->file );
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['mtime'] = filemtime( $this->file );
+		file_put_contents( $this->file, 'changed backup bytes' );
+		touch( $this->file, time() + 5 );
+
+		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'alynt_drime_file_changed', $result->get_error_code() );
+		$this->assertArrayNotHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+		$this->assertSame( 0, $client->validate_calls );
+		$this->assertArrayHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ] );
 	}
 
 	public function test_failed_upload_stores_requeue_context() {
