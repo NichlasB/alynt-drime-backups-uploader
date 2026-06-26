@@ -973,7 +973,7 @@ class Alynt_Server_Backup_Runner {
 
 		$wp_parent = dirname( $this->wordpress_path() );
 		$wp_base   = basename( $this->wordpress_path() );
-		$command   = 'tar --exclude-from=' . escapeshellarg( $exclude_file )
+		$command   = 'tar --ignore-failed-read --exclude-from=' . escapeshellarg( $exclude_file )
 			. ' -czf ' . escapeshellarg( $temp_archive )
 			. ' -C ' . escapeshellarg( $wp_parent ) . ' ' . escapeshellarg( $wp_base )
 			. ' -C ' . escapeshellarg( $work_dir );
@@ -985,13 +985,51 @@ class Alynt_Server_Backup_Runner {
 		$command .= ' ' . escapeshellarg( basename( $manifest_path ) );
 
 		$result = $this->run_shell_command( $command );
-		if ( 0 !== $result['exit_code'] ) {
+		if ( 0 !== $result['exit_code'] && ! $this->is_recoverable_tar_archive_warning( $result, $temp_archive ) ) {
 			$this->error( 'Archive creation failed.' );
 			$this->error( implode( "\n", $result['output'] ) );
 			return false;
 		}
 
 		return is_file( $temp_archive ) && filesize( $temp_archive ) > 0;
+	}
+
+	/**
+	 * Determines whether tar completed with only live-file churn warnings.
+	 *
+	 * GNU tar exits with status 1 when files change while being read. On live
+	 * WordPress sites, cache and upload files can change during a package run.
+	 * Treat that specific warning as recoverable only when a non-empty archive
+	 * was still produced.
+	 *
+	 * @param array{exit_code:int,output:array<int,string>} $result Command result.
+	 * @param string                                        $temp_archive Temporary archive path.
+	 * @return bool
+	 */
+	private function is_recoverable_tar_archive_warning( array $result, $temp_archive ) {
+		if ( 1 !== (int) $result['exit_code'] || ! is_file( $temp_archive ) || filesize( $temp_archive ) <= 0 ) {
+			return false;
+		}
+
+		$output = isset( $result['output'] ) && is_array( $result['output'] ) ? $result['output'] : array();
+		if ( empty( $output ) ) {
+			return false;
+		}
+
+		foreach ( $output as $line ) {
+			$line = trim( (string) $line );
+			if ( '' === $line ) {
+				continue;
+			}
+
+			if ( false === strpos( $line, 'file changed as we read it' ) ) {
+				return false;
+			}
+		}
+
+		$this->line( 'Archive completed with live file-change warnings.' );
+
+		return true;
 	}
 
 	/**
