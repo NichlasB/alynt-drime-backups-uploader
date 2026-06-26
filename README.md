@@ -43,6 +43,10 @@ Companion WordPress plugin that scans completed local backup packages and upload
 
 For development and release validation, use the packaged zip and the documented LocalWP confirmation gate before touching `plugin-tester.local`.
 
+## Development
+
+Run `npm run build` after editing files in `assets/src/admin/`; the build script regenerates the enqueued `assets/admin.js`, `assets/admin-workspaces.js`, and `assets/admin.css` files directly. Run `npm run test` and `npm run lint` before packaging. The `pot` script requires WP-CLI on the command path.
+
 ## Updates
 
 The plugin includes `GitHub Plugin URI: NichlasB/alynt-drime-backups-uploader` for Alynt Plugin Updater compatibility. Release builds should be distributed from public GitHub releases using an attached WordPress-installable zip asset.

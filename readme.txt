@@ -95,6 +95,7 @@ No public custom actions or filters are exposed.
 * Added generic-outbox sidecar uploads for server-runner manifest and checksum files.
 * Added WP-CLI scan, upload, run, status, failed-upload, diagnostics, and restore-support commands for server-driven workflows.
 * Changed server-runner archives to exclude symlink entries before restore staging.
+* Changed the build script to regenerate the served admin JavaScript and CSS assets that WordPress enqueues.
 * Clarified uninstall scope for plugin-owned WordPress state versus operator-managed local backup files.
 
 = 0.1.0 =

@@ -18,8 +18,9 @@ The plugin currently integrates with WordPress through core hooks only. Public e
 | `admin_post_alynt_drime_backups_save_settings` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_save_settings()` | Saves plugin settings. |
 | `admin_post_alynt_drime_backups_test_connection` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_test_connection()` | Tests the Drime API token. |
 | `admin_post_alynt_drime_backups_send_test_failure_email` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_send_test_failure_email()` | Sends a test failure-notification email through WordPress mail. |
-| `admin_post_alynt_drime_backups_scan_now` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_scan_now()` | Runs a manual WPvivid backup scan. |
+| `admin_post_alynt_drime_backups_scan_now` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_scan_now()` | Runs a manual scan across configured backup producers. |
 | `admin_post_alynt_drime_backups_upload_next` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_upload_next()` | Uploads the next queued backup. |
+| `admin_post_alynt_drime_backups_requeue_failed_upload` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_requeue_failed_upload()` | Requeues a readable failed upload from the failed-upload registry. |
 | `admin_post_alynt_drime_backups_preview_remote_retention` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_preview_remote_retention()` | Previews eligible plugin-owned remote-retention candidates. |
 | `admin_post_alynt_drime_backups_run_remote_retention` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_run_remote_retention()` | Moves eligible plugin-owned Drime files to trash. |
 | `admin_post_alynt_drime_backups_clear_active_upload` | action | `Alynt_Drime_Backups_Uploader_Plugin::handle_clear_active_upload()` | Clears active upload state and aborts the remote multipart upload when possible. |

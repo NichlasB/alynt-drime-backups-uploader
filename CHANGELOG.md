@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - Moved text-domain loading to early `plugins_loaded`.
 - Shared verified array-option storage through `Alynt_Drime_Backups_Uploader_Option_Storage`.
 - Changed the server runner to exclude symlink entries from new archives before restore staging.
+- Changed the build script to regenerate the served admin JavaScript and CSS files that WordPress enqueues.
 
 ### Fixed
 
