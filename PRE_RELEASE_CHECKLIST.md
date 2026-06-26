@@ -10,7 +10,7 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] WP Plugin Toolkit Add Observability Tooling Prompt: completed. Redacted diagnostics, export, settings controls, and runtime status reporting are implemented.
 - [x] WP Plugin Toolkit Feature Bloat And Structure Review Prompt: completed for implemented feature slices. Large runtime classes were split into focused traits where useful.
 - [x] WP Plugin Toolkit Documentation Sync Audit Prompt: completed for the `0.1.0` release line and refreshed after the GridPane runner hardening/admin UI polish pass.
-- [x] Alynt Plugin Updater Compatibility Guide: completed. GitHub release asset install and Alynt Plugin Updater detection/update validation passed for `v0.1.0`.
+- [x] Alynt Plugin Updater Compatibility Guide: completed. GitHub release asset install and Alynt Plugin Updater detection/update validation passed for `v0.1.0`; follow-up validation passed for the `v0.1.1` GitHub release asset on `plugin-tester.local`.
 
 ## Pre-Release Review Sequence
 
@@ -38,6 +38,7 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] Distribution zip audit passed for `alynt-drime-backups-uploader-v0.1.0.zip`.
 - [x] GitHub release asset was published and install-tested.
 - [x] Alynt Plugin Updater detected and installed the GitHub release asset.
+- [x] Alynt Plugin Updater detected `v0.1.1` from the GitHub release asset, populated WordPress's update transient with `alynt-drime-backups-uploader-v0.1.1.zip`, installed the update on `plugin-tester.local`, and final verification showed version `0.1.1`, active plugin state, clean queue/failed counts, and no remaining update response.
 
 ## E2E Validation
 
