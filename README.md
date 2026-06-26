@@ -45,7 +45,7 @@ For development and release validation, use the packaged zip and the documented 
 
 ## Updates
 
-The plugin includes `GitHub Plugin URI: NichlasB/alynt-drime-backups-uploader` for Alynt Plugin Updater compatibility. Updates are distributed from public GitHub releases using the attached WordPress-installable zip asset.
+The plugin includes `GitHub Plugin URI: NichlasB/alynt-drime-backups-uploader` for Alynt Plugin Updater compatibility. Release builds should be distributed from public GitHub releases using an attached WordPress-installable zip asset.
 
 ## Configuration
 

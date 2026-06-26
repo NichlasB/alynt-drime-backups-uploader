@@ -81,6 +81,7 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+* Initial Alynt Drime Backups Uploader plugin line with Drime settings, queue/registry storage, WPvivid source support, generic server-outbox support, direct and multipart uploads, duplicate handling, retry limits, diagnostics, uninstall cleanup, and build/test tooling.
 * Added producer-adapter documentation for future backup-source support.
 * Added a health warning for old WPvivid-specific uploader coexistence during migration.
 * Added package-security documentation for server-runner package integrity and restore staging boundaries.
@@ -88,73 +89,13 @@ No public custom actions or filters are exposed.
 * Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
 * Added CLI-only server-runner fetch support for known Drime packages and sidecars.
 * Added generic-outbox sidecar uploads for server-runner manifest and checksum files.
+* Added WP-CLI scan, upload, run, status, failed-upload, diagnostics, and restore-support commands for server-driven workflows.
 * Changed server-runner archives to exclude symlink entries before restore staging.
 
-= 0.6.0 =
-* Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.
-* Added a memory guard so oversized multipart chunk settings fail gracefully under constrained PHP memory.
-* Improved selected-base relative-path uploads so cached concrete Drime destination folders are reused before creating missing folders.
-
-= 0.5.1 =
-* Added a Failed Uploads table with per-file retry actions for readable local backup files.
-* Increased Drime API control-request timeout for slower multipart preflight/signing responses.
-* Changed local deletion for WPvivid-listed split backup sets so cleanup waits until every listed part is uploaded.
-
-= 0.5.0 =
-* Added a read-only Drime workspace picker for loading workspaces available to the saved API token.
-* Changed workspace changes to clear selected base-folder metadata so stale folder IDs are not reused across workspaces.
-* Refined settings input widths and status table widths for a cleaner admin layout.
-
-= 0.4.0 =
-* Added a read-only Drime folder browser and destination preview for selecting an existing base folder and checking the resolved upload path.
-* Changed uploads so a selected base folder can be combined with a typed relative subpath, creating the final subfolder during upload when needed.
-
-= 0.3.0 =
-* Added cron health tracking for scheduled scans, including last runner evidence, WP-CLI scan evidence, WP-Cron disabled status, and server-cron health guidance.
-* Added a Server Cron Expected setting for reminders when automatic scans should be driven by WP-CLI but no WP-CLI scheduled scan has been observed.
-
-= 0.2.1 =
-* Added a Scan State section with current UTC time, automatic scan status, next scheduled scan timing, last completed scan, and minimum file age in seconds.
-* Displayed Recent Events timestamps in explicit UTC format and added a current UTC time reference above the events table.
-
-= 0.2.0 =
-* Added a configurable multipart chunk size setting for Drime uploads.
-* Added manual Remote Retention controls for plugin-owned Drime uploads.
-* Added optional failed-upload email notifications through WordPress mail with recipient settings, duplicate suppression, and a test-email admin action.
-* Clarified production guidance for local deletion and minimum file age settings.
-* Added row numbers to the Recent Events diagnostics table.
-
-= 0.1.1 =
-* Added Alynt Plugin Updater compatibility metadata and refreshed release packaging workflow for public GitHub release updates.
-
 = 0.1.0 =
-* Initial development release with Drime settings, WPvivid local scanner, queue/registry storage, direct and multipart uploads, duplicate handling, retry limits, diagnostics, uninstall cleanup, and build/test tooling.
+* Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
 
-= 0.6.0 =
-Allows larger Drime multipart chunk sizes with a PHP memory guard. Keep 32 MB unless larger chunks have been validated in the target environment.
-
-= 0.5.1 =
-Improves large multipart upload resilience and failed-upload recovery. No breaking changes.
-
-= 0.5.0 =
-Adds Drime workspace selection from the settings screen. No breaking changes.
-
-= 0.4.0 =
-Adds Drime folder browsing and read-only destination preview for safer backup destination setup. No breaking changes.
-
-= 0.3.0 =
-Adds cron-health evidence and server-cron expectation reminders for automatic scan reliability. No breaking changes.
-
-= 0.2.1 =
-Adds clearer UTC scan timing and Recent Events context for backup monitoring. No breaking changes.
-
-= 0.2.0 =
-Adds Drime backup controls, failed-upload email notifications, and admin UI clarity improvements. No breaking changes.
-
-= 0.1.1 =
-Adds GitHub release update compatibility.
-
 = 0.1.0 =
-Initial development release.
+Initial development version for the new Alynt Drime Backups Uploader plugin line.
