@@ -131,13 +131,42 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		$settings              = self::defaults();
 		$settings['site_uuid'] = $this->sanitize_uuid( isset( $current['site_uuid'] ) ? (string) $current['site_uuid'] : '' );
 
+		$this->sanitize_token_settings( $raw, $current, $settings );
+		$this->sanitize_destination_settings( $raw, $current, $settings );
+		$this->sanitize_source_settings( $raw, $settings );
+		$this->sanitize_behavior_settings( $raw, $settings );
+		$this->sanitize_failure_notification_settings( $raw, $settings );
+		$this->sanitize_diagnostics_settings( $raw, $settings );
+
+		return $settings;
+	}
+
+	/**
+	 * Sanitizes token settings.
+	 *
+	 * @param array<string,mixed> $raw Raw settings.
+	 * @param array<string,mixed> $current Current settings.
+	 * @param array<string,mixed> $settings Sanitized settings.
+	 * @return void
+	 */
+	private function sanitize_token_settings( array $raw, array $current, array &$settings ) {
 		$incoming_token = isset( $raw['api_token'] ) ? trim( (string) wp_unslash( $raw['api_token'] ) ) : '';
 		if ( '' === $incoming_token || '************' === $incoming_token ) {
 			$settings['api_token'] = isset( $current['api_token'] ) ? (string) $current['api_token'] : '';
 		} else {
 			$settings['api_token'] = sanitize_text_field( $incoming_token );
 		}
+	}
 
+	/**
+	 * Sanitizes Drime destination settings.
+	 *
+	 * @param array<string,mixed> $raw Raw settings.
+	 * @param array<string,mixed> $current Current settings.
+	 * @param array<string,mixed> $settings Sanitized settings.
+	 * @return void
+	 */
+	private function sanitize_destination_settings( array $raw, array $current, array &$settings ) {
 		$current_workspace_id     = isset( $current['workspace_id'] ) ? absint( $current['workspace_id'] ) : 0;
 		$settings['workspace_id'] = isset( $raw['workspace_id'] ) ? max( 0, absint( $raw['workspace_id'] ) ) : 0;
 
@@ -160,7 +189,16 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		}
 
 		$settings['relative_path'] = isset( $raw['relative_path'] ) ? $this->sanitize_relative_path( (string) wp_unslash( $raw['relative_path'] ) ) : '';
+	}
 
+	/**
+	 * Sanitizes backup source settings.
+	 *
+	 * @param array<string,mixed> $raw Raw settings.
+	 * @param array<string,mixed> $settings Sanitized settings.
+	 * @return void
+	 */
+	private function sanitize_source_settings( array $raw, array &$settings ) {
 		if ( isset( $raw['backup_path_override'] ) ) {
 			$settings['backup_path_override'] = sanitize_text_field( wp_unslash( $raw['backup_path_override'] ) );
 		}
@@ -168,7 +206,16 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		if ( isset( $raw['server_outbox_path'] ) ) {
 			$settings['server_outbox_path'] = sanitize_text_field( wp_unslash( $raw['server_outbox_path'] ) );
 		}
+	}
 
+	/**
+	 * Sanitizes upload behavior settings.
+	 *
+	 * @param array<string,mixed> $raw Raw settings.
+	 * @param array<string,mixed> $settings Sanitized settings.
+	 * @return void
+	 */
+	private function sanitize_behavior_settings( array $raw, array &$settings ) {
 		$duplicate_mode             = isset( $raw['duplicate_mode'] ) ? sanitize_key( wp_unslash( $raw['duplicate_mode'] ) ) : 'skip';
 		$settings['duplicate_mode'] = in_array( $duplicate_mode, array( 'skip', 'rename' ), true ) ? $duplicate_mode : 'skip';
 
@@ -180,15 +227,32 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		$settings['delete_local_after_upload'] = ! empty( $raw['delete_local_after_upload'] );
 		$settings['remote_retention_enabled']  = ! empty( $raw['remote_retention_enabled'] );
 		$settings['remote_retention_days']     = isset( $raw['remote_retention_days'] ) ? $this->clamp_remote_retention_days( $raw['remote_retention_days'] ) : self::DEFAULT_REMOTE_RETENTION_DAYS;
-		$settings['failure_email_enabled']     = ! empty( $raw['failure_email_enabled'] );
-		$settings['failure_email_recipients']  = $this->sanitize_email_recipients( isset( $raw['failure_email_recipients'] ) ? (string) wp_unslash( $raw['failure_email_recipients'] ) : self::default_failure_email_recipients() );
 		$settings['max_retries']               = isset( $raw['max_retries'] ) ? max( 0, min( 10, absint( $raw['max_retries'] ) ) ) : 3;
+	}
 
+	/**
+	 * Sanitizes failure notification settings.
+	 *
+	 * @param array<string,mixed> $raw Raw settings.
+	 * @param array<string,mixed> $settings Sanitized settings.
+	 * @return void
+	 */
+	private function sanitize_failure_notification_settings( array $raw, array &$settings ) {
+		$settings['failure_email_enabled']    = ! empty( $raw['failure_email_enabled'] );
+		$settings['failure_email_recipients'] = $this->sanitize_email_recipients( isset( $raw['failure_email_recipients'] ) ? (string) wp_unslash( $raw['failure_email_recipients'] ) : self::default_failure_email_recipients() );
+	}
+
+	/**
+	 * Sanitizes diagnostics settings.
+	 *
+	 * @param array<string,mixed> $raw Raw settings.
+	 * @param array<string,mixed> $settings Sanitized settings.
+	 * @return void
+	 */
+	private function sanitize_diagnostics_settings( array $raw, array &$settings ) {
 		$settings['diagnostics_enabled']   = ! empty( $raw['diagnostics_enabled'] );
 		$settings['diagnostics_min_level'] = $this->sanitize_level( isset( $raw['diagnostics_min_level'] ) ? (string) wp_unslash( $raw['diagnostics_min_level'] ) : 'warning' );
 		$settings['diagnostics_retention'] = isset( $raw['diagnostics_retention'] ) ? max( 25, min( 500, absint( $raw['diagnostics_retention'] ) ) ) : 100;
-
-		return $settings;
 	}
 
 	/**

@@ -19,6 +19,10 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Failed_Uploads;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Notices;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Settings;
+	use Alynt_Drime_Backups_Uploader_Admin_Page_Drime_Settings;
+	use Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings;
+	use Alynt_Drime_Backups_Uploader_Admin_Page_Upload_Settings;
+	use Alynt_Drime_Backups_Uploader_Admin_Page_Notification_Settings;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Cron_Health;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Status;
 
