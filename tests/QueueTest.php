@@ -138,6 +138,53 @@ class QueueTest extends TestCase {
 		$this->assertSame( 1, $updates );
 	}
 
+	public function test_add_many_preserves_producer_neutral_package_context() {
+		$options = null;
+		$queue   = $this->queue_with_options( $options );
+
+		$added = $queue->add_many(
+			array(
+				array(
+					'signature'          => 'generic-one',
+					'path'               => 'C:/backups/site-one.tar.gz',
+					'name'               => 'site-one.tar.gz',
+					'producer_key'       => 'generic_outbox',
+					'producer_label'     => 'Generic Outbox',
+					'package_id'         => 'site-one-20260626',
+					'filename'           => 'site-one.tar.gz',
+					'backup_set_id'      => 'set-one',
+					'backup_set_index'   => 1,
+					'backup_set_total'   => 1,
+					'manifest_path'      => 'C:/backups/site-one.tar.gz.manifest.json',
+					'checksum_path'      => 'C:/backups/site-one.tar.gz.sha256',
+					'checksum_algorithm' => 'sha256',
+					'checksum'           => 'abc123',
+					'metadata'           => array(
+						'generic_outbox' => array(
+							'archive_format' => 'tar.gz',
+						),
+					),
+				),
+			)
+		);
+
+		$item = $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['generic-one'];
+
+		$this->assertSame( 1, $added );
+		$this->assertSame( 'generic_outbox', $item['producer_key'] );
+		$this->assertSame( 'Generic Outbox', $item['producer_label'] );
+		$this->assertSame( 'site-one-20260626', $item['package_id'] );
+		$this->assertSame( 'site-one.tar.gz', $item['filename'] );
+		$this->assertSame( 'set-one', $item['backup_set_id'] );
+		$this->assertSame( 1, $item['backup_set_index'] );
+		$this->assertSame( 1, $item['backup_set_total'] );
+		$this->assertSame( 'C:/backups/site-one.tar.gz.manifest.json', $item['manifest_path'] );
+		$this->assertSame( 'C:/backups/site-one.tar.gz.sha256', $item['checksum_path'] );
+		$this->assertSame( 'sha256', $item['checksum_algorithm'] );
+		$this->assertSame( 'abc123', $item['checksum'] );
+		$this->assertSame( 'tar.gz', $item['metadata']['generic_outbox']['archive_format'] );
+	}
+
 	public function test_prepend_adds_retry_item_to_front_of_queue() {
 		$options = array(
 			Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION => array(

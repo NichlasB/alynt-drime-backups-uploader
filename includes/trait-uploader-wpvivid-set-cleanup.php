@@ -45,7 +45,42 @@ trait Alynt_Drime_Backups_Uploader_Uploader_WPvivid_Set_Cleanup {
 			$context['wpvivid'] = $item['wpvivid'];
 		}
 
+		foreach ( $this->producer_context_string_keys() as $key ) {
+			if ( isset( $item[ $key ] ) && is_scalar( $item[ $key ] ) ) {
+				$context[ $key ] = (string) $item[ $key ];
+			}
+		}
+
+		foreach ( array( 'backup_set_index', 'backup_set_total' ) as $key ) {
+			if ( isset( $item[ $key ] ) ) {
+				$context[ $key ] = absint( $item[ $key ] );
+			}
+		}
+
+		if ( isset( $item['metadata'] ) && is_array( $item['metadata'] ) ) {
+			$context['metadata'] = $item['metadata'];
+		}
+
 		return $context;
+	}
+
+	/**
+	 * Returns normalized producer context keys that can be copied as strings.
+	 *
+	 * @return array<int,string>
+	 */
+	private function producer_context_string_keys() {
+		return array(
+			'producer_key',
+			'producer_label',
+			'package_id',
+			'filename',
+			'backup_set_id',
+			'manifest_path',
+			'checksum_path',
+			'checksum_algorithm',
+			'checksum',
+		);
 	}
 
 	/**

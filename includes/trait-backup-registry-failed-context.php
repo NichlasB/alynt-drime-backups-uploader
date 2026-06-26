@@ -25,13 +25,13 @@ trait Alynt_Drime_Backups_Uploader_Backup_Registry_Failed_Context {
 	private function sanitize_failed_context( array $context ) {
 		$sanitized = array();
 
-		foreach ( array( 'signature', 'name', 'path' ) as $key ) {
+		foreach ( array( 'signature', 'name', 'path', 'producer_key', 'producer_label', 'package_id', 'filename', 'backup_set_id', 'manifest_path', 'checksum_path', 'checksum_algorithm', 'checksum' ) as $key ) {
 			if ( isset( $context[ $key ] ) && is_scalar( $context[ $key ] ) ) {
 				$sanitized[ $key ] = sanitize_text_field( (string) $context[ $key ] );
 			}
 		}
 
-		foreach ( array( 'size', 'attempts' ) as $key ) {
+		foreach ( array( 'size', 'attempts', 'backup_set_index', 'backup_set_total' ) as $key ) {
 			if ( isset( $context[ $key ] ) ) {
 				$sanitized[ $key ] = absint( $context[ $key ] );
 			}

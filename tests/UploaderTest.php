@@ -61,6 +61,51 @@ class UploaderTest extends TestCase {
 		$this->assertArrayNotHasKey( Alynt_Drime_Backups_Uploader_Queue::ACTIVE_OPTION, $options );
 	}
 
+	public function test_successful_upload_preserves_producer_neutral_registry_context() {
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key'       => 'generic_outbox',
+				'producer_label'     => 'Generic Outbox',
+				'package_id'         => 'site-one-20260626',
+				'filename'           => basename( $this->file ),
+				'backup_set_id'      => 'site-one-20260626',
+				'backup_set_index'   => 1,
+				'backup_set_total'   => 1,
+				'manifest_path'      => $this->file . '.manifest.json',
+				'checksum_path'      => $this->file . '.sha256',
+				'checksum_algorithm' => 'sha256',
+				'checksum'           => 'abc123',
+				'metadata'           => array(
+					'generic_outbox' => array(
+						'archive_format' => 'tar.gz',
+					),
+				),
+			)
+		);
+
+		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertSame( 'generic_outbox', $record['producer_key'] );
+		$this->assertSame( 'Generic Outbox', $record['producer_label'] );
+		$this->assertSame( 'site-one-20260626', $record['package_id'] );
+		$this->assertSame( basename( $this->file ), $record['filename'] );
+		$this->assertSame( 'site-one-20260626', $record['backup_set_id'] );
+		$this->assertSame( 1, $record['backup_set_index'] );
+		$this->assertSame( 1, $record['backup_set_total'] );
+		$this->assertSame( $this->file . '.manifest.json', $record['manifest_path'] );
+		$this->assertSame( $this->file . '.sha256', $record['checksum_path'] );
+		$this->assertSame( 'sha256', $record['checksum_algorithm'] );
+		$this->assertSame( 'abc123', $record['checksum'] );
+		$this->assertSame( 'tar.gz', $record['metadata']['generic_outbox']['archive_format'] );
+	}
+
 	public function test_multipart_resume_uses_existing_active_state_and_remote_parts() {
 		$options = $this->base_options();
 		$options[ Alynt_Drime_Backups_Uploader_Queue::ACTIVE_OPTION ] = array(

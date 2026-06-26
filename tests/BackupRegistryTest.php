@@ -46,7 +46,18 @@ class BackupRegistryTest extends TestCase {
 					'path'      => '/var/www/site/wp-content/wpvividbackups/backup.zip',
 					'name'      => 'backup.zip',
 					'attempts'  => 3,
-					'wpvivid'   => array(
+					'producer_key'       => 'generic_outbox',
+					'producer_label'     => 'Generic Outbox',
+					'package_id'         => 'site-one-20260626',
+					'filename'           => 'site-one.tar.gz',
+					'backup_set_id'      => 'set-one',
+					'backup_set_index'   => 1,
+					'backup_set_total'   => 1,
+					'manifest_path'      => '/var/backups/site-one.tar.gz.manifest.json',
+					'checksum_path'      => '/var/backups/site-one.tar.gz.sha256',
+					'checksum_algorithm' => 'sha256',
+					'checksum'           => 'abc123',
+					'wpvivid'            => array(
 						'backup_id'     => 'abc123',
 						'set_signature' => 'set-one',
 						'set_files'     => array( 'one.zip', 'two.zip' ),
@@ -61,6 +72,17 @@ class BackupRegistryTest extends TestCase {
 		$this->assertSame( 'Gateway timeout.', $record['message'] );
 		$this->assertSame( 'backup.zip', $record['name'] );
 		$this->assertSame( 3, $record['attempts'] );
+		$this->assertSame( 'generic_outbox', $record['producer_key'] );
+		$this->assertSame( 'Generic Outbox', $record['producer_label'] );
+		$this->assertSame( 'site-one-20260626', $record['package_id'] );
+		$this->assertSame( 'site-one.tar.gz', $record['filename'] );
+		$this->assertSame( 'set-one', $record['backup_set_id'] );
+		$this->assertSame( 1, $record['backup_set_index'] );
+		$this->assertSame( 1, $record['backup_set_total'] );
+		$this->assertSame( '/var/backups/site-one.tar.gz.manifest.json', $record['manifest_path'] );
+		$this->assertSame( '/var/backups/site-one.tar.gz.sha256', $record['checksum_path'] );
+		$this->assertSame( 'sha256', $record['checksum_algorithm'] );
+		$this->assertSame( 'abc123', $record['checksum'] );
 		$this->assertSame( 'abc123', $record['wpvivid']['backup_id'] );
 		$this->assertSame( array( 'one.zip', 'two.zip' ), $record['wpvivid']['set_files'] );
 	}
