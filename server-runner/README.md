@@ -71,4 +71,4 @@ Before extraction, `stage-restore` lists the archive and rejects unsafe member p
 
 It does not import `database.sql`, does not overwrite the live WordPress path, and refuses to use an existing restore directory.
 
-See [docs/RESTORE_RUNBOOK.md](../docs/RESTORE_RUNBOOK.md) for the operator runbook, GridPane staging checks, and the currently gated manual disaster restore outline.
+See [docs/RESTORE_RUNBOOK.md](../docs/RESTORE_RUNBOOK.md) for the operator runbook, GridPane staging checks, and the currently gated manual disaster restore outline. See [docs/PACKAGE_SECURITY.md](../docs/PACKAGE_SECURITY.md) for the package integrity, extraction safety, storage-path, and encryption boundaries.

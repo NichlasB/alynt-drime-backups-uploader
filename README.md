@@ -82,6 +82,8 @@ The plugin settings screen generates a GridPane runner config, runner install co
 
 For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: it verifies and stages packages for inspection, but it does not download from Drime, import databases, or overwrite live site files.
 
+For package integrity, extraction safety, storage-path, and encryption boundaries, see [docs/PACKAGE_SECURITY.md](docs/PACKAGE_SECURITY.md).
+
 ## Diagnostics
 
 Diagnostics are disabled by default. When enabled, the plugin stores a bounded event log in WordPress options and exposes a health summary, recent events table, JSON export, and clear action to administrators.

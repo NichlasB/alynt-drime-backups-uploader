@@ -38,6 +38,10 @@ No. Remote retention is disabled by default, runs only from manual admin actions
 
 The scanner waits until files are old enough and their size is stable across scans. WPvivid-listed split sets are queued only when every listed part is present and stable. Generic outbox packages are queued only after the final archive is stable.
 
+= How are server-runner packages verified before restore staging? =
+
+The runner verifies the package checksum and manifest sidecar, then rejects unsafe archive member paths before extracting into a new restore directory. The current restore flow is inspection-only and does not import databases or overwrite live files.
+
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
 During migration, yes, but do not leave both plugins automatically uploading the same WPvivid backup folder. The health summary warns when the old WPvivid-specific uploader is active and this plugin is configured to use the WPvivid source.
@@ -71,6 +75,7 @@ No public custom actions or filters are exposed.
 = Unreleased =
 * Added producer-adapter documentation for future backup-source support.
 * Added a health warning for old WPvivid-specific uploader coexistence during migration.
+* Added package-security documentation for server-runner package integrity and restore staging boundaries.
 
 = 0.6.0 =
 * Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.

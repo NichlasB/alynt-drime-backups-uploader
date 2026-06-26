@@ -135,6 +135,8 @@ This outline is not an automated production restore command. Use it only after a
 
 The plugin and runner should not perform steps 6 or 7 automatically until a destructive restore design has its own confirmation gates, dry-run output, and staging evidence.
 
+For the package integrity, extraction safety, storage-path, and encryption boundaries behind this runbook, see [PACKAGE_SECURITY.md](PACKAGE_SECURITY.md).
+
 ## Drime Download Gap
 
 If the only copy is in Drime, download the package and both sidecars to the server first, then run the local verification workflow above.
