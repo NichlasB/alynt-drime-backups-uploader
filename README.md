@@ -86,6 +86,8 @@ For package integrity, extraction safety, storage-path, and encryption boundarie
 
 For database/filesystem timing expectations and high-write site caveats, see [docs/CONSISTENCY_MODEL.md](docs/CONSISTENCY_MODEL.md).
 
+For disaster discovery when the original WordPress plugin state is unavailable, see [docs/REMOTE_RESTORE_DISCOVERY.md](docs/REMOTE_RESTORE_DISCOVERY.md).
+
 ## Diagnostics
 
 Diagnostics are disabled by default. When enabled, the plugin stores a bounded event log in WordPress options and exposes a health summary, recent events table, JSON export, and clear action to administrators.

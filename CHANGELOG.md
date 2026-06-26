@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Added restore staging archive-member safety validation before server-runner extraction.
 - Added package-security documentation for server-runner package integrity and restore staging boundaries.
 - Added logical backup consistency documentation and server-runner manifest timing fields.
+- Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
 
 ## [0.6.0] - 2026-06-22
 

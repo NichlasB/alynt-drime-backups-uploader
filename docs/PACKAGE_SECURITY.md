@@ -21,7 +21,7 @@ Not covered yet:
 - Automated production restore.
 - End-to-end package signing.
 - Backup encryption and key recovery.
-- Remote disaster inventory for a WordPress-unavailable site.
+- Automated remote disaster inventory for a WordPress-unavailable site.
 
 ## Trust Boundaries
 
@@ -100,6 +100,8 @@ The runner health check verifies writable paths, minimum free disk space, and sa
 ## Drime Upload Boundary
 
 The plugin uploads package bytes to the configured Drime workspace and destination folder. It does not currently upload a separate signed inventory or restore index.
+
+See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the current manual discovery path and future remote index option.
 
 Remote retention is disabled by default and only runs from manual administrator actions. It moves eligible plugin-owned remote files to Drime trash and does not permanently delete files.
 

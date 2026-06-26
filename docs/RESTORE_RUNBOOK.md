@@ -144,3 +144,5 @@ For the package integrity, extraction safety, storage-path, and encryption bound
 If the only copy is in Drime, download the package and both sidecars to the server first, then run the local verification workflow above.
 
 A future `fetch` command can be added after the download source, authentication model, and overwrite policy are designed. Until then, restore verification starts from local files.
+
+See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the manual disaster discovery path, future `fetch` command contract, and remote index option.

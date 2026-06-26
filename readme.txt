@@ -46,6 +46,10 @@ The runner verifies the package checksum and manifest sidecar, then rejects unsa
 
 No. The server runner creates a logical WordPress backup from a WP-CLI database export plus a filesystem archive. High-write sites should use low-traffic windows or a future stricter consistency mode before production reliance.
 
+= Can I restore if the original WordPress site is unavailable? =
+
+The current MVP requires manual Drime download of the archive plus matching manifest and checksum sidecars, followed by local runner verification and staging. Automated fetch and remote index support are planned separately.
+
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
 During migration, yes, but do not leave both plugins automatically uploading the same WPvivid backup folder. The health summary warns when the old WPvivid-specific uploader is active and this plugin is configured to use the WPvivid source.
@@ -81,6 +85,7 @@ No public custom actions or filters are exposed.
 * Added a health warning for old WPvivid-specific uploader coexistence during migration.
 * Added package-security documentation for server-runner package integrity and restore staging boundaries.
 * Added logical backup consistency documentation and server-runner manifest timing fields.
+* Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
 
 = 0.6.0 =
 * Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.
