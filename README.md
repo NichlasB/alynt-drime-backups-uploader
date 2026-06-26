@@ -88,6 +88,8 @@ Diagnostics are disabled by default. When enabled, the plugin stores a bounded e
 
 Diagnostics redact bearer tokens, authorization headers, cookies, nonces, passwords, request bodies, presigned URLs, and HTTP URLs embedded in scalar values.
 
+See [docs/STATUS_PAYLOAD.md](docs/STATUS_PAYLOAD.md) for the redacted health/status payload contract prepared for future dashboard work.
+
 ## Cron Health
 
 The Scan State panel shows the current UTC time, the next automated scan, the last scheduled scan, the last detected scan runner, whether `DISABLE_WP_CRON` is active, and a server-cron health summary. The plugin records runtime evidence from WordPress; it does not read server cron files such as `/etc/cron.d/wp-cron-sites`.

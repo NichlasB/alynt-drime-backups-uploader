@@ -42,6 +42,8 @@ class HealthSummaryTest extends TestCase {
 		$this->assertSame( Alynt_Drime_Backups_Uploader_Cron_Health::STATUS_LIKELY_CONFIGURED, $status['cron_status'] );
 		$this->assertArrayNotHasKey( 'server_outbox_path', $status );
 		$this->assertArrayNotHasKey( 'backup_path_override', $status );
+		$this->assertSame( $this->expected_redacted_status_keys(), array_keys( $status ) );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
 
 		rmdir( $outbox );
 	}
@@ -151,5 +153,51 @@ class HealthSummaryTest extends TestCase {
 		mkdir( $outbox );
 
 		return $outbox;
+	}
+
+	/**
+	 * Returns the default redacted status payload keys.
+	 *
+	 * @return array<int,string>
+	 */
+	private function expected_redacted_status_keys() {
+		return array(
+			'schema_version',
+			'site_uuid',
+			'plugin_version',
+			'queue_count',
+			'uploaded_count',
+			'failed_count',
+			'active_upload',
+			'auto_scan_enabled',
+			'server_cron_expected',
+			'server_outbox_configured',
+			'server_outbox_readable',
+			'wpvivid_override_configured',
+			'old_wpvivid_uploader_active',
+			'wp_cron_disabled',
+			'cron_status',
+			'cron_reason',
+			'warning_count',
+			'warnings',
+			'last_runner',
+			'last_runner_at',
+			'last_scheduled_scan_at',
+			'last_wp_cli_scan_at',
+		);
+	}
+
+	/**
+	 * Asserts that a status payload does not include secret/path-like keys.
+	 *
+	 * @param array<string,mixed> $status Status payload.
+	 * @return void
+	 */
+	private function assert_status_payload_contains_no_sensitive_keys( array $status ) {
+		$encoded = json_encode( $status );
+
+		foreach ( array( 'api_token', 'authorization', 'cookie', 'nonce', 'password', 'secret', 'server_outbox_path', 'backup_path_override', 'database', 'presigned', 'signed_url' ) as $needle ) {
+			$this->assertStringNotContainsString( $needle, strtolower( (string) $encoded ) );
+		}
 	}
 }

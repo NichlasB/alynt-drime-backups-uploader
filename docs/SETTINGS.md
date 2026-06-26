@@ -51,6 +51,8 @@ These options are owned by the plugin and are removed on uninstall.
 
 ## Health Payload Fields
 
+See `docs/STATUS_PAYLOAD.md` for the full redacted status payload contract and future dashboard boundary.
+
 The health summary includes these non-secret migration/coexistence fields:
 
 | Field | Type | Description |
