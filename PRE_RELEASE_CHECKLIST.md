@@ -57,9 +57,11 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] Staging uploaded registry recorded Drime file entry `765316863`, parent folder `764729789`, and two sidecars for the fresh package.
 - [x] Staging diagnostics settings were restored to disabled plus `warning` threshold after the pass.
 - [x] Staging runner work directory was clean after the pass.
+- [x] Staging outbox cleanup completed after E2E: older `20260625-225948` and `20260626-094942` package sets were removed, newest verified `20260626-165727` package set was retained, outbox dropped from about `5.1G` to `1.7G`, and filesystem availability rose to about `13G`.
+- [x] LocalWP admin status-table width check passed after the UI polish: `Server Runner Status`, `Scan State`, `Remote Retention`, and `Diagnostics` all measured `760px` wide in Playwright after loading the rebuilt admin stylesheet.
 
 ## Open Items
 
-- [ ] Decide whether to remove old staging outbox packages to reclaim disk space. Current outbox retains three package sets totaling about `5.1G`.
-- [ ] Push commit `90a1de2` after final review if the release branch should advance on GitHub.
+- [x] Decide whether to remove old staging outbox packages to reclaim disk space. Completed on 2026-06-26; current outbox retains only the newest verified package set totaling about `1.7G`.
+- [x] Push commit `90a1de2` after final review if the release branch should advance on GitHub. Completed with `64e5dc5` on `origin/master`.
 - [ ] Run a final documentation sync audit if additional release-facing behavior changes before the next release.

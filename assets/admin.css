@@ -46,7 +46,8 @@
 .alynt-drime-wpvivid-diagnostics-actions form {
   margin: 0;
 }
-.alynt-drime-wpvivid-health {
+.alynt-drime-wpvivid-health,
+.alynt-drime-wpvivid-health-summary {
   max-width: var(--alynt-drime-panel-width);
   margin: 12px 0 20px;
 }
@@ -83,6 +84,7 @@
   margin: 0;
 }
 .alynt-drime-wpvivid-health th,
+.alynt-drime-wpvivid-health-summary th,
 .alynt-drime-wpvivid-retention th,
 .alynt-drime-wpvivid-scan-state th {
   width: 220px;
