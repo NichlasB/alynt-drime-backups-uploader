@@ -35,6 +35,8 @@ array(
 
 `candidates` must contain only completed, stable packages that are safe to queue.
 
+The scanner validates each candidate before returning the combined result. Candidates missing `signature`, `path`, or `name` are skipped and surfaced as scan errors. Valid candidates are filled with safe defaults for producer-neutral fields such as `producer_key`, `producer_label`, `package_id`, `filename`, `backup_set_id`, `backup_set_total`, checksum fields, timestamps, and `metadata`.
+
 ## Package Record Shape
 
 Each candidate must include the legacy fields still used by the queue and uploader:

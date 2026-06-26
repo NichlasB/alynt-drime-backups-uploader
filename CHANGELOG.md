@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added producer-adapter documentation for future backup-source support.
+- Added scanner-level validation and defaulting for normalized producer package records.
 
 ## [0.6.0] - 2026-06-22
 

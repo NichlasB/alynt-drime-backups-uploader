@@ -138,6 +138,85 @@ class ScannerTest extends TestCase {
 		$this->assertSame( array(), $result['candidates'] );
 	}
 
+	public function test_custom_producer_candidate_is_normalized_by_scanner() {
+		$scanner = new Alynt_Drime_Backups_Uploader_Scanner(
+			new Alynt_Drime_Backups_Uploader_Settings(),
+			new Alynt_Drime_Backups_Uploader_WPvivid_Detector(),
+			null,
+			array(
+				new Alynt_Drime_Backups_Uploader_Test_Producer(
+					'custom_source',
+					'Custom Source',
+					array(
+						'directory'  => 'C:/backups',
+						'candidates' => array(
+							array(
+								'signature'      => 'custom-one',
+								'path'           => 'C:/backups/custom-one.zip',
+								'name'           => 'custom-one.zip',
+								'size'           => '123',
+								'mtime'          => '456',
+								'producer_key'   => 'wrong',
+								'producer_label' => 'Wrong',
+								'metadata'       => 'not-an-array',
+							),
+						),
+						'errors'     => array(),
+					)
+				),
+			)
+		);
+
+		$result    = $scanner->scan();
+		$candidate = $result['candidates'][0];
+
+		$this->assertCount( 1, $result['candidates'] );
+		$this->assert_normalized_producer_candidate( $candidate, 'custom_source', 'Custom Source' );
+		$this->assertSame( 'custom-one', $candidate['package_id'] );
+		$this->assertSame( 'custom-one.zip', $candidate['filename'] );
+		$this->assertSame( 456, $candidate['modified_time'] );
+		$this->assertSame( 'custom-one', $candidate['backup_set_id'] );
+		$this->assertSame( 1, $candidate['backup_set_total'] );
+		$this->assertSame( array(), $candidate['metadata'] );
+	}
+
+	public function test_invalid_custom_producer_candidates_are_skipped() {
+		$scanner = new Alynt_Drime_Backups_Uploader_Scanner(
+			new Alynt_Drime_Backups_Uploader_Settings(),
+			new Alynt_Drime_Backups_Uploader_WPvivid_Detector(),
+			null,
+			array(
+				new Alynt_Drime_Backups_Uploader_Test_Producer(
+					'custom_source',
+					'Custom Source',
+					array(
+						'directory'  => 'C:/backups',
+						'candidates' => array(
+							array(
+								'path' => 'C:/backups/missing-signature.zip',
+								'name' => 'missing-signature.zip',
+							),
+							'not-a-record',
+							array(
+								'signature' => 'custom-two',
+								'path'      => 'C:/backups/custom-two.zip',
+								'name'      => 'custom-two.zip',
+							),
+						),
+						'errors'     => array(),
+					)
+				),
+			)
+		);
+
+		$result = $scanner->scan();
+
+		$this->assertCount( 1, $result['candidates'] );
+		$this->assertSame( 'custom-two', $result['candidates'][0]['signature'] );
+		$this->assertCount( 2, $result['errors'] );
+		$this->assertSame( 'The custom_source backup producer returned an invalid package record.', $result['errors'][0] );
+	}
+
 	/**
 	 * Creates a scanner with mocked WordPress options.
 	 *
@@ -237,5 +316,29 @@ class ScannerTest extends TestCase {
 		}
 
 		rmdir( $directory );
+	}
+}
+
+class Alynt_Drime_Backups_Uploader_Test_Producer implements Alynt_Drime_Backups_Uploader_Producer_Interface {
+	private $key;
+	private $label;
+	private $result;
+
+	public function __construct( $key, $label, array $result ) {
+		$this->key    = $key;
+		$this->label  = $label;
+		$this->result = $result;
+	}
+
+	public function key() {
+		return $this->key;
+	}
+
+	public function label() {
+		return $this->label;
+	}
+
+	public function scan() {
+		return $this->result;
 	}
 }
