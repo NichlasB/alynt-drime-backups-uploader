@@ -5,6 +5,7 @@ Updated: 2026-06-26
 ## Current State
 
 - Development repo exists at `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
+- Current stable baseline is `v0.1.1`, accepted on 2026-06-26 after GitHub release validation, Alynt Plugin Updater detection/install validation, and a real WordPress Plugins-screen update rehearsal on `plugin-tester.local`.
 - Plugin scaffold is in place with settings, scanner, queue, registry, Drime client, uploader, cron, admin page, uninstall cleanup, README, changelog, and settings docs.
 - Diagnostics and observability workflow is complete.
 - Build tooling workflow is complete. Composer/npm dependencies are installed, PHPCS/WPCS is configured, npm build/lint/test scripts pass, and the build script regenerates the admin assets that WordPress actually enqueues.
