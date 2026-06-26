@@ -10,6 +10,8 @@ use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
 
 class ScannerTest extends TestCase {
+	use Alynt_Drime_Backups_Uploader_Test_Producer_Adapter_Assertions;
+
 	/**
 	 * Temporary backup directory.
 	 *
@@ -87,6 +89,7 @@ class ScannerTest extends TestCase {
 
 		$this->assertCount( 2, $result['candidates'] );
 		$this->assertArrayHasKey( 'wpvivid', $result['producers'] );
+		$this->assert_normalized_producer_candidate( $result['candidates'][0], 'wpvivid', 'WPvivid' );
 		$this->assertSame( 'wpvivid', $result['candidates'][0]['producer_key'] );
 		$this->assertSame( 'WPvivid', $result['candidates'][0]['producer_label'] );
 		$this->assertSame( basename( $db ), $result['candidates'][0]['filename'] );

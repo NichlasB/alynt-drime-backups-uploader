@@ -76,7 +76,7 @@ class UploaderTest extends TestCase {
 				'manifest_path'      => $this->file . '.manifest.json',
 				'checksum_path'      => $this->file . '.sha256',
 				'checksum_algorithm' => 'sha256',
-				'checksum'           => 'abc123',
+				'checksum_value'     => 'abc123',
 				'metadata'           => array(
 					'generic_outbox' => array(
 						'archive_format' => 'tar.gz',
@@ -102,7 +102,7 @@ class UploaderTest extends TestCase {
 		$this->assertSame( $this->file . '.manifest.json', $record['manifest_path'] );
 		$this->assertSame( $this->file . '.sha256', $record['checksum_path'] );
 		$this->assertSame( 'sha256', $record['checksum_algorithm'] );
-		$this->assertSame( 'abc123', $record['checksum'] );
+		$this->assertSame( 'abc123', $record['checksum_value'] );
 		$this->assertSame( 'tar.gz', $record['metadata']['generic_outbox']['archive_format'] );
 	}
 

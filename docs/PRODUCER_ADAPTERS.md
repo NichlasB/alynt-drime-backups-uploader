@@ -120,6 +120,8 @@ Each producer should have tests for:
 
 If the producer has a unique multi-file package model, add fixture-based tests proving incomplete sets are not queued and complete sets are represented consistently.
 
+Use `Alynt_Drime_Backups_Uploader_Test_Producer_Adapter_Assertions` for the shared normalized package-shape checks so every producer is held to the same baseline contract.
+
 ## Compatibility Notes
 
 The producer key becomes part of persisted queue, uploaded-registry, failed-registry, diagnostics, and future monitoring payloads. Treat it as a stable contract.

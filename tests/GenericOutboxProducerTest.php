@@ -10,6 +10,8 @@ use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
 
 class GenericOutboxProducerTest extends TestCase {
+	use Alynt_Drime_Backups_Uploader_Test_Producer_Adapter_Assertions;
+
 	/**
 	 * Temporary outbox directory.
 	 *
@@ -85,18 +87,15 @@ class GenericOutboxProducerTest extends TestCase {
 		$this->assertCount( 1, $second['candidates'] );
 
 		$candidate = $second['candidates'][0];
-		$this->assertSame( 'generic_outbox', $candidate['producer_key'] );
-		$this->assertSame( 'Generic Outbox', $candidate['producer_label'] );
+		$this->assert_normalized_producer_candidate( $candidate, 'generic_outbox', 'Generic Outbox' );
 		$this->assertSame( 'pkg-20260625-001', $candidate['package_id'] );
 		$this->assertSame( 'set-20260625-001', $candidate['backup_set_id'] );
-		$this->assertSame( basename( $archive ), $candidate['filename'] );
 		$this->assertSame( wp_normalize_path( $manifest ), wp_normalize_path( $candidate['manifest_path'] ) );
 		$this->assertSame( wp_normalize_path( $checksum ), wp_normalize_path( $candidate['checksum_path'] ) );
 		$this->assertSame( 'sha256', $candidate['checksum_algorithm'] );
 		$this->assertSame( str_repeat( 'a', 64 ), $candidate['checksum_value'] );
 		$this->assertSame( 'https://example.test', $candidate['site_url'] );
 		$this->assertSame( 1782403200, $candidate['created_at'] );
-		$this->assertArrayNotHasKey( 'snapshot_key', $candidate );
 		$this->assertSame( 'pkg-20260625-001', $candidate['metadata']['generic_outbox']['manifest']['package_id'] );
 	}
 

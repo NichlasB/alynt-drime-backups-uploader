@@ -158,7 +158,7 @@ class QueueTest extends TestCase {
 					'manifest_path'      => 'C:/backups/site-one.tar.gz.manifest.json',
 					'checksum_path'      => 'C:/backups/site-one.tar.gz.sha256',
 					'checksum_algorithm' => 'sha256',
-					'checksum'           => 'abc123',
+					'checksum_value'     => 'abc123',
 					'metadata'           => array(
 						'generic_outbox' => array(
 							'archive_format' => 'tar.gz',
@@ -181,7 +181,7 @@ class QueueTest extends TestCase {
 		$this->assertSame( 'C:/backups/site-one.tar.gz.manifest.json', $item['manifest_path'] );
 		$this->assertSame( 'C:/backups/site-one.tar.gz.sha256', $item['checksum_path'] );
 		$this->assertSame( 'sha256', $item['checksum_algorithm'] );
-		$this->assertSame( 'abc123', $item['checksum'] );
+		$this->assertSame( 'abc123', $item['checksum_value'] );
 		$this->assertSame( 'tar.gz', $item['metadata']['generic_outbox']['archive_format'] );
 	}
 

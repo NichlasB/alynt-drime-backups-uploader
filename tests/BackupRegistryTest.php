@@ -56,7 +56,7 @@ class BackupRegistryTest extends TestCase {
 					'manifest_path'      => '/var/backups/site-one.tar.gz.manifest.json',
 					'checksum_path'      => '/var/backups/site-one.tar.gz.sha256',
 					'checksum_algorithm' => 'sha256',
-					'checksum'           => 'abc123',
+					'checksum_value'     => 'abc123',
 					'wpvivid'            => array(
 						'backup_id'     => 'abc123',
 						'set_signature' => 'set-one',
@@ -82,7 +82,7 @@ class BackupRegistryTest extends TestCase {
 		$this->assertSame( '/var/backups/site-one.tar.gz.manifest.json', $record['manifest_path'] );
 		$this->assertSame( '/var/backups/site-one.tar.gz.sha256', $record['checksum_path'] );
 		$this->assertSame( 'sha256', $record['checksum_algorithm'] );
-		$this->assertSame( 'abc123', $record['checksum'] );
+		$this->assertSame( 'abc123', $record['checksum_value'] );
 		$this->assertSame( 'abc123', $record['wpvivid']['backup_id'] );
 		$this->assertSame( array( 'one.zip', 'two.zip' ), $record['wpvivid']['set_files'] );
 	}
