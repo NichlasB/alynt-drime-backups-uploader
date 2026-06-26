@@ -39,6 +39,12 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart_Parts {
 			return $memory_ok;
 		}
 
+		$sign_response = $this->sign_missing_multipart_parts( $session, $parts );
+		if ( is_wp_error( $sign_response ) ) {
+			fclose( $handle );
+			return $sign_response;
+		}
+
 		for ( $part_number = 1; $part_number <= $session['total']; $part_number++ ) {
 			if ( isset( $parts[ $part_number ] ) ) {
 				if ( ! $this->store_active_upload_state( $path, $remote_name, $session['key'], $session['upload_id'], (string) $item['signature'], $parts, $session['total'] ) ) {
@@ -49,7 +55,7 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart_Parts {
 				continue;
 			}
 
-			$part = $this->upload_multipart_part( $handle, $session['key'], $session['upload_id'], $part_number, $chunk_size );
+			$part = $this->upload_multipart_part( $handle, $sign_response, $part_number, $chunk_size );
 			if ( is_wp_error( $part ) ) {
 				fclose( $handle );
 				return $part;
@@ -69,21 +75,38 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart_Parts {
 	}
 
 	/**
-	 * Uploads one multipart part.
+	 * Signs all missing multipart part URLs for this upload pass.
 	 *
-	 * @param resource $handle File handle.
-	 * @param string   $key Multipart key.
-	 * @param string   $upload_id Multipart upload ID.
-	 * @param int      $part_number Part number.
-	 * @param int      $chunk_size Chunk size in bytes.
-	 * @return array{PartNumber:int,ETag:string}|WP_Error
+	 * @param array{key:string,upload_id:string,total:int} $session Multipart session.
+	 * @param array<int,array<string,mixed>>               $parts Completed parts.
+	 * @return array<string,mixed>|WP_Error
 	 */
-	private function upload_multipart_part( $handle, $key, $upload_id, $part_number, $chunk_size ) {
-		$sign_response = $this->client->sign_part_urls( $key, $upload_id, array( $part_number ) );
-		if ( is_wp_error( $sign_response ) ) {
-			return $sign_response;
+	private function sign_missing_multipart_parts( array $session, array $parts ) {
+		$part_numbers = array();
+
+		for ( $part_number = 1; $part_number <= $session['total']; $part_number++ ) {
+			if ( ! isset( $parts[ $part_number ] ) ) {
+				$part_numbers[] = $part_number;
+			}
 		}
 
+		if ( empty( $part_numbers ) ) {
+			return array( 'urls' => array() );
+		}
+
+		return $this->client->sign_part_urls( $session['key'], $session['upload_id'], $part_numbers );
+	}
+
+	/**
+	 * Uploads one multipart part.
+	 *
+	 * @param resource            $handle File handle.
+	 * @param array<string,mixed> $sign_response Sign response.
+	 * @param int                 $part_number Part number.
+	 * @param int                 $chunk_size Chunk size in bytes.
+	 * @return array{PartNumber:int,ETag:string}|WP_Error
+	 */
+	private function upload_multipart_part( $handle, array $sign_response, $part_number, $chunk_size ) {
 		$url = $this->extract_signed_url( $sign_response, $part_number );
 		if ( is_wp_error( $url ) ) {
 			return $url;

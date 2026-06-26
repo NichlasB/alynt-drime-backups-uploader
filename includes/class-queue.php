@@ -44,13 +44,14 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	 */
 	public function prepend( array $item, array $uploaded = array() ) {
 		$queue = $this->all();
+		$index = $this->duplicate_index( $queue );
 
 		if ( empty( $item['signature'] ) ) {
 			return false;
 		}
 
 		$signature = (string) $item['signature'];
-		if ( isset( $uploaded[ $signature ] ) || isset( $queue[ $signature ] ) || $this->has_duplicate_item( $queue, $item ) ) {
+		if ( isset( $uploaded[ $signature ] ) || isset( $queue[ $signature ] ) || $this->has_indexed_duplicate_item( $index, $item ) ) {
 			return false;
 		}
 
@@ -72,10 +73,11 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	 */
 	public function add_many( array $items, array $uploaded = array() ) {
 		$queue = $this->all();
+		$index = $this->duplicate_index( $queue );
 		$added = 0;
 
 		foreach ( $items as $item ) {
-			if ( ! $this->queue_item( $queue, $uploaded, $item ) ) {
+			if ( ! $this->queue_item( $queue, $index, $uploaded, $item ) ) {
 				continue;
 			}
 
@@ -93,13 +95,14 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	 * Adds one item to an in-memory queue if it is eligible.
 	 *
 	 * @param array<string,array<string,mixed>> $queue Queue.
+	 * @param array<string,array<string,bool>>  $index Duplicate index.
 	 * @param array<string,array<string,mixed>> $uploaded Uploaded records keyed by signature.
 	 * @param array<string,mixed>               $item Item.
 	 * @return bool
 	 *
 	 * @since 0.1.0
 	 */
-	private function queue_item( array &$queue, array $uploaded, array $item ) {
+	private function queue_item( array &$queue, array &$index, array $uploaded, array $item ) {
 		if ( empty( $item['signature'] ) ) {
 			return false;
 		}
@@ -109,13 +112,14 @@ class Alynt_Drime_Backups_Uploader_Queue {
 			return false;
 		}
 
-		if ( $this->has_duplicate_item( $queue, $item ) ) {
+		if ( $this->has_indexed_duplicate_item( $index, $item ) ) {
 			return false;
 		}
 
 		$item['queued_at']   = time();
 		$item['attempts']    = isset( $item['attempts'] ) ? absint( $item['attempts'] ) : 0;
 		$queue[ $signature ] = $item;
+		$this->index_duplicate_item( $index, $item );
 
 		return true;
 	}
@@ -226,54 +230,82 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	}
 
 	/**
-	 * Checks for duplicate queue entries beyond the signature key.
+	 * Builds duplicate lookup maps for queued paths and producer-specific files.
 	 *
 	 * @param array<string,array<string,mixed>> $queue Queue.
-	 * @param array<string,mixed>               $item Item.
-	 * @return bool
+	 * @return array<string,array<string,bool>>
 	 */
-	private function has_duplicate_item( array $queue, array $item ) {
+	private function duplicate_index( array $queue ) {
+		$index = array(
+			'paths'   => array(),
+			'wpvivid' => array(),
+		);
+
 		foreach ( $queue as $existing ) {
 			if ( ! is_array( $existing ) ) {
 				continue;
 			}
 
-			if ( $this->same_local_path( $existing, $item ) || $this->same_wpvivid_file( $existing, $item ) ) {
-				return true;
-			}
+			$this->index_duplicate_item( $index, $existing );
 		}
 
-		return false;
+		return $index;
 	}
 
 	/**
-	 * Checks whether two queue items point at the same local path.
+	 * Adds one queue item to duplicate lookup maps.
 	 *
-	 * @param array<string,mixed> $left Left item.
-	 * @param array<string,mixed> $right Right item.
-	 * @return bool
+	 * @param array<string,array<string,bool>> $index Duplicate index.
+	 * @param array<string,mixed>              $item Item.
+	 * @return void
 	 */
-	private function same_local_path( array $left, array $right ) {
-		$left_path  = isset( $left['path'] ) ? wp_normalize_path( (string) $left['path'] ) : '';
-		$right_path = isset( $right['path'] ) ? wp_normalize_path( (string) $right['path'] ) : '';
+	private function index_duplicate_item( array &$index, array $item ) {
+		$path = $this->local_path_key( $item );
+		if ( '' !== $path ) {
+			$index['paths'][ $path ] = true;
+		}
 
-		return '' !== $left_path && $left_path === $right_path;
+		$wpvivid = $this->wpvivid_file_key( $item );
+		if ( '' !== $wpvivid ) {
+			$index['wpvivid'][ $wpvivid ] = true;
+		}
 	}
 
 	/**
-	 * Checks whether two queue items represent the same WPvivid backup file.
+	 * Checks for duplicate queue entries beyond the signature key.
 	 *
-	 * @param array<string,mixed> $left Left item.
-	 * @param array<string,mixed> $right Right item.
+	 * @param array<string,array<string,bool>> $index Duplicate index.
+	 * @param array<string,mixed>              $item Item.
 	 * @return bool
 	 */
-	private function same_wpvivid_file( array $left, array $right ) {
-		$left_id    = $this->wpvivid_backup_id( $left );
-		$right_id   = $this->wpvivid_backup_id( $right );
-		$left_name  = isset( $left['name'] ) ? (string) $left['name'] : '';
-		$right_name = isset( $right['name'] ) ? (string) $right['name'] : '';
+	private function has_indexed_duplicate_item( array $index, array $item ) {
+		$path    = $this->local_path_key( $item );
+		$wpvivid = $this->wpvivid_file_key( $item );
 
-		return '' !== $left_id && $left_id === $right_id && '' !== $left_name && $left_name === $right_name;
+		return ( '' !== $path && isset( $index['paths'][ $path ] ) ) || ( '' !== $wpvivid && isset( $index['wpvivid'][ $wpvivid ] ) );
+	}
+
+	/**
+	 * Returns a normalized local path lookup key.
+	 *
+	 * @param array<string,mixed> $item Item.
+	 * @return string
+	 */
+	private function local_path_key( array $item ) {
+		return isset( $item['path'] ) ? wp_normalize_path( (string) $item['path'] ) : '';
+	}
+
+	/**
+	 * Returns a WPvivid backup file lookup key.
+	 *
+	 * @param array<string,mixed> $item Item.
+	 * @return string
+	 */
+	private function wpvivid_file_key( array $item ) {
+		$id   = $this->wpvivid_backup_id( $item );
+		$name = isset( $item['name'] ) ? (string) $item['name'] : '';
+
+		return '' !== $id && '' !== $name ? $id . '|' . $name : '';
 	}
 
 	/**

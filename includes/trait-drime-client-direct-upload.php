@@ -99,7 +99,8 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 		$raw   = curl_exec( $ch );
 		$code  = (int) curl_getinfo( $ch, CURLINFO_RESPONSE_CODE );
 		$error = curl_error( $ch );
-		unset( $ch );
+		// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated -- Supported PHP 7.4 runtimes still benefit from explicit cURL handle cleanup.
+		curl_close( $ch );
 
 		if ( false === $raw ) {
 			$this->diagnostic(

@@ -198,16 +198,14 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 		$previous     = isset( $snapshots[ $snapshot_key ] ) && is_array( $snapshots[ $snapshot_key ] ) ? $snapshots[ $snapshot_key ] : array();
 		$stable       = isset( $previous['size'] ) && (int) $previous['size'] === (int) $size && ( $now - (int) $mtime ) >= $minimum_age;
 
-		return $this->normalize_package(
-			array(
-				'snapshot_key' => $snapshot_key,
-				'signature'    => $this->package_signature( $file, $size, $mtime ),
-				'path'         => $file,
-				'name'         => basename( $file ),
-				'size'         => $size,
-				'mtime'        => $mtime,
-				'stable'       => $stable,
-			)
+		return array(
+			'snapshot_key' => $snapshot_key,
+			'signature'    => $this->package_signature( $file, $size, $mtime ),
+			'path'         => $file,
+			'name'         => basename( $file ),
+			'size'         => $size,
+			'mtime'        => $mtime,
+			'stable'       => $stable,
 		);
 	}
 
@@ -262,6 +260,7 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 				continue;
 			}
 
+			$info = $this->normalize_package( $info );
 			unset( $info['stable'], $info['snapshot_key'] );
 			$candidates[] = $info;
 		}

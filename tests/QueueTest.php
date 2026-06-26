@@ -138,6 +138,54 @@ class QueueTest extends TestCase {
 		$this->assertSame( 1, $updates );
 	}
 
+	public function test_add_many_rejects_duplicate_local_path_in_same_batch() {
+		$options = null;
+		$queue   = $this->queue_with_options( $options );
+
+		$added = $queue->add_many(
+			array(
+				array(
+					'signature' => 'one',
+					'path'      => 'C:\\backups\\one.zip',
+					'name'      => 'one.zip',
+				),
+				array(
+					'signature' => 'two',
+					'path'      => 'C:/backups/one.zip',
+					'name'      => 'one-copy.zip',
+				),
+			)
+		);
+
+		$this->assertSame( 1, $added );
+		$this->assertSame( array( 'one' ), array_keys( $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] ) );
+	}
+
+	public function test_add_many_rejects_duplicate_wpvivid_file_in_same_batch() {
+		$options = null;
+		$queue   = $this->queue_with_options( $options );
+
+		$added = $queue->add_many(
+			array(
+				array(
+					'signature' => 'one',
+					'path'      => 'C:/backups/db-one.zip',
+					'name'      => 'wpvivid-abc_backup_db.zip',
+					'wpvivid'   => array( 'backup_id' => 'abc' ),
+				),
+				array(
+					'signature' => 'two',
+					'path'      => 'C:/other/db-one.zip',
+					'name'      => 'wpvivid-abc_backup_db.zip',
+					'wpvivid'   => array( 'backup_id' => 'abc' ),
+				),
+			)
+		);
+
+		$this->assertSame( 1, $added );
+		$this->assertSame( array( 'one' ), array_keys( $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] ) );
+	}
+
 	public function test_add_many_preserves_producer_neutral_package_context() {
 		$options = null;
 		$queue   = $this->queue_with_options( $options );

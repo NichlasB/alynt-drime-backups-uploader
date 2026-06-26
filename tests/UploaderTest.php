@@ -56,6 +56,7 @@ class UploaderTest extends TestCase {
 
 		$this->assertFalse( is_wp_error( $result ) );
 		$this->assertSame( 1, $client->create_multipart_calls );
+		$this->assertSame( array( array( 1, 2 ) ), $client->signed_part_number_batches );
 		$this->assertSame( array( 1, 2 ), $client->uploaded_part_numbers );
 		$this->assertSame( array(), $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
 		$this->assertArrayNotHasKey( Alynt_Drime_Backups_Uploader_Queue::ACTIVE_OPTION, $options );
@@ -698,6 +699,7 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	public $connection_result      = true;
 	public $validate_calls         = 0;
 	public $sign_response          = array();
+	public $signed_part_number_batches = array();
 	public $abort_result           = array( 'status' => 'success' );
 	public $children               = array();
 	public $created_folders        = array();
@@ -759,17 +761,21 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 
 	public function sign_part_urls( $key, $upload_id, array $part_numbers ) {
 		unset( $key, $upload_id );
+		$this->signed_part_number_batches[] = $part_numbers;
 		if ( ! empty( $this->sign_response ) ) {
 			return $this->sign_response;
 		}
 
+		$urls = array();
+		foreach ( $part_numbers as $part_number ) {
+			$urls[] = array(
+				'partNumber' => $part_number,
+				'url'        => 'https://example.test/upload/' . $part_number,
+			);
+		}
+
 		return array(
-			'urls' => array(
-				array(
-					'partNumber' => reset( $part_numbers ),
-					'url'        => 'https://example.test/upload',
-				),
-			),
+			'urls' => $urls,
 		);
 	}
 

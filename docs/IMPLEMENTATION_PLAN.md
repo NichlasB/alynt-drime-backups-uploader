@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-06-22
+Updated: 2026-06-26
 
 ## Current State
 
@@ -13,7 +13,7 @@ Updated: 2026-06-22
 - Pre-release Error Handling Review workflow is complete. Settings saves now verify persisted state, scan failures surface as explicit admin notices, diagnostics export has a JSON fallback, direct uploads use bounded cURL timeouts, and admin-post buttons show loading labels.
 - Pre-release WP Best Practices Review workflow is complete. The plugin loader now checks minimum WordPress/PHP requirements before loading runtime files that use modern PHP syntax.
 - Pre-release Database Review workflow is complete. The plugin has no custom tables or raw SQL; option-backed queue and registry writes now verify persisted state and return explicit failures when WordPress option storage does not update.
-- Pre-release Performance Review workflow is complete. Scan queuing now batches uploaded-registry reads and queue writes, and cron clearing skips unscheduled hooks to avoid unnecessary idle-request work.
+- Pre-release Performance Review workflow is complete. Scan queuing batches uploaded-registry reads and queue writes, cron clearing skips unscheduled hooks, multipart uploads batch-sign missing part URLs, queue duplicate checks use in-memory lookup indexes, generic outbox sidecars are read only after a file is stable, and direct upload cURL handles are explicitly closed.
 - Pre-release Edge Cases Review workflow is complete. Upload workers now use a short option-backed lock, clear-active reports abort/state failures honestly, and the delete-local-after-upload setting now performs post-upload local cleanup.
 - Pre-release Uninstall Review workflow is complete. Uninstall cleanup now includes the upload worker lock option and removes plugin-owned per-site options and cron hooks across multisite installs.
 - Pre-release I18N Review workflow is complete. Text-domain loading now runs early on `plugins_loaded`, all visible diagnostics severity labels and the relative-path placeholder are translatable, and a POT template was generated with WP-CLI.
