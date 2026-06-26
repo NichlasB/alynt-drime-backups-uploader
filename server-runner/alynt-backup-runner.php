@@ -52,6 +52,8 @@ class Alynt_Server_Backup_Runner {
 				return $this->verify_command( $options );
 			case 'inspect':
 				return $this->inspect_command( $options );
+			case 'fetch':
+				return $this->fetch_command( $options );
 			case 'stage-restore':
 				return $this->stage_restore_command( $options );
 			default:
@@ -258,6 +260,91 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Fetches a package and sidecars from Drime into a local directory.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function fetch_command( array $options ) {
+		$package_id    = isset( $options['package-id'] ) ? trim( (string) $options['package-id'] ) : '';
+		$download_path = isset( $options['download-path'] ) ? $this->normalize_path( (string) $options['download-path'] ) : '';
+		$folder_hash   = isset( $options['folder-hash'] ) ? trim( (string) $options['folder-hash'] ) : '';
+		$workspace_id  = isset( $options['workspace-id'] ) ? max( 0, (int) $options['workspace-id'] ) : 0;
+		$token_env     = isset( $options['token-env'] ) ? trim( (string) $options['token-env'] ) : 'ALYNT_DRIME_TOKEN';
+		$overwrite     = ! empty( $options['overwrite'] ) && '0' !== (string) $options['overwrite'];
+
+		if ( '' === $package_id ) {
+			$this->error( 'Missing --package-id=example-com-YYYYmmdd-HHMMSS.' );
+			return 1;
+		}
+
+		if ( '' === $folder_hash ) {
+			$this->error( 'Missing --folder-hash=DRIME_FOLDER_HASH.' );
+			return 1;
+		}
+
+		if ( '' === $download_path ) {
+			$this->error( 'Missing --download-path=/private/restore/downloads.' );
+			return 1;
+		}
+
+		if ( ! $this->ensure_directory( $download_path ) || ! is_writable( $download_path ) ) {
+			$this->error( 'Download path is not writable.' );
+			return 1;
+		}
+
+		if ( ! function_exists( 'curl_init' ) ) {
+			$this->error( 'The PHP cURL extension is required for Drime fetch.' );
+			return 1;
+		}
+
+		$token = getenv( $token_env );
+		if ( ! is_string( $token ) || '' === trim( $token ) ) {
+			$this->error( 'Missing Drime bearer token environment variable: ' . $token_env );
+			return 1;
+		}
+
+		$names = $this->fetch_package_names( $package_id );
+		if ( empty( $names ) ) {
+			return 1;
+		}
+
+		$entries = $this->list_drime_entries( $workspace_id, $folder_hash, $package_id, trim( $token ) );
+		if ( empty( $entries ) ) {
+			return 1;
+		}
+
+		foreach ( $names as $name ) {
+			$entry = $this->find_drime_entry_by_name( $entries, $name );
+			if ( empty( $entry['hash'] ) ) {
+				$this->error( 'Required remote package file was not found: ' . $name );
+				return 1;
+			}
+
+			$destination = $download_path . DIRECTORY_SEPARATOR . $name;
+			if ( file_exists( $destination ) && ! $overwrite ) {
+				$this->error( 'Local file already exists; refusing to overwrite: ' . $destination );
+				return 1;
+			}
+
+			if ( ! $this->download_drime_entry( (string) $entry['hash'], $destination, trim( $token ) ) ) {
+				return 1;
+			}
+
+			$this->line( 'Fetched: ' . $name );
+		}
+
+		$package = $download_path . DIRECTORY_SEPARATOR . $names[0];
+		if ( ! $this->verify_package( $package ) ) {
+			return 1;
+		}
+
+		$this->line( 'Fetched package verified: ' . $package );
+
+		return 0;
+	}
+
+	/**
 	 * Extracts a verified package into a non-destructive restore staging directory.
 	 *
 	 * @param array<string,mixed> $options Options.
@@ -429,6 +516,226 @@ class Alynt_Server_Backup_Runner {
 		pclose( $handle );
 
 		return $entries;
+	}
+
+	/**
+	 * Builds required package filenames for fetch.
+	 *
+	 * @param string $package_id Package ID.
+	 * @return array<int,string>
+	 */
+	private function fetch_package_names( $package_id ) {
+		$slug = $this->safe_slug( $package_id );
+		if ( $slug !== $package_id ) {
+			$this->error( 'Package ID contains unsupported characters.' );
+			return array();
+		}
+
+		$archive = $package_id . '.' . $this->archive_format();
+
+		return array(
+			$archive,
+			$archive . '.manifest.json',
+			$archive . '.sha256',
+		);
+	}
+
+	/**
+	 * Lists candidate Drime entries for a package.
+	 *
+	 * @param int    $workspace_id Workspace ID.
+	 * @param string $folder_hash Folder hash.
+	 * @param string $query Query.
+	 * @param string $token Bearer token.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function list_drime_entries( $workspace_id, $folder_hash, $query, $token ) {
+		$args = array(
+			'workspaceId' => max( 0, (int) $workspace_id ),
+			'folderId'    => $folder_hash,
+			'query'       => $query,
+			'perPage'     => 100,
+			'page'        => 1,
+		);
+
+		$url      = $this->drime_api_url( '/drive/file-entries?' . http_build_query( $args, '', '&', PHP_QUERY_RFC3986 ) );
+		$response = $this->drime_json_request( $url, $token );
+		if ( ! is_array( $response ) ) {
+			return array();
+		}
+
+		if ( empty( $response['data'] ) || ! is_array( $response['data'] ) ) {
+			$this->error( 'No matching remote package files were found.' );
+			return array();
+		}
+
+		return $response['data'];
+	}
+
+	/**
+	 * Finds a Drime entry by exact filename.
+	 *
+	 * @param array<int,array<string,mixed>> $entries Entries.
+	 * @param string                         $name Name.
+	 * @return array<string,mixed>
+	 */
+	private function find_drime_entry_by_name( array $entries, $name ) {
+		foreach ( $entries as $entry ) {
+			if ( ! is_array( $entry ) || empty( $entry['name'] ) || (string) $entry['name'] !== $name ) {
+				continue;
+			}
+
+			if ( empty( $entry['hash'] ) || ! is_scalar( $entry['hash'] ) ) {
+				continue;
+			}
+
+			return $entry;
+		}
+
+		return array();
+	}
+
+	/**
+	 * Downloads one Drime file entry to a local path.
+	 *
+	 * @param string $hash Entry hash.
+	 * @param string $destination Destination.
+	 * @param string $token Bearer token.
+	 * @return bool
+	 */
+	private function download_drime_entry( $hash, $destination, $token ) {
+		$temp_path = $destination . '.tmp';
+		if ( file_exists( $temp_path ) && ! unlink( $temp_path ) ) {
+			$this->error( 'Could not remove stale temporary download file.' );
+			return false;
+		}
+
+		$handle = fopen( $temp_path, 'wb' );
+		if ( false === $handle ) {
+			$this->error( 'Could not create temporary download file.' );
+			return false;
+		}
+
+		$curl = curl_init( $this->drime_api_url( '/file-entries/download/' . rawurlencode( $hash ) ) );
+		if ( false === $curl ) {
+			fclose( $handle );
+			unlink( $temp_path );
+			$this->error( 'Could not initialize Drime download request.' );
+			return false;
+		}
+
+		curl_setopt( $curl, CURLOPT_HTTPHEADER, array( 'Authorization: Bearer ' . $token ) );
+		curl_setopt( $curl, CURLOPT_FILE, $handle );
+		curl_setopt( $curl, CURLOPT_FOLLOWLOCATION, true );
+		curl_setopt( $curl, CURLOPT_CONNECTTIMEOUT, 15 );
+		curl_setopt( $curl, CURLOPT_TIMEOUT, 0 );
+
+		$ok   = curl_exec( $curl );
+		$code = (int) curl_getinfo( $curl, CURLINFO_RESPONSE_CODE );
+		$error = curl_error( $curl );
+
+		$this->close_curl( $curl );
+		fclose( $handle );
+
+		if ( true !== $ok || $code < 200 || $code >= 300 ) {
+			$this->error( 'Drime download failed with HTTP status ' . $code . '.' );
+			if ( '' !== $error ) {
+				$this->error( $error );
+			}
+
+			unlink( $temp_path );
+			return false;
+		}
+
+		if ( ! is_file( $temp_path ) || filesize( $temp_path ) <= 0 ) {
+			$this->error( 'Downloaded file is empty.' );
+			unlink( $temp_path );
+			return false;
+		}
+
+		if ( file_exists( $destination ) && ! unlink( $destination ) ) {
+			$this->error( 'Could not replace existing destination file.' );
+			unlink( $temp_path );
+			return false;
+		}
+
+		if ( ! rename( $temp_path, $destination ) ) {
+			$this->error( 'Could not promote downloaded file into place.' );
+			unlink( $temp_path );
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Performs a Drime JSON request.
+	 *
+	 * @param string $url URL.
+	 * @param string $token Bearer token.
+	 * @return array<string,mixed>
+	 */
+	private function drime_json_request( $url, $token ) {
+		$curl = curl_init( $url );
+		if ( false === $curl ) {
+			$this->error( 'Could not initialize Drime API request.' );
+			return array();
+		}
+
+		curl_setopt( $curl, CURLOPT_HTTPHEADER, array( 'Authorization: Bearer ' . $token ) );
+		curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $curl, CURLOPT_CONNECTTIMEOUT, 15 );
+		curl_setopt( $curl, CURLOPT_TIMEOUT, 60 );
+
+		$body  = curl_exec( $curl );
+		$code  = (int) curl_getinfo( $curl, CURLINFO_RESPONSE_CODE );
+		$error = curl_error( $curl );
+
+		$this->close_curl( $curl );
+
+		if ( ! is_string( $body ) || $code < 200 || $code >= 300 ) {
+			$this->error( 'Drime API request failed with HTTP status ' . $code . '.' );
+			if ( '' !== $error ) {
+				$this->error( $error );
+			}
+
+			return array();
+		}
+
+		$decoded = json_decode( $body, true );
+		if ( ! is_array( $decoded ) ) {
+			$this->error( 'Drime API returned invalid JSON.' );
+			return array();
+		}
+
+		return $decoded;
+	}
+
+	/**
+	 * Builds a Drime API URL.
+	 *
+	 * @param string $path API path.
+	 * @return string
+	 */
+	private function drime_api_url( $path ) {
+		$base = $this->config_string( 'drime_api_base_url' );
+		if ( '' === $base ) {
+			$base = 'https://app.drime.cloud/api/v1';
+		}
+
+		return rtrim( $base, '/' ) . '/' . ltrim( $path, '/' );
+	}
+
+	/**
+	 * Closes cURL handles on PHP versions where explicit close is still needed.
+	 *
+	 * @param resource|CurlHandle $curl cURL handle.
+	 * @return void
+	 */
+	private function close_curl( $curl ) {
+		if ( PHP_VERSION_ID < 80500 ) {
+			curl_close( $curl );
+		}
 	}
 
 	/**
@@ -988,7 +1295,7 @@ class Alynt_Server_Backup_Runner {
 	 * @return void
 	 */
 	private function usage() {
-		$this->line( 'Usage: php alynt-backup-runner.php <health|run|list|verify|inspect|stage-restore> --config=/path/to/config.json [--package=/path/to/archive.tar.gz] [--restore-path=/path/to/restores]' );
+		$this->line( alynt_runner_usage() );
 	}
 }
 
@@ -1036,10 +1343,22 @@ function alynt_runner_load_config( $path ) {
 	return $config;
 }
 
+/**
+ * Returns runner CLI usage.
+ *
+ * @return string
+ */
+function alynt_runner_usage() {
+	return 'Usage: php alynt-backup-runner.php <health|run|list|verify|inspect|fetch|stage-restore> '
+		. '--config=/path/to/config.json [--package=/path/to/archive.tar.gz] '
+		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
+		. '[--restore-path=/path/to/restores]';
+}
+
 $parsed = alynt_runner_parse_args( $argv );
 
 if ( 'help' === $parsed['command'] || '--help' === $parsed['command'] ) {
-	fwrite( STDOUT, "Usage: php alynt-backup-runner.php <health|run|list|verify|inspect|stage-restore> --config=/path/to/config.json [--package=/path/to/archive.tar.gz] [--restore-path=/path/to/restores]\n" );
+	fwrite( STDOUT, alynt_runner_usage() . "\n" );
 	exit( 0 );
 }
 

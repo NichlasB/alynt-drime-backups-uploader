@@ -2,20 +2,20 @@
 
 This runbook covers the first restore workflow for Alynt Drime Backups Uploader server-runner packages.
 
-The current restore support is intentionally non-destructive. The runner can verify and stage a backup package for inspection, but it does not import the database, overwrite the live WordPress files, or fetch a package from Drime.
+The current restore support is intentionally non-destructive. The runner can fetch a known package from Drime, verify it, and stage it for inspection, but it does not import the database or overwrite live WordPress files.
 
 ## Scope
 
 Supported now:
 
 - Verify a local `.tar.gz` package and its sidecars.
+- Fetch a known Drime package and its sidecars into a local download directory.
 - Inspect package metadata and archive contents.
 - Extract a verified package into a separate restore staging directory.
 - Review restored files and `database.sql` without touching production.
 
 Not supported yet:
 
-- Downloading packages from Drime through the runner.
 - Importing `database.sql` into WordPress.
 - Replacing the live `htdocs` directory.
 - Running an automated production restore command.
@@ -60,6 +60,21 @@ For GridPane sites, the preferred restore staging path is:
 ```
 
 ## Verify A Package
+
+If the only copy is in Drime, fetch the package and sidecars first:
+
+```bash
+export ALYNT_DRIME_TOKEN='drime-bearer-token'
+
+php /path/to/alynt-backup-runner.php fetch \
+  --config=/var/www/example.com/private/alynt-drime-backups/config.json \
+  --package-id=example-com-YYYYmmdd-HHMMSS \
+  --workspace-id=0 \
+  --folder-hash=DRIME_FOLDER_HASH \
+  --download-path=/var/www/example.com/private/alynt-drime-backups/downloads
+```
+
+`fetch` requires exact remote matches for the archive, `.manifest.json`, and `.sha256` sidecar. It downloads into temporary files, refuses to overwrite existing files unless `--overwrite=1` is supplied, and verifies the package immediately after download. The Drime token must come from the environment variable named by `--token-env`, defaulting to `ALYNT_DRIME_TOKEN`.
 
 Run verification before inspecting or extracting:
 
@@ -139,10 +154,8 @@ The plugin and runner should not perform steps 6 or 7 automatically until a dest
 
 For the package integrity, extraction safety, storage-path, and encryption boundaries behind this runbook, see [PACKAGE_SECURITY.md](PACKAGE_SECURITY.md).
 
-## Drime Download Gap
+## Drime Download
 
-If the only copy is in Drime, download the package and both sidecars to the server first, then run the local verification workflow above.
+If the only copy is in Drime, prefer the CLI `fetch` command above when the package ID, workspace ID, destination folder hash, and token are available. Otherwise, download the package and both sidecars manually to the server first, then run the local verification workflow.
 
-A future `fetch` command can be added after the download source, authentication model, and overwrite policy are designed. Until then, restore verification starts from local files.
-
-See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the manual disaster discovery path, future `fetch` command contract, and remote index option.
+See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the manual disaster discovery path, CLI fetch behavior, and remote index option.

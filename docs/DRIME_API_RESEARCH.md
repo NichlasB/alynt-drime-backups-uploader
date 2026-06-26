@@ -1,6 +1,6 @@
 # Drime API Research
 
-Updated: 2026-06-22
+Updated: 2026-06-26
 
 Sources:
 
@@ -18,7 +18,8 @@ Sources:
 - https://docs.drime.cloud/api-reference/users/get-logged-user
 - https://docs.drime.cloud/api-reference/user/get-workspaces
 - https://docs.drime.cloud/api-reference/folders/get-user-folders
-- https://docs.drime.cloud/api-reference/files/list-file-entries
+- https://docs.drime.cloud/api-reference/files/get-file-entries
+- https://docs.drime.cloud/api-reference/files/download-file
 - https://docs.drime.cloud/api-reference/folders/get-folder-path
 
 ## Verified From Current Docs
@@ -55,6 +56,8 @@ Sources:
 - S3 entry body includes `filename`, `size`, `clientName`, `clientMime`, `clientExtension`, `workspaceId`, and optionally `parentId` or `relativePath`.
 - S3 entry response should include `status` and `fileEntry`.
 - Folder browsing can use `GET /cli/loggedUser`, `GET /users/{userId}/folders?workspaceId=0`, `GET /drive/file-entries?workspaceId=0&type=folder&folderId={folderHash}`, and `GET /folders/{folderHash}/path`.
+- File discovery can use `GET /drive/file-entries` with `workspaceId`, `folderId`, `query`, `perPage`, and `page` query parameters. Current docs name the docs page `get-file-entries`.
+- File download can use `GET /file-entries/download/{hash}`. The first server-runner `fetch` command downloads only exact package filename matches and verifies the fetched sidecars immediately.
 - The folder browser stores non-secret display metadata only: numeric folder ID, folder hash, and display path. It does not expose bearer tokens in JavaScript or AJAX responses.
 - The workspace picker stores only the selected numeric `workspace_id`; AJAX responses expose sanitized workspace IDs, names, member counts, and role labels, not tokens or raw account payloads.
 

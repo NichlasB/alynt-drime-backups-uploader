@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Added package-security documentation for server-runner package integrity and restore staging boundaries.
 - Added logical backup consistency documentation and server-runner manifest timing fields.
 - Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
+- Added CLI-only server-runner fetch support for known Drime packages and sidecars.
 
 ## [0.6.0] - 2026-06-22
 

@@ -19,6 +19,7 @@ php alynt-backup-runner.php run --config=/path/to/config.json
 php alynt-backup-runner.php list --config=/path/to/config.json
 php alynt-backup-runner.php verify --config=/path/to/config.json --package=/path/to/package.tar.gz
 php alynt-backup-runner.php inspect --config=/path/to/config.json --package=/path/to/package.tar.gz
+php alynt-backup-runner.php fetch --config=/path/to/config.json --package-id=package-id --workspace-id=0 --folder-hash=hash --download-path=/path/to/downloads
 php alynt-backup-runner.php stage-restore --config=/path/to/config.json --package=/path/to/package.tar.gz
 ```
 
@@ -65,7 +66,9 @@ The plugin can detect the archive and read the manifest/checksum sidecars.
 
 ## Restore Staging
 
-The first restore flow is intentionally non-destructive. `stage-restore` verifies the package and sidecars, creates a new directory under `restore_path`, extracts the archive there, and writes `RESTORE_NOTES.txt`.
+The first restore flow is intentionally non-destructive. `fetch` can download a known Drime package plus sidecars into a local download directory, and `stage-restore` verifies the package and sidecars, creates a new directory under `restore_path`, extracts the archive there, and writes `RESTORE_NOTES.txt`.
+
+`fetch` reads the Drime bearer token from `ALYNT_DRIME_TOKEN` by default, or from the environment variable named by `--token-env`. It requires exact filename matches for the archive, manifest sidecar, and checksum sidecar, refuses local overwrites unless `--overwrite=1` is provided, and verifies the package immediately after download.
 
 Before extraction, `stage-restore` lists the archive and rejects unsafe member paths, including absolute paths, parent-directory traversal, empty path segments, and archive links. This keeps restore staging focused on runner-created packages and prevents a malformed archive from writing outside the new staging directory.
 

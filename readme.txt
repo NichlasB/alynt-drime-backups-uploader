@@ -48,7 +48,7 @@ No. The server runner creates a logical WordPress backup from a WP-CLI database 
 
 = Can I restore if the original WordPress site is unavailable? =
 
-The current MVP requires manual Drime download of the archive plus matching manifest and checksum sidecars, followed by local runner verification and staging. Automated fetch and remote index support are planned separately.
+The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. It then verifies and stages locally. wp-admin restore, database import, live file overwrite, and remote index support are not included.
 
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
@@ -86,6 +86,7 @@ No public custom actions or filters are exposed.
 * Added package-security documentation for server-runner package integrity and restore staging boundaries.
 * Added logical backup consistency documentation and server-runner manifest timing fields.
 * Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
+* Added CLI-only server-runner fetch support for known Drime packages and sidecars.
 
 = 0.6.0 =
 * Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.
