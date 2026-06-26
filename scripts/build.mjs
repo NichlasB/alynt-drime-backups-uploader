@@ -3,24 +3,33 @@ import * as esbuild from 'esbuild';
 const isWatch = process.argv.includes('--watch');
 
 const buildOptions = {
-	entryPoints: [
-		'assets/src/admin/index.js',
-	],
 	bundle: true,
-	minify: !isWatch,
+	minify: false,
 	sourcemap: isWatch,
-	outdir: 'assets/dist',
 	target: ['es2020'],
 	loader: {
 		'.css': 'css',
 	},
 };
 
+const buildTargets = [
+	{
+		...buildOptions,
+		entryPoints: ['assets/src/admin/index.js'],
+		outfile: 'assets/admin.js',
+	},
+	{
+		...buildOptions,
+		entryPoints: ['assets/src/admin/workspaces.js'],
+		outfile: 'assets/admin-workspaces.js',
+	},
+];
+
 if (isWatch) {
-	const ctx = await esbuild.context(buildOptions);
-	await ctx.watch();
+	const contexts = await Promise.all(buildTargets.map((target) => esbuild.context(target)));
+	await Promise.all(contexts.map((context) => context.watch()));
 	console.log('Watching for changes...');
 } else {
-	await esbuild.build(buildOptions);
+	await Promise.all(buildTargets.map((target) => esbuild.build(target)));
 	console.log('Build complete.');
 }

@@ -7,9 +7,9 @@ Updated: 2026-06-26
 - Development repo exists at `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
 - Plugin scaffold is in place with settings, scanner, queue, registry, Drime client, uploader, cron, admin page, uninstall cleanup, README, changelog, and settings docs.
 - Diagnostics and observability workflow is complete.
-- Build tooling workflow is complete. Composer/npm dependencies are installed, PHPCS/WPCS is configured, and npm build/lint/test scripts pass.
+- Build tooling workflow is complete. Composer/npm dependencies are installed, PHPCS/WPCS is configured, npm build/lint/test scripts pass, and the build script regenerates the admin assets that WordPress actually enqueues.
 - Pre-release Code Cleanup workflow is complete. Two unused runtime methods were removed: `Alynt_Drime_Backups_Uploader_Drime_Client::create_folder()` and `Alynt_Drime_Backups_Uploader_Plugin::cron()`.
-- Pre-release File Structure Review workflow is complete. Oversized runtime classes were split into focused traits for admin rendering, Drime direct/multipart APIs, uploader multipart/active/retry helpers, scanner metadata, and plugin admin actions; current runtime method inventory has no methods over 50 lines.
+- Pre-release File Structure Review workflow is complete. Oversized runtime classes were split into focused traits for admin rendering, Drime direct/multipart APIs, uploader multipart/active/retry helpers, scanner metadata, and plugin admin actions.
 - Pre-release Error Handling Review workflow is complete. Settings saves now verify persisted state, scan failures surface as explicit admin notices, diagnostics export has a JSON fallback, direct uploads use bounded cURL timeouts, and admin-post buttons show loading labels.
 - Pre-release WP Best Practices Review workflow is complete. The plugin loader now checks minimum WordPress/PHP requirements before loading runtime files that use modern PHP syntax.
 - Pre-release Database Review workflow is complete. The plugin has no custom tables or raw SQL; option-backed queue and registry writes now verify persisted state and return explicit failures when WordPress option storage does not update.
@@ -18,7 +18,7 @@ Updated: 2026-06-26
 - Pre-release Uninstall Review workflow is complete. Uninstall cleanup includes the upload worker lock option, removes plugin-owned per-site options and cron hooks across multisite installs, and now has static regression coverage for the full uninstall inventory and the decision not to delete local backup or runner files.
 - Pre-release I18N Review workflow is complete. Text-domain loading runs early on `plugins_loaded`, visible diagnostics severity labels and placeholders are translatable, JavaScript UI copy now depends on localized strings instead of hardcoded fallbacks, countable seconds/days labels use plural forms, and the POT template was regenerated with WP-CLI.
 - Pre-release Accessibility Review workflow is complete. Admin notices expose live roles, diagnostic/data tables have screen-reader captions and scoped headers, live AJAX status regions are atomic, decorative spinners are hidden from assistive technology, disabled dynamic buttons expose `aria-disabled`, and the recent-events empty-state heading follows the page hierarchy.
-- Pre-release Code Quality Review workflow is complete. Queue and registry array-option persistence now use a shared storage trait, runtime method inventory has no methods over 50 lines, and the final lint/test/build gate passes.
+- Pre-release Code Quality Review workflow is complete. Queue and registry array-option persistence uses a shared storage trait, the build script now writes the served admin JS/CSS files instead of an ignored `assets/dist` directory, and the final lint/test/build gate passes.
 - Pre-release Documentation Review workflow is complete. Runtime PHPDoc now includes `@since 0.1.0` coverage for class/trait/public-method declarations, README/readme/changelog/settings docs are current, and `docs/HOOKS.md` documents that version `0.1.0` exposes no public custom hooks.
 - Pre-release Security Audit workflow is complete. No critical, high, medium, or low blocking issues were found; admin actions are capability/nonce-gated, outputs are escaped, diagnostics are redacted, direct database SQL is absent, dangerous-function scans found only the intentional Drime cURL upload path, and Composer/npm audits are clean.
 - Release validation/package refresh is complete for the current source. Final lint, tests, build, npm audit, Composer audit, PHP syntax sweep, distribution zip audit, LocalWP packaged install, and admin render probe passed.
@@ -686,7 +686,7 @@ Status:
 
 - `@01-CODE_CLEANUP_PROMPT.md run` through `@13-SECURITY_AUDIT_PROMPT.md run` completed on 2026-06-20 and are recorded in `PRE_RELEASE_CHECKLIST.md`.
 - Final release validation lint/test/build rows completed on 2026-06-20 and are recorded in `PRE_RELEASE_CHECKLIST.md`.
-- Current pre-release rerun on 2026-06-26 is complete through `@10-ACCESSIBILITY_REVIEW_PROMPT.md run`; record each rerun step in `PRE_RELEASE_CHECKLIST.md` after its verification gate passes.
+- Current pre-release rerun on 2026-06-26 is complete through `@11-CODE_QUALITY_REVIEW_PROMPT.md run`; record each rerun step in `PRE_RELEASE_CHECKLIST.md` after its verification gate passes.
 
 ## Acceptance Criteria For MVP
 
