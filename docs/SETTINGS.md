@@ -49,6 +49,8 @@ These options are owned by the plugin and are removed on uninstall.
 | `alynt_drime_backups_logs` | array | `array()` | `Alynt_Drime_Backups_Uploader_Logger` | Redacted diagnostics events when diagnostics are enabled. |
 | `alynt_drime_backups_upload_lock` | array | `array()` | `Alynt_Drime_Backups_Uploader_Uploader` | Short-lived upload worker lock to prevent concurrent queue processing. |
 
+Uninstall removes the plugin-owned options above and the plugin cron hooks from each site on multisite installs. It intentionally does not remove backup archives, sidecars, restore staging folders, or manually installed server-runner directories outside WordPress option storage.
+
 ## Health Payload Fields
 
 See `docs/STATUS_PAYLOAD.md` for the full redacted status payload contract and future dashboard boundary.

@@ -67,6 +67,10 @@ The settings screen controls:
 
 See [docs/SETTINGS.md](docs/SETTINGS.md) for the full option schema.
 
+## Uninstall Behavior
+
+Uninstall removes the plugin-owned WordPress options and scheduled cron hooks for each site on multisite installs. It does not delete local WPvivid backups, generic outbox packages, server-runner sidecars, restore staging folders, or manually installed runner directories; those files may be the only local backup copies and should be retained or cleaned up through an operator-approved server process.
+
 ## Producer Adapters
 
 Backup sources are implemented as producer adapters. A producer discovers completed local packages and returns normalized package records; the shared queue and Drime uploader handle the upload lifecycle.

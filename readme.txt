@@ -30,6 +30,10 @@ The plugin includes Drime destination settings with workspace selection, folder 
 
 No. Local deletion is disabled by default and must be explicitly enabled in settings.
 
+= What happens on uninstall? =
+
+Uninstall removes plugin-owned WordPress options and scheduled cron hooks. It does not delete local backup packages, sidecars, restore staging folders, or manually installed server-runner directories.
+
 = Does this permanently delete Drime files? =
 
 No. Remote retention is disabled by default, runs only from manual admin actions, and moves eligible plugin-owned Drime uploads to trash. It does not permanently delete remote files.
@@ -91,6 +95,7 @@ No public custom actions or filters are exposed.
 * Added generic-outbox sidecar uploads for server-runner manifest and checksum files.
 * Added WP-CLI scan, upload, run, status, failed-upload, diagnostics, and restore-support commands for server-driven workflows.
 * Changed server-runner archives to exclude symlink entries before restore staging.
+* Clarified uninstall scope for plugin-owned WordPress state versus operator-managed local backup files.
 
 = 0.1.0 =
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
