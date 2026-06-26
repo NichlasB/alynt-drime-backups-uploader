@@ -127,6 +127,14 @@
 	overflow-wrap: anywhere;
 }
 
+.alynt-drime-wpvivid .form-table td > textarea.alynt-drime-cron-snippet {
+	font-family: Consolas, Monaco, monospace;
+	max-width: var(--alynt-drime-panel-width);
+	min-height: 142px;
+	white-space: pre;
+	width: min(100%, var(--alynt-drime-panel-width));
+}
+
 .alynt-drime-workspace-tools {
 	margin-top: 8px;
 	max-width: var(--alynt-drime-panel-width);

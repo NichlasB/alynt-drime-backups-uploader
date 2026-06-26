@@ -158,6 +158,13 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 				</td>
 			</tr>
 			<tr>
+				<th scope="row"><label for="alynt-gridpane-cron-snippet"><?php esc_html_e( 'GridPane Cron Snippet', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<textarea id="alynt-gridpane-cron-snippet" class="large-text code alynt-drime-cron-snippet" readonly rows="6" aria-describedby="alynt-gridpane-cron-snippet-description"><?php echo esc_textarea( $this->gridpane_cron_snippet( $settings ) ); ?></textarea>
+					<p id="alynt-gridpane-cron-snippet-description" class="description"><?php esc_html_e( 'Copy this into the site user crontab after the server runner is installed and health checks pass.', 'alynt-drime-backups-uploader' ); ?></p>
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><?php esc_html_e( 'WPvivid Detected Path', 'alynt-drime-backups-uploader' ); ?></th>
 				<td><code><?php echo esc_html( $detected_path ); ?></code></td>
 			</tr>
@@ -180,6 +187,82 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Settings {
 	 */
 	private function wp_cli_command( $subcommand ) {
 		return 'wp --path=' . escapeshellarg( untrailingslashit( ABSPATH ) ) . ' alynt-drime-backups ' . $subcommand;
+	}
+
+	/**
+	 * Builds a GridPane-oriented server cron snippet.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function gridpane_cron_snippet( array $settings ) {
+		$runner_command = $this->server_runner_command( 'run', $settings );
+		$upload_command = $this->wp_cli_command_posix( 'run --max-uploads=1' );
+		$status_command = $this->wp_cli_command_posix( 'status --format=json' );
+
+		return implode(
+			"\n",
+			array(
+				'# Alynt Drime Backups: create one server-side package daily.',
+				'17 2 * * * ' . $runner_command,
+				'# Alynt Drime Backups: scan/upload completed packages every 15 minutes.',
+				'*/15 * * * * ' . $upload_command,
+				'# Alynt Drime Backups: optional status log check.',
+				'7 3 * * * ' . $status_command,
+			)
+		);
+	}
+
+	/**
+	 * Builds a server runner command.
+	 *
+	 * @param string              $command Runner command.
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_runner_command( $command, array $settings ) {
+		$runner_base = $this->runner_base_path( $settings );
+		$runner_path = $runner_base . '/runner/alynt-backup-runner.php';
+		$config_path = $runner_base . '/runner/config.json';
+		$command     = preg_replace( '/[^a-z0-9_-]+/i', '', (string) $command );
+		$command     = '' !== $command ? $command : 'health';
+
+		return 'php ' . $this->posix_shell_arg( $runner_path ) . ' ' . $command . ' --config=' . $this->posix_shell_arg( $config_path );
+	}
+
+	/**
+	 * Returns the expected server runner base path.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function runner_base_path( array $settings ) {
+		$outbox = isset( $settings['server_outbox_path'] ) ? trim( (string) $settings['server_outbox_path'] ) : '';
+		if ( '' !== $outbox ) {
+			return untrailingslashit( dirname( $outbox ) );
+		}
+
+		return untrailingslashit( dirname( untrailingslashit( ABSPATH ) ) . '/private/alynt-drime-backups' );
+	}
+
+	/**
+	 * Builds a WP-CLI command with POSIX quoting for GridPane crontabs.
+	 *
+	 * @param string $subcommand Plugin subcommand.
+	 * @return string
+	 */
+	private function wp_cli_command_posix( $subcommand ) {
+		return 'wp --path=' . $this->posix_shell_arg( untrailingslashit( ABSPATH ) ) . ' alynt-drime-backups ' . $subcommand;
+	}
+
+	/**
+	 * Quotes a string for a POSIX shell command.
+	 *
+	 * @param string $value Value.
+	 * @return string
+	 */
+	private function posix_shell_arg( $value ) {
+		return "'" . str_replace( "'", "'\\''", (string) $value ) . "'";
 	}
 
 	/**

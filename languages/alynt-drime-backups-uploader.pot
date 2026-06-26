@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-22T19:17:29+00:00\n"
+"POT-Creation-Date: 2026-06-26T00:04:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: alynt-drime-backups-uploader\n"
@@ -42,7 +42,7 @@ msgid "Alynt Drime Backups Uploader requires WordPress %1$s or higher and PHP %2
 msgstr ""
 
 #: includes/class-admin-page.php:52
-#: includes/class-admin-page.php:156
+#: includes/class-admin-page.php:157
 msgid "Drime Backups Uploader"
 msgstr ""
 
@@ -142,24 +142,24 @@ msgstr ""
 msgid "You do not have permission to manage this plugin."
 msgstr ""
 
-#: includes/class-cron-health.php:134
+#: includes/class-cron-health.php:151
 #: includes/trait-admin-page-cron-health.php:135
 msgid "Automatic scanning is disabled."
 msgstr ""
 
-#: includes/class-cron-health.php:141
+#: includes/class-cron-health.php:158
 msgid "Server cron is expected, but no WP-CLI scheduled scan has been observed yet."
 msgstr ""
 
-#: includes/class-cron-health.php:148
+#: includes/class-cron-health.php:165
 msgid "The scheduled scan is overdue; the site may need a reliable server cron trigger."
 msgstr ""
 
-#: includes/class-cron-health.php:155
+#: includes/class-cron-health.php:172
 msgid "A scheduled scan has run from WP-CLI."
 msgstr ""
 
-#: includes/class-cron-health.php:161
+#: includes/class-cron-health.php:178
 msgid "Only HTTP WP-Cron or no scheduled scan evidence has been observed."
 msgstr ""
 
@@ -203,8 +203,20 @@ msgstr ""
 msgid "Drime backup upload failed"
 msgstr ""
 
-#: includes/class-scanner.php:111
-msgid "The WPvivid backup directory is not readable."
+#: includes/class-generic-outbox-producer.php:81
+msgid "The backup outbox directory is not readable."
+msgstr ""
+
+#: includes/class-health-summary.php:123
+msgid "Server outbox path is not configured."
+msgstr ""
+
+#: includes/class-health-summary.php:128
+msgid "Server outbox path is not readable by WordPress."
+msgstr ""
+
+#: includes/class-health-summary.php:135
+msgid "Server cron attention is needed."
 msgstr ""
 
 #: includes/class-uploader.php:103
@@ -220,19 +232,19 @@ msgstr ""
 msgid "The queued backup reached the retry limit."
 msgstr ""
 
-#: includes/class-uploader.php:314
+#: includes/class-uploader.php:343
 msgid "The upload state could not be saved. Check that the WordPress database is writable, then try again."
 msgstr ""
 
-#: includes/class-uploader.php:361
+#: includes/class-uploader.php:415
 msgid "The queued backup file is no longer readable."
 msgstr ""
 
-#: includes/class-uploader.php:370
+#: includes/class-uploader.php:424
 msgid "The queued backup file is empty."
 msgstr ""
 
-#: includes/class-uploader.php:379
+#: includes/class-uploader.php:433
 msgid "A file with this name already exists in Drime, so the upload was skipped."
 msgstr ""
 
@@ -240,6 +252,10 @@ msgstr ""
 #: includes/class-workspace-browser.php:86
 #, php-format
 msgid "Workspace %d"
+msgstr ""
+
+#: includes/class-wpvivid-producer.php:141
+msgid "The WPvivid backup directory is not readable."
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:34
@@ -255,12 +271,12 @@ msgid "Current UTC Time"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:39
-#: includes/trait-admin-page-settings.php:196
+#: includes/trait-admin-page-settings.php:308
 msgid "Automatic Scanning"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:39
-#: includes/trait-admin-page-status.php:98
+#: includes/trait-admin-page-status.php:133
 msgid "Enabled"
 msgstr ""
 
@@ -290,27 +306,34 @@ msgid "Last Scan Runner"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:44
+#: includes/trait-admin-page-status.php:77
 msgid "Last WP-CLI Scan"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:45
-#: includes/trait-admin-page-settings.php:200
+#: includes/trait-admin-page-settings.php:312
 msgid "Server Cron Expected"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:45
 #: includes/trait-admin-page-cron-health.php:46
-#: includes/trait-admin-page-status.php:98
-#: includes/trait-admin-page-status.php:146
-#: includes/trait-admin-page-status.php:149
+#: includes/trait-admin-page-status.php:71
+#: includes/trait-admin-page-status.php:72
+#: includes/trait-admin-page-status.php:73
+#: includes/trait-admin-page-status.php:133
+#: includes/trait-admin-page-status.php:181
+#: includes/trait-admin-page-status.php:184
 msgid "Yes"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:45
 #: includes/trait-admin-page-cron-health.php:46
-#: includes/trait-admin-page-status.php:98
-#: includes/trait-admin-page-status.php:146
-#: includes/trait-admin-page-status.php:149
+#: includes/trait-admin-page-status.php:71
+#: includes/trait-admin-page-status.php:72
+#: includes/trait-admin-page-status.php:73
+#: includes/trait-admin-page-status.php:133
+#: includes/trait-admin-page-status.php:181
+#: includes/trait-admin-page-status.php:184
 msgid "No"
 msgstr ""
 
@@ -323,7 +346,7 @@ msgid "Server Cron Health"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:48
-#: includes/trait-admin-page-settings.php:207
+#: includes/trait-admin-page-settings.php:319
 msgid "Minimum File Age"
 msgstr ""
 
@@ -394,8 +417,8 @@ msgid "Failed upload details"
 msgstr ""
 
 #: includes/trait-admin-page-failed-uploads.php:36
-#: includes/trait-admin-page-status.php:73
-#: includes/trait-admin-page-status.php:109
+#: includes/trait-admin-page-status.php:108
+#: includes/trait-admin-page-status.php:144
 msgid "File"
 msgstr ""
 
@@ -586,174 +609,198 @@ msgid "Optional subpath under the selected base folder. Missing folders are crea
 msgstr ""
 
 #: includes/trait-admin-page-settings.php:139
-msgid "WPvivid Source"
+msgid "Backup Sources"
 msgstr ""
 
 #: includes/trait-admin-page-settings.php:142
-msgid "Detected Backup Path"
+msgid "Server Outbox Path"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:146
-msgid "Backup Path Override"
+#: includes/trait-admin-page-settings.php:145
+msgid "Directory where the server backup runner writes completed backup packages."
 msgstr ""
 
 #: includes/trait-admin-page-settings.php:149
-msgid "Optional. Use only if WPvivid stores local backups outside the detected path."
+msgid "WP-CLI Runner Command"
+msgstr ""
+
+#: includes/trait-admin-page-settings.php:155
+msgid "WP-CLI Status Command"
+msgstr ""
+
+#: includes/trait-admin-page-settings.php:161
+msgid "GridPane Cron Snippet"
 msgstr ""
 
 #: includes/trait-admin-page-settings.php:164
+msgid "Copy this into the site user crontab after the server runner is installed and health checks pass."
+msgstr ""
+
+#: includes/trait-admin-page-settings.php:168
+msgid "WPvivid Detected Path"
+msgstr ""
+
+#: includes/trait-admin-page-settings.php:172
+msgid "WPvivid Path Override"
+msgstr ""
+
+#: includes/trait-admin-page-settings.php:175
+msgid "Optional. Use only if WPvivid stores local backups outside the detected path."
+msgstr ""
+
+#: includes/trait-admin-page-settings.php:276
 msgid "Behavior"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:186
+#: includes/trait-admin-page-settings.php:298
 msgid "Duplicate Handling"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:189
+#: includes/trait-admin-page-settings.php:301
 msgid "Skip existing files"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:190
+#: includes/trait-admin-page-settings.php:302
 msgid "Rename new uploads"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:192
+#: includes/trait-admin-page-settings.php:304
 msgid "Choose whether existing Drime filenames are skipped or renamed during upload."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:197
+#: includes/trait-admin-page-settings.php:309
 msgid "Scan with WP-Cron every 15 minutes."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:202
+#: includes/trait-admin-page-settings.php:314
 msgid "Remind me if scheduled scans have not been observed from WP-CLI."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:203
+#: includes/trait-admin-page-settings.php:315
 msgid "Use this when the site should be driven by a server cron job instead of visitor traffic. The plugin records runtime evidence; it does not read server cron files."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:210
+#: includes/trait-admin-page-settings.php:322
 msgid "Enter the minimum age in seconds. Files must also keep the same size across scans before they are queued."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:214
+#: includes/trait-admin-page-settings.php:326
 msgid "Multipart Chunk Size"
 msgstr ""
 
 #. translators: %d: recommended multipart chunk size in MB.
-#: includes/trait-admin-page-settings.php:221
+#: includes/trait-admin-page-settings.php:333
 #, php-format
 msgid "Set the size of each Drime multipart upload part. %d MB is recommended for large backups."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:229
+#: includes/trait-admin-page-settings.php:341
 msgid "Delete Local Files"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:231
+#: includes/trait-admin-page-settings.php:343
 msgid "Delete local backup files after confirmed Drime upload."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:232
+#: includes/trait-admin-page-settings.php:344
 msgid "For production, enable this only after Drime uploads and restore procedures are verified and your local retention policy allows removing WPvivid files."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:236
-#: includes/trait-admin-page-status.php:94
+#: includes/trait-admin-page-settings.php:348
+#: includes/trait-admin-page-status.php:129
 msgid "Remote Retention"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:238
+#: includes/trait-admin-page-settings.php:350
 msgid "Allow manual cleanup of old Drime files uploaded by this plugin."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:239
+#: includes/trait-admin-page-settings.php:351
 msgid "Cleanup moves eligible Drime files to trash only. It does not permanently delete remote files or delete local backup files."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:243
+#: includes/trait-admin-page-settings.php:355
 msgid "Remote Retention Age"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:246
+#: includes/trait-admin-page-settings.php:358
 msgid "Uploaded registry records older than this many days become eligible for manual Drime trash cleanup."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:250
+#: includes/trait-admin-page-settings.php:362
 msgid "Maximum Retries"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:253
+#: includes/trait-admin-page-settings.php:365
 msgid "Set the number of failed upload attempts before a queued file is removed."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:268
+#: includes/trait-admin-page-settings.php:380
 msgid "Failure Emails"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:270
+#: includes/trait-admin-page-settings.php:382
 msgid "Email administrators when an upload reaches a final failure state."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:271
+#: includes/trait-admin-page-settings.php:383
 msgid "Emails are plain text and use the site WordPress mail stack."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:275
+#: includes/trait-admin-page-settings.php:387
 msgid "Failure Email Recipients"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:278
+#: includes/trait-admin-page-settings.php:390
 msgid "Enter one email per line or separate multiple addresses with commas."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:292
+#: includes/trait-admin-page-settings.php:404
 msgid "Debug"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:293
+#: includes/trait-admin-page-settings.php:405
 msgid "Info"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:294
+#: includes/trait-admin-page-settings.php:406
 msgid "Warning"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:295
+#: includes/trait-admin-page-settings.php:407
 msgid "Error"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:296
+#: includes/trait-admin-page-settings.php:408
 msgid "Critical"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:301
-#: includes/trait-admin-page-status.php:135
+#: includes/trait-admin-page-settings.php:413
+#: includes/trait-admin-page-status.php:170
 msgid "Diagnostics"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:303
+#: includes/trait-admin-page-settings.php:415
 msgid "Store redacted diagnostic events."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:304
+#: includes/trait-admin-page-settings.php:416
 msgid "Events are stored locally and exclude tokens, request bodies, and signed URLs."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:308
+#: includes/trait-admin-page-settings.php:420
 msgid "Diagnostics Level"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:315
+#: includes/trait-admin-page-settings.php:427
 msgid "Only events at this severity or higher are stored."
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:319
+#: includes/trait-admin-page-settings.php:431
 msgid "Diagnostics Retention"
 msgstr ""
 
-#: includes/trait-admin-page-settings.php:322
+#: includes/trait-admin-page-settings.php:434
 msgid "Maximum local diagnostic events to retain."
 msgstr ""
 
@@ -801,164 +848,201 @@ msgstr ""
 msgid "Uploaded"
 msgstr ""
 
+#: includes/trait-admin-page-status.php:65
+msgid "Server Runner Status"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:67
+msgid "Server runner and uploader health summary"
+msgstr ""
+
 #: includes/trait-admin-page-status.php:69
-msgid "Active Upload"
+msgid "Health Schema"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:70
+msgid "Site UUID"
 msgstr ""
 
 #: includes/trait-admin-page-status.php:71
-msgid "Active upload details"
+msgid "Server Outbox Configured"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:72
+msgid "Server Outbox Readable"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:73
+#: includes/trait-admin-page-status.php:104
+msgid "Active Upload"
 msgstr ""
 
 #: includes/trait-admin-page-status.php:74
-msgid "Completed Parts"
+msgid "Server Cron Status"
 msgstr ""
 
 #: includes/trait-admin-page-status.php:75
-msgid "Total Parts"
+msgid "Server Cron Reason"
 msgstr ""
 
 #: includes/trait-admin-page-status.php:76
-msgid "Updated"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:80
-msgid "Clear Active Upload"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:80
-msgid "Clear active upload state? The current multipart upload may need to restart."
-msgstr ""
-
-#: includes/trait-admin-page-status.php:96
-msgid "Remote retention summary"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:99
-msgid "Retention Age"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:99
-#: includes/trait-admin-page-status.php:117
-msgid "days"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:100
-msgid "Eligible Files"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:101
-msgid "Cleanup Mode"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:101
-msgid "Move to Drime trash only"
+msgid "Warnings"
 msgstr ""
 
 #: includes/trait-admin-page-status.php:106
-msgid "Remote retention candidates"
+msgid "Active upload details"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:109
+msgid "Completed Parts"
 msgstr ""
 
 #: includes/trait-admin-page-status.php:110
-msgid "Age"
+msgid "Total Parts"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:137
-msgid "Export Diagnostics"
+#: includes/trait-admin-page-status.php:111
+msgid "Updated"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:138
-msgid "Clear Diagnostics"
+#: includes/trait-admin-page-status.php:115
+msgid "Clear Active Upload"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:115
+msgid "Clear active upload state? The current multipart upload may need to restart."
+msgstr ""
+
+#: includes/trait-admin-page-status.php:131
+msgid "Remote retention summary"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:134
+msgid "Retention Age"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:134
+#: includes/trait-admin-page-status.php:152
+msgid "days"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:135
+msgid "Eligible Files"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:136
+msgid "Cleanup Mode"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:136
+msgid "Move to Drime trash only"
 msgstr ""
 
 #: includes/trait-admin-page-status.php:141
-msgid "Diagnostics health summary"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:143
-msgid "Plugin Version"
-msgstr ""
-
-#: includes/trait-admin-page-status.php:144
-msgid "WordPress Version"
+msgid "Remote retention candidates"
 msgstr ""
 
 #: includes/trait-admin-page-status.php:145
+msgid "Age"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:172
+msgid "Export Diagnostics"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:173
+msgid "Clear Diagnostics"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:176
+msgid "Diagnostics health summary"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:178
+msgid "Plugin Version"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:179
+msgid "WordPress Version"
+msgstr ""
+
+#: includes/trait-admin-page-status.php:180
 msgid "PHP Version"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:146
+#: includes/trait-admin-page-status.php:181
 msgid "Diagnostics Enabled"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:147
+#: includes/trait-admin-page-status.php:182
 msgid "Stored Events"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:148
+#: includes/trait-admin-page-status.php:183
 msgid "Last Event"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:148
+#: includes/trait-admin-page-status.php:183
 msgid "None"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:149
+#: includes/trait-admin-page-status.php:184
 msgid "Scan Cron Scheduled"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:163
+#: includes/trait-admin-page-status.php:198
 msgid "Recent Events"
 msgstr ""
 
 #. translators: %s: Current UTC time.
-#: includes/trait-admin-page-status.php:167
+#: includes/trait-admin-page-status.php:202
 #, php-format
 msgid "Current UTC time: %s"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:189
+#: includes/trait-admin-page-status.php:224
 msgid "No events yet"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:190
+#: includes/trait-admin-page-status.php:225
 msgid "Scans, uploads, and connection checks will appear here."
 msgstr ""
 
-#: includes/trait-admin-page-status.php:204
+#: includes/trait-admin-page-status.php:239
 msgid "Recent diagnostic events"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:207
+#: includes/trait-admin-page-status.php:242
 msgid "#"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:208
+#: includes/trait-admin-page-status.php:243
 msgid "Time"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:209
+#: includes/trait-admin-page-status.php:244
 msgid "Level"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:210
+#: includes/trait-admin-page-status.php:245
 msgid "Category"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:211
+#: includes/trait-admin-page-status.php:246
 msgid "Code"
 msgstr ""
 
-#: includes/trait-admin-page-status.php:212
+#: includes/trait-admin-page-status.php:247
 msgid "Message"
 msgstr ""
 
 #. translators: %s: Button label.
-#: includes/trait-admin-page-status.php:242
+#: includes/trait-admin-page-status.php:277
 #, php-format
 msgid "%s..."
 msgstr ""
 
-#: includes/trait-admin-page-status.php:253
+#: includes/trait-admin-page-status.php:288
 msgid "Clear all diagnostics events? This cannot be undone."
 msgstr ""
 
