@@ -1022,7 +1022,47 @@ class Alynt_Server_Backup_Runner {
 			$patterns[] = '*/' . $normalized;
 		}
 
+		foreach ( $this->symlink_exclude_patterns( $wp_base ) as $pattern ) {
+			$patterns[] = $pattern;
+		}
+
 		return array_values( array_unique( $patterns ) );
+	}
+
+	/**
+	 * Returns tar exclude patterns for symlinks inside the WordPress path.
+	 *
+	 * @param string $wp_base WordPress base directory name in the archive.
+	 * @return array<int,string>
+	 */
+	private function symlink_exclude_patterns( $wp_base ) {
+		$wp_path = $this->wordpress_path();
+		if ( '' === $wp_path || ! is_dir( $wp_path ) ) {
+			return array();
+		}
+
+		$patterns = array();
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $wp_path, FilesystemIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::SELF_FIRST
+		);
+
+		foreach ( $iterator as $item ) {
+			if ( ! $item->isLink() ) {
+				continue;
+			}
+
+			$relative = ltrim( str_replace( '\\', '/', substr( $item->getPathname(), strlen( $wp_path ) ) ), '/' );
+			if ( '' === $relative ) {
+				continue;
+			}
+
+			$patterns[] = $relative;
+			$patterns[] = $wp_base . '/' . $relative;
+			$patterns[] = '*/' . $relative;
+		}
+
+		return $patterns;
 	}
 
 	/**

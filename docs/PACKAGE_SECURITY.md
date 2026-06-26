@@ -39,6 +39,8 @@ The server runner writes archives in a work directory first, then renames comple
 
 The generic outbox producer ignores temporary and partial files, then waits until a discovered archive is old enough and stable before queueing it.
 
+The server runner excludes symlink entries from new archives. If a site relies on a symlinked WordPress drop-in or plugin-owned link, the restored staging package will not recreate that link automatically; the operator should inspect the source site and recreate any required link manually after approving a real restore.
+
 A completed server-runner package has:
 
 ```text

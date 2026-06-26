@@ -46,6 +46,8 @@ The plugin settings screen can generate a non-secret `config.json` snippet and c
 
 This runner currently supports `tar.gz` only. Additional archive formats should be added after live GridPane validation proves the first flow.
 
+The runner excludes symlink entries from new archives. This keeps restore staging focused on regular files and directories, and avoids extracting links that point outside the staged restore directory.
+
 ## Resource Safety
 
 The runner health check verifies that `work_path`, `outbox_path`, and `restore_path` are writable and have at least `minimum_free_space_bytes` available. The default minimum is 1 GB when the setting is omitted.

@@ -128,6 +128,8 @@ It refuses to overwrite an existing restore directory with the same package ID.
 
 Before extracting, the runner validates archive member names and refuses packages with absolute paths, parent-directory traversal, empty path segments, or symlink/hardlink entries. If this safety validation fails, stop and treat the package as unsuitable for restore staging until its source is understood.
 
+New server-runner packages exclude symlinks during archive creation. If an older package fails validation because it contains a link entry, create a fresh package with the current runner or handle that package through a separate approved manual recovery procedure.
+
 After staging, check:
 
 ```bash

@@ -88,6 +88,7 @@ No public custom actions or filters are exposed.
 * Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
 * Added CLI-only server-runner fetch support for known Drime packages and sidecars.
 * Added generic-outbox sidecar uploads for server-runner manifest and checksum files.
+* Changed server-runner archives to exclude symlink entries before restore staging.
 
 = 0.6.0 =
 * Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.
