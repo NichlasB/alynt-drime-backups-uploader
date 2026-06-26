@@ -97,6 +97,7 @@ import './style.css';
 			open.className = 'button button-small';
 			open.textContent = text('open');
 			open.disabled = !folder.hash;
+			open.setAttribute('aria-disabled', folder.hash ? 'false' : 'true');
 			open.setAttribute('data-alynt-folder-open', folder.hash || '');
 
 			use.type = 'button';

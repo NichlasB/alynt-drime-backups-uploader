@@ -40,13 +40,13 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Drime_Settings {
 					<p id="alynt-workspace-id-description" class="description"><?php esc_html_e( 'Use 0 for your personal/default Drime workspace.', 'alynt-drime-backups-uploader' ); ?></p>
 					<div class="alynt-drime-workspace-tools" data-alynt-workspace-browser>
 						<button type="button" class="button" data-alynt-workspaces-load><?php esc_html_e( 'Load Drime Workspaces', 'alynt-drime-backups-uploader' ); ?></button>
-						<span class="spinner" data-alynt-workspace-spinner></span>
+						<span class="spinner" aria-hidden="true" data-alynt-workspace-spinner></span>
 						<label class="screen-reader-text" for="alynt-workspace-select"><?php esc_html_e( 'Choose Drime workspace', 'alynt-drime-backups-uploader' ); ?></label>
 						<select id="alynt-workspace-select" data-alynt-workspace-select hidden>
 							<?php /* translators: %d: saved Drime workspace ID. */ ?>
 							<option value="<?php echo esc_attr( (string) absint( $settings['workspace_id'] ) ); ?>"><?php echo esc_html( 0 === absint( $settings['workspace_id'] ) ? __( 'Personal/default workspace', 'alynt-drime-backups-uploader' ) : sprintf( __( 'Workspace ID %d', 'alynt-drime-backups-uploader' ), absint( $settings['workspace_id'] ) ) ); ?></option>
 						</select>
-						<div class="alynt-drime-workspace-status" aria-live="polite" data-alynt-workspace-status></div>
+						<div class="alynt-drime-workspace-status" aria-live="polite" aria-atomic="true" data-alynt-workspace-status></div>
 					</div>
 				</td>
 			</tr>
@@ -73,8 +73,8 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Drime_Settings {
 					<div class="alynt-drime-folder-tools" data-alynt-folder-browser>
 						<button type="button" class="button" data-alynt-folder-browser-open><?php esc_html_e( 'Browse Drime Folders', 'alynt-drime-backups-uploader' ); ?></button>
 						<button type="button" class="button" data-alynt-destination-preview><?php esc_html_e( 'Preview Destination', 'alynt-drime-backups-uploader' ); ?></button>
-						<span class="spinner" data-alynt-folder-spinner></span>
-						<div class="alynt-drime-folder-status" aria-live="polite" data-alynt-folder-status></div>
+						<span class="spinner" aria-hidden="true" data-alynt-folder-spinner></span>
+						<div class="alynt-drime-folder-status" aria-live="polite" aria-atomic="true" data-alynt-folder-status></div>
 						<div class="alynt-drime-folder-panel" hidden data-alynt-folder-panel>
 							<div class="alynt-drime-folder-search">
 								<label class="screen-reader-text" for="alynt-folder-search"><?php esc_html_e( 'Search Drime folders', 'alynt-drime-backups-uploader' ); ?></label>
@@ -82,6 +82,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Drime_Settings {
 								<button type="button" class="button" data-alynt-folder-search-button><?php esc_html_e( 'Search', 'alynt-drime-backups-uploader' ); ?></button>
 							</div>
 							<table class="widefat striped alynt-drime-folder-table">
+								<caption class="screen-reader-text"><?php esc_html_e( 'Drime folder browser results', 'alynt-drime-backups-uploader' ); ?></caption>
 								<thead>
 									<tr>
 										<th scope="col"><?php esc_html_e( 'Name', 'alynt-drime-backups-uploader' ); ?></th>
@@ -92,7 +93,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Drime_Settings {
 								<tbody data-alynt-folder-rows></tbody>
 							</table>
 						</div>
-						<div class="alynt-drime-destination-preview" aria-live="polite" data-alynt-destination-status></div>
+						<div class="alynt-drime-destination-preview" aria-live="polite" aria-atomic="true" data-alynt-destination-status></div>
 					</div>
 				</td>
 			</tr>
