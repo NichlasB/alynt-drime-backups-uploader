@@ -84,6 +84,8 @@ For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). 
 
 For package integrity, extraction safety, storage-path, and encryption boundaries, see [docs/PACKAGE_SECURITY.md](docs/PACKAGE_SECURITY.md).
 
+For database/filesystem timing expectations and high-write site caveats, see [docs/CONSISTENCY_MODEL.md](docs/CONSISTENCY_MODEL.md).
+
 ## Diagnostics
 
 Diagnostics are disabled by default. When enabled, the plugin stores a bounded event log in WordPress options and exposes a health summary, recent events table, JSON export, and clear action to administrators.

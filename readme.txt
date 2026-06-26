@@ -42,6 +42,10 @@ The scanner waits until files are old enough and their size is stable across sca
 
 The runner verifies the package checksum and manifest sidecar, then rejects unsafe archive member paths before extracting into a new restore directory. The current restore flow is inspection-only and does not import databases or overwrite live files.
 
+= Are server-runner packages transactional snapshots? =
+
+No. The server runner creates a logical WordPress backup from a WP-CLI database export plus a filesystem archive. High-write sites should use low-traffic windows or a future stricter consistency mode before production reliance.
+
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
 During migration, yes, but do not leave both plugins automatically uploading the same WPvivid backup folder. The health summary warns when the old WPvivid-specific uploader is active and this plugin is configured to use the WPvivid source.
@@ -76,6 +80,7 @@ No public custom actions or filters are exposed.
 * Added producer-adapter documentation for future backup-source support.
 * Added a health warning for old WPvivid-specific uploader coexistence during migration.
 * Added package-security documentation for server-runner package integrity and restore staging boundaries.
+* Added logical backup consistency documentation and server-runner manifest timing fields.
 
 = 0.6.0 =
 * Changed Drime multipart chunk-size validation to allow values from 5 MB through 256 MB while keeping the conservative recommendation unchanged.

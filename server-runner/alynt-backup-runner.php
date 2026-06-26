@@ -106,23 +106,38 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
-		$package_id = $this->package_id();
-		$work_dir   = $this->work_path() . DIRECTORY_SEPARATOR . $package_id;
+		$package_started_at = gmdate( 'c' );
+		$package_id         = $this->package_id();
+		$work_dir           = $this->work_path() . DIRECTORY_SEPARATOR . $package_id;
 		if ( ! $this->ensure_directory( $work_dir ) ) {
 			$this->error( 'Could not create package work directory.' );
 			return 1;
 		}
 
-		$db_path = '';
+		$db_path                   = '';
+		$database_dump_started_at  = '';
+		$database_dump_finished_at = '';
 		if ( $this->database_enabled() ) {
-			$db_path = $work_dir . DIRECTORY_SEPARATOR . 'database.sql';
+			$db_path                  = $work_dir . DIRECTORY_SEPARATOR . 'database.sql';
+			$database_dump_started_at = gmdate( 'c' );
 			if ( ! $this->export_database( $db_path ) ) {
 				return 1;
 			}
+
+			$database_dump_finished_at = gmdate( 'c' );
 		}
 
 		$manifest_path = $work_dir . DIRECTORY_SEPARATOR . 'manifest.json';
-		$manifest      = $this->manifest( $package_id, $db_path );
+		$manifest      = $this->manifest(
+			$package_id,
+			$db_path,
+			array(
+				'package_started_at'          => $package_started_at,
+				'database_dump_started_at'    => $database_dump_started_at,
+				'database_dump_finished_at'   => $database_dump_finished_at,
+				'file_archive_started_at'     => gmdate( 'c' ),
+			)
+		);
 		if ( ! $this->write_json( $manifest_path, $manifest ) ) {
 			$this->error( 'Could not write package manifest.' );
 			return 1;
@@ -229,6 +244,10 @@ class Alynt_Server_Backup_Runner {
 		$this->line( 'Archive Format: ' . $this->manifest_value( $manifest, 'archive_format' ) );
 		$this->line( 'File Root: ' . $this->manifest_value( $manifest, 'file_root' ) );
 		$this->line( 'Database Dump: ' . $this->manifest_value( $manifest, 'database_dump' ) );
+		$this->line( 'Backup Type: ' . $this->manifest_value( $manifest, 'backup_type' ) );
+		$this->line( 'Database Dump Started: ' . $this->manifest_value( $manifest, 'database_dump_started_at' ) );
+		$this->line( 'Database Dump Finished: ' . $this->manifest_value( $manifest, 'database_dump_finished_at' ) );
+		$this->line( 'File Archive Started: ' . $this->manifest_value( $manifest, 'file_archive_started_at' ) );
 		$this->line( 'Archive Preview:' );
 
 		foreach ( $this->archive_preview( $package ) as $entry ) {
@@ -570,25 +589,41 @@ class Alynt_Server_Backup_Runner {
 	 * Builds package manifest.
 	 *
 	 * @param string $package_id Package ID.
-	 * @param string $db_path Database path.
+	 * @param string              $db_path Database path.
+	 * @param array<string,string> $timing Timing values.
 	 * @return array<string,mixed>
 	 */
-	private function manifest( $package_id, $db_path ) {
+	private function manifest( $package_id, $db_path, array $timing ) {
 		return array(
-			'manifest_version' => 1,
-			'package_id'       => $package_id,
-			'backup_set_id'    => $package_id,
-			'producer'         => 'alynt_server_runner',
-			'producer_version' => self::VERSION,
-			'site_id'          => $this->config_string( 'site_id' ),
-			'site_url'         => $this->config_string( 'site_url' ),
-			'created_at'       => gmdate( 'c' ),
-			'archive_format'   => $this->archive_format(),
-			'wordpress_path'   => $this->wordpress_path(),
-			'database_dump'    => '' !== $db_path ? basename( $db_path ) : '',
-			'file_root'        => basename( $this->wordpress_path() ),
-			'exclude_paths'    => $this->exclude_paths(),
+			'manifest_version'          => 1,
+			'package_id'                => $package_id,
+			'backup_set_id'             => $package_id,
+			'producer'                  => 'alynt_server_runner',
+			'producer_version'          => self::VERSION,
+			'site_id'                   => $this->config_string( 'site_id' ),
+			'site_url'                  => $this->config_string( 'site_url' ),
+			'created_at'                => $this->timing_value( $timing, 'package_started_at' ),
+			'backup_type'               => 'logical_wordpress_backup',
+			'archive_format'            => $this->archive_format(),
+			'wordpress_path'            => $this->wordpress_path(),
+			'database_dump'             => '' !== $db_path ? basename( $db_path ) : '',
+			'database_dump_started_at'  => $this->timing_value( $timing, 'database_dump_started_at' ),
+			'database_dump_finished_at' => $this->timing_value( $timing, 'database_dump_finished_at' ),
+			'file_archive_started_at'   => $this->timing_value( $timing, 'file_archive_started_at' ),
+			'file_root'                 => basename( $this->wordpress_path() ),
+			'exclude_paths'             => $this->exclude_paths(),
 		);
+	}
+
+	/**
+	 * Returns a timing value.
+	 *
+	 * @param array<string,string> $timing Timing values.
+	 * @param string               $key Key.
+	 * @return string
+	 */
+	private function timing_value( array $timing, $key ) {
+		return isset( $timing[ $key ] ) ? (string) $timing[ $key ] : '';
 	}
 
 	/**

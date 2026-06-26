@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Added status payload contract documentation and redaction guard tests for future dashboard readiness.
 - Added restore staging archive-member safety validation before server-runner extraction.
 - Added package-security documentation for server-runner package integrity and restore staging boundaries.
+- Added logical backup consistency documentation and server-runner manifest timing fields.
 
 ## [0.6.0] - 2026-06-22
 

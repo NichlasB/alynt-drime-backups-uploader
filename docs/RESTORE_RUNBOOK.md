@@ -89,6 +89,8 @@ php /path/to/alynt-backup-runner.php inspect \
 
 Confirm the output matches the expected site URL, archive format, file root, and database dump path.
 
+For server-runner packages, also review backup type and timing fields. See [CONSISTENCY_MODEL.md](CONSISTENCY_MODEL.md) for how to interpret logical backup timing.
+
 ## Stage A Restore
 
 Stage the package into a new restore directory:

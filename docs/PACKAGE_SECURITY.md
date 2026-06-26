@@ -49,6 +49,8 @@ example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
 
 The manifest identifies the package, producer, site, archive format, file root, database dump path, and runner version. It must not contain Drime API tokens, WordPress salts, database passwords, SSH keys, cookies, or other secrets.
 
+See [CONSISTENCY_MODEL.md](CONSISTENCY_MODEL.md) for the logical backup timing fields and high-write site caveats.
+
 ## Integrity Model
 
 The `.sha256` sidecar lets the runner verify that the local archive bytes match the package recorded at creation time.
