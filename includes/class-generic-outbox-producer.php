@@ -16,6 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 0.1.0
  */
 class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drime_Backups_Uploader_Producer_Interface {
+	use Alynt_Drime_Backups_Uploader_Option_Storage;
+
 	const KEY             = 'generic_outbox';
 	const LABEL           = 'Generic Outbox';
 	const SNAPSHOT_OPTION = 'alynt_drime_backups_outbox_file_snapshots';
@@ -84,7 +86,13 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 			return $result;
 		}
 
-		$result['candidates'] = $this->filter_complete_candidates( $this->scan_file_infos( $directory, $settings ) );
+		$scan = $this->scan_file_infos( $directory, $settings );
+
+		if ( ! empty( $scan['errors'] ) ) {
+			$result['errors'] = array_merge( $result['errors'], $scan['errors'] );
+		}
+
+		$result['candidates'] = $this->filter_complete_candidates( $scan['file_infos'] );
 
 		return $result;
 	}
@@ -108,7 +116,7 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 	 *
 	 * @param string              $directory Directory.
 	 * @param array<string,mixed> $settings Settings.
-	 * @return array<int,array<string,mixed>>
+	 * @return array{file_infos:array<int,array<string,mixed>>,errors:array<int,string>}
 	 */
 	private function scan_file_infos( $directory, array $settings ) {
 		$snapshots     = $this->get_snapshots();
@@ -116,6 +124,7 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 		$minimum_age   = max( 60, absint( $settings['min_file_age_seconds'] ) );
 		$now           = time();
 		$file_infos    = array();
+		$errors        = array();
 
 		foreach ( $this->list_archives( $directory ) as $file ) {
 			$info = $this->scan_file_info( $file, $snapshots, $minimum_age, $now );
@@ -130,25 +139,15 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 			$file_infos[]                           = $info;
 		}
 
-		update_option( self::SNAPSHOT_OPTION, $new_snapshots, false );
-		$this->sync_snapshot_cache( $new_snapshots );
-
-		return $file_infos;
-	}
-
-	/**
-	 * Syncs the snapshot option cache after mutation.
-	 *
-	 * @param array<string,array<string,int>> $snapshots Snapshots.
-	 * @return void
-	 */
-	private function sync_snapshot_cache( array $snapshots ) {
-		if ( function_exists( 'wp_cache_delete' ) ) {
-			wp_cache_delete( self::SNAPSHOT_OPTION, 'options' );
+		if ( ! $this->persist_array_option( self::SNAPSHOT_OPTION, $new_snapshots ) ) {
+			$errors[] = __( 'The backup outbox scan state could not be saved. Confirm the site database is writable, then try again.', 'alynt-drime-backups-uploader' );
+			$this->diagnostic( 'error', 'outbox_snapshot_save_failed', 'The backup outbox scan state could not be saved.' );
 		}
-		if ( function_exists( 'wp_cache_set' ) ) {
-			wp_cache_set( self::SNAPSHOT_OPTION, $snapshots, 'options' );
-		}
+
+		return array(
+			'file_infos' => $file_infos,
+			'errors'     => $errors,
+		);
 	}
 
 	/**

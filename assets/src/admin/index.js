@@ -26,7 +26,7 @@ import './style.css';
 			body: formData,
 		}).then((response) => response.json()).then((payload) => {
 			if (!payload || !payload.success) {
-				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : 'Request failed.');
+				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : text('requestFailed', 'The request failed. Check your connection and try again.'));
 			}
 
 			return payload.data;

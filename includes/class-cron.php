@@ -80,11 +80,11 @@ class Alynt_Drime_Backups_Uploader_Cron {
 
 		if ( ! empty( $settings['auto_scan_enabled'] ) ) {
 			if ( ! wp_next_scheduled( self::SCAN_EVENT ) ) {
-				wp_schedule_event( time() + MINUTE_IN_SECONDS, 'fifteen_minutes', self::SCAN_EVENT );
+				$this->schedule_event( time() + MINUTE_IN_SECONDS, self::SCAN_EVENT );
 			}
 
 			if ( ! wp_next_scheduled( self::UPLOAD_EVENT ) ) {
-				wp_schedule_event( time() + ( 2 * MINUTE_IN_SECONDS ), 'fifteen_minutes', self::UPLOAD_EVENT );
+				$this->schedule_event( time() + ( 2 * MINUTE_IN_SECONDS ), self::UPLOAD_EVENT );
 			}
 			return;
 		}
@@ -119,6 +119,30 @@ class Alynt_Drime_Backups_Uploader_Cron {
 	}
 
 	/**
+	 * Schedules one plugin cron event and records scheduling failures.
+	 *
+	 * @param int    $timestamp Timestamp.
+	 * @param string $hook Hook.
+	 * @return void
+	 */
+	private function schedule_event( $timestamp, $hook ) {
+		$result = wp_schedule_event( $timestamp, 'fifteen_minutes', $hook, array(), true );
+
+		if ( is_wp_error( $result ) || false === $result ) {
+			$this->plugin->logger()->event(
+				'cron',
+				'error',
+				'cron_schedule_failed',
+				'A scheduled backup event could not be registered.',
+				array(
+					'hook'   => $hook,
+					'reason' => is_wp_error( $result ) ? $result->get_error_message() : 'wp_schedule_event returned false',
+				)
+			);
+		}
+	}
+
+	/**
 	 * Runs a scan.
 	 *
 	 * @return void
@@ -127,6 +151,9 @@ class Alynt_Drime_Backups_Uploader_Cron {
 	 */
 	public function scan() {
 		$runner = $this->plugin->cron_health()->record_scheduled_scan();
+		if ( ! $this->plugin->cron_health()->last_record_persisted() ) {
+			$this->plugin->logger()->event( 'cron', 'warning', 'cron_health_save_failed', 'Scheduled scan ran, but cron health evidence could not be saved.' );
+		}
 
 		$this->plugin->logger()->event( 'cron', 'info', 'scan_started', 'Scheduled scan started.', array( 'runner' => $runner ) );
 		$this->plugin->scan_and_queue();

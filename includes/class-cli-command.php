@@ -42,7 +42,9 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 	 * @return void
 	 */
 	public function scan() {
-		$this->plugin->cron_health()->record_manual_scan();
+		if ( ! $this->plugin->cron_health()->record_manual_scan() ) {
+			$this->warning( 'Manual scan ran, but cron health evidence could not be saved.' );
+		}
 
 		$result = $this->plugin->scan_and_queue();
 		if ( ! empty( $result['errors'] ) ) {
@@ -103,7 +105,9 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 	public function run( $args = array(), $assoc_args = array() ) {
 		unset( $args );
 
-		$this->plugin->cron_health()->record_manual_scan();
+		if ( ! $this->plugin->cron_health()->record_manual_scan() ) {
+			$this->warning( 'Manual run started, but cron health evidence could not be saved.' );
+		}
 		$scan = $this->plugin->scan_and_queue();
 		if ( ! empty( $scan['errors'] ) ) {
 			$this->error( 'Scan failed: ' . implode( '; ', $scan['errors'] ) );

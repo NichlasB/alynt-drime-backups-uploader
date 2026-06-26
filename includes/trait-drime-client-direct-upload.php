@@ -102,7 +102,16 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 		unset( $ch );
 
 		if ( false === $raw ) {
-			return new WP_Error( 'alynt_drime_upload_failed', $error ? $error : __( 'The direct upload request failed.', 'alynt-drime-backups-uploader' ) );
+			$this->diagnostic(
+				'error',
+				'direct_upload_request_failed',
+				'The direct upload request failed.',
+				array(
+					'reason' => $error ? $error : 'curl_exec returned false',
+				)
+			);
+
+			return new WP_Error( 'alynt_drime_upload_failed', __( 'The direct upload request failed. Check the server network connection and try again.', 'alynt-drime-backups-uploader' ) );
 		}
 
 		return array(

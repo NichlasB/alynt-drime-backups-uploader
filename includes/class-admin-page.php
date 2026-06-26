@@ -106,6 +106,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 				'i18n'    => array(
 					'loading'                 => __( 'Loading...', 'alynt-drime-backups-uploader' ),
 					'previewing'              => __( 'Previewing...', 'alynt-drime-backups-uploader' ),
+					'requestFailed'           => __( 'The request failed. Check your connection and try again.', 'alynt-drime-backups-uploader' ),
 					'loadFailed'              => __( 'Could not load Drime folders.', 'alynt-drime-backups-uploader' ),
 					'workspacesLoadFailed'    => __( 'Could not load Drime workspaces.', 'alynt-drime-backups-uploader' ),
 					'noWorkspaces'            => __( 'No team workspaces found. The personal/default workspace remains available.', 'alynt-drime-backups-uploader' ),

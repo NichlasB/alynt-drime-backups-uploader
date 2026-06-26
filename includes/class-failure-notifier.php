@@ -126,8 +126,8 @@ class Alynt_Drime_Backups_Uploader_Failure_Notifier {
 		$sent = wp_mail( $recipients, $this->subject( __( 'Drime backup upload failed', 'alynt-drime-backups-uploader' ) ), $this->failure_message( $item, $failure_state, $reason, $attempts ), $this->headers() );
 		$this->log_send_result( $sent, $item, $failure_state );
 
-		if ( $sent ) {
-			$this->mark_sent( $key, $item, $failure_state );
+		if ( $sent && ! $this->mark_sent( $key, $item, $failure_state ) ) {
+			$this->logger->event( 'notification', 'error', 'failure_email_dedupe_save_failed', 'Failure notification email was sent, but the dedupe marker could not be saved.', $this->context( $item, $failure_state ) );
 		}
 
 		return (bool) $sent;

@@ -42,12 +42,12 @@ class Alynt_Drime_Backups_Uploader_Logger {
 	 * @param string              $level Level.
 	 * @param string              $message Message.
 	 * @param array<string,mixed> $context Context.
-	 * @return void
+	 * @return bool Whether the event was stored or intentionally skipped.
 	 *
 	 * @since 0.1.0
 	 */
 	public function log( $level, $message, array $context = array() ) {
-		$this->event( 'general', $level, 'event', $message, $context );
+		return $this->event( 'general', $level, 'event', $message, $context );
 	}
 
 	/**
@@ -58,7 +58,7 @@ class Alynt_Drime_Backups_Uploader_Logger {
 	 * @param string              $code Event code.
 	 * @param string              $message Message.
 	 * @param array<string,mixed> $context Context.
-	 * @return void
+	 * @return bool Whether the event was stored or intentionally skipped.
 	 *
 	 * @since 0.1.0
 	 */
@@ -66,12 +66,12 @@ class Alynt_Drime_Backups_Uploader_Logger {
 		$settings = $this->settings->get();
 
 		if ( empty( $settings['diagnostics_enabled'] ) ) {
-			return;
+			return true;
 		}
 
 		$level = $this->normalize_level( $level );
 		if ( ! $this->passes_threshold( $level, (string) $settings['diagnostics_min_level'] ) ) {
-			return;
+			return true;
 		}
 
 		$events = $this->get_events();
@@ -90,8 +90,8 @@ class Alynt_Drime_Backups_Uploader_Logger {
 
 		$retention = isset( $settings['diagnostics_retention'] ) ? absint( $settings['diagnostics_retention'] ) : 100;
 		$events    = array_slice( $events, 0, max( 25, min( 500, $retention ) ) );
-		update_option( self::OPTION_NAME, $events, false );
-		$this->sync_option_cache( $events );
+
+		return $this->persist_events( $events );
 	}
 
 	/**
@@ -110,13 +110,28 @@ class Alynt_Drime_Backups_Uploader_Logger {
 	/**
 	 * Clears all diagnostics events.
 	 *
-	 * @return void
+	 * @return bool Whether diagnostics were cleared.
 	 *
 	 * @since 0.1.0
 	 */
 	public function clear() {
 		delete_option( self::OPTION_NAME );
 		$this->flush_option_cache();
+
+		return array() === get_option( self::OPTION_NAME, array() );
+	}
+
+	/**
+	 * Persists diagnostics events and verifies the stored value.
+	 *
+	 * @param array<int,array<string,mixed>> $events Events.
+	 * @return bool
+	 */
+	private function persist_events( array $events ) {
+		update_option( self::OPTION_NAME, $events, false );
+		$this->sync_option_cache( $events );
+
+		return get_option( self::OPTION_NAME, array() ) === $events;
 	}
 
 	/**

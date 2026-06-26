@@ -17,6 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Alynt_Drime_Backups_Uploader_WPvivid_Producer implements Alynt_Drime_Backups_Uploader_Producer_Interface {
 	use Alynt_Drime_Backups_Uploader_Scanner_Metadata;
+	use Alynt_Drime_Backups_Uploader_Option_Storage;
 
 	const KEY             = 'wpvivid';
 	const LABEL           = 'WPvivid';
@@ -98,8 +99,12 @@ class Alynt_Drime_Backups_Uploader_WPvivid_Producer implements Alynt_Drime_Backu
 			return $result;
 		}
 
-		$file_infos           = $this->scan_file_infos( $files, $settings );
-		$result['candidates'] = $this->filter_complete_candidates( $file_infos );
+		$scan = $this->scan_file_infos( $files, $settings );
+		if ( ! empty( $scan['errors'] ) ) {
+			$result['errors'] = array_merge( $result['errors'], $scan['errors'] );
+		}
+
+		$result['candidates'] = $this->filter_complete_candidates( $scan['file_infos'] );
 
 		return $result;
 	}
@@ -149,7 +154,7 @@ class Alynt_Drime_Backups_Uploader_WPvivid_Producer implements Alynt_Drime_Backu
 	 *
 	 * @param array<int,string>   $files Files.
 	 * @param array<string,mixed> $settings Settings.
-	 * @return array<string,array<string,mixed>>
+	 * @return array{file_infos:array<string,array<string,mixed>>,errors:array<int,string>}
 	 */
 	private function scan_file_infos( array $files, array $settings ) {
 		$snapshots       = $this->get_snapshots();
@@ -158,6 +163,7 @@ class Alynt_Drime_Backups_Uploader_WPvivid_Producer implements Alynt_Drime_Backu
 		$now             = time();
 		$backup_metadata = $this->get_backup_list_metadata();
 		$file_infos      = array();
+		$errors          = array();
 
 		foreach ( $files as $file ) {
 			$info = $this->scan_file_info( $file, $snapshots, $minimum_age, $now, $backup_metadata );
@@ -172,25 +178,15 @@ class Alynt_Drime_Backups_Uploader_WPvivid_Producer implements Alynt_Drime_Backu
 			$file_infos[ $info['name'] ]         = $info;
 		}
 
-		update_option( self::SNAPSHOT_OPTION, $new_snapshots, false );
-		$this->sync_snapshot_cache( $new_snapshots );
-
-		return $file_infos;
-	}
-
-	/**
-	 * Syncs the snapshot option cache after mutation.
-	 *
-	 * @param array<string,array<string,int>> $snapshots Snapshots.
-	 * @return void
-	 */
-	private function sync_snapshot_cache( array $snapshots ) {
-		if ( function_exists( 'wp_cache_delete' ) ) {
-			wp_cache_delete( self::SNAPSHOT_OPTION, 'options' );
+		if ( ! $this->persist_array_option( self::SNAPSHOT_OPTION, $new_snapshots ) ) {
+			$errors[] = __( 'The WPvivid backup scan state could not be saved. Confirm the site database is writable, then try again.', 'alynt-drime-backups-uploader' );
+			$this->diagnostic( 'error', 'wpvivid_snapshot_save_failed', 'The WPvivid backup scan state could not be saved.' );
 		}
-		if ( function_exists( 'wp_cache_set' ) ) {
-			wp_cache_set( self::SNAPSHOT_OPTION, $snapshots, 'options' );
-		}
+
+		return array(
+			'file_infos' => $file_infos,
+			'errors'     => $errors,
+		);
 	}
 
 	/**

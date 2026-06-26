@@ -85,7 +85,9 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Admin_Actions {
 
 		$this->verify_admin_action( 'alynt_drime_backups_scan_now' );
 
-		$this->cron_health->record_manual_scan();
+		if ( ! $this->cron_health->record_manual_scan() ) {
+			$this->logger->event( 'cron', 'warning', 'cron_health_save_failed', 'Manual scan ran, but cron health evidence could not be saved.' );
+		}
 
 		$result = $this->scan_and_queue();
 
@@ -118,7 +120,7 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Admin_Actions {
 			$this->logger->event( 'upload', 'error', 'manual_upload_failed', 'Manual upload failed.', array( 'reason' => $result->get_error_message() ) );
 			$this->notify_manual_upload_failure( $item, $result );
 
-			$this->redirect( 'action_failed' );
+			$this->redirect( 'upload_failed' );
 
 		}
 
@@ -158,7 +160,13 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Admin_Actions {
 
 		if ( is_wp_error( $result ) || ! empty( $result['failed'] ) ) {
 
-			$this->redirect( 'retention_failed' );
+			$this->redirect(
+				'retention_failed',
+				array(
+					'failed'  => is_array( $result ) && isset( $result['failed'] ) ? absint( $result['failed'] ) : 0,
+					'trashed' => is_array( $result ) && isset( $result['trashed'] ) ? absint( $result['trashed'] ) : 0,
+				)
+			);
 
 		}
 
@@ -244,7 +252,9 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Admin_Actions {
 
 		$this->verify_admin_action( 'alynt_drime_backups_clear_diagnostics' );
 
-		$this->logger->clear();
+		if ( ! $this->logger->clear() ) {
+			$this->redirect( 'diagnostics_clear_failed' );
+		}
 
 		$this->redirect( 'diagnostics_cleared' );
 	}
@@ -360,21 +370,23 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Admin_Actions {
 
 	 * Redirects to admin page.
 	 *
-	 * @param string $notice Notice key.
+	 * @param string              $notice Notice key.
+	 * @param array<string,mixed> $args Extra query args.
 
 	 * @return void
 	 */
-	private function redirect( $notice ) {
+	private function redirect( $notice, array $args = array() ) {
+		$query_args = array_merge(
+			array(
+				'page'         => 'alynt-drime-backups-uploader',
+				'alynt_notice' => sanitize_key( $notice ),
+			),
+			$args
+		);
 
 		wp_safe_redirect(
 			add_query_arg(
-				array(
-
-					'page'         => 'alynt-drime-backups-uploader',
-
-					'alynt_notice' => sanitize_key( $notice ),
-
-				),
+				$query_args,
 				admin_url( 'tools.php' )
 			)
 		);

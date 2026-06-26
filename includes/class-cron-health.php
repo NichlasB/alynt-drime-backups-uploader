@@ -27,6 +27,13 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 	const OVERDUE_WARNING_THRESHOLD = 1800;
 
 	/**
+	 * Last persistence result.
+	 *
+	 * @var bool
+	 */
+	private $last_record_persisted = true;
+
+	/**
 	 * Returns default health state.
 	 *
 	 * @return array<string,mixed>
@@ -77,8 +84,7 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 			$state['last_http_cron_scan_at'] = $now;
 		}
 
-		update_option( self::OPTION_NAME, $state, false );
-		$this->sync_option_cache( $state );
+		$this->last_record_persisted = $this->persist_state( $state );
 
 		return $runner;
 	}
@@ -86,7 +92,7 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 	/**
 	 * Records a manual admin scan.
 	 *
-	 * @return void
+	 * @return bool Whether the state was recorded.
 	 */
 	public function record_manual_scan() {
 		$state = $this->get();
@@ -96,8 +102,31 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 		$state['last_runner_at']      = $now;
 		$state['last_manual_scan_at'] = $now;
 
+		$this->last_record_persisted = $this->persist_state( $state );
+
+		return $this->last_record_persisted;
+	}
+
+	/**
+	 * Returns whether the last record write was persisted.
+	 *
+	 * @return bool
+	 */
+	public function last_record_persisted() {
+		return $this->last_record_persisted;
+	}
+
+	/**
+	 * Persists cron health state and verifies the stored value.
+	 *
+	 * @param array<string,mixed> $state State.
+	 * @return bool
+	 */
+	private function persist_state( array $state ) {
 		update_option( self::OPTION_NAME, $state, false );
 		$this->sync_option_cache( $state );
+
+		return get_option( self::OPTION_NAME, array() ) === $state;
 	}
 
 	/**

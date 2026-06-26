@@ -28,7 +28,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 			<?php $this->render_action_button( 'alynt_drime_backups_test_connection', __( 'Test Drime Connection', 'alynt-drime-backups-uploader' ) ); ?>
 			<?php $this->render_action_button( 'alynt_drime_backups_send_test_failure_email', __( 'Send Test Email', 'alynt-drime-backups-uploader' ) ); ?>
 			<?php $this->render_action_button( 'alynt_drime_backups_scan_now', __( 'Scan Backup Folder', 'alynt-drime-backups-uploader' ) ); ?>
-			<?php $this->render_action_button( 'alynt_drime_backups_upload_next', __( 'Upload Next Queued Backup', 'alynt-drime-backups-uploader' ) ); ?>
+			<?php $this->render_action_button( 'alynt_drime_backups_upload_next', __( 'Upload Next Queued Backup', 'alynt-drime-backups-uploader' ), false, __( 'Uploading backup...', 'alynt-drime-backups-uploader' ) ); ?>
 			<?php $this->render_action_button( 'alynt_drime_backups_preview_remote_retention', __( 'Preview Remote Retention', 'alynt-drime-backups-uploader' ) ); ?>
 			<?php $this->render_action_button( 'alynt_drime_backups_run_remote_retention', __( 'Run Remote Retention', 'alynt-drime-backups-uploader' ), __( 'Move eligible Drime files uploaded by this plugin to trash?', 'alynt-drime-backups-uploader' ) ); ?>
 		</div>
@@ -269,14 +269,17 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 	 * @param string      $action Action.
 	 * @param string      $label Label.
 	 * @param bool|string $confirm Whether to show confirmation.
+	 * @param string      $loading_label Optional loading label.
 	 * @return void
 	 */
-	private function render_action_button( $action, $label, $confirm = false ) {
-		$loading_label = sprintf(
-			/* translators: %s: Button label. */
-			__( '%s...', 'alynt-drime-backups-uploader' ),
-			$label
-		);
+	private function render_action_button( $action, $label, $confirm = false, $loading_label = '' ) {
+		if ( '' === $loading_label ) {
+			$loading_label = sprintf(
+				/* translators: %s: Button label. */
+				__( '%s...', 'alynt-drime-backups-uploader' ),
+				$label
+			);
+		}
 		?>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>">
