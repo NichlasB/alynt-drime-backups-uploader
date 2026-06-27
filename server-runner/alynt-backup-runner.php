@@ -212,6 +212,16 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
+		if (
+			! $this->write_json_atomic(
+				$final_archive . '.remote-catalog.json',
+				$this->remote_catalog_snapshot()
+			)
+		) {
+			$this->error( 'Could not write completed package remote catalog.' );
+			return 1;
+		}
+
 		if ( ! $this->remove_directory( $work_dir ) ) {
 			$this->error( 'Warning: package was created, but the work directory could not be removed.' );
 		}
@@ -332,6 +342,34 @@ class Alynt_Server_Backup_Runner {
 			'archive_format' => $this->archive_format(),
 			'package_count'  => 1,
 			'packages'       => array( $package_record ),
+			'restore_policy' => array(
+				'requires_archive_manifest_checksum' => true,
+				'destructive_restore_automated'     => false,
+				'manual_restore_required'           => true,
+			),
+		);
+	}
+
+	/**
+	 * Builds a remote-safe package catalog snapshot for Drime restore discovery.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function remote_catalog_snapshot() {
+		$packages = glob( $this->outbox_path() . DIRECTORY_SEPARATOR . '*.' . $this->archive_format() );
+		if ( ! is_array( $packages ) ) {
+			$packages = array();
+		}
+
+		sort( $packages );
+
+		return array(
+			'schema_version' => 1,
+			'catalog_type'   => 'folder_package_catalog_snapshot',
+			'generated_at'   => gmdate( 'c' ),
+			'archive_format' => $this->archive_format(),
+			'package_count'  => count( $packages ),
+			'packages'       => array_map( array( $this, 'package_inventory_record' ), $packages ),
 			'restore_policy' => array(
 				'requires_archive_manifest_checksum' => true,
 				'destructive_restore_automated'     => false,

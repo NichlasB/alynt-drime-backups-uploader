@@ -66,6 +66,7 @@ class GenericOutboxProducerTest extends TestCase {
 		$manifest = $archive . '.manifest.json';
 		$checksum = $archive . '.sha256';
 		$index    = $archive . '.remote-index.json';
+		$catalog  = $archive . '.remote-catalog.json';
 
 		file_put_contents(
 			$manifest,
@@ -89,6 +90,16 @@ class GenericOutboxProducerTest extends TestCase {
 				)
 			)
 		);
+		file_put_contents(
+			$catalog,
+			json_encode(
+				array(
+					'schema_version' => 1,
+					'catalog_type'   => 'folder_package_catalog_snapshot',
+					'package_count'  => 1,
+				)
+			)
+		);
 
 		$producer = new Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer( new Alynt_Drime_Backups_Uploader_Settings() );
 		$first    = $producer->scan();
@@ -104,12 +115,14 @@ class GenericOutboxProducerTest extends TestCase {
 		$this->assertSame( wp_normalize_path( $manifest ), wp_normalize_path( $candidate['manifest_path'] ) );
 		$this->assertSame( wp_normalize_path( $checksum ), wp_normalize_path( $candidate['checksum_path'] ) );
 		$this->assertSame( wp_normalize_path( $index ), wp_normalize_path( $candidate['remote_index_path'] ) );
+		$this->assertSame( wp_normalize_path( $catalog ), wp_normalize_path( $candidate['remote_catalog_path'] ) );
 		$this->assertSame( 'sha256', $candidate['checksum_algorithm'] );
 		$this->assertSame( str_repeat( 'a', 64 ), $candidate['checksum_value'] );
 		$this->assertSame( 'https://example.test', $candidate['site_url'] );
 		$this->assertSame( 1782403200, $candidate['created_at'] );
 		$this->assertSame( 'pkg-20260625-001', $candidate['metadata']['generic_outbox']['manifest']['package_id'] );
 		$this->assertSame( 'single_package_restore_index', $candidate['metadata']['generic_outbox']['remote_index']['index_type'] );
+		$this->assertSame( 'folder_package_catalog_snapshot', $candidate['metadata']['generic_outbox']['remote_catalog']['catalog_type'] );
 	}
 
 	public function test_temporary_and_unsupported_files_are_not_returned() {

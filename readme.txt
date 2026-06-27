@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, server-runner local package inventory and package-level remote-index sidecars, light consistency metadata, cleanup-preview output, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -60,7 +60,7 @@ No. The server runner creates a logical WordPress backup from a WP-CLI database 
 
 = Can I restore if the original WordPress site is unavailable? =
 
-The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. Server-runner packages also upload a package-level `.remote-index.json` sidecar for remote discovery. It then verifies and stages locally. wp-admin restore, database import, live file overwrite, and a shared folder-level remote catalog are not included.
+The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies and stages locally. wp-admin restore, database import, live file overwrite, and a mutable singleton remote catalog are not included.
 
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
@@ -111,6 +111,7 @@ No public custom actions or filters are exposed.
 * Added server-cron review commands that build and diff a proposed crontab file without installing it automatically.
 * Added multiple standalone site runner guidance for separate GridPane/VPS WordPress sites.
 * Added package-level remote-index sidecars for server-runner packages uploaded through the generic outbox.
+* Added folder catalog snapshot sidecars for server-runner packages uploaded through the generic outbox.
 * Changed server-runner archives to exclude symlink entries before restore staging.
 * Changed server-runner archive creation to recover from live file-change warnings only when a non-empty archive was produced.
 * Changed generated server-runner configs to use light consistency mode by default.

@@ -80,9 +80,10 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Sidecars {
 		$paths = array();
 		foreach (
 			array(
-				'manifest'     => 'manifest_path',
-				'checksum'     => 'checksum_path',
-				'remote_index' => 'remote_index_path',
+				'manifest'       => 'manifest_path',
+				'checksum'       => 'checksum_path',
+				'remote_index'   => 'remote_index_path',
+				'remote_catalog' => 'remote_catalog_path',
 			) as $kind => $key
 		) {
 			$path = isset( $item[ $key ] ) && is_scalar( $item[ $key ] ) ? (string) $item[ $key ] : '';

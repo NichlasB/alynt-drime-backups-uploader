@@ -227,34 +227,38 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 	 * @return array<string,mixed>
 	 */
 	private function normalize_package( array $info ) {
-		$manifest          = $this->read_manifest( (string) $info['path'] );
-		$checksum          = $this->read_checksum( (string) $info['path'] );
-		$remote_index      = $this->read_remote_index( (string) $info['path'] );
-		$manifest_path     = isset( $manifest['_path'] ) ? (string) $manifest['_path'] : '';
-		$checksum_path     = isset( $checksum['path'] ) ? (string) $checksum['path'] : '';
-		$remote_index_path = isset( $remote_index['path'] ) ? (string) $remote_index['path'] : '';
-		$package_id        = isset( $manifest['package_id'] ) && '' !== (string) $manifest['package_id'] ? (string) $manifest['package_id'] : (string) $info['signature'];
+		$manifest            = $this->read_manifest( (string) $info['path'] );
+		$checksum            = $this->read_checksum( (string) $info['path'] );
+		$remote_index        = $this->read_remote_index( (string) $info['path'] );
+		$remote_catalog      = $this->read_remote_catalog( (string) $info['path'] );
+		$manifest_path       = isset( $manifest['_path'] ) ? (string) $manifest['_path'] : '';
+		$checksum_path       = isset( $checksum['path'] ) ? (string) $checksum['path'] : '';
+		$remote_index_path   = isset( $remote_index['path'] ) ? (string) $remote_index['path'] : '';
+		$remote_catalog_path = isset( $remote_catalog['path'] ) ? (string) $remote_catalog['path'] : '';
+		$package_id          = isset( $manifest['package_id'] ) && '' !== (string) $manifest['package_id'] ? (string) $manifest['package_id'] : (string) $info['signature'];
 
-		$info['package_id']         = $package_id;
-		$info['producer_key']       = $this->key();
-		$info['producer_label']     = $this->label();
-		$info['filename']           = (string) $info['name'];
-		$info['modified_time']      = isset( $info['mtime'] ) ? (int) $info['mtime'] : 0;
-		$info['backup_set_id']      = isset( $manifest['backup_set_id'] ) ? (string) $manifest['backup_set_id'] : $package_id;
-		$info['backup_set_part']    = '';
-		$info['backup_set_total']   = 1;
-		$info['manifest_path']      = $manifest_path;
-		$info['checksum_path']      = $checksum_path;
-		$info['remote_index_path']  = $remote_index_path;
-		$info['checksum_algorithm'] = isset( $checksum['algorithm'] ) ? (string) $checksum['algorithm'] : '';
-		$info['checksum_value']     = isset( $checksum['value'] ) ? (string) $checksum['value'] : '';
-		$info['site_url']           = isset( $manifest['site_url'] ) ? (string) $manifest['site_url'] : '';
-		$info['created_at']         = isset( $manifest['created_at'] ) ? $this->normalize_timestamp( $manifest['created_at'] ) : 0;
-		$info['metadata']           = array(
+		$info['package_id']          = $package_id;
+		$info['producer_key']        = $this->key();
+		$info['producer_label']      = $this->label();
+		$info['filename']            = (string) $info['name'];
+		$info['modified_time']       = isset( $info['mtime'] ) ? (int) $info['mtime'] : 0;
+		$info['backup_set_id']       = isset( $manifest['backup_set_id'] ) ? (string) $manifest['backup_set_id'] : $package_id;
+		$info['backup_set_part']     = '';
+		$info['backup_set_total']    = 1;
+		$info['manifest_path']       = $manifest_path;
+		$info['checksum_path']       = $checksum_path;
+		$info['remote_index_path']   = $remote_index_path;
+		$info['remote_catalog_path'] = $remote_catalog_path;
+		$info['checksum_algorithm']  = isset( $checksum['algorithm'] ) ? (string) $checksum['algorithm'] : '';
+		$info['checksum_value']      = isset( $checksum['value'] ) ? (string) $checksum['value'] : '';
+		$info['site_url']            = isset( $manifest['site_url'] ) ? (string) $manifest['site_url'] : '';
+		$info['created_at']          = isset( $manifest['created_at'] ) ? $this->normalize_timestamp( $manifest['created_at'] ) : 0;
+		$info['metadata']            = array(
 			'generic_outbox' => array(
-				'manifest'     => $this->manifest_metadata( $manifest ),
-				'checksum'     => $checksum,
-				'remote_index' => $remote_index,
+				'manifest'       => $this->manifest_metadata( $manifest ),
+				'checksum'       => $checksum,
+				'remote_index'   => $remote_index,
+				'remote_catalog' => $remote_catalog,
 			),
 		);
 
@@ -340,7 +344,52 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 	 * @return array<string,mixed>
 	 */
 	private function read_remote_index( $file ) {
-		foreach ( $this->sidecar_candidates( $file, 'remote-index.json' ) as $candidate ) {
+		$sidecar = $this->read_json_sidecar( $file, 'remote-index.json' );
+		if ( empty( $sidecar ) ) {
+			return array();
+		}
+
+		$decoded = $sidecar['data'];
+
+		return array(
+			'path'           => (string) $sidecar['path'],
+			'schema_version' => isset( $decoded['schema_version'] ) ? (int) $decoded['schema_version'] : 0,
+			'index_type'     => isset( $decoded['index_type'] ) && is_scalar( $decoded['index_type'] ) ? (string) $decoded['index_type'] : '',
+			'package_count'  => isset( $decoded['package_count'] ) ? (int) $decoded['package_count'] : 0,
+		);
+	}
+
+	/**
+	 * Reads package remote catalog sidecar metadata.
+	 *
+	 * @param string $file Archive path.
+	 * @return array<string,mixed>
+	 */
+	private function read_remote_catalog( $file ) {
+		$sidecar = $this->read_json_sidecar( $file, 'remote-catalog.json' );
+		if ( empty( $sidecar ) ) {
+			return array();
+		}
+
+		$decoded = $sidecar['data'];
+
+		return array(
+			'path'           => (string) $sidecar['path'],
+			'schema_version' => isset( $decoded['schema_version'] ) ? (int) $decoded['schema_version'] : 0,
+			'catalog_type'   => isset( $decoded['catalog_type'] ) && is_scalar( $decoded['catalog_type'] ) ? (string) $decoded['catalog_type'] : '',
+			'package_count'  => isset( $decoded['package_count'] ) ? (int) $decoded['package_count'] : 0,
+		);
+	}
+
+	/**
+	 * Reads a JSON sidecar file.
+	 *
+	 * @param string $file Archive path.
+	 * @param string $suffix Sidecar suffix.
+	 * @return array{path:string,data:array<string,mixed>}|array{}
+	 */
+	private function read_json_sidecar( $file, $suffix ) {
+		foreach ( $this->sidecar_candidates( $file, $suffix ) as $candidate ) {
 			if ( ! is_readable( $candidate ) ) {
 				continue;
 			}
@@ -349,10 +398,8 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 			$decoded  = false !== $contents ? json_decode( $contents, true ) : null;
 			if ( is_array( $decoded ) ) {
 				return array(
-					'path'           => $candidate,
-					'schema_version' => isset( $decoded['schema_version'] ) ? (int) $decoded['schema_version'] : 0,
-					'index_type'     => isset( $decoded['index_type'] ) && is_scalar( $decoded['index_type'] ) ? (string) $decoded['index_type'] : '',
-					'package_count'  => isset( $decoded['package_count'] ) ? (int) $decoded['package_count'] : 0,
+					'path' => $candidate,
+					'data' => $decoded,
 				);
 			}
 		}

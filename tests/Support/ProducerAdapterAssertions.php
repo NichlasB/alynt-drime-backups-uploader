@@ -15,7 +15,7 @@ trait Alynt_Drime_Backups_Uploader_Test_Producer_Adapter_Assertions {
 	 * @return void
 	 */
 	private function assert_normalized_producer_candidate( array $candidate, $producer_key, $producer_label ) {
-		foreach ( array( 'signature', 'path', 'name', 'producer_key', 'producer_label', 'package_id', 'filename', 'backup_set_id', 'manifest_path', 'checksum_path', 'remote_index_path', 'checksum_algorithm', 'checksum_value', 'site_url' ) as $key ) {
+		foreach ( array( 'signature', 'path', 'name', 'producer_key', 'producer_label', 'package_id', 'filename', 'backup_set_id', 'manifest_path', 'checksum_path', 'remote_index_path', 'remote_catalog_path', 'checksum_algorithm', 'checksum_value', 'site_url' ) as $key ) {
 			$this->assertArrayHasKey( $key, $candidate );
 			$this->assertIsString( $candidate[ $key ] );
 		}

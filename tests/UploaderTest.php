@@ -111,12 +111,15 @@ class UploaderTest extends TestCase {
 		$manifest            = $this->file . '.manifest.json';
 		$checksum            = $this->file . '.sha256';
 		$index               = $this->file . '.remote-index.json';
+		$catalog             = $this->file . '.remote-catalog.json';
 		$this->extra_files[] = $manifest;
 		$this->extra_files[] = $checksum;
 		$this->extra_files[] = $index;
+		$this->extra_files[] = $catalog;
 		file_put_contents( $manifest, '{"package_id":"test"}' );
 		file_put_contents( $checksum, 'abc123  ' . basename( $this->file ) );
 		file_put_contents( $index, '{"schema_version":1,"index_type":"single_package_restore_index","package_count":1}' );
+		file_put_contents( $catalog, '{"schema_version":1,"catalog_type":"folder_package_catalog_snapshot","package_count":1}' );
 		$options  = $this->base_options();
 		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
 			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
@@ -125,6 +128,7 @@ class UploaderTest extends TestCase {
 				'manifest_path'      => $manifest,
 				'checksum_path'      => $checksum,
 				'remote_index_path'  => $index,
+				'remote_catalog_path' => $catalog,
 			)
 		);
 
@@ -140,16 +144,19 @@ class UploaderTest extends TestCase {
 				basename( $manifest ),
 				basename( $checksum ),
 				basename( $index ),
+				basename( $catalog ),
 			),
 			$client->simple_upload_names
 		);
-		$this->assertCount( 3, $record['sidecars'] );
+		$this->assertCount( 4, $record['sidecars'] );
 		$this->assertSame( 'manifest', $record['sidecars'][0]['type'] );
 		$this->assertSame( basename( $manifest ), $record['sidecars'][0]['remote_name'] );
 		$this->assertSame( 'checksum', $record['sidecars'][1]['type'] );
 		$this->assertSame( basename( $checksum ), $record['sidecars'][1]['remote_name'] );
 		$this->assertSame( 'remote_index', $record['sidecars'][2]['type'] );
 		$this->assertSame( basename( $index ), $record['sidecars'][2]['remote_name'] );
+		$this->assertSame( 'remote_catalog', $record['sidecars'][3]['type'] );
+		$this->assertSame( basename( $catalog ), $record['sidecars'][3]['remote_name'] );
 	}
 
 	public function test_duplicate_generic_outbox_archive_can_upload_missing_sidecars() {

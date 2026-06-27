@@ -27,7 +27,7 @@ Date:
 
 - Confirm the exact site and server.
 - Confirm the package ID and filename.
-- Confirm the archive, `.manifest.json`, and `.sha256` sidecar are available together. For current server-runner packages, also confirm the `.remote-index.json` sidecar is present or document why the package predates it.
+- Confirm the archive, `.manifest.json`, and `.sha256` sidecar are available together. For current server-runner packages, also confirm the `.remote-index.json` and `.remote-catalog.json` sidecars are present or document why the package predates them.
 - Confirm the restore staging path is outside the public web root.
 - Confirm there is enough disk space for the downloaded archive and extracted copy.
 - Confirm this rehearsal is inspection-only.
@@ -54,6 +54,7 @@ example-com-YYYYmmdd-HHMMSS.tar.gz
 example-com-YYYYmmdd-HHMMSS.tar.gz.manifest.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
 example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
+example-com-YYYYmmdd-HHMMSS.tar.gz.remote-catalog.json
 ```
 
 Stop if the required manifest or checksum sidecar is missing.

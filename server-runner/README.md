@@ -8,7 +8,7 @@ This first runner is intentionally conservative:
 - It writes packages to a configured outbox directory.
 - It uses WP-CLI for database exports.
 - It uses `tar` for WordPress file archives.
-- It writes manifest, SHA-256, and package-level remote-index sidecars.
+- It writes manifest, SHA-256, package-level remote-index, and folder catalog snapshot sidecars.
 - It can record light consistency metadata for high-write-site review.
 - It writes temporary files first, then atomically renames completed artifacts into the outbox.
 
@@ -94,9 +94,10 @@ example-com-YYYYmmdd-HHMMSS.tar.gz
 example-com-YYYYmmdd-HHMMSS.tar.gz.manifest.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
 example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
+example-com-YYYYmmdd-HHMMSS.tar.gz.remote-catalog.json
 ```
 
-The plugin can detect the archive and read the manifest/checksum/remote-index sidecars. The remote-index sidecar is a per-package restore discovery helper that travels to Drime with the archive; it is not a shared folder-level catalog.
+The plugin can detect the archive and read the manifest/checksum/remote-index/remote-catalog sidecars. The remote-index sidecar describes the single package. The remote-catalog sidecar is a folder catalog snapshot that describes the local outbox package set at package creation time. Both travel to Drime with the archive; the catalog snapshot is not a mutable singleton remote file.
 
 The runner can also print a local inventory for the outbox:
 
@@ -104,7 +105,7 @@ The runner can also print a local inventory for the outbox:
 php alynt-backup-runner.php list --config=/path/to/config.json --format=json
 ```
 
-Use this before restore discovery or cleanup decisions to confirm which package sets have archive, manifest, checksum, and remote-index files locally. `verification_ready` means the manifest has a package ID and the checksum sidecar has a parseable SHA-256 value; still run `verify` before restore staging.
+Use this before restore discovery or cleanup decisions to confirm which package sets have archive, manifest, checksum, remote-index, and remote-catalog files locally. `verification_ready` means the manifest has a package ID and the checksum sidecar has a parseable SHA-256 value; still run `verify` before restore staging.
 
 The runner can preview old local artifacts before an operator-approved cleanup:
 

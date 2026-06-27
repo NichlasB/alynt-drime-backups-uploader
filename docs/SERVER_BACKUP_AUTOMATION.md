@@ -60,7 +60,7 @@ The local outbox is intentionally not deleted by uninstall and is not automatica
 Recommended lifecycle:
 
 1. Create the package and sidecars.
-2. Upload the archive, manifest, checksum, and package-level remote index to Drime when available.
+2. Upload the archive, manifest, checksum, package-level remote index, and folder catalog snapshot to Drime when available.
 3. Fetch the same package back from Drime.
 4. Verify the package and sidecars.
 5. Stage the restore into a separate restore directory.
@@ -127,6 +127,7 @@ Review:
 - Local inventory package count and `verification_ready` flags.
 - Local inventory `consistency_status` for recent server-runner packages.
 - Local inventory `remote_index_present` and `remote_index_valid` for recent server-runner packages.
+- Latest `.remote-catalog.json` sidecar when the original local outbox is unavailable.
 - Cleanup-preview candidate count before operator-approved disk cleanup.
 - Last WP-CLI scan time.
 - Queue count.
@@ -141,7 +142,7 @@ The current implementation does not yet include:
 
 - Automatic cron installation.
 - Automatic local outbox cleanup. A read-only cleanup preview exists, but deletion remains manual.
-- A shared folder-level remote package catalog. Server-runner packages now upload package-level `.remote-index.json` sidecars, but the plugin does not maintain one rolling index for every package in a Drime destination folder.
+- A mutable singleton remote package catalog. Server-runner packages now upload package-level `.remote-index.json` and folder catalog snapshot `.remote-catalog.json` sidecars, but the plugin does not overwrite one rolling file in a Drime destination folder.
 - Alternative archive formats beyond runner-created `.tar.gz` packages.
 - Automatic maintenance mode or write-pausing for high-write sites.
 - Automatic destructive restore.

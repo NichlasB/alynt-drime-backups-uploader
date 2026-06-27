@@ -52,7 +52,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Ignores temporary and unsupported files.
 - Requires readable, non-empty, stable files before queueing.
 - Uses age and unchanged-size checks before queueing.
-- Reads manifest, checksum, and package-level remote-index sidecars after the main archive is stable.
+- Reads manifest, checksum, package-level remote-index, and folder catalog snapshot sidecars after the main archive is stable.
 - Supports server-runner packages and future producer outputs as long as they follow the normalized candidate shape.
 
 ### Server-Side Backup Runner
@@ -62,7 +62,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Creates `.tar.gz` packages containing WordPress files plus optional `database.sql`.
 - Uses WP-CLI for database export.
 - Uses `tar` for filesystem archive creation.
-- Writes manifest, SHA-256, and package-level remote-index sidecars.
+- Writes manifest, SHA-256, package-level remote-index, and folder catalog snapshot sidecars.
 - Writes temporary archive files first, then atomically moves completed packages into the outbox.
 - Uses a runner-level lock to avoid overlapping package creation.
 - Health checks verify required paths, free space, `tar`, WP-CLI, and WordPress path assumptions.
@@ -75,7 +75,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Duplicate handling supports skip and rename behavior.
 - Destination folder preview, workspace selection, and relative-path upload handling are implemented.
 - Multipart resume, stale active upload clearing, retry handling, and failure registry behavior are implemented.
-- Manifest/checksum/remote-index sidecars are uploaded with server-runner packages.
+- Manifest/checksum/remote-index/remote-catalog sidecars are uploaded with server-runner packages.
 - Manual remote retention is implemented conservatively:
   - registry-owned uploads only;
   - disabled by default;
@@ -214,7 +214,7 @@ Current artifact:
 
 ### 3. Broader Server-Side Backup Automation Support
 
-Status: documentation, local package inventory, package-level remote-index sidecars, cleanup preview, light consistency mode, multiple standalone site guidance, and server-cron review UX implemented.
+Status: documentation, local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, cleanup preview, light consistency mode, multiple standalone site guidance, and server-cron review UX implemented.
 
 Goal:
 
@@ -231,12 +231,13 @@ Implemented first slice:
 - Added generated **Server Cron Review Commands** so operators can capture the current crontab, build a proposed crontab file with the generated snippet, review a diff, and manually approve the final `crontab` install command.
 - Added `docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md` to clarify that this backlog item meant several separate WordPress sites on one server, not WordPress Multisite. The guide documents isolated runner configs, outboxes, work paths, restore paths, cron entries, Drime site folders, monitoring, cleanup-preview use, and common mistakes.
 - Added package-level `.remote-index.json` sidecars for server-runner packages. The generic outbox producer reads and uploads those sidecars with the archive, manifest, and checksum so each Drime package set carries non-secret restore discovery metadata.
+- Added `.remote-catalog.json` folder catalog snapshot sidecars for server-runner packages. The generic outbox producer reads and uploads those sidecars with the package set so the latest uploaded package can carry a non-secret catalog of the local outbox package set.
 
 Remaining possible future work:
 
 - Additional archive formats after real server validation.
 - Stronger consistency modes for higher-write sites, such as maintenance-window runbooks, temporary maintenance mode, or host-level snapshots.
-- Shared folder-level remote package catalog for easier cross-package discovery when the original server is unavailable.
+- Mutable singleton remote package catalog if future Drime API validation proves safe in-place replacement semantics.
 - Operator-approved local cleanup execution after confirmed Drime upload and restore verification.
 
 Light consistency mode validation:
@@ -283,8 +284,17 @@ Package-level remote index feature workflow results:
 - Feature Bloat And Structure Review: completed with explicit base ref `origin/master`; measurement reported 13 changed PHP files and 4 oversized existing files (`server-runner/alynt-backup-runner.php`, `tests/UploaderTest.php`, `includes/class-uploader.php`, and `includes/class-generic-outbox-producer.php`). The standalone runner and uploader paths remain existing architecture-sensitive files, and the new code is confined to small helper methods plus existing sidecar upload paths.
 - Feature UI/UX Implementation Review: not applicable; no admin UI or frontend UI changed.
 - Feature Security Review: passed; the remote-index sidecar stores non-secret package metadata only, does not include Drime tokens or signed URLs, omits archive absolute paths, and does not approve restore or destructive actions.
-- Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, restore docs, remote discovery docs, automation docs, package security docs, rollout/rehearsal docs, and this plan now document package-level remote-index sidecars while keeping shared folder-level catalog work as future.
+- Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, restore docs, remote discovery docs, automation docs, package security docs, rollout/rehearsal docs, and this plan now document package-level remote-index sidecars while keeping mutable singleton remote catalog work as future.
 - Final validation: `php -l` passed for changed PHP files; `npm.cmd test` passed with 136 tests and 734 assertions; `npm.cmd run lint` passed across 53 files; `git diff --check` passed with only the existing `readme.txt` CRLF warning.
+
+Folder catalog snapshot feature workflow results:
+
+- Feature Light Review: passed; change is limited to server-runner catalog snapshot generation, generic-outbox catalog sidecar discovery/upload, queue/retry context preservation, focused tests, and documentation.
+- Feature Bloat And Structure Review: completed with explicit base ref `631a684`; measurement reported 13 changed PHP files and 4 oversized existing files (`server-runner/alynt-backup-runner.php`, `tests/UploaderTest.php`, `includes/class-uploader.php`, and `includes/class-generic-outbox-producer.php`). The new duplicate JSON sidecar reader was consolidated, and any further split of the standalone runner/uploader/generic producer remains architecture-sensitive rather than a feature-stage cleanup.
+- Feature UI/UX Implementation Review: not applicable; no admin UI or frontend UI changed.
+- Feature Security Review: passed; the catalog snapshot stores non-secret package metadata, omits archive absolute paths, does not include tokens or signed URLs, follows the same package-basename sidecar safety rule as other sidecars, and does not approve restore or destructive actions.
+- Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, restore docs, remote discovery docs, automation docs, package security docs, rollout/rehearsal docs, and this plan now document folder catalog snapshot sidecars while keeping mutable singleton remote catalog replacement as future optional work.
+- Final validation: `npm.cmd test` passed with 136 tests and 754 assertions; `npm.cmd run lint` passed across 53 files; `git diff --check` passed with only the existing `readme.txt` CRLF warning.
 
 ### 4. Restore Flow Improvements
 
@@ -347,7 +357,7 @@ Local cleanup preview feature workflow results:
 
 Remaining possible future work:
 
-- Shared folder-level remote package catalog for easier Drime discovery across many packages when WordPress and the original local outbox are unavailable.
+- Mutable singleton remote package catalog only if future Drime API validation proves safe in-place replacement semantics.
 - Guided staging-restore UI or WP-CLI helper output.
 - Destructive restore automation only as a separate, gated project with dry-run, confirmation, and staging evidence.
 

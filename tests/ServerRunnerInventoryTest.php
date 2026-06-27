@@ -155,9 +155,11 @@ class ServerRunnerInventoryTest extends Alynt_Drime_Backups_Uploader_Server_Runn
 
 		$manifest = json_decode( (string) file_get_contents( $packages[0] . '.manifest.json' ), true );
 		$index    = json_decode( (string) file_get_contents( $packages[0] . '.remote-index.json' ), true );
+		$catalog  = json_decode( (string) file_get_contents( $packages[0] . '.remote-catalog.json' ), true );
 
 		$this->assertIsArray( $manifest );
 		$this->assertIsArray( $index );
+		$this->assertIsArray( $catalog );
 		$this->assertSame( 'light', $manifest['consistency_mode'] );
 		$this->assertSame( 'clean', $manifest['consistency_status'] );
 		$this->assertSame( 0, $manifest['file_archive_exit_code'] );
@@ -174,6 +176,14 @@ class ServerRunnerInventoryTest extends Alynt_Drime_Backups_Uploader_Server_Runn
 		$this->assertTrue( $index['packages'][0]['remote_index_present'] );
 		$this->assertTrue( $index['packages'][0]['remote_index_valid'] );
 		$this->assertTrue( $index['restore_policy']['manual_restore_required'] );
+		$this->assertSame( 1, $catalog['schema_version'] );
+		$this->assertSame( 'folder_package_catalog_snapshot', $catalog['catalog_type'] );
+		$this->assertSame( 1, $catalog['package_count'] );
+		$this->assertSame( basename( $packages[0] ), $catalog['packages'][0]['archive_name'] );
+		$this->assertArrayNotHasKey( 'archive_path', $catalog['packages'][0] );
+		$this->assertTrue( $catalog['packages'][0]['remote_index_present'] );
+		$this->assertTrue( $catalog['packages'][0]['remote_index_valid'] );
+		$this->assertTrue( $catalog['restore_policy']['manual_restore_required'] );
 
 		$list = $this->run_runner( 'list', $config, array( '--format=json' ) );
 		$this->assertSame( 0, $list['exit_code'], implode( "\n", $list['error'] ) );

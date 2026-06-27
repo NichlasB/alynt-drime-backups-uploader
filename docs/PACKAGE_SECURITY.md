@@ -9,7 +9,7 @@ The goal is to make the first restore loop trustworthy enough to test and operat
 Covered now:
 
 - Local package completion rules.
-- Manifest and checksum sidecars.
+- Manifest, checksum, remote-index, and remote-catalog sidecars.
 - Restore-stage archive safety validation.
 - Recommended private server paths.
 - CLI fetch and restore-staging boundaries.
@@ -21,7 +21,7 @@ Not covered yet:
 - Automated production restore.
 - End-to-end package signing.
 - Backup encryption and key recovery.
-- Shared folder-level remote disaster catalog for a WordPress-unavailable site.
+- Mutable singleton remote disaster catalog for a WordPress-unavailable site.
 
 ## Trust Boundaries
 
@@ -48,6 +48,7 @@ example-com-YYYYmmdd-HHMMSS.tar.gz
 example-com-YYYYmmdd-HHMMSS.tar.gz.manifest.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
 example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
+example-com-YYYYmmdd-HHMMSS.tar.gz.remote-catalog.json
 ```
 
 The manifest identifies the package, producer, site, archive format, file root, database dump path, and runner version. It must not contain Drime API tokens, WordPress salts, database passwords, SSH keys, cookies, or other secrets.
@@ -102,11 +103,11 @@ The runner health check verifies writable paths, minimum free disk space, and sa
 
 ## Drime Upload Boundary
 
-The plugin uploads package bytes to the configured Drime workspace and destination folder. For generic server-runner packages, it also uploads the manifest, checksum, and package-level remote-index sidecars to the same Drime folder. The remote-index sidecar contains non-secret restore discovery metadata and is a convenience file, not an authenticity guarantee or approval to restore. The plugin does not currently maintain a separate signed inventory or shared folder-level restore catalog.
+The plugin uploads package bytes to the configured Drime workspace and destination folder. For generic server-runner packages, it also uploads the manifest, checksum, package-level remote-index, and folder catalog snapshot sidecars to the same Drime folder. The remote-index and remote-catalog sidecars contain non-secret restore discovery metadata and are convenience files, not authenticity guarantees or approval to restore. The plugin does not currently maintain a separate signed inventory or mutable singleton folder-level restore catalog.
 
 Workspace ID `0`, the personal/default Drime workspace, is blocked for backup destinations. A blank workspace is allowed only as an initial "not configured yet" setup state and cannot be used for folder browsing, destination preview, or uploads. Operators can also define `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` in `wp-config.php` to restrict the site to one or more approved workspace IDs. The workspace picker, settings save, folder browser, destination preview, and upload worker enforce the same workspace rules so bypassing the dropdown does not allow uploads into a disallowed workspace.
 
-See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the current manual discovery path and package-level remote-index sidecar.
+See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the current manual discovery path, package-level remote-index sidecar, and folder catalog snapshot sidecar.
 
 The server runner's CLI `fetch` command reads the Drime bearer token from an environment variable, downloads exact package/sidecar matches, and verifies the package before restore staging. If Drime returns a redirected download URL, the runner validates that redirect target as HTTPS and repeats the download without forwarding the bearer token.
 

@@ -261,7 +261,7 @@ Run this before treating a server-runner site as fully onboarded. For WPvivid-on
 
 1. Identify the first uploaded server-runner package ID.
 2. Confirm the archive, `.manifest.json`, and `.sha256` sidecar are present in Drime.
-3. Fetch the package and sidecars from Drime, or manually download the archive plus manifest/checksum sidecars to a safe server path. Download the `.remote-index.json` sidecar too for current server-runner packages.
+3. Fetch the package and sidecars from Drime, or manually download the archive plus manifest/checksum sidecars to a safe server path. Download the `.remote-index.json` and `.remote-catalog.json` sidecars too for current server-runner packages.
 4. Verify the package locally.
 5. Inspect the package metadata.
 6. Stage the package into the restore directory.
@@ -290,7 +290,7 @@ php /var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.
 
 Acceptance:
 
-- Fetch or manual download includes the archive plus required manifest/checksum sidecars, and the `.remote-index.json` sidecar for current server-runner packages.
+- Fetch or manual download includes the archive plus required manifest/checksum sidecars, and the `.remote-index.json` plus `.remote-catalog.json` sidecars for current server-runner packages.
 - Verification passes.
 - Inspect output matches the expected site URL and package metadata.
 - Stage restore creates a new restore directory outside the public web root.
@@ -338,7 +338,7 @@ wp --path=/var/www/example.com/htdocs alynt-drime-backups status --format=json
 | Package is not queued | Confirm file age, unchanged size across scans, supported extension, readable sidecars, and scan timing. |
 | Upload fails | Check Drime token, workspace, destination preview, network errors, retry state, and failed-upload table. |
 | Server cron warning remains | Confirm cron is installed for the site user and that the WP-CLI `run` command has executed. |
-| Restore fetch cannot find sidecars | Confirm the Drime artifacts share the same package basename and are in the same destination folder. Manifest/checksum are required for verification; `.remote-index.json` is expected for current server-runner packages. |
+| Restore fetch cannot find sidecars | Confirm the Drime artifacts share the same package basename and are in the same destination folder. Manifest/checksum are required for verification; `.remote-index.json` and `.remote-catalog.json` are expected for current server-runner packages. |
 | Staging restore refuses extraction | Inspect archive member paths; unsafe paths or link entries should stop the restore. |
 
 ## Rollout Acceptance Checklist

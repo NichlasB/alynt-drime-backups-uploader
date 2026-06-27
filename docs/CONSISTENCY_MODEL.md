@@ -13,7 +13,7 @@ The server runner creates one package in this order:
 3. Export the database with WP-CLI when database export is enabled.
 4. Write `manifest.json`.
 5. Archive the WordPress file tree, database dump, and manifest into a `.tar.gz`.
-6. Write final manifest, checksum, and package-level remote-index sidecars beside the completed archive.
+6. Write final manifest, checksum, package-level remote-index, and folder catalog snapshot sidecars beside the completed archive.
 7. Move the completed package into the outbox atomically.
 
 The package manifest uses:

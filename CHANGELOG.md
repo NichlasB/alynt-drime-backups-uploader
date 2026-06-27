@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Added server-cron review commands to the settings screen so operators can build and diff a proposed crontab file before manually approving installation.
 - Added multiple standalone site runner guidance for managing separate GridPane/VPS WordPress sites without sharing runner configs, outboxes, cron entries, or Drime site folders.
 - Added package-level `.remote-index.json` sidecars for server-runner packages and generic-outbox uploads so each Drime package set carries restore discovery metadata.
+- Added `.remote-catalog.json` folder catalog snapshot sidecars so each uploaded server-runner package can carry a non-secret catalog of the local outbox package set.
 
 ### Changed
 

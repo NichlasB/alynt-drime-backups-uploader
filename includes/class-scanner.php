@@ -144,27 +144,28 @@ class Alynt_Drime_Backups_Uploader_Scanner {
 			return array();
 		}
 
-		$candidate['signature']          = $signature;
-		$candidate['path']               = $path;
-		$candidate['name']               = $name;
-		$candidate['size']               = $this->candidate_int( $candidate, 'size' );
-		$candidate['mtime']              = $this->candidate_int( $candidate, 'mtime' );
-		$candidate['producer_key']       = $producer->key();
-		$candidate['producer_label']     = $producer->label();
-		$candidate['package_id']         = $this->candidate_string( $candidate, 'package_id', $signature );
-		$candidate['filename']           = $this->candidate_string( $candidate, 'filename', $name );
-		$candidate['modified_time']      = $this->candidate_int( $candidate, 'modified_time', $candidate['mtime'] );
-		$candidate['backup_set_id']      = $this->candidate_string( $candidate, 'backup_set_id', $candidate['package_id'] );
-		$candidate['backup_set_part']    = $this->candidate_string( $candidate, 'backup_set_part' );
-		$candidate['backup_set_total']   = max( 1, $this->candidate_int( $candidate, 'backup_set_total', 1 ) );
-		$candidate['manifest_path']      = $this->candidate_string( $candidate, 'manifest_path' );
-		$candidate['checksum_path']      = $this->candidate_string( $candidate, 'checksum_path' );
-		$candidate['remote_index_path']  = $this->candidate_string( $candidate, 'remote_index_path' );
-		$candidate['checksum_algorithm'] = $this->candidate_string( $candidate, 'checksum_algorithm' );
-		$candidate['checksum_value']     = $this->candidate_string( $candidate, 'checksum_value' );
-		$candidate['site_url']           = $this->candidate_string( $candidate, 'site_url' );
-		$candidate['created_at']         = $this->candidate_int( $candidate, 'created_at' );
-		$candidate['metadata']           = isset( $candidate['metadata'] ) && is_array( $candidate['metadata'] ) ? $candidate['metadata'] : array();
+		$candidate['signature']           = $signature;
+		$candidate['path']                = $path;
+		$candidate['name']                = $name;
+		$candidate['size']                = $this->candidate_int( $candidate, 'size' );
+		$candidate['mtime']               = $this->candidate_int( $candidate, 'mtime' );
+		$candidate['producer_key']        = $producer->key();
+		$candidate['producer_label']      = $producer->label();
+		$candidate['package_id']          = $this->candidate_string( $candidate, 'package_id', $signature );
+		$candidate['filename']            = $this->candidate_string( $candidate, 'filename', $name );
+		$candidate['modified_time']       = $this->candidate_int( $candidate, 'modified_time', $candidate['mtime'] );
+		$candidate['backup_set_id']       = $this->candidate_string( $candidate, 'backup_set_id', $candidate['package_id'] );
+		$candidate['backup_set_part']     = $this->candidate_string( $candidate, 'backup_set_part' );
+		$candidate['backup_set_total']    = max( 1, $this->candidate_int( $candidate, 'backup_set_total', 1 ) );
+		$candidate['manifest_path']       = $this->candidate_string( $candidate, 'manifest_path' );
+		$candidate['checksum_path']       = $this->candidate_string( $candidate, 'checksum_path' );
+		$candidate['remote_index_path']   = $this->candidate_string( $candidate, 'remote_index_path' );
+		$candidate['remote_catalog_path'] = $this->candidate_string( $candidate, 'remote_catalog_path' );
+		$candidate['checksum_algorithm']  = $this->candidate_string( $candidate, 'checksum_algorithm' );
+		$candidate['checksum_value']      = $this->candidate_string( $candidate, 'checksum_value' );
+		$candidate['site_url']            = $this->candidate_string( $candidate, 'site_url' );
+		$candidate['created_at']          = $this->candidate_int( $candidate, 'created_at' );
+		$candidate['metadata']            = isset( $candidate['metadata'] ) && is_array( $candidate['metadata'] ) ? $candidate['metadata'] : array();
 
 		return $candidate;
 	}
