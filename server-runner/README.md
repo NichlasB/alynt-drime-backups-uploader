@@ -27,6 +27,7 @@ php alynt-backup-runner.php inspect --config=/path/to/config.json --package=/pat
 php alynt-backup-runner.php fetch --config=/path/to/config.json --package-id=package-id --workspace-id=0 --folder-hash=hash --download-path=/path/to/downloads
 php alynt-backup-runner.php stage-restore --config=/path/to/config.json --package=/path/to/package.tar.gz
 php alynt-backup-runner.php restore-dry-run --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --format=json
+php alynt-backup-runner.php restore-dry-run --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --write-report=1 --format=json
 ```
 
 `list` keeps the original plain-text path output by default. Use `--format=json` to print a local package inventory with package IDs, archive names, sidecar names, manifest/checksum/remote-index validity flags, checksum metadata, manifest metadata, and `verification_ready` flags. The JSON inventory is read-only and does not verify hashes or contact Drime.
@@ -131,7 +132,9 @@ The cleanup command deletes matching local outbox archives plus `.manifest.json`
 
 The first restore flow is intentionally non-destructive. `fetch` can download a known Drime package plus sidecars into a local download directory, and `stage-restore` verifies the package and sidecars, creates a new directory under `restore_path`, extracts the archive there, and writes `RESTORE_NOTES.txt` plus `RESTORE_REPORT.json`.
 
-`restore-dry-run` reads a staged restore directory and reports whether a future gated restore command would have enough evidence to proceed. It checks the staging-only restore config flags, confirms `--staged-path` is inside `restore_path`, validates `RESTORE_REPORT.json`, verifies required staged `htdocs/` and/or `database.sql` content for the selected scope, checks the configured target WordPress path, checks pre-restore backup path readiness, and confirms the target filesystem has the configured minimum free space. It does not create a pre-restore backup, import a database, overwrite files, write reports, delete files, or run shell restore commands.
+`restore-dry-run` reads a staged restore directory and reports whether a future gated restore command would have enough evidence to proceed. It checks the staging-only restore config flags, confirms `--staged-path` is inside `restore_path`, validates `RESTORE_REPORT.json`, verifies required staged `htdocs/` and/or `database.sql` content for the selected scope, checks the configured target WordPress path, checks pre-restore backup path readiness, and confirms the target filesystem has the configured minimum free space.
+
+By default, dry run prints output only. Add `--write-report=1` to write a successful dry-run evidence report under configured `restore_reports_path`. The command writes that report only after the dry run passes; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
 
 The restore commands now print operator guidance after successful `fetch`, `verify`, `inspect`, and `stage-restore` runs. This guidance points to the next inspection step, names the staged path after extraction, and repeats that database imports and live file replacement remain separately approved manual work.
 
@@ -139,7 +142,7 @@ The restore commands now print operator guidance after successful `fetch`, `veri
 
 Before extraction, `stage-restore` lists the archive and rejects unsafe member paths, including absolute paths, parent-directory traversal, empty path segments, and archive links. This keeps restore staging focused on runner-created packages and prevents a malformed archive from writing outside the new staging directory.
 
-It does not import `database.sql`, does not overwrite the live WordPress path, and refuses to use an existing restore directory. `RESTORE_REPORT.json` records the package ID, archive and sidecar names, checksum metadata, manifest fields, and explicit booleans confirming that no database import or live file overwrite was performed. The final `stage-restore` output tells operators to review `RESTORE_NOTES.txt`, `RESTORE_REPORT.json`, `htdocs/`, and `database.sql` before any separately approved recovery work. `restore-dry-run` can be run after that inspection to produce a machine-readable preflight result, but `restore-apply` is not implemented yet.
+It does not import `database.sql`, does not overwrite the live WordPress path, and refuses to use an existing restore directory. `RESTORE_REPORT.json` records the package ID, archive and sidecar names, checksum metadata, manifest fields, and explicit booleans confirming that no database import or live file overwrite was performed. The final `stage-restore` output tells operators to review `RESTORE_NOTES.txt`, `RESTORE_REPORT.json`, `htdocs/`, and `database.sql` before any separately approved recovery work. `restore-dry-run` can be run after that inspection to produce a machine-readable preflight result and, when explicitly requested, a persistent dry-run evidence report. `restore-apply` is not implemented yet.
 
 See [docs/RESTORE_RUNBOOK.md](../docs/RESTORE_RUNBOOK.md) for the operator runbook, GridPane staging checks, and the currently gated manual disaster restore outline. See [docs/PACKAGE_SECURITY.md](../docs/PACKAGE_SECURITY.md) for the package integrity, extraction safety, storage-path, and encryption boundaries.
 

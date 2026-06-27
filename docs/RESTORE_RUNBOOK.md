@@ -191,6 +191,23 @@ php /path/to/alynt-backup-runner.php restore-dry-run \
   --format=json
 ```
 
+To write a persistent evidence report after a passing dry run, add `--write-report=1` and configure `restore_reports_path`:
+
+```json
+{
+  "restore_reports_path": "/var/www/example.com/private/alynt-drime-backups/restore-reports"
+}
+```
+
+```bash
+php /path/to/alynt-backup-runner.php restore-dry-run \
+  --config=/var/www/example.com/private/alynt-drime-backups/config.json \
+  --staged-path=/var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMSS \
+  --scope=files-and-database \
+  --write-report=1 \
+  --format=json
+```
+
 Supported scope values are:
 
 - `files`
@@ -209,7 +226,7 @@ The dry run reads config and staged evidence only. It checks:
 - `restore_pre_backup_path` exists or its parent is writable.
 - The target filesystem has the configured minimum free space.
 
-The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `restore_apply_command_available: false`. It does not create a pre-restore backup, import a database, overwrite files, write reports, delete files, or run shell restore commands.
+The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `restore_apply_command_available: false`. By default it writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under `restore_reports_path`; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
 
 ## Manual Disaster Restore Outline
 

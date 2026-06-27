@@ -48,7 +48,7 @@ The runner verifies the package checksum and manifest sidecar, prints next-step 
 
 = Can I dry-run a future restore after staging a package? =
 
-Yes. The runner supports `restore-dry-run --staged-path=/path/to/staged/package --scope=files-and-database --format=json`. It reads config and staged restore evidence only, then reports whether staging-only restore gates, target path safety, pre-restore backup path readiness, and required staged files are present. It does not import databases, overwrite files, or create backups.
+Yes. The runner supports `restore-dry-run --staged-path=/path/to/staged/package --scope=files-and-database --format=json`. It reads config and staged restore evidence, then reports whether staging-only restore gates, target path safety, pre-restore backup path readiness, and required staged files are present. Add `--write-report=1` to write a successful dry-run evidence report under configured `restore_reports_path`. It does not import databases, overwrite files, or create backups.
 
 = Can I list local server-runner packages before choosing one to restore? =
 
@@ -119,6 +119,7 @@ No public custom actions or filters are exposed.
 * Added operator-confirmed server-runner local cleanup execution for old outbox package sets and restore staging directories.
 * Added clearer server-runner restore guidance after fetch, verify, inspect, and stage-restore commands.
 * Added read-only server-runner restore dry-run checks for staged restore evidence, staging-only config gates, target path safety, and scope-specific staged files.
+* Added optional server-runner restore dry-run evidence reports with `--write-report=1` and configured `restore_reports_path`.
 * Changed server-runner archives to exclude symlink entries before restore staging.
 * Changed server-runner archive creation to recover from live file-change warnings only when a non-empty archive was produced.
 * Changed generated server-runner configs to use light consistency mode by default.

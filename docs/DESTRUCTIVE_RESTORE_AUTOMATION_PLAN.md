@@ -70,8 +70,8 @@ Supported `--scope` values for version 1:
 
 Recommended first implementation path:
 
-1. Build `restore-dry-run`. Current source status: implemented as a read-only preflight only.
-2. Add report generation.
+1. Build `restore-dry-run`. Current source status: implemented as a preflight.
+2. Add report generation. Current source status: implemented as optional `--write-report=1` success evidence under configured `restore_reports_path`.
 3. Add pre-restore backup evidence checks.
 4. Add `restore-apply --scope=database`.
 5. Add `restore-apply --scope=files`.
@@ -245,13 +245,22 @@ Dry run should verify:
 
 Current `restore-dry-run` behavior:
 
-- Reads staged evidence only and writes nothing.
+- Reads staged evidence and writes nothing by default.
 - Supports `--scope=files`, `--scope=database`, and `--scope=files-and-database`.
 - Supports `--format=json`.
+- Supports `--write-report=1` to write a successful dry-run evidence report under configured `restore_reports_path`.
+- Refuses to write success evidence when the dry run fails.
 - Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, `pre_restore_backup_created: false`, and `restore_apply_command_available: false`.
 - Does not create pre-restore backups yet.
 - Does not check target database connectivity yet.
 - Does not implement `restore-apply`.
+
+Current dry-run report fields:
+
+- `report_write_requested`
+- `report_written`
+- `report_path`
+- `report_write_error`
 
 Feature-stage review status for the first dry-run slice:
 
@@ -260,6 +269,15 @@ Feature-stage review status for the first dry-run slice:
 - Feature UI/UX Implementation Review: not applicable; no wp-admin UI, frontend UI, AJAX, REST, or browser-facing controls changed.
 - Feature Security Review: passed; dry run validates scope, restore-path containment, staged report evidence, safe single-segment report paths, target path safety, and reports no destructive actions.
 - Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, restore runbook, package security docs, pre-release checklist, and this plan now describe the dry-run boundary.
+- Validation: PHP syntax checks, focused restore/security PHPUnit, full `npm.cmd test`, `npm.cmd run lint`, `git diff --check`, and feature bloat report passed. `git diff --check` reports only the existing `readme.txt` CRLF warning.
+
+Feature-stage review status for the dry-run report-generation slice:
+
+- Feature Light Review: passed; report writing is opt-in, writes only successful dry-run evidence, and leaves failed dry runs without success artifacts.
+- Feature Bloat And Structure Review: completed with explicit base ref `65aef5a`; the new test file was trimmed under threshold, and the standalone runner remains oversized/deferred because splitting the portable CLI script is architecture-sensitive.
+- Feature UI/UX Implementation Review: not applicable; no wp-admin UI, frontend UI, AJAX, REST, or browser-facing controls changed.
+- Feature Security Review: passed; report writing is gated by `--write-report=1`, requires configured `restore_reports_path`, blocks broad report paths, and still exposes no `restore-apply` command.
+- Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, restore runbook, package security docs, pre-release checklist, implementation plan, and this plan now describe optional dry-run evidence reports.
 - Validation: PHP syntax checks, focused restore/security PHPUnit, full `npm.cmd test`, `npm.cmd run lint`, `git diff --check`, and feature bloat report passed. `git diff --check` reports only the existing `readme.txt` CRLF warning.
 
 Apply should:

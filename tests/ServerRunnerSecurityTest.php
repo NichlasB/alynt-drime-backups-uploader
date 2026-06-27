@@ -61,15 +61,14 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( "'database_imported'               => false", $source );
 		$this->assertStringContainsString( "'live_files_overwritten'          => false", $source );
 		$this->assertStringContainsString( "'restore_apply_command_available' => false", $source );
+		$this->assertStringContainsString( '--write-report=1', $source );
+		$this->assertStringContainsString( 'restore_reports_path', $source );
+		$this->assertStringContainsString( 'Dry run failed; success evidence report was not written.', $source );
 		$this->assertStringNotContainsString( "case 'restore-apply'", $source );
 		$this->assertSame( 1, preg_match( '/private function restore_dry_run_command\(.*?private function print_verify_next_steps/s', $source, $matches ) );
 
 		$method_source = $matches[0];
 		$this->assertStringNotContainsString( 'run_shell_command', $method_source );
-		$this->assertStringNotContainsString( 'write_json', $method_source );
-		$this->assertStringNotContainsString( 'write_file', $method_source );
-		$this->assertStringNotContainsString( 'mkdir(', $method_source );
-		$this->assertStringNotContainsString( 'rename(', $method_source );
 		$this->assertStringNotContainsString( 'unlink(', $method_source );
 		$this->assertStringNotContainsString( 'rmdir(', $method_source );
 	}

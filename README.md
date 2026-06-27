@@ -96,7 +96,7 @@ The plugin settings screen generates a GridPane runner config, runner install co
 
 For the broader server-side automation model, including scheduling, multiple standalone site layout, disk retention, cleanup preview/execution, and high-write-site boundaries, see [docs/SERVER_BACKUP_AUTOMATION.md](docs/SERVER_BACKUP_AUTOMATION.md). For several separate WordPress sites on one server, see [docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md](docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md).
 
-For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: the server runner can fetch a known package from Drime, verify it, inspect it, print next-step guidance, stage it for inspection, write local restore evidence, and run a read-only `restore-dry-run` preflight, but it does not import databases or overwrite live site files.
+For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: the server runner can fetch a known package from Drime, verify it, inspect it, print next-step guidance, stage it for inspection, write local restore evidence, and run a read-only `restore-dry-run` preflight. When explicitly requested with `--write-report=1`, a passing dry run also writes a JSON evidence report under configured `restore_reports_path`. The runner does not import databases or overwrite live site files.
 
 For recording restore proof during onboarding or periodic confidence checks, see [docs/RESTORE_REHEARSAL_CHECKLIST.md](docs/RESTORE_REHEARSAL_CHECKLIST.md).
 

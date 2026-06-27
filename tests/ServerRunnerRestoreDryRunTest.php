@@ -16,15 +16,7 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 
 		$fixture = $this->create_staged_restore_fixture( 'example-com-20260627-150000' );
 
-		$result = $this->run_runner(
-			'restore-dry-run',
-			$fixture['config'],
-			array(
-				'--staged-path=' . escapeshellarg( $fixture['staged_path'] ),
-				'--scope=files-and-database',
-				'--format=json',
-			)
-		);
+		$result = $this->run_restore_dry_run_fixture( $fixture );
 
 		$this->assertSame( 0, $result['exit_code'], implode( "\n", $result['error'] ) );
 
@@ -41,10 +33,47 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 		$this->assertFalse( $dry_run['live_files_overwritten'] );
 		$this->assertFalse( $dry_run['pre_restore_backup_created'] );
 		$this->assertFalse( $dry_run['restore_apply_command_available'] );
+		$this->assertFalse( $dry_run['report_write_requested'] );
+		$this->assertFalse( $dry_run['report_written'] );
+		$this->assertSame( '', $dry_run['report_path'] );
 
 		foreach ( $dry_run['checks'] as $check ) {
 			$this->assertTrue( $check['passed'], $check['name'] );
 		}
+	}
+
+	public function test_restore_dry_run_writes_success_evidence_report_when_requested() {
+		if ( ! $this->tar_available() ) {
+			$this->markTestSkipped( 'The tar command is required for restore dry-run coverage.' );
+		}
+
+		$fixture = $this->create_staged_restore_fixture( 'example-com-20260627-150500' );
+
+		$result = $this->run_restore_dry_run_fixture( $fixture, array( '--write-report=1' ) );
+
+		$this->assertSame( 0, $result['exit_code'], implode( "\n", $result['error'] ) );
+
+		$dry_run = json_decode( implode( "\n", $result['output'] ), true );
+		$this->assertIsArray( $dry_run );
+		$this->assertSame( 'passed', $dry_run['status'] );
+		$this->assertTrue( $dry_run['report_write_requested'] );
+		$this->assertTrue( $dry_run['report_written'] );
+		$this->assertStringStartsWith( str_replace( '\\', '/', $fixture['reports_path'] ), str_replace( '\\', '/', $dry_run['report_path'] ) );
+		$this->assertFileExists( $dry_run['report_path'] );
+		$this->assertTrue( $this->check_passed( $dry_run, 'dry_run_report_path_configured' ) );
+		$this->assertTrue( $this->check_passed( $dry_run, 'dry_run_report_path_safe' ) );
+		$this->assertTrue( $this->check_passed( $dry_run, 'dry_run_report_written' ) );
+
+		$report = json_decode( (string) file_get_contents( $dry_run['report_path'] ), true );
+		$this->assertIsArray( $report );
+		$this->assertSame( 'restore-dry-run', $report['command'] );
+		$this->assertSame( 'passed', $report['status'] );
+		$this->assertTrue( $report['report_write_requested'] );
+		$this->assertTrue( $report['report_written'] );
+		$this->assertSame( $dry_run['report_path'], $report['report_path'] );
+		$this->assertFalse( $report['destructive_actions_performed'] );
+		$this->assertFalse( $report['database_imported'] );
+		$this->assertFalse( $report['live_files_overwritten'] );
 	}
 
 	public function test_restore_dry_run_fails_when_restore_apply_is_not_enabled() {
@@ -59,15 +88,7 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 			)
 		);
 
-		$result = $this->run_runner(
-			'restore-dry-run',
-			$fixture['config'],
-			array(
-				'--staged-path=' . escapeshellarg( $fixture['staged_path'] ),
-				'--scope=files-and-database',
-				'--format=json',
-			)
-		);
+		$result = $this->run_restore_dry_run_fixture( $fixture );
 
 		$this->assertSame( 1, $result['exit_code'] );
 
@@ -80,6 +101,32 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 		$this->assertFalse( $this->check_passed( $dry_run, 'restore_apply_enabled' ) );
 	}
 
+	public function test_restore_dry_run_does_not_write_success_report_when_dry_run_fails() {
+		if ( ! $this->tar_available() ) {
+			$this->markTestSkipped( 'The tar command is required for restore dry-run coverage.' );
+		}
+
+		$fixture = $this->create_staged_restore_fixture(
+			'example-com-20260627-152000',
+			array(
+				'restore_apply_enabled' => false,
+			)
+		);
+
+		$result = $this->run_restore_dry_run_fixture( $fixture, array( '--write-report=1' ) );
+
+		$this->assertSame( 1, $result['exit_code'] );
+
+		$dry_run = json_decode( implode( "\n", $result['output'] ), true );
+		$this->assertIsArray( $dry_run );
+		$this->assertSame( 'failed', $dry_run['status'] );
+		$this->assertTrue( $dry_run['report_write_requested'] );
+		$this->assertFalse( $dry_run['report_written'] );
+		$this->assertSame( '', $dry_run['report_path'] );
+		$this->assertSame( 'Dry run failed; success evidence report was not written.', $dry_run['report_write_error'] );
+		$this->assertSame( array(), glob( $fixture['reports_path'] . DIRECTORY_SEPARATOR . '*.json' ) );
+	}
+
 	public function test_restore_dry_run_fails_when_restore_report_is_missing() {
 		if ( ! $this->tar_available() ) {
 			$this->markTestSkipped( 'The tar command is required for restore dry-run coverage.' );
@@ -89,15 +136,7 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 		$report_path = $fixture['staged_path'] . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json';
 		unlink( $report_path );
 
-		$result = $this->run_runner(
-			'restore-dry-run',
-			$fixture['config'],
-			array(
-				'--staged-path=' . escapeshellarg( $fixture['staged_path'] ),
-				'--scope=files-and-database',
-				'--format=json',
-			)
-		);
+		$result = $this->run_restore_dry_run_fixture( $fixture );
 
 		$this->assertSame( 1, $result['exit_code'] );
 
@@ -124,15 +163,7 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 		$report['database_dump'] = 'nested/database.sql';
 		file_put_contents( $report_path, json_encode( $report ) );
 
-		$result = $this->run_runner(
-			'restore-dry-run',
-			$fixture['config'],
-			array(
-				'--staged-path=' . escapeshellarg( $fixture['staged_path'] ),
-				'--scope=files-and-database',
-				'--format=json',
-			)
-		);
+		$result = $this->run_restore_dry_run_fixture( $fixture );
 
 		$this->assertSame( 1, $result['exit_code'] );
 
@@ -150,12 +181,13 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 	 *
 	 * @param string              $package_id Package ID.
 	 * @param array<string,mixed> $overrides Config overrides.
-	 * @return array{config:string,archive:string,staged_path:string}
+	 * @return array{config:string,archive:string,staged_path:string,reports_path:string}
 	 */
 	private function create_staged_restore_fixture( $package_id, array $overrides = array() ) {
 		$outbox          = $this->make_directory( 'outbox-' . $package_id );
 		$wordpress_path  = $this->make_directory( 'target-' . $package_id );
 		$pre_backup_path = $this->make_directory( 'pre-restore-' . $package_id );
+		$reports_path    = $this->make_directory( 'restore-reports-' . $package_id );
 		$config          = $this->write_config(
 			$outbox,
 			array_merge(
@@ -165,6 +197,7 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 					'restore_environment'            => 'staging',
 					'restore_target_wordpress_path'  => $wordpress_path,
 					'restore_pre_backup_path'        => $pre_backup_path,
+					'restore_reports_path'           => $reports_path,
 					'minimum_free_space_bytes'       => 0,
 				),
 				$overrides
@@ -198,9 +231,32 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 		$this->assertSame( 0, $stage['exit_code'], implode( "\n", $stage['error'] ) );
 
 		return array(
-			'config'      => $config,
-			'archive'     => $archive,
-			'staged_path' => $this->root . DIRECTORY_SEPARATOR . 'restores' . DIRECTORY_SEPARATOR . $package_id,
+			'config'       => $config,
+			'archive'      => $archive,
+			'staged_path'  => $this->root . DIRECTORY_SEPARATOR . 'restores' . DIRECTORY_SEPARATOR . $package_id,
+			'reports_path' => $reports_path,
+		);
+	}
+
+	/**
+	 * Runs restore dry-run for a staged fixture.
+	 *
+	 * @param array{config:string,archive:string,staged_path:string,reports_path:string} $fixture Fixture.
+	 * @param array<int,string>                                                         $extra_args Extra args.
+	 * @return array{exit_code:int,output:array<int,string>,error:array<int,string>}
+	 */
+	private function run_restore_dry_run_fixture( array $fixture, array $extra_args = array() ) {
+		return $this->run_runner(
+			'restore-dry-run',
+			$fixture['config'],
+			array_merge(
+				array(
+					'--staged-path=' . escapeshellarg( $fixture['staged_path'] ),
+					'--scope=files-and-database',
+					'--format=json',
+				),
+				$extra_args
+			)
 		);
 	}
 

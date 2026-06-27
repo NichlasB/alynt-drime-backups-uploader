@@ -1076,6 +1076,7 @@ class Alynt_Server_Backup_Runner {
 	private function restore_dry_run_command( array $options ) {
 		$staged_path = isset( $options['staged-path'] ) ? $this->normalize_path( (string) $options['staged-path'] ) : '';
 		$scope       = isset( $options['scope'] ) ? strtolower( trim( (string) $options['scope'] ) ) : 'files-and-database';
+		$write_report = isset( $options['write-report'] ) && $this->truthy_value( $options['write-report'] );
 
 		if ( '' === $staged_path ) {
 			$this->error( 'Missing --staged-path=/path/to/staged/package.' );
@@ -1088,6 +1089,9 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		$result = $this->restore_dry_run_result( $staged_path, $scope );
+		if ( $write_report ) {
+			$result = $this->write_restore_dry_run_report( $result );
+		}
 
 		if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
 			$this->line( json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
@@ -1113,6 +1117,7 @@ class Alynt_Server_Backup_Runner {
 		$pre_backup_path = $this->normalize_path( $this->config_string( 'restore_pre_backup_path' ) );
 		$report_path     = $staged_path . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json';
 		$report          = $this->read_restore_report( $report_path );
+		$package_id      = isset( $report['package_id'] ) ? (string) $report['package_id'] : basename( $staged_path );
 
 		$this->add_restore_dry_run_check(
 			$checks,
@@ -1243,6 +1248,7 @@ class Alynt_Server_Backup_Runner {
 			'command'                         => 'restore-dry-run',
 			'status'                          => 0 === $failure_count ? 'passed' : 'failed',
 			'scope'                           => $scope,
+			'package_id'                      => $package_id,
 			'staged_path'                     => $staged_path,
 			'target_wordpress_path'           => $target_path,
 			'restore_environment'             => $this->config_string( 'restore_environment' ),
@@ -1256,7 +1262,69 @@ class Alynt_Server_Backup_Runner {
 			'live_files_overwritten'          => false,
 			'pre_restore_backup_created'      => false,
 			'restore_apply_command_available' => false,
+			'report_write_requested'          => false,
+			'report_written'                  => false,
+			'report_path'                     => '',
+			'report_write_error'              => '',
 		);
+	}
+
+	/**
+	 * Writes a successful restore dry-run evidence report.
+	 *
+	 * @param array<string,mixed> $result Dry-run result.
+	 * @return array<string,mixed>
+	 */
+	private function write_restore_dry_run_report( array $result ) {
+		$result['report_write_requested'] = true;
+
+		if ( 0 !== (int) $result['failure_count'] ) {
+			$result['report_write_error'] = 'Dry run failed; success evidence report was not written.';
+			return $result;
+		}
+
+		$reports_path = $this->restore_reports_path();
+		$this->add_restore_dry_run_check(
+			$result['checks'],
+			'dry_run_report_path_configured',
+			'' !== $reports_path,
+			'Restore dry-run reports path is configured.'
+		);
+		$this->add_restore_dry_run_check(
+			$result['checks'],
+			'dry_run_report_path_safe',
+			'' !== $reports_path && ! $this->dangerous_restore_target_path( $reports_path ),
+			'Restore dry-run reports path is not a broad system path.'
+		);
+
+		if ( '' !== $reports_path && ! $this->dangerous_restore_target_path( $reports_path ) && $this->ensure_directory( $reports_path ) && is_writable( $reports_path ) ) {
+			$package_id            = isset( $result['package_id'] ) ? (string) $result['package_id'] : 'restore-package';
+			$report_file           = 'RESTORE_DRY_RUN_REPORT-' . $this->safe_slug( $package_id ) . '-' . gmdate( 'Ymd-His' ) . '.json';
+			$result['report_path'] = $reports_path . DIRECTORY_SEPARATOR . $report_file;
+			$result['report_written'] = true;
+			if ( ! $this->write_json_atomic( $result['report_path'], $result ) ) {
+				$result['report_written'] = false;
+			}
+			$this->add_restore_dry_run_check(
+				$result['checks'],
+				'dry_run_report_written',
+				(bool) $result['report_written'],
+				'Restore dry-run evidence report was written.'
+			);
+			if ( ! $result['report_written'] ) {
+				$result['report_write_error'] = 'Could not write restore dry-run evidence report.';
+			}
+		} else {
+			$result['report_write_error'] = 'Restore dry-run reports path is missing, unsafe, or not writable.';
+			$this->add_restore_dry_run_check(
+				$result['checks'],
+				'dry_run_report_path_writable',
+				false,
+				'Restore dry-run reports path exists and is writable.'
+			);
+		}
+
+		return $this->finalize_restore_dry_run_result( $result );
 	}
 
 	/**
@@ -1390,6 +1458,27 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Recalculates dry-run status after optional report-writing checks.
+	 *
+	 * @param array<string,mixed> $result Dry-run result.
+	 * @return array<string,mixed>
+	 */
+	private function finalize_restore_dry_run_result( array $result ) {
+		$failure_count = 0;
+		foreach ( $result['checks'] as $check ) {
+			if ( empty( $check['passed'] ) ) {
+				++$failure_count;
+			}
+		}
+
+		$result['failure_count']         = $failure_count;
+		$result['status']                = 0 === $failure_count ? 'passed' : 'failed';
+		$result['restore_apply_allowed'] = 0 === $failure_count;
+
+		return $result;
+	}
+
+	/**
 	 * Prints a restore dry-run result.
 	 *
 	 * @param array<string,mixed> $result Dry-run result.
@@ -1400,6 +1489,15 @@ class Alynt_Server_Backup_Runner {
 		$this->line( 'Scope: ' . $result['scope'] );
 		$this->line( 'Staged path: ' . $result['staged_path'] );
 		$this->line( 'Target WordPress path: ' . $result['target_wordpress_path'] );
+		if ( ! empty( $result['report_write_requested'] ) ) {
+			$this->line( 'Report written: ' . ( ! empty( $result['report_written'] ) ? 'yes' : 'no' ) );
+			if ( ! empty( $result['report_path'] ) ) {
+				$this->line( 'Report path: ' . $result['report_path'] );
+			}
+			if ( ! empty( $result['report_write_error'] ) ) {
+				$this->line( 'Report write error: ' . $result['report_write_error'] );
+			}
+		}
 		$this->line( '' );
 
 		foreach ( $result['checks'] as $check ) {
@@ -2338,6 +2436,15 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Returns restore dry-run reports path.
+	 *
+	 * @return string
+	 */
+	private function restore_reports_path() {
+		return $this->normalize_path( $this->config_string( 'restore_reports_path' ) );
+	}
+
+	/**
 	 * Returns WP-CLI executable.
 	 *
 	 * @return string
@@ -2496,7 +2603,16 @@ class Alynt_Server_Backup_Runner {
 			return false;
 		}
 
-		$value = $this->config[ $key ];
+		return $this->truthy_value( $this->config[ $key ] );
+	}
+
+	/**
+	 * Returns whether a scalar value is truthy.
+	 *
+	 * @param mixed $value Value.
+	 * @return bool
+	 */
+	private function truthy_value( $value ) {
 		if ( is_bool( $value ) ) {
 			return $value;
 		}
@@ -2846,7 +2962,7 @@ function alynt_runner_usage() {
 		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
 		. '[--restore-path=/path/to/restores] [--staged-path=/path/to/staged/package] [--scope=files-and-database] '
-		. '[--older-than-days=14] [--confirm=delete-local-artifacts]';
+		. '[--write-report=1] [--older-than-days=14] [--confirm=delete-local-artifacts]';
 }
 
 $parsed = alynt_runner_parse_args( $argv );
