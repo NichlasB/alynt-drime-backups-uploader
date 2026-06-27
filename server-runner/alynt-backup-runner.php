@@ -797,7 +797,13 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
-		return $this->verify_package( $package ) ? 0 : 1;
+		if ( ! $this->verify_package( $package ) ) {
+			return 1;
+		}
+
+		$this->print_verify_next_steps( $package );
+
+		return 0;
 	}
 
 	/**
@@ -838,6 +844,8 @@ class Alynt_Server_Backup_Runner {
 		foreach ( $this->archive_preview( $package ) as $entry ) {
 			$this->line( '  ' . $entry );
 		}
+
+		$this->print_inspect_next_steps( $package, $manifest );
 
 		return 0;
 	}
@@ -923,6 +931,7 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		$this->line( 'Fetched package verified: ' . $package );
+		$this->print_fetch_next_steps( $package );
 
 		return 0;
 	}
@@ -1004,8 +1013,7 @@ class Alynt_Server_Backup_Runner {
 			$this->error( 'Warning: package was staged, but RESTORE_REPORT.json could not be written.' );
 		}
 
-		$this->line( 'Package staged at: ' . $restore_dir );
-		$this->line( 'No database import or production overwrite was performed.' );
+		$this->print_stage_restore_next_steps( $package, $restore_dir, $manifest );
 
 		return 0;
 	}
@@ -1055,6 +1063,81 @@ class Alynt_Server_Backup_Runner {
 				'Keep production restore steps manual until separately approved.',
 			),
 		);
+	}
+
+	/**
+	 * Prints next steps after package verification.
+	 *
+	 * @param string $package Package path.
+	 * @return void
+	 */
+	private function print_verify_next_steps( $package ) {
+		$this->line( '' );
+		$this->line( 'Restore guidance:' );
+		$this->line( '- Package is intact: ' . basename( $package ) );
+		$this->line( '- Next: run inspect to review metadata, timing, and archive preview.' );
+		$this->line( '- Then: run stage-restore only if the package matches the intended site.' );
+		$this->line( '- Do not import database.sql or overwrite live files without separate approval.' );
+	}
+
+	/**
+	 * Prints next steps after package inspection.
+	 *
+	 * @param string              $package Package path.
+	 * @param array<string,mixed> $manifest Manifest.
+	 * @return void
+	 */
+	private function print_inspect_next_steps( $package, array $manifest ) {
+		$this->line( '' );
+		$this->line( 'Restore guidance:' );
+		$this->line( '- Confirm package ID: ' . $this->manifest_value( $manifest, 'package_id' ) );
+		$this->line( '- Confirm site URL: ' . $this->manifest_value( $manifest, 'site_url' ) );
+		$this->line( '- Confirm consistency status: ' . $this->manifest_value( $manifest, 'consistency_status' ) );
+		$this->line( '- Next: run stage-restore to extract into a private inspection directory.' );
+		$this->line( '- Stop if the package, site URL, timing, or archive preview is unexpected.' );
+		$this->line( '- No live restore has been approved by this inspection output.' );
+	}
+
+	/**
+	 * Prints next steps after a Drime fetch.
+	 *
+	 * @param string $package Package path.
+	 * @return void
+	 */
+	private function print_fetch_next_steps( $package ) {
+		$this->line( '' );
+		$this->line( 'Restore guidance:' );
+		$this->line( '- Downloaded package and required sidecars are present locally.' );
+		$this->line( '- Fetched package path: ' . $package );
+		$this->line( '- Next: run inspect against this package path.' );
+		$this->line( '- Then: run stage-restore only after the package metadata matches the intended site.' );
+	}
+
+	/**
+	 * Prints next steps after non-destructive restore staging.
+	 *
+	 * @param string              $package Package path.
+	 * @param string              $restore_dir Restore directory.
+	 * @param array<string,mixed> $manifest Manifest.
+	 * @return void
+	 */
+	private function print_stage_restore_next_steps( $package, $restore_dir, array $manifest ) {
+		$this->line( 'Restore staging completed.' );
+		$this->line( 'Package: ' . basename( $package ) );
+		$this->line( 'Package ID: ' . $this->manifest_value( $manifest, 'package_id' ) );
+		$this->line( 'Staged at: ' . $restore_dir );
+		$this->line( '' );
+		$this->line( 'Review next:' );
+		$this->line( '1. Open RESTORE_NOTES.txt.' );
+		$this->line( '2. Open RESTORE_REPORT.json.' );
+		$this->line( '3. Inspect htdocs/ before any file replacement.' );
+		$this->line( '4. Inspect database.sql before any database import.' );
+		$this->line( '5. Keep production restore steps manual until separately approved.' );
+		$this->line( '' );
+		$this->line( 'Safety boundary:' );
+		$this->line( '- No database import was performed.' );
+		$this->line( '- No live WordPress files were overwritten.' );
+		$this->line( '- This command staged files for inspection only.' );
 	}
 
 	/**

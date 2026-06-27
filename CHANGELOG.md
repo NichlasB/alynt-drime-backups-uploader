@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Added a producer adapter backlog guide for deciding when a future backup source needs a dedicated adapter instead of the generic outbox.
 - Added `server-runner` JSON package inventory output through `list --format=json` for local restore discovery and sidecar readiness checks.
 - Added `RESTORE_REPORT.json` output after successful server-runner restore staging so restore rehearsals have machine-readable local evidence.
+- Added clearer server-runner restore guidance after successful fetch, verify, inspect, and stage-restore commands.
 - Added `server-runner cleanup-preview` for read-only local outbox and restore staging cleanup candidate reporting.
 - Added `server-runner cleanup` for operator-confirmed deletion of old local outbox package sets and restore staging directories.
 - Added Drime workspace destination guardrails that block workspace ID `0` and support optional `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` allowlisting.

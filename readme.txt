@@ -44,7 +44,7 @@ The scanner waits until files are old enough and their size is stable across sca
 
 = How are server-runner packages verified before restore staging? =
 
-The runner verifies the package checksum and manifest sidecar, then rejects unsafe archive member paths before extracting into a new restore directory. It writes `RESTORE_NOTES.txt` and `RESTORE_REPORT.json` as local evidence. The current restore flow is inspection-only and does not import databases or overwrite live files.
+The runner verifies the package checksum and manifest sidecar, prints next-step guidance for operators, then rejects unsafe archive member paths before extracting into a new restore directory. It writes `RESTORE_NOTES.txt` and `RESTORE_REPORT.json` as local evidence. The current restore flow is inspection-only and does not import databases or overwrite live files.
 
 = Can I list local server-runner packages before choosing one to restore? =
 
@@ -60,7 +60,7 @@ No. The server runner creates a logical WordPress backup from a WP-CLI database 
 
 = Can I restore if the original WordPress site is unavailable? =
 
-The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies and stages locally. wp-admin restore, database import, live file overwrite, and a mutable singleton remote catalog are not included.
+The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies, inspects, prints review guidance, and stages locally. wp-admin restore, database import, live file overwrite, and a mutable singleton remote catalog are not included.
 
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
@@ -113,6 +113,7 @@ No public custom actions or filters are exposed.
 * Added package-level remote-index sidecars for server-runner packages uploaded through the generic outbox.
 * Added folder catalog snapshot sidecars for server-runner packages uploaded through the generic outbox.
 * Added operator-confirmed server-runner local cleanup execution for old outbox package sets and restore staging directories.
+* Added clearer server-runner restore guidance after fetch, verify, inspect, and stage-restore commands.
 * Changed server-runner archives to exclude symlink entries before restore staging.
 * Changed server-runner archive creation to recover from live file-change warnings only when a non-empty archive was produced.
 * Changed generated server-runner configs to use light consistency mode by default.

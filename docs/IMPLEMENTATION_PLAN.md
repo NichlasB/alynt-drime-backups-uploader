@@ -307,7 +307,7 @@ Folder catalog snapshot feature workflow results:
 
 ### 4. Restore Flow Improvements
 
-Status: restore rehearsal and restore report slices implemented in source/docs.
+Status: restore rehearsal, restore report, and richer server-runner CLI guidance slices implemented in source/docs.
 
 Goal:
 
@@ -320,6 +320,13 @@ Implemented first slice:
 - Enriched server-runner `RESTORE_NOTES.txt` output with archive format, file root, database dump, and manual inspection reminders.
 - Added regression coverage that restore staging notes keep database import and live file overwrite as manual, separately approved operations.
 - Added `RESTORE_REPORT.json` output after successful `stage-restore` so restore rehearsals have machine-readable local evidence for package metadata, checksum metadata, verification state, extraction state, and destructive-action boundaries.
+
+Implemented CLI guidance slice:
+
+- Add clearer server-runner CLI guidance after `fetch`, `verify`, `inspect`, and especially `stage-restore`.
+- Keep the guidance server/operator focused rather than adding a wp-admin restore UI.
+- Keep all restore actions non-destructive.
+- Record destructive restore automation as a separate future gated project, not part of this slice.
 
 Feature-stage workflow results:
 
@@ -355,6 +362,15 @@ Restore validation report feature workflow results:
 - Documentation Sync Audit: completed; `README.md`, `readme.txt`, server-runner docs, restore runbook, restore rehearsal checklist, changelog, and this plan now document `RESTORE_REPORT.json`.
 - Final validation: `npm.cmd test` passed with 125 tests and 635 assertions; `npm.cmd run lint` passed.
 
+Richer server-runner restore guidance feature workflow results:
+
+- Feature Light Review: passed; change is limited to CLI output guidance for `fetch`, `verify`, `inspect`, and `stage-restore`, focused runner tests, and documentation.
+- Feature Bloat And Structure Review: completed with explicit base ref `d15bbd8`; measurement reported 2 changed PHP files and 1 oversized existing file (`server-runner/alynt-backup-runner.php`). The changed test file remains under threshold, and splitting the standalone runner is deferred as architecture-sensitive rather than forced in this feature slice.
+- Feature UI/UX Implementation Review: not applicable; no admin UI or frontend UI changed.
+- Feature Security Review: passed; the guidance adds no new inputs, writes, remote calls, or restore authority. It repeats that database imports and live file replacement remain separately approved manual work.
+- Documentation Sync Audit: completed; `README.md`, `readme.txt`, `CHANGELOG.md`, server-runner docs, restore runbook, restore rehearsal checklist, remote discovery docs, package security docs, and this plan now document the restore guidance boundary.
+- Final validation: `php -l server-runner/alynt-backup-runner.php` passed; focused restore/security PHPUnit passed with 9 tests and 118 assertions; `npm.cmd test` passed with 140 tests and 799 assertions; `npm.cmd run lint` passed across 53 files; `git diff --check` passed with only the existing `readme.txt` CRLF warning.
+
 Local cleanup preview feature workflow results:
 
 - Feature Light Review: passed; change is limited to a read-only `server-runner cleanup-preview` command, focused CLI tests, and documentation.
@@ -376,8 +392,8 @@ Operator-approved local cleanup execution feature workflow results:
 Remaining possible future work:
 
 - Mutable singleton remote package catalog only if future Drime API validation proves safe in-place replacement semantics.
-- Guided staging-restore UI or WP-CLI helper output.
-- Destructive restore automation only as a separate, gated project with dry-run, confirmation, and staging evidence.
+- Guided staging-restore wp-admin UI only if operator experience later proves that the browser is the right surface.
+- Destructive restore automation only as a separate, gated project with dry-run, confirmation, pre-restore safety evidence, and staging evidence.
 
 ### 5. Central Dashboard Plugin Preparation
 

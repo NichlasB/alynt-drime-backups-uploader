@@ -2,7 +2,7 @@
 
 This document defines how operators should think about finding restorable packages when the local WordPress site, plugin options, or uploaded registry are unavailable.
 
-The current MVP can create, upload, list local package inventory, upload package-level remote-index sidecars, upload folder catalog snapshot sidecars, fetch, verify, inspect, and stage packages. It does not maintain a mutable singleton remote restore catalog and does not perform destructive restores.
+The current MVP can create, upload, list local package inventory, upload package-level remote-index sidecars, upload folder catalog snapshot sidecars, fetch, verify, inspect, print restore guidance, and stage packages. It does not maintain a mutable singleton remote restore catalog and does not perform destructive restores.
 
 ## Current MVP Path
 

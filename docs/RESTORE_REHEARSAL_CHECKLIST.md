@@ -110,6 +110,7 @@ Confirm:
 - `RESTORE_REPORT.json` has `package_verified: true`.
 - `RESTORE_REPORT.json` has `database_imported: false` and `live_files_overwritten: false`.
 - `htdocs/`, `database.sql`, and `manifest.json` are present when expected.
+- The command output showed the review checklist and safety boundary.
 
 ## Report Template
 

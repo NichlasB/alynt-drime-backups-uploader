@@ -72,7 +72,7 @@ Future package signing can be added after the key model, rotation policy, and di
 
 ## Restore Extraction Safety
 
-The current restore flow is intentionally non-destructive. `stage-restore` extracts a verified package into a new restore directory for inspection.
+The current restore flow is intentionally non-destructive. `stage-restore` extracts a verified package into a new restore directory for inspection. Successful restore commands print operator guidance, but that guidance is limited to review steps and does not approve database imports or live file replacement.
 
 Before extraction, `stage-restore` lists the archive and rejects unsafe members:
 

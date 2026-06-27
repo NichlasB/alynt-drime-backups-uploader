@@ -4,6 +4,8 @@ This runbook covers the first restore workflow for Alynt Drime Backups Uploader 
 
 The current restore support is intentionally non-destructive. The runner can fetch a known package from Drime, verify it, and stage it for inspection, but it does not import the database or overwrite live WordPress files.
 
+The runner prints next-step guidance after successful `fetch`, `verify`, `inspect`, and `stage-restore` commands. Treat that output as an operator checklist, not as approval to perform a live restore.
+
 ## Scope
 
 Supported now:
@@ -105,6 +107,9 @@ Expected result:
 
 ```text
 Package verified: /path/to/package.tar.gz
+Restore guidance:
+- Package is intact: package.tar.gz
+- Next: run inspect to review metadata, timing, and archive preview.
 ```
 
 Stop if the command reports missing sidecars, an invalid manifest, or a checksum mismatch.
@@ -122,6 +127,8 @@ php /path/to/alynt-backup-runner.php inspect \
 Confirm the output matches the expected site URL, archive format, file root, and database dump path.
 
 For server-runner packages, also review backup type and timing fields. See [CONSISTENCY_MODEL.md](CONSISTENCY_MODEL.md) for how to interpret logical backup timing.
+
+The `inspect` command ends with guidance to run `stage-restore` only when the package ID, site URL, timing, and archive preview match the intended recovery target.
 
 ## Stage A Restore
 
@@ -142,6 +149,18 @@ The runner creates:
 ```
 
 It refuses to overwrite an existing restore directory with the same package ID.
+
+After a successful run, `stage-restore` prints the staged path and a compact review checklist:
+
+```text
+Restore staging completed.
+Review next:
+1. Open RESTORE_NOTES.txt.
+2. Open RESTORE_REPORT.json.
+3. Inspect htdocs/ before any file replacement.
+4. Inspect database.sql before any database import.
+5. Keep production restore steps manual until separately approved.
+```
 
 Before extracting, the runner validates archive member names and refuses packages with absolute paths, parent-directory traversal, empty path segments, or symlink/hardlink entries. If this safety validation fails, stop and treat the package as unsuitable for restore staging until its source is understood.
 
