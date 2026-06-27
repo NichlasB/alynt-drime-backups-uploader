@@ -31,6 +31,22 @@ class ServerRunnerInventoryTest extends Alynt_Drime_Backups_Uploader_Server_Runn
 			)
 		);
 		file_put_contents( $archive . '.sha256', str_repeat( 'a', 64 ) . '  example-com-20260627-120000.tar.gz' );
+		file_put_contents(
+			$archive . '.remote-index.json',
+			json_encode(
+				array(
+					'schema_version' => 1,
+					'index_type'     => 'single_package_restore_index',
+					'package_count'  => 1,
+					'packages'       => array(
+						array(
+							'package_id'   => 'example-com-20260627-120000',
+							'archive_name' => 'example-com-20260627-120000.tar.gz',
+						),
+					),
+				)
+			)
+		);
 
 		$result = $this->run_runner( 'list', $config, array( '--format=json' ) );
 
@@ -53,6 +69,9 @@ class ServerRunnerInventoryTest extends Alynt_Drime_Backups_Uploader_Server_Runn
 		$this->assertSame( 'example-com-20260627-120000.tar.gz.sha256', $package['checksum_name'] );
 		$this->assertTrue( $package['checksum_present'] );
 		$this->assertTrue( $package['checksum_valid'] );
+		$this->assertSame( 'example-com-20260627-120000.tar.gz.remote-index.json', $package['remote_index_name'] );
+		$this->assertTrue( $package['remote_index_present'] );
+		$this->assertTrue( $package['remote_index_valid'] );
 		$this->assertSame( 'sha256', $package['checksum_algorithm'] );
 		$this->assertSame( str_repeat( 'a', 64 ), $package['checksum_value'] );
 		$this->assertSame( 'https://example.com', $package['site_url'] );
@@ -135,8 +154,10 @@ class ServerRunnerInventoryTest extends Alynt_Drime_Backups_Uploader_Server_Runn
 		$this->assertCount( 1, $packages );
 
 		$manifest = json_decode( (string) file_get_contents( $packages[0] . '.manifest.json' ), true );
+		$index    = json_decode( (string) file_get_contents( $packages[0] . '.remote-index.json' ), true );
 
 		$this->assertIsArray( $manifest );
+		$this->assertIsArray( $index );
 		$this->assertSame( 'light', $manifest['consistency_mode'] );
 		$this->assertSame( 'clean', $manifest['consistency_status'] );
 		$this->assertSame( 0, $manifest['file_archive_exit_code'] );
@@ -145,6 +166,14 @@ class ServerRunnerInventoryTest extends Alynt_Drime_Backups_Uploader_Server_Runn
 		$this->assertSame( array(), $manifest['file_archive_warning_samples'] );
 		$this->assertNotEmpty( $manifest['file_archive_started_at'] );
 		$this->assertNotEmpty( $manifest['file_archive_finished_at'] );
+		$this->assertSame( 1, $index['schema_version'] );
+		$this->assertSame( 'single_package_restore_index', $index['index_type'] );
+		$this->assertSame( 1, $index['package_count'] );
+		$this->assertSame( basename( $packages[0] ), $index['packages'][0]['archive_name'] );
+		$this->assertArrayNotHasKey( 'archive_path', $index['packages'][0] );
+		$this->assertTrue( $index['packages'][0]['remote_index_present'] );
+		$this->assertTrue( $index['packages'][0]['remote_index_valid'] );
+		$this->assertTrue( $index['restore_policy']['manual_restore_required'] );
 
 		$list = $this->run_runner( 'list', $config, array( '--format=json' ) );
 		$this->assertSame( 0, $list['exit_code'], implode( "\n", $list['error'] ) );
@@ -152,5 +181,7 @@ class ServerRunnerInventoryTest extends Alynt_Drime_Backups_Uploader_Server_Runn
 		$inventory = json_decode( implode( "\n", $list['output'] ), true );
 		$this->assertSame( 'light', $inventory['packages'][0]['consistency_mode'] );
 		$this->assertSame( 'clean', $inventory['packages'][0]['consistency_status'] );
+		$this->assertTrue( $inventory['packages'][0]['remote_index_present'] );
+		$this->assertTrue( $inventory['packages'][0]['remote_index_valid'] );
 	}
 }

@@ -10,6 +10,7 @@ Supported now:
 
 - Verify a local `.tar.gz` package and its sidecars.
 - List local outbox package inventory as JSON for package discovery.
+- Use package-level `.remote-index.json` sidecars as restore discovery helpers for server-runner package sets.
 - Fetch a known Drime package and its sidecars into a local download directory.
 - Inspect package metadata and archive contents.
 - Extract a verified package into a separate restore staging directory.
@@ -26,12 +27,13 @@ Any production restore must remain a manual, explicitly approved operation until
 
 ## Package Layout
 
-A complete server-runner package has three local artifacts:
+A complete current server-runner package has four local artifacts:
 
 ```text
 example-com-YYYYmmdd-HHMMSS.tar.gz
 example-com-YYYYmmdd-HHMMSS.tar.gz.manifest.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
+example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
 ```
 
 The archive contains:
@@ -63,7 +65,7 @@ php /path/to/alynt-backup-runner.php list \
   --format=json
 ```
 
-Use the JSON inventory to confirm the package ID, archive name, sidecar names, manifest/checksum validity, checksum metadata, and whether `verification_ready` is true. This is a discovery helper only; still run `verify` before inspection or staging.
+Use the JSON inventory to confirm the package ID, archive name, sidecar names, manifest/checksum/remote-index validity, checksum metadata, and whether `verification_ready` is true. This is a discovery helper only; still run `verify` before inspection or staging.
 
 For GridPane sites, the preferred restore staging path is:
 
@@ -88,7 +90,7 @@ php /path/to/alynt-backup-runner.php fetch \
 
 `fetch` requires exact remote matches for the archive, `.manifest.json`, and `.sha256` sidecar. It downloads into temporary files, refuses to overwrite existing files unless `--overwrite=1` is supplied, and verifies the package immediately after download. The Drime token must come from the environment variable named by `--token-env`, defaulting to `ALYNT_DRIME_TOKEN`.
 
-For server-runner packages uploaded through the generic outbox producer, the plugin uploads the manifest and checksum sidecars to the same Drime folder as the archive. If `fetch` reports a missing sidecar, stop and repair the remote package set before treating the backup as restorable.
+For server-runner packages uploaded through the generic outbox producer, the plugin uploads the manifest, checksum, and package-level remote-index sidecars to the same Drime folder as the archive. If `fetch` reports a missing required manifest/checksum sidecar, stop and repair the remote package set before treating the backup as restorable.
 
 Run verification before inspecting or extracting:
 
@@ -176,9 +178,9 @@ For the package integrity, extraction safety, storage-path, and encryption bound
 
 ## Drime Download
 
-If the only copy is in Drime, prefer the CLI `fetch` command above when the package ID, workspace ID, destination folder hash, and token are available. Otherwise, download the package and both sidecars manually to the server first, then run the local verification workflow.
+If the only copy is in Drime, prefer the CLI `fetch` command above when the package ID, workspace ID, destination folder hash, and token are available. Otherwise, download the package plus required manifest/checksum sidecars manually to the server first, then run the local verification workflow. Download the `.remote-index.json` sidecar too when it is available so discovery notes stay with the package set.
 
-See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the manual disaster discovery path, CLI fetch behavior, and remote index option.
+See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the manual disaster discovery path, CLI fetch behavior, and package-level remote-index sidecar.
 
 ## Restore Rehearsal Report
 

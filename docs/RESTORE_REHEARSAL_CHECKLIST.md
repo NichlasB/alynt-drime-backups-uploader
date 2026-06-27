@@ -27,7 +27,7 @@ Date:
 
 - Confirm the exact site and server.
 - Confirm the package ID and filename.
-- Confirm the archive, `.manifest.json`, and `.sha256` sidecar are available together.
+- Confirm the archive, `.manifest.json`, and `.sha256` sidecar are available together. For current server-runner packages, also confirm the `.remote-index.json` sidecar is present or document why the package predates it.
 - Confirm the restore staging path is outside the public web root.
 - Confirm there is enough disk space for the downloaded archive and extracted copy.
 - Confirm this rehearsal is inspection-only.
@@ -47,15 +47,16 @@ php /path/to/alynt-backup-runner.php fetch \
   --download-path=/var/www/example.com/private/alynt-drime-backups/downloads
 ```
 
-If downloading manually from Drime, download all three files into a private server path:
+If downloading manually from Drime, download the package set into a private server path:
 
 ```text
 example-com-YYYYmmdd-HHMMSS.tar.gz
 example-com-YYYYmmdd-HHMMSS.tar.gz.manifest.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
+example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
 ```
 
-Stop if any sidecar is missing.
+Stop if the required manifest or checksum sidecar is missing.
 
 ## Verify
 

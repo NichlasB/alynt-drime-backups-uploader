@@ -314,7 +314,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 		$package_dir  = dirname( $path );
 		$package_name = basename( $path );
 
-		foreach ( array( 'manifest_path', 'checksum_path' ) as $key ) {
+		foreach ( array( 'manifest_path', 'checksum_path', 'remote_index_path' ) as $key ) {
 			$sidecar = isset( $item[ $key ] ) && is_scalar( $item[ $key ] ) ? (string) $item[ $key ] : '';
 			if ( '' === $sidecar || ! is_file( $sidecar ) ) {
 				continue;

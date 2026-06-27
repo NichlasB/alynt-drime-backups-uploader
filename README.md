@@ -6,12 +6,12 @@ Companion WordPress plugin that scans completed local backup packages and upload
 
 - Scans configured backup producers through an adapter layer.
 - Detects the local WPvivid backup folder, including verified Free/Pro path options.
-- Scans a configured generic server outbox for completed archive packages with optional manifest and checksum sidecars.
+- Scans a configured generic server outbox for completed archive packages with optional manifest, checksum, and remote-index sidecars.
 - Scans only stable backup files so in-progress archives are not queued.
 - Handles WPvivid-listed split archives such as `.part001.zip` and `.part002.zip` as complete sets.
 - Queues uploads, tracks attempts, enforces retry limits, and prevents duplicate queue entries.
 - Uploads small files through Drime direct upload and larger files through resumable multipart upload.
-- Uploads generic server-runner manifest and checksum sidecars with the main archive so fetched packages can be verified before restore staging.
+- Uploads generic server-runner manifest, checksum, and package-level remote-index sidecars with the main archive so fetched packages can be discovered and verified before restore staging.
 - Shows failed uploads with per-file retry actions when the local file is still readable.
 - Lets administrators load allowed Drime workspaces, browse existing Drime folders, and preview the resolved upload destination before backups run.
 - Blocks the personal/default Drime workspace ID `0` for backup destinations and supports an optional `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` constant to lock a site to approved workspace IDs.
@@ -86,7 +86,7 @@ See [docs/PRODUCER_ADAPTER_BACKLOG.md](docs/PRODUCER_ADAPTER_BACKLOG.md) for the
 
 ## Server Runner
 
-The `server-runner/` directory contains a standalone PHP CLI runner for GridPane-style servers. It exports the WordPress database with WP-CLI, archives the WordPress files with `tar`, writes manifest/checksum sidecars, and atomically places completed packages in the configured outbox.
+The `server-runner/` directory contains a standalone PHP CLI runner for GridPane-style servers. It exports the WordPress database with WP-CLI, archives the WordPress files with `tar`, writes manifest/checksum/remote-index sidecars, and atomically places completed packages in the configured outbox.
 
 See [server-runner/README.md](server-runner/README.md) for the runner config shape and commands.
 

@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Added server-runner light consistency mode so packages can record database/archive timing, archive warning counts, and clean versus file-changes-detected status for high-write-site review.
 - Added server-cron review commands to the settings screen so operators can build and diff a proposed crontab file before manually approving installation.
 - Added multiple standalone site runner guidance for managing separate GridPane/VPS WordPress sites without sharing runner configs, outboxes, cron entries, or Drime site folders.
+- Added package-level `.remote-index.json` sidecars for server-runner packages and generic-outbox uploads so each Drime package set carries restore discovery metadata.
 
 ### Changed
 

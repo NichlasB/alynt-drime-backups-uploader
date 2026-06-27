@@ -110,17 +110,21 @@ class UploaderTest extends TestCase {
 	public function test_successful_generic_outbox_upload_uploads_sidecars() {
 		$manifest            = $this->file . '.manifest.json';
 		$checksum            = $this->file . '.sha256';
+		$index               = $this->file . '.remote-index.json';
 		$this->extra_files[] = $manifest;
 		$this->extra_files[] = $checksum;
+		$this->extra_files[] = $index;
 		file_put_contents( $manifest, '{"package_id":"test"}' );
 		file_put_contents( $checksum, 'abc123  ' . basename( $this->file ) );
+		file_put_contents( $index, '{"schema_version":1,"index_type":"single_package_restore_index","package_count":1}' );
 		$options  = $this->base_options();
 		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
 			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
 			array(
-				'producer_key'  => 'generic_outbox',
-				'manifest_path' => $manifest,
-				'checksum_path' => $checksum,
+				'producer_key'       => 'generic_outbox',
+				'manifest_path'      => $manifest,
+				'checksum_path'      => $checksum,
+				'remote_index_path'  => $index,
 			)
 		);
 
@@ -135,14 +139,17 @@ class UploaderTest extends TestCase {
 			array(
 				basename( $manifest ),
 				basename( $checksum ),
+				basename( $index ),
 			),
 			$client->simple_upload_names
 		);
-		$this->assertCount( 2, $record['sidecars'] );
+		$this->assertCount( 3, $record['sidecars'] );
 		$this->assertSame( 'manifest', $record['sidecars'][0]['type'] );
 		$this->assertSame( basename( $manifest ), $record['sidecars'][0]['remote_name'] );
 		$this->assertSame( 'checksum', $record['sidecars'][1]['type'] );
 		$this->assertSame( basename( $checksum ), $record['sidecars'][1]['remote_name'] );
+		$this->assertSame( 'remote_index', $record['sidecars'][2]['type'] );
+		$this->assertSame( basename( $index ), $record['sidecars'][2]['remote_name'] );
 	}
 
 	public function test_duplicate_generic_outbox_archive_can_upload_missing_sidecars() {

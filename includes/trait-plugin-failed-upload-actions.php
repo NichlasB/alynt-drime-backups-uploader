@@ -75,7 +75,7 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Failed_Upload_Actions {
 			$item['wpvivid'] = $record['wpvivid'];
 		}
 
-		foreach ( array( 'producer_key', 'producer_label', 'package_id', 'filename', 'backup_set_id', 'manifest_path', 'checksum_path', 'checksum_algorithm', 'checksum_value' ) as $key ) {
+		foreach ( array( 'producer_key', 'producer_label', 'package_id', 'filename', 'backup_set_id', 'manifest_path', 'checksum_path', 'remote_index_path', 'checksum_algorithm', 'checksum_value' ) as $key ) {
 			if ( isset( $record[ $key ] ) && is_scalar( $record[ $key ] ) ) {
 				$item[ $key ] = (string) $record[ $key ];
 			}

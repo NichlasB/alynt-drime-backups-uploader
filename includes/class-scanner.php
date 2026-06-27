@@ -159,6 +159,7 @@ class Alynt_Drime_Backups_Uploader_Scanner {
 		$candidate['backup_set_total']   = max( 1, $this->candidate_int( $candidate, 'backup_set_total', 1 ) );
 		$candidate['manifest_path']      = $this->candidate_string( $candidate, 'manifest_path' );
 		$candidate['checksum_path']      = $this->candidate_string( $candidate, 'checksum_path' );
+		$candidate['remote_index_path']  = $this->candidate_string( $candidate, 'remote_index_path' );
 		$candidate['checksum_algorithm'] = $this->candidate_string( $candidate, 'checksum_algorithm' );
 		$candidate['checksum_value']     = $this->candidate_string( $candidate, 'checksum_value' );
 		$candidate['site_url']           = $this->candidate_string( $candidate, 'site_url' );

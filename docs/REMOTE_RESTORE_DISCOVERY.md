@@ -2,7 +2,7 @@
 
 This document defines how operators should think about finding restorable packages when the local WordPress site, plugin options, or uploaded registry are unavailable.
 
-The current MVP can create, upload, list local package inventory, fetch, verify, inspect, and stage packages. It does not maintain a remote restore index and does not perform destructive restores.
+The current MVP can create, upload, list local package inventory, upload package-level remote-index sidecars, fetch, verify, inspect, and stage packages. It does not maintain a shared folder-level remote restore catalog and does not perform destructive restores.
 
 ## Current MVP Path
 
@@ -10,16 +10,16 @@ If the original WordPress site is still available:
 
 1. Use the plugin uploaded registry and diagnostics to identify the uploaded package.
 2. Confirm the Drime workspace and destination folder from plugin settings.
-3. Use `php alynt-backup-runner.php list --format=json` against the site runner config to review local package IDs, archive names, sidecar names, checksum metadata, and `verification_ready` flags.
-4. Use the server-runner `fetch` command, or download the archive and both sidecars from Drime manually.
-5. Place all three files on the server if using manual download.
+3. Use `php alynt-backup-runner.php list --format=json` against the site runner config to review local package IDs, archive names, sidecar names, checksum metadata, remote-index presence, and `verification_ready` flags.
+4. Use the server-runner `fetch` command, or download the archive and required sidecars from Drime manually.
+5. Place the archive, `.manifest.json`, and `.sha256` files on the server if using manual download. Keep the `.remote-index.json` sidecar nearby when available for discovery notes.
 6. Run the server-runner `verify`, `inspect`, and `stage-restore` commands.
 
 If the original WordPress site is unavailable:
 
 1. Use the Drime web UI to browse the known backup workspace and folder.
-2. Locate the archive and matching `.manifest.json` and `.sha256` sidecars by filename.
-3. Download all three files to a safe server path manually, or use `fetch` if the package ID, workspace, folder hash, and token are available.
+2. Locate the archive and matching `.manifest.json`, `.sha256`, and optional `.remote-index.json` sidecars by filename.
+3. Download the archive plus required manifest/checksum sidecars to a safe server path manually, or use `fetch` if the package ID, workspace, folder hash, and token are available.
 4. Use the manifest sidecar to confirm site ID, site URL, package ID, producer, backup type, timing fields, file root, and database dump path.
 5. Run local verification and staging restore from the server runner.
 
@@ -43,10 +43,11 @@ The JSON output includes:
 - Package ID from the manifest when available.
 - Manifest sidecar name, presence, and validity.
 - Checksum sidecar name, presence, validity, algorithm, and value.
+- Remote-index sidecar name, presence, and validity.
 - Non-secret manifest fields such as site URL, created time, producer, backup type, archive format, file root, and database dump name.
 - `verification_ready` when both required sidecars are present.
 
-The inventory is local and read-only. It does not hash package bytes, contact Drime, upload an index, delete files, or approve restore work. `verification_ready` means the manifest has a package ID and the checksum sidecar has a parseable SHA-256 value; use `verify` before trusting a package for restore staging.
+The inventory is local and read-only. It does not hash package bytes, contact Drime, delete files, or approve restore work. `verification_ready` means the manifest has a package ID and the checksum sidecar has a parseable SHA-256 value; use `verify` before trusting a package for restore staging.
 
 ## Package Naming
 
@@ -56,9 +57,10 @@ Server-runner packages should keep a predictable basename:
 example-com-YYYYmmdd-HHMMSS.tar.gz
 example-com-YYYYmmdd-HHMMSS.tar.gz.manifest.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
+example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
 ```
 
-The archive, manifest sidecar, and checksum sidecar must travel together. A package without sidecars should not be staged unless the operator has a separate, approved recovery procedure.
+The archive, manifest sidecar, and checksum sidecar must travel together. The remote-index sidecar should travel with them when available because it makes Drime-side discovery easier, but verification still depends on the manifest and checksum sidecars. A package without required sidecars should not be staged unless the operator has a separate, approved recovery procedure.
 
 ## Self-Describing Packages
 
@@ -107,30 +109,43 @@ Fetch behavior:
 
 The first `fetch` implementation is intentionally not exposed as a wp-admin remote restore action.
 
-## Remote Index Option
+## Package-Level Remote Index
 
-A future remote index can make discovery easier, especially for a central dashboard or a server where the original WordPress database is gone.
+Server-runner packages now write a package-level remote-index sidecar beside the archive:
 
-Possible shape:
+```text
+example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
+```
+
+The generic outbox uploader sends this sidecar to the same Drime folder as the archive, manifest, and checksum. This gives each package set a small, non-secret discovery file even when the original WordPress uploaded registry is unavailable.
+
+Current shape:
 
 ```json
 {
   "schema_version": 1,
-  "site_id": "example.com",
-  "site_url": "https://example.com",
+  "index_type": "single_package_restore_index",
   "generated_at": "2026-06-26T00:00:00+00:00",
+  "archive_format": "tar.gz",
+  "package_count": 1,
   "packages": [
     {
       "package_id": "example-com-20260626-020000",
       "archive_name": "example-com-20260626-020000.tar.gz",
       "manifest_name": "example-com-20260626-020000.tar.gz.manifest.json",
       "checksum_name": "example-com-20260626-020000.tar.gz.sha256",
+      "remote_index_name": "example-com-20260626-020000.tar.gz.remote-index.json",
       "created_at": "2026-06-26T02:00:00+00:00",
       "backup_type": "logical_wordpress_backup",
-      "size": 1234567890,
+      "archive_size": 1234567890,
       "checksum_algorithm": "sha256"
     }
-  ]
+  ],
+  "restore_policy": {
+    "requires_archive_manifest_checksum": true,
+    "destructive_restore_automated": false,
+    "manual_restore_required": true
+  }
 }
 ```
 
@@ -142,6 +157,8 @@ Remote index rules:
 - Write the index atomically if it is generated locally before upload.
 - Keep old index versions readable if the schema evolves.
 - Do not allow dashboard or remote index data to trigger production restore without local verification and human approval.
+
+The plugin does not yet maintain a shared rolling index for a full Drime folder. If operators need a single catalog of every package in a destination folder, that remains a future dashboard/automation feature.
 
 ## Dashboard Relationship
 
@@ -174,4 +191,4 @@ Before claiming disaster restore readiness:
 - Stage the downloaded package into a restore directory.
 - Complete the restore rehearsal report in `RESTORE_REHEARSAL_CHECKLIST.md`.
 - Confirm the package can be discovered without relying on the original WordPress uploaded registry.
-- Decide whether package-level sidecar discovery is sufficient for the first production rollout or whether a remote index must be implemented first.
+- Confirm the `.remote-index.json` sidecar is present for new server-runner package sets, or document why an older package predates that sidecar.

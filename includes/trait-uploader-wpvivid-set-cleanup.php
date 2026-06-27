@@ -78,6 +78,7 @@ trait Alynt_Drime_Backups_Uploader_Uploader_WPvivid_Set_Cleanup {
 			'backup_set_id',
 			'manifest_path',
 			'checksum_path',
+			'remote_index_path',
 			'checksum_algorithm',
 			'checksum_value',
 		);

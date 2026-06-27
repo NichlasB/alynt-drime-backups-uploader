@@ -202,6 +202,16 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
+		if (
+			! $this->write_json_atomic(
+				$final_archive . '.remote-index.json',
+				$this->remote_package_index( $final_archive )
+			)
+		) {
+			$this->error( 'Could not write completed package remote index.' );
+			return 1;
+		}
+
 		if ( ! $this->remove_directory( $work_dir ) ) {
 			$this->error( 'Warning: package was created, but the work directory could not be removed.' );
 		}
@@ -256,43 +266,77 @@ class Alynt_Server_Backup_Runner {
 	 * Builds a package inventory record for restore discovery.
 	 *
 	 * @param string $package Package path.
+	 * @param bool   $include_remote_index Whether to read the remote index sidecar.
 	 * @return array<string,mixed>
 	 */
-	private function package_inventory_record( $package ) {
-		$manifest_path    = $package . '.manifest.json';
-		$checksum_path    = $package . '.sha256';
-		$manifest         = $this->read_package_manifest_quiet( $package );
-		$checksum         = $this->read_checksum_sidecar( $package );
-		$basename         = basename( $package );
-		$manifest_present = is_readable( $manifest_path );
-		$checksum_present = is_readable( $checksum_path );
-		$manifest_valid   = ! empty( $manifest['package_id'] );
-		$checksum_valid   = ! empty( $checksum['value'] );
-		$package_id       = $manifest_valid ? $this->manifest_value( $manifest, 'package_id' ) : $this->package_id_from_archive_name( $basename );
+	private function package_inventory_record( $package, $include_remote_index = true ) {
+		$manifest_path        = $package . '.manifest.json';
+		$checksum_path        = $package . '.sha256';
+		$remote_index_path    = $package . '.remote-index.json';
+		$manifest             = $this->read_package_manifest_quiet( $package );
+		$checksum             = $this->read_checksum_sidecar( $package );
+		$remote_index         = $include_remote_index ? $this->read_remote_index_quiet( $package ) : array();
+		$basename             = basename( $package );
+		$manifest_present     = is_readable( $manifest_path );
+		$checksum_present     = is_readable( $checksum_path );
+		$remote_index_present = is_readable( $remote_index_path );
+		$manifest_valid       = ! empty( $manifest['package_id'] );
+		$checksum_valid       = ! empty( $checksum['value'] );
+		$remote_index_valid   = $this->remote_index_is_valid( $remote_index );
+		$package_id           = $manifest_valid ? $this->manifest_value( $manifest, 'package_id' ) : $this->package_id_from_archive_name( $basename );
 
 		return array(
-			'package_id'         => $package_id,
-			'archive_name'       => $basename,
-			'archive_size'       => is_file( $package ) ? (int) filesize( $package ) : 0,
-			'archive_modified_at' => is_file( $package ) ? gmdate( 'c', (int) filemtime( $package ) ) : '',
-			'manifest_name'      => basename( $manifest_path ),
-			'manifest_present'   => $manifest_present,
-			'manifest_valid'     => $manifest_valid,
-			'checksum_name'      => basename( $checksum_path ),
-			'checksum_present'   => $checksum_present,
-			'checksum_valid'     => $checksum_valid,
-			'checksum_algorithm' => isset( $checksum['algorithm'] ) ? (string) $checksum['algorithm'] : '',
-			'checksum_value'     => isset( $checksum['value'] ) ? (string) $checksum['value'] : '',
-			'site_url'           => $this->manifest_value( $manifest, 'site_url' ),
-			'created_at'         => $this->manifest_value( $manifest, 'created_at' ),
-			'producer'           => $this->manifest_value( $manifest, 'producer' ),
-			'backup_type'        => $this->manifest_value( $manifest, 'backup_type' ),
-			'archive_format'     => $this->manifest_value( $manifest, 'archive_format' ),
-			'file_root'          => $this->manifest_value( $manifest, 'file_root' ),
-			'database_dump'      => $this->manifest_value( $manifest, 'database_dump' ),
-			'consistency_mode'   => $this->manifest_value( $manifest, 'consistency_mode' ),
-			'consistency_status' => $this->manifest_value( $manifest, 'consistency_status' ),
-			'verification_ready' => $manifest_valid && $checksum_valid,
+			'package_id'           => $package_id,
+			'archive_name'         => $basename,
+			'archive_size'         => is_file( $package ) ? (int) filesize( $package ) : 0,
+			'archive_modified_at'  => is_file( $package ) ? gmdate( 'c', (int) filemtime( $package ) ) : '',
+			'manifest_name'        => basename( $manifest_path ),
+			'manifest_present'     => $manifest_present,
+			'manifest_valid'       => $manifest_valid,
+			'checksum_name'        => basename( $checksum_path ),
+			'checksum_present'     => $checksum_present,
+			'checksum_valid'       => $checksum_valid,
+			'remote_index_name'    => basename( $remote_index_path ),
+			'remote_index_present' => $remote_index_present,
+			'remote_index_valid'   => $remote_index_valid,
+			'checksum_algorithm'   => isset( $checksum['algorithm'] ) ? (string) $checksum['algorithm'] : '',
+			'checksum_value'       => isset( $checksum['value'] ) ? (string) $checksum['value'] : '',
+			'site_url'             => $this->manifest_value( $manifest, 'site_url' ),
+			'created_at'           => $this->manifest_value( $manifest, 'created_at' ),
+			'producer'             => $this->manifest_value( $manifest, 'producer' ),
+			'backup_type'          => $this->manifest_value( $manifest, 'backup_type' ),
+			'archive_format'       => $this->manifest_value( $manifest, 'archive_format' ),
+			'file_root'            => $this->manifest_value( $manifest, 'file_root' ),
+			'database_dump'        => $this->manifest_value( $manifest, 'database_dump' ),
+			'consistency_mode'     => $this->manifest_value( $manifest, 'consistency_mode' ),
+			'consistency_status'   => $this->manifest_value( $manifest, 'consistency_status' ),
+			'verification_ready'   => $manifest_valid && $checksum_valid,
+		);
+	}
+
+	/**
+	 * Builds a remote-safe package index for Drime restore discovery.
+	 *
+	 * @param string $package Package path.
+	 * @return array<string,mixed>
+	 */
+	private function remote_package_index( $package ) {
+		$package_record                         = $this->package_inventory_record( $package, false );
+		$package_record['remote_index_present'] = true;
+		$package_record['remote_index_valid']   = true;
+
+		return array(
+			'schema_version' => 1,
+			'index_type'     => 'single_package_restore_index',
+			'generated_at'   => gmdate( 'c' ),
+			'archive_format' => $this->archive_format(),
+			'package_count'  => 1,
+			'packages'       => array( $package_record ),
+			'restore_policy' => array(
+				'requires_archive_manifest_checksum' => true,
+				'destructive_restore_automated'     => false,
+				'manual_restore_required'           => true,
+			),
 		);
 	}
 
@@ -782,6 +826,37 @@ class Alynt_Server_Backup_Runner {
 		$manifest = json_decode( (string) file_get_contents( $manifest_path ), true );
 
 		return is_array( $manifest ) ? $manifest : array();
+	}
+
+	/**
+	 * Reads a remote package index without writing errors.
+	 *
+	 * @param string $package Package path.
+	 * @return array<string,mixed>
+	 */
+	private function read_remote_index_quiet( $package ) {
+		$index_path = $package . '.remote-index.json';
+		if ( ! is_readable( $index_path ) ) {
+			return array();
+		}
+
+		$index = json_decode( (string) file_get_contents( $index_path ), true );
+
+		return is_array( $index ) ? $index : array();
+	}
+
+	/**
+	 * Checks whether a decoded remote package index has the expected shape.
+	 *
+	 * @param array<string,mixed> $index Index.
+	 * @return bool
+	 */
+	private function remote_index_is_valid( array $index ) {
+		return 1 === (int) ( isset( $index['schema_version'] ) ? $index['schema_version'] : 0 )
+			&& isset( $index['index_type'] )
+			&& 'single_package_restore_index' === (string) $index['index_type']
+			&& ! empty( $index['packages'] )
+			&& is_array( $index['packages'] );
 	}
 
 	/**

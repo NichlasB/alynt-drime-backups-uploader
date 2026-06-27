@@ -8,7 +8,7 @@ This first runner is intentionally conservative:
 - It writes packages to a configured outbox directory.
 - It uses WP-CLI for database exports.
 - It uses `tar` for WordPress file archives.
-- It writes manifest and SHA-256 sidecars.
+- It writes manifest, SHA-256, and package-level remote-index sidecars.
 - It can record light consistency metadata for high-write-site review.
 - It writes temporary files first, then atomically renames completed artifacts into the outbox.
 
@@ -27,7 +27,7 @@ php alynt-backup-runner.php fetch --config=/path/to/config.json --package-id=pac
 php alynt-backup-runner.php stage-restore --config=/path/to/config.json --package=/path/to/package.tar.gz
 ```
 
-`list` keeps the original plain-text path output by default. Use `--format=json` to print a local package inventory with package IDs, archive names, sidecar names, manifest/checksum validity flags, checksum metadata, manifest metadata, and `verification_ready` flags. The JSON inventory is read-only and does not verify hashes or contact Drime.
+`list` keeps the original plain-text path output by default. Use `--format=json` to print a local package inventory with package IDs, archive names, sidecar names, manifest/checksum/remote-index validity flags, checksum metadata, manifest metadata, and `verification_ready` flags. The JSON inventory is read-only and does not verify hashes or contact Drime.
 
 `cleanup-preview` is also read-only. It reports outbox packages and restore staging directories older than the selected threshold, defaults to 14 days, and sets `destructive_actions_performed` to `false` in JSON output. It does not delete archives, sidecars, or restore staging folders.
 
@@ -93,9 +93,10 @@ A completed package writes:
 example-com-YYYYmmdd-HHMMSS.tar.gz
 example-com-YYYYmmdd-HHMMSS.tar.gz.manifest.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
+example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
 ```
 
-The plugin can detect the archive and read the manifest/checksum sidecars.
+The plugin can detect the archive and read the manifest/checksum/remote-index sidecars. The remote-index sidecar is a per-package restore discovery helper that travels to Drime with the archive; it is not a shared folder-level catalog.
 
 The runner can also print a local inventory for the outbox:
 
@@ -103,7 +104,7 @@ The runner can also print a local inventory for the outbox:
 php alynt-backup-runner.php list --config=/path/to/config.json --format=json
 ```
 
-Use this before restore discovery or cleanup decisions to confirm which package sets have archive, manifest, and checksum files locally. `verification_ready` means the manifest has a package ID and the checksum sidecar has a parseable SHA-256 value; still run `verify` before restore staging.
+Use this before restore discovery or cleanup decisions to confirm which package sets have archive, manifest, checksum, and remote-index files locally. `verification_ready` means the manifest has a package ID and the checksum sidecar has a parseable SHA-256 value; still run `verify` before restore staging.
 
 The runner can preview old local artifacts before an operator-approved cleanup:
 

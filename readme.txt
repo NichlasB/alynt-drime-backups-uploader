@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, server-runner local package inventory, light consistency metadata, cleanup-preview output, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, server-runner local package inventory and package-level remote-index sidecars, light consistency metadata, cleanup-preview output, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -48,7 +48,7 @@ The runner verifies the package checksum and manifest sidecar, then rejects unsa
 
 = Can I list local server-runner packages before choosing one to restore? =
 
-Yes. The runner supports `list --format=json` to print a local, read-only inventory with package IDs, archive names, sidecar names, manifest/checksum validity, checksum metadata, and `verification_ready` flags. Still run `verify` before restore staging.
+Yes. The runner supports `list --format=json` to print a local, read-only inventory with package IDs, archive names, sidecar names, manifest/checksum/remote-index validity, checksum metadata, and `verification_ready` flags. Still run `verify` before restore staging.
 
 = Can I preview old local artifacts before deleting anything? =
 
@@ -60,7 +60,7 @@ No. The server runner creates a logical WordPress backup from a WP-CLI database 
 
 = Can I restore if the original WordPress site is unavailable? =
 
-The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. It then verifies and stages locally. wp-admin restore, database import, live file overwrite, and remote index support are not included.
+The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. Server-runner packages also upload a package-level `.remote-index.json` sidecar for remote discovery. It then verifies and stages locally. wp-admin restore, database import, live file overwrite, and a shared folder-level remote catalog are not included.
 
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
@@ -110,6 +110,7 @@ No public custom actions or filters are exposed.
 * Added server-runner light consistency metadata for database/archive timing, archive warning counts, and clean versus file-changes-detected status.
 * Added server-cron review commands that build and diff a proposed crontab file without installing it automatically.
 * Added multiple standalone site runner guidance for separate GridPane/VPS WordPress sites.
+* Added package-level remote-index sidecars for server-runner packages uploaded through the generic outbox.
 * Changed server-runner archives to exclude symlink entries before restore staging.
 * Changed server-runner archive creation to recover from live file-change warnings only when a non-empty archive was produced.
 * Changed generated server-runner configs to use light consistency mode by default.
