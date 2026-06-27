@@ -13,6 +13,7 @@ Covered now:
 - Restore-stage archive safety validation.
 - Recommended private server paths.
 - CLI fetch and restore-staging boundaries.
+- Restore dry-run boundaries.
 - Drime upload and retention boundaries.
 - Encryption status for the MVP.
 
@@ -87,6 +88,14 @@ If archive safety validation fails, the runner removes the newly created empty r
 
 This validation is a staging guard. It does not make an unknown third-party package trusted. Operators should stage and inspect packages before any manual database import or file replacement.
 
+## Restore Dry-Run Boundary
+
+`restore-dry-run` is a read-only preflight for the separate destructive restore project. It reads the runner config, a staged restore directory, and `RESTORE_REPORT.json`, then reports whether staging-only gates and evidence are present.
+
+The command checks that restore apply is explicitly enabled in config, the target environment is `staging`, the staged path is under `restore_path`, the staged report still says no database import or live file overwrite happened, the requested scope has the required staged files, the configured target WordPress path is not a broad system path, the pre-restore backup path is available, and minimum free space is present.
+
+The command does not create pre-restore backups, import databases, replace files, write restore reports, delete local files, contact Drime, or run shell restore commands. It reports `restore_apply_command_available: false` because destructive apply is not implemented in the current runner.
+
 ## Recommended Server Paths
 
 For GridPane sites, keep package work and outbox paths outside the public web root:
@@ -137,4 +146,4 @@ Before production rollout of the server-runner producer:
 - Stage the restore into a non-public restore directory.
 - Inspect `htdocs/`, `database.sql`, `manifest.json`, and `RESTORE_NOTES.txt`.
 
-No automated production restore command should ship until destructive restore has its own dry-run output, confirmation gates, pre-restore snapshot requirement, and staging evidence. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.
+No automated production restore command should ship. The current `restore-dry-run` provides read-only preflight output only; destructive restore still needs separate confirmation gates, pre-restore snapshot evidence, staging evidence, and apply implementation. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.

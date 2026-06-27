@@ -22,7 +22,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
 - Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
 - Provides WP-CLI commands for server-driven scan/upload/status workflows.
-- Includes a first-pass PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, guide non-destructive restore staging, preview old local artifacts, and run operator-approved local cleanup behind an explicit confirmation flag.
+- Includes a first-pass PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, guide non-destructive restore staging, run read-only restore dry runs, preview old local artifacts, and run operator-approved local cleanup behind an explicit confirmation flag.
 - Stores bounded, redacted diagnostics when diagnostics are explicitly enabled.
 - Keeps local backups after upload by default; deletion requires explicit opt-in.
 
@@ -96,7 +96,7 @@ The plugin settings screen generates a GridPane runner config, runner install co
 
 For the broader server-side automation model, including scheduling, multiple standalone site layout, disk retention, cleanup preview/execution, and high-write-site boundaries, see [docs/SERVER_BACKUP_AUTOMATION.md](docs/SERVER_BACKUP_AUTOMATION.md). For several separate WordPress sites on one server, see [docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md](docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md).
 
-For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: the server runner can fetch a known package from Drime, verify it, inspect it, print next-step guidance, stage it for inspection, and write local restore evidence, but it does not import databases or overwrite live site files.
+For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: the server runner can fetch a known package from Drime, verify it, inspect it, print next-step guidance, stage it for inspection, write local restore evidence, and run a read-only `restore-dry-run` preflight, but it does not import databases or overwrite live site files.
 
 For recording restore proof during onboarding or periodic confidence checks, see [docs/RESTORE_REHEARSAL_CHECKLIST.md](docs/RESTORE_REHEARSAL_CHECKLIST.md).
 

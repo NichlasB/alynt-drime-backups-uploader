@@ -70,7 +70,7 @@ Supported `--scope` values for version 1:
 
 Recommended first implementation path:
 
-1. Build `restore-dry-run`.
+1. Build `restore-dry-run`. Current source status: implemented as a read-only preflight only.
 2. Add report generation.
 3. Add pre-restore backup evidence checks.
 4. Add `restore-apply --scope=database`.
@@ -242,6 +242,25 @@ Dry run should verify:
 8. Target database is reachable by WP-CLI.
 9. Pre-restore backup path is writable.
 10. Disk space is sufficient for pre-restore backup and restore work.
+
+Current `restore-dry-run` behavior:
+
+- Reads staged evidence only and writes nothing.
+- Supports `--scope=files`, `--scope=database`, and `--scope=files-and-database`.
+- Supports `--format=json`.
+- Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, `pre_restore_backup_created: false`, and `restore_apply_command_available: false`.
+- Does not create pre-restore backups yet.
+- Does not check target database connectivity yet.
+- Does not implement `restore-apply`.
+
+Feature-stage review status for the first dry-run slice:
+
+- Feature Light Review: passed after tightening staged report path checks so malformed `file_root` or `database_dump` values fail the dry run.
+- Feature Bloat And Structure Review: completed with explicit base ref `52380a4`; the standalone runner remains oversized and is deferred because splitting the portable CLI script is architecture-sensitive.
+- Feature UI/UX Implementation Review: not applicable; no wp-admin UI, frontend UI, AJAX, REST, or browser-facing controls changed.
+- Feature Security Review: passed; dry run validates scope, restore-path containment, staged report evidence, safe single-segment report paths, target path safety, and reports no destructive actions.
+- Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, restore runbook, package security docs, pre-release checklist, and this plan now describe the dry-run boundary.
+- Validation: PHP syntax checks, focused restore/security PHPUnit, full `npm.cmd test`, `npm.cmd run lint`, `git diff --check`, and feature bloat report passed. `git diff --check` reports only the existing `readme.txt` CRLF warning.
 
 Apply should:
 

@@ -61,6 +61,8 @@ class Alynt_Server_Backup_Runner {
 				return $this->fetch_command( $options );
 			case 'stage-restore':
 				return $this->stage_restore_command( $options );
+			case 'restore-dry-run':
+				return $this->restore_dry_run_command( $options );
 			default:
 				$this->error( 'Unknown command: ' . $command );
 				$this->usage();
@@ -1063,6 +1065,352 @@ class Alynt_Server_Backup_Runner {
 				'Keep production restore steps manual until separately approved.',
 			),
 		);
+	}
+
+	/**
+	 * Performs a read-only restore apply preflight.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function restore_dry_run_command( array $options ) {
+		$staged_path = isset( $options['staged-path'] ) ? $this->normalize_path( (string) $options['staged-path'] ) : '';
+		$scope       = isset( $options['scope'] ) ? strtolower( trim( (string) $options['scope'] ) ) : 'files-and-database';
+
+		if ( '' === $staged_path ) {
+			$this->error( 'Missing --staged-path=/path/to/staged/package.' );
+			return 1;
+		}
+
+		if ( ! in_array( $scope, array( 'files', 'database', 'files-and-database' ), true ) ) {
+			$this->error( 'Invalid --scope. Use files, database, or files-and-database.' );
+			return 1;
+		}
+
+		$result = $this->restore_dry_run_result( $staged_path, $scope );
+
+		if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
+			$this->line( json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+		} else {
+			$this->print_restore_dry_run_result( $result );
+		}
+
+		return 0 === (int) $result['failure_count'] ? 0 : 1;
+	}
+
+	/**
+	 * Builds a read-only restore dry-run result.
+	 *
+	 * @param string $staged_path Staged restore path.
+	 * @param string $scope Restore scope.
+	 * @return array<string,mixed>
+	 */
+	private function restore_dry_run_result( $staged_path, $scope ) {
+		$checks          = array();
+		$restore_base    = $this->restore_path();
+		$target_path     = $this->normalize_path( $this->config_string( 'restore_target_wordpress_path' ) );
+		$wordpress_path  = $this->wordpress_path();
+		$pre_backup_path = $this->normalize_path( $this->config_string( 'restore_pre_backup_path' ) );
+		$report_path     = $staged_path . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json';
+		$report          = $this->read_restore_report( $report_path );
+
+		$this->add_restore_dry_run_check(
+			$checks,
+			'restore_apply_enabled',
+			$this->config_bool( 'restore_apply_enabled' ),
+			'Restore apply is explicitly enabled in runner config.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'restore_environment',
+			'staging' === strtolower( $this->config_string( 'restore_environment' ) ),
+			'Restore environment is staging.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'staged_path_under_restore_path',
+			'' !== $restore_base && $this->path_is_within_directory( $restore_base, $staged_path ) && $this->normalize_path( $restore_base ) !== $staged_path,
+			'Staged path is inside the configured restore path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'staged_path_readable',
+			is_dir( $staged_path ) && is_readable( $staged_path ),
+			'Staged path exists and is readable.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'restore_report_readable',
+			is_file( $report_path ) && is_readable( $report_path ),
+			'RESTORE_REPORT.json exists and is readable.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'restore_report_valid_json',
+			! empty( $report ),
+			'RESTORE_REPORT.json is valid JSON.'
+		);
+
+		$this->add_restore_dry_run_report_check( $checks, $report, 'status', 'staged_for_inspection' );
+		$this->add_restore_dry_run_report_check( $checks, $report, 'package_verified', true );
+		$this->add_restore_dry_run_report_check( $checks, $report, 'archive_members_safe', true );
+		$this->add_restore_dry_run_report_check( $checks, $report, 'extracted_for_inspection', true );
+		$this->add_restore_dry_run_report_check( $checks, $report, 'database_imported', false );
+		$this->add_restore_dry_run_report_check( $checks, $report, 'live_files_overwritten', false );
+		$this->add_restore_dry_run_report_check( $checks, $report, 'manual_restore_required', true );
+
+		if ( $this->restore_scope_includes_files( $scope ) ) {
+			$file_root      = isset( $report['file_root'] ) ? (string) $report['file_root'] : '';
+			$file_root_safe = $this->restore_report_relative_name_is_safe( $file_root );
+			$this->add_restore_dry_run_check(
+				$checks,
+				'restore_report_file_root_safe',
+				$file_root_safe,
+				'RESTORE_REPORT.json file_root is a safe single path segment.'
+			);
+			$this->add_restore_dry_run_check(
+				$checks,
+				'staged_files_present',
+				$file_root_safe && is_dir( $staged_path . DIRECTORY_SEPARATOR . $file_root ),
+				'Staged WordPress files are present for file restore scope.'
+			);
+		}
+
+		if ( $this->restore_scope_includes_database( $scope ) ) {
+			$database_dump      = isset( $report['database_dump'] ) ? (string) $report['database_dump'] : '';
+			$database_dump_safe = $this->restore_report_relative_name_is_safe( $database_dump );
+			$this->add_restore_dry_run_check(
+				$checks,
+				'restore_report_database_dump_safe',
+				$database_dump_safe,
+				'RESTORE_REPORT.json database_dump is a safe single path segment.'
+			);
+			$this->add_restore_dry_run_check(
+				$checks,
+				'staged_database_present',
+				$database_dump_safe && is_file( $staged_path . DIRECTORY_SEPARATOR . $database_dump ) && is_readable( $staged_path . DIRECTORY_SEPARATOR . $database_dump ),
+				'Staged database dump is present for database restore scope.'
+			);
+		}
+
+		$this->add_restore_dry_run_check(
+			$checks,
+			'target_wordpress_path_configured',
+			'' !== $target_path,
+			'Restore target WordPress path is configured.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'target_wordpress_path_matches_runner',
+			'' !== $target_path && $target_path === $wordpress_path,
+			'Restore target WordPress path matches the runner WordPress path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'target_wordpress_path_safe',
+			'' !== $target_path && ! $this->dangerous_restore_target_path( $target_path ),
+			'Restore target WordPress path is not a broad system path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'target_wordpress_path_readable',
+			is_dir( $target_path ) && is_readable( $target_path ),
+			'Restore target WordPress path exists and is readable.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_backup_path_ready',
+			'' !== $pre_backup_path && $this->path_or_parent_is_writable_directory( $pre_backup_path ),
+			'Pre-restore backup path exists or its parent is writable.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'target_free_space',
+			$this->has_minimum_free_space( $target_path ),
+			'Target filesystem has the configured minimum free space.'
+		);
+
+		$failure_count = 0;
+		foreach ( $checks as $check ) {
+			if ( empty( $check['passed'] ) ) {
+				++$failure_count;
+			}
+		}
+
+		return array(
+			'schema_version'                  => 1,
+			'generated_at'                    => gmdate( 'c' ),
+			'command'                         => 'restore-dry-run',
+			'status'                          => 0 === $failure_count ? 'passed' : 'failed',
+			'scope'                           => $scope,
+			'staged_path'                     => $staged_path,
+			'target_wordpress_path'           => $target_path,
+			'restore_environment'             => $this->config_string( 'restore_environment' ),
+			'restore_apply_enabled'           => $this->config_bool( 'restore_apply_enabled' ),
+			'pre_restore_backup_path'         => $pre_backup_path,
+			'failure_count'                   => $failure_count,
+			'checks'                          => $checks,
+			'restore_apply_allowed'           => 0 === $failure_count,
+			'destructive_actions_performed'   => false,
+			'database_imported'               => false,
+			'live_files_overwritten'          => false,
+			'pre_restore_backup_created'      => false,
+			'restore_apply_command_available' => false,
+		);
+	}
+
+	/**
+	 * Adds a restore dry-run check record.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Checks.
+	 * @param string                         $name Check name.
+	 * @param bool                           $passed Whether check passed.
+	 * @param string                         $message Check message.
+	 * @return void
+	 */
+	private function add_restore_dry_run_check( array &$checks, $name, $passed, $message ) {
+		$checks[] = array(
+			'name'    => $name,
+			'passed'  => (bool) $passed,
+			'message' => $message,
+		);
+	}
+
+	/**
+	 * Adds a RESTORE_REPORT.json field check.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Checks.
+	 * @param array<string,mixed>            $report Restore report.
+	 * @param string                         $key Report key.
+	 * @param mixed                          $expected Expected value.
+	 * @return void
+	 */
+	private function add_restore_dry_run_report_check( array &$checks, array $report, $key, $expected ) {
+		$this->add_restore_dry_run_check(
+			$checks,
+			'restore_report_' . $key,
+			array_key_exists( $key, $report ) && $report[ $key ] === $expected,
+			'RESTORE_REPORT.json records ' . $key . ' as ' . var_export( $expected, true ) . '.'
+		);
+	}
+
+	/**
+	 * Reads a staged restore report.
+	 *
+	 * @param string $report_path Report path.
+	 * @return array<string,mixed>
+	 */
+	private function read_restore_report( $report_path ) {
+		if ( ! is_readable( $report_path ) ) {
+			return array();
+		}
+
+		$report = json_decode( (string) file_get_contents( $report_path ), true );
+
+		return is_array( $report ) ? $report : array();
+	}
+
+	/**
+	 * Returns whether a restore scope includes files.
+	 *
+	 * @param string $scope Restore scope.
+	 * @return bool
+	 */
+	private function restore_scope_includes_files( $scope ) {
+		return in_array( $scope, array( 'files', 'files-and-database' ), true );
+	}
+
+	/**
+	 * Returns whether a restore scope includes database.
+	 *
+	 * @param string $scope Restore scope.
+	 * @return bool
+	 */
+	private function restore_scope_includes_database( $scope ) {
+		return in_array( $scope, array( 'database', 'files-and-database' ), true );
+	}
+
+	/**
+	 * Returns whether a restore report path name is a safe single segment.
+	 *
+	 * @param string $value Report value.
+	 * @return bool
+	 */
+	private function restore_report_relative_name_is_safe( $value ) {
+		$value = trim( $value );
+
+		return '' !== $value && false === strpos( $value, '/' ) && false === strpos( $value, '\\' ) && '.' !== $value && '..' !== $value;
+	}
+
+	/**
+	 * Returns whether a path is within a directory.
+	 *
+	 * @param string $base Base directory.
+	 * @param string $path Child path.
+	 * @return bool
+	 */
+	private function path_is_within_directory( $base, $path ) {
+		$base = $this->normalize_path( $base );
+		$path = $this->normalize_path( $path );
+
+		return '' !== $base && ( $path === $base || 0 === strpos( $path, $base . '/' ) );
+	}
+
+	/**
+	 * Returns whether a restore target path is too broad to restore into.
+	 *
+	 * @param string $path Target path.
+	 * @return bool
+	 */
+	private function dangerous_restore_target_path( $path ) {
+		$path  = $this->normalize_path( $path );
+		$lower = strtolower( $path );
+
+		if ( in_array( $lower, array( '', '/', '/var', '/var/www' ), true ) ) {
+			return true;
+		}
+
+		return 1 === preg_match( '/^[a-z]:$/', $lower ) || 1 === preg_match( '/^[a-z]:\/$/', $lower );
+	}
+
+	/**
+	 * Checks whether a path exists as writable directory, or its parent can receive it.
+	 *
+	 * @param string $path Path.
+	 * @return bool
+	 */
+	private function path_or_parent_is_writable_directory( $path ) {
+		if ( is_dir( $path ) ) {
+			return is_writable( $path );
+		}
+
+		$parent = dirname( $path );
+
+		return '' !== $parent && is_dir( $parent ) && is_writable( $parent );
+	}
+
+	/**
+	 * Prints a restore dry-run result.
+	 *
+	 * @param array<string,mixed> $result Dry-run result.
+	 * @return void
+	 */
+	private function print_restore_dry_run_result( array $result ) {
+		$this->line( 'passed' === $result['status'] ? 'Restore dry run passed.' : 'Restore dry run failed.' );
+		$this->line( 'Scope: ' . $result['scope'] );
+		$this->line( 'Staged path: ' . $result['staged_path'] );
+		$this->line( 'Target WordPress path: ' . $result['target_wordpress_path'] );
+		$this->line( '' );
+
+		foreach ( $result['checks'] as $check ) {
+			$this->line( sprintf( '[%s] %s - %s', empty( $check['passed'] ) ? 'fail' : 'ok', $check['name'], $check['message'] ) );
+		}
+
+		$this->line( '' );
+		$this->line( 'Safety boundary:' );
+		$this->line( '- No destructive actions were performed.' );
+		$this->line( '- No database import was performed.' );
+		$this->line( '- No live WordPress files were overwritten.' );
 	}
 
 	/**
@@ -2138,6 +2486,25 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Returns a config value as a strict opt-in boolean.
+	 *
+	 * @param string $key Config key.
+	 * @return bool
+	 */
+	private function config_bool( $key ) {
+		if ( ! isset( $this->config[ $key ] ) ) {
+			return false;
+		}
+
+		$value = $this->config[ $key ];
+		if ( is_bool( $value ) ) {
+			return $value;
+		}
+
+		return in_array( strtolower( trim( (string) $value ) ), array( '1', 'true', 'yes', 'on' ), true );
+	}
+
+	/**
 	 * Returns the configured minimum free space required for package operations.
 	 *
 	 * @return int
@@ -2475,10 +2842,11 @@ function alynt_runner_load_config( $path ) {
  * @return string
  */
 function alynt_runner_usage() {
-	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore> '
+	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore|restore-dry-run> '
 		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
-		. '[--restore-path=/path/to/restores] [--older-than-days=14] [--confirm=delete-local-artifacts]';
+		. '[--restore-path=/path/to/restores] [--staged-path=/path/to/staged/package] [--scope=files-and-database] '
+		. '[--older-than-days=14] [--confirm=delete-local-artifacts]';
 }
 
 $parsed = alynt_runner_parse_args( $argv );

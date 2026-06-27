@@ -17,6 +17,7 @@ Supported now:
 - Inspect package metadata and archive contents.
 - Extract a verified package into a separate restore staging directory.
 - Write a local `RESTORE_REPORT.json` evidence file after successful restore staging.
+- Run a read-only `restore-dry-run` preflight against staged evidence.
 - Review restored files and `database.sql` without touching production.
 
 Not supported yet:
@@ -177,6 +178,38 @@ cat /var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMS
 `RESTORE_NOTES.txt` should state that no database import was performed and no live WordPress files were overwritten.
 
 `RESTORE_REPORT.json` is a machine-readable local evidence file. It records package ID, archive and sidecar names, checksum metadata, non-secret manifest fields, `package_verified`, `archive_members_safe`, `extracted_for_inspection`, `database_imported: false`, `live_files_overwritten: false`, and `manual_restore_required: true`.
+
+## Restore Dry Run
+
+After staging and inspection, run a read-only dry run if you are preparing for the separate destructive restore project:
+
+```bash
+php /path/to/alynt-backup-runner.php restore-dry-run \
+  --config=/var/www/example.com/private/alynt-drime-backups/config.json \
+  --staged-path=/var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMSS \
+  --scope=files-and-database \
+  --format=json
+```
+
+Supported scope values are:
+
+- `files`
+- `database`
+- `files-and-database`
+
+The dry run reads config and staged evidence only. It checks:
+
+- `restore_apply_enabled` is explicitly enabled in config.
+- `restore_environment` is `staging`.
+- `--staged-path` is inside the configured `restore_path`.
+- `RESTORE_REPORT.json` exists, is valid JSON, and records staged inspection evidence.
+- Staged `htdocs/` exists when file restore is requested.
+- Staged `database.sql` exists when database restore is requested.
+- `restore_target_wordpress_path` matches the runner `wordpress_path` and is not a broad system path.
+- `restore_pre_backup_path` exists or its parent is writable.
+- The target filesystem has the configured minimum free space.
+
+The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `restore_apply_command_available: false`. It does not create a pre-restore backup, import a database, overwrite files, write reports, delete files, or run shell restore commands.
 
 ## Manual Disaster Restore Outline
 

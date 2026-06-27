@@ -547,4 +547,4 @@ Do not run workflow prompts mechanically when their work is already complete and
 
 The plugin baseline is effectively complete for the validated MVP/new-plugin scope.
 
-The Broader Server-Side Backup Automation Support multiple standalone site runner guidance slice is implemented as documentation. The next plan step is Git Operations Prompt option A to commit and push this docs-only slice, unless another approved feature slice is intentionally added first.
+The destructive restore automation project is tracked separately in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md). The first safe implementation slice is `restore-dry-run`: a read-only server-runner preflight that checks staged restore evidence and staging-only gates without importing a database, overwriting files, creating backups, deleting files, or exposing a destructive `restore-apply` command.

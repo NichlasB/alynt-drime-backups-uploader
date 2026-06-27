@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -45,6 +45,10 @@ The scanner waits until files are old enough and their size is stable across sca
 = How are server-runner packages verified before restore staging? =
 
 The runner verifies the package checksum and manifest sidecar, prints next-step guidance for operators, then rejects unsafe archive member paths before extracting into a new restore directory. It writes `RESTORE_NOTES.txt` and `RESTORE_REPORT.json` as local evidence. The current restore flow is inspection-only and does not import databases or overwrite live files.
+
+= Can I dry-run a future restore after staging a package? =
+
+Yes. The runner supports `restore-dry-run --staged-path=/path/to/staged/package --scope=files-and-database --format=json`. It reads config and staged restore evidence only, then reports whether staging-only restore gates, target path safety, pre-restore backup path readiness, and required staged files are present. It does not import databases, overwrite files, or create backups.
 
 = Can I list local server-runner packages before choosing one to restore? =
 
@@ -114,6 +118,7 @@ No public custom actions or filters are exposed.
 * Added folder catalog snapshot sidecars for server-runner packages uploaded through the generic outbox.
 * Added operator-confirmed server-runner local cleanup execution for old outbox package sets and restore staging directories.
 * Added clearer server-runner restore guidance after fetch, verify, inspect, and stage-restore commands.
+* Added read-only server-runner restore dry-run checks for staged restore evidence, staging-only config gates, target path safety, and scope-specific staged files.
 * Changed server-runner archives to exclude symlink entries before restore staging.
 * Changed server-runner archive creation to recover from live file-change warnings only when a non-empty archive was produced.
 * Changed generated server-runner configs to use light consistency mode by default.
