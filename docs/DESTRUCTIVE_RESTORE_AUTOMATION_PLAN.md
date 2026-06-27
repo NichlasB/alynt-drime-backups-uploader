@@ -72,7 +72,7 @@ Recommended first implementation path:
 
 1. Build `restore-dry-run`. Current source status: implemented as a preflight.
 2. Add report generation. Current source status: implemented as optional `--write-report=1` success evidence under configured `restore_reports_path`.
-3. Add pre-restore backup evidence checks.
+3. Add pre-restore backup evidence checks. Current source status: implemented as validation of a matching evidence JSON file and readable backup artifacts.
 4. Add `restore-apply --scope=database`.
 5. Add `restore-apply --scope=files`.
 6. Combine as `restore-apply --scope=files-and-database`.
@@ -89,6 +89,7 @@ Example:
   "restore_environment": "staging",
   "restore_target_wordpress_path": "/var/www/alyntdrime.sitesmain.com/htdocs",
   "restore_pre_backup_path": "/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/pre-restore",
+  "restore_pre_backup_evidence_path": "/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/pre-restore/PRE_RESTORE_BACKUP_EVIDENCE-package-id.json",
   "restore_reports_path": "/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/restore-reports"
 }
 ```
@@ -248,8 +249,11 @@ Current `restore-dry-run` behavior:
 - Reads staged evidence and writes nothing by default.
 - Supports `--scope=files`, `--scope=database`, and `--scope=files-and-database`.
 - Supports `--format=json`.
+- Supports `--pre-restore-evidence=/path/to/evidence.json` override, otherwise reads `restore_pre_backup_evidence_path` from config.
 - Supports `--write-report=1` to write a successful dry-run evidence report under configured `restore_reports_path`.
 - Refuses to write success evidence when the dry run fails.
+- Requires pre-restore backup evidence to match package ID, scope, and target path.
+- Requires scope-specific backup artifact files to be readable and under `restore_pre_backup_path`.
 - Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, `pre_restore_backup_created: false`, and `restore_apply_command_available: false`.
 - Does not create pre-restore backups yet.
 - Does not check target database connectivity yet.
@@ -261,6 +265,21 @@ Current dry-run report fields:
 - `report_written`
 - `report_path`
 - `report_write_error`
+
+Current pre-restore backup evidence shape:
+
+```json
+{
+  "schema_version": 1,
+  "evidence_type": "pre_restore_backup",
+  "generated_at": "2026-06-27T15:30:00+00:00",
+  "package_id": "example-com-YYYYmmdd-HHMMSS",
+  "scope": "files-and-database",
+  "target_wordpress_path": "/var/www/example.com/htdocs",
+  "database_export_path": "/var/www/example.com/private/alynt-drime-backups/pre-restore/current-database.sql",
+  "file_backup_path": "/var/www/example.com/private/alynt-drime-backups/pre-restore/current-files.tar.gz"
+}
+```
 
 Feature-stage review status for the first dry-run slice:
 
@@ -278,6 +297,15 @@ Feature-stage review status for the dry-run report-generation slice:
 - Feature UI/UX Implementation Review: not applicable; no wp-admin UI, frontend UI, AJAX, REST, or browser-facing controls changed.
 - Feature Security Review: passed; report writing is gated by `--write-report=1`, requires configured `restore_reports_path`, blocks broad report paths, and still exposes no `restore-apply` command.
 - Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, restore runbook, package security docs, pre-release checklist, implementation plan, and this plan now describe optional dry-run evidence reports.
+- Validation: PHP syntax checks, focused restore/security PHPUnit, full `npm.cmd test`, `npm.cmd run lint`, `git diff --check`, and feature bloat report passed. `git diff --check` reports only the existing `readme.txt` CRLF warning.
+
+Feature-stage review status for the pre-restore backup evidence validation slice:
+
+- Feature Light Review: passed; the slice validates existing evidence only and does not create backups or perform restore actions.
+- Feature Bloat And Structure Review: completed with explicit base ref `3239a3a`; changed test files are under threshold, and the standalone runner remains oversized/deferred because splitting the portable CLI script is architecture-sensitive.
+- Feature UI/UX Implementation Review: not applicable; no wp-admin UI, frontend UI, AJAX, REST, or browser-facing controls changed.
+- Feature Security Review: passed; evidence file and artifact paths must live under `restore_pre_backup_path`, match package/scope/target, and be readable before dry run can pass.
+- Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, restore runbook, package security docs, pre-release checklist, implementation plan, and this plan now describe pre-restore evidence validation.
 - Validation: PHP syntax checks, focused restore/security PHPUnit, full `npm.cmd test`, `npm.cmd run lint`, `git diff --check`, and feature bloat report passed. `git diff --check` reports only the existing `readme.txt` CRLF warning.
 
 Apply should:

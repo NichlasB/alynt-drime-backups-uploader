@@ -62,7 +62,13 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( "'live_files_overwritten'          => false", $source );
 		$this->assertStringContainsString( "'restore_apply_command_available' => false", $source );
 		$this->assertStringContainsString( '--write-report=1', $source );
+		$this->assertStringContainsString( '--pre-restore-evidence=/path/to/evidence.json', $source );
 		$this->assertStringContainsString( 'restore_reports_path', $source );
+		$this->assertStringContainsString( 'restore_pre_backup_evidence_path', $source );
+		$this->assertStringContainsString( 'pre_restore_evidence_path_under_pre_backup_path', $source );
+		$this->assertStringContainsString( 'add_pre_restore_artifact_check', $source );
+		$this->assertStringContainsString( 'database_export_path', $source );
+		$this->assertStringContainsString( 'file_backup_path', $source );
 		$this->assertStringContainsString( 'Dry run failed; success evidence report was not written.', $source );
 		$this->assertStringNotContainsString( "case 'restore-apply'", $source );
 		$this->assertSame( 1, preg_match( '/private function restore_dry_run_command\(.*?private function print_verify_next_steps/s', $source, $matches ) );

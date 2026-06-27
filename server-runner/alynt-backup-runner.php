@@ -1074,9 +1074,10 @@ class Alynt_Server_Backup_Runner {
 	 * @return int Exit code.
 	 */
 	private function restore_dry_run_command( array $options ) {
-		$staged_path = isset( $options['staged-path'] ) ? $this->normalize_path( (string) $options['staged-path'] ) : '';
-		$scope       = isset( $options['scope'] ) ? strtolower( trim( (string) $options['scope'] ) ) : 'files-and-database';
-		$write_report = isset( $options['write-report'] ) && $this->truthy_value( $options['write-report'] );
+		$staged_path               = isset( $options['staged-path'] ) ? $this->normalize_path( (string) $options['staged-path'] ) : '';
+		$scope                     = isset( $options['scope'] ) ? strtolower( trim( (string) $options['scope'] ) ) : 'files-and-database';
+		$pre_backup_evidence_path  = isset( $options['pre-restore-evidence'] ) ? $this->normalize_path( (string) $options['pre-restore-evidence'] ) : $this->restore_pre_backup_evidence_path();
+		$write_report              = isset( $options['write-report'] ) && $this->truthy_value( $options['write-report'] );
 
 		if ( '' === $staged_path ) {
 			$this->error( 'Missing --staged-path=/path/to/staged/package.' );
@@ -1088,7 +1089,7 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
-		$result = $this->restore_dry_run_result( $staged_path, $scope );
+		$result = $this->restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path );
 		if ( $write_report ) {
 			$result = $this->write_restore_dry_run_report( $result );
 		}
@@ -1107,9 +1108,10 @@ class Alynt_Server_Backup_Runner {
 	 *
 	 * @param string $staged_path Staged restore path.
 	 * @param string $scope Restore scope.
+	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
 	 * @return array<string,mixed>
 	 */
-	private function restore_dry_run_result( $staged_path, $scope ) {
+	private function restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path ) {
 		$checks          = array();
 		$restore_base    = $this->restore_path();
 		$target_path     = $this->normalize_path( $this->config_string( 'restore_target_wordpress_path' ) );
@@ -1118,6 +1120,7 @@ class Alynt_Server_Backup_Runner {
 		$report_path     = $staged_path . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json';
 		$report          = $this->read_restore_report( $report_path );
 		$package_id      = isset( $report['package_id'] ) ? (string) $report['package_id'] : basename( $staged_path );
+		$pre_backup_evidence = $this->read_restore_report( $pre_backup_evidence_path );
 
 		$this->add_restore_dry_run_check(
 			$checks,
@@ -1228,6 +1231,7 @@ class Alynt_Server_Backup_Runner {
 			'' !== $pre_backup_path && $this->path_or_parent_is_writable_directory( $pre_backup_path ),
 			'Pre-restore backup path exists or its parent is writable.'
 		);
+		$this->add_pre_restore_evidence_checks( $checks, $pre_backup_evidence_path, $pre_backup_path, $pre_backup_evidence, $package_id, $scope, $target_path );
 		$this->add_restore_dry_run_check(
 			$checks,
 			'target_free_space',
@@ -1254,6 +1258,7 @@ class Alynt_Server_Backup_Runner {
 			'restore_environment'             => $this->config_string( 'restore_environment' ),
 			'restore_apply_enabled'           => $this->config_bool( 'restore_apply_enabled' ),
 			'pre_restore_backup_path'         => $pre_backup_path,
+			'pre_restore_evidence_path'       => $pre_backup_evidence_path,
 			'failure_count'                   => $failure_count,
 			'checks'                          => $checks,
 			'restore_apply_allowed'           => 0 === $failure_count,
@@ -1266,6 +1271,116 @@ class Alynt_Server_Backup_Runner {
 			'report_written'                  => false,
 			'report_path'                     => '',
 			'report_write_error'              => '',
+		);
+	}
+
+	/**
+	 * Adds pre-restore backup evidence checks.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Checks.
+	 * @param string                         $evidence_path Evidence file path.
+	 * @param string                         $pre_backup_path Pre-restore backup directory path.
+	 * @param array<string,mixed>            $evidence Evidence payload.
+	 * @param string                         $package_id Package ID.
+	 * @param string                         $scope Restore scope.
+	 * @param string                         $target_path Target WordPress path.
+	 * @return void
+	 */
+	private function add_pre_restore_evidence_checks( array &$checks, $evidence_path, $pre_backup_path, array $evidence, $package_id, $scope, $target_path ) {
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_path_configured',
+			'' !== $evidence_path,
+			'Pre-restore backup evidence path is configured.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_path_under_pre_backup_path',
+			'' !== $evidence_path && '' !== $pre_backup_path && $this->path_is_within_directory( $pre_backup_path, $evidence_path ),
+			'Pre-restore backup evidence path is inside the configured pre-restore backup path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_readable',
+			is_file( $evidence_path ) && is_readable( $evidence_path ),
+			'Pre-restore backup evidence file exists and is readable.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_valid_json',
+			! empty( $evidence ),
+			'Pre-restore backup evidence file is valid JSON.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_type',
+			isset( $evidence['evidence_type'] ) && 'pre_restore_backup' === (string) $evidence['evidence_type'],
+			'Pre-restore backup evidence type is pre_restore_backup.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_package_id',
+			isset( $evidence['package_id'] ) && (string) $evidence['package_id'] === $package_id,
+			'Pre-restore backup evidence package ID matches the staged package.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_scope',
+			isset( $evidence['scope'] ) && (string) $evidence['scope'] === $scope,
+			'Pre-restore backup evidence scope matches the dry-run scope.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_target_path',
+			isset( $evidence['target_wordpress_path'] ) && $this->normalize_path( (string) $evidence['target_wordpress_path'] ) === $target_path,
+			'Pre-restore backup evidence target path matches the restore target.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_evidence_generated_at',
+			! empty( $evidence['generated_at'] ),
+			'Pre-restore backup evidence records when it was generated.'
+		);
+
+		if ( $this->restore_scope_includes_database( $scope ) ) {
+			$this->add_pre_restore_artifact_check( $checks, $evidence, 'database_export_path', $pre_backup_path, 'database export' );
+		}
+
+		if ( $this->restore_scope_includes_files( $scope ) ) {
+			$this->add_pre_restore_artifact_check( $checks, $evidence, 'file_backup_path', $pre_backup_path, 'file backup' );
+		}
+	}
+
+	/**
+	 * Adds pre-restore backup artifact checks.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Checks.
+	 * @param array<string,mixed>            $evidence Evidence payload.
+	 * @param string                         $key Evidence key.
+	 * @param string                         $pre_backup_path Pre-restore backup directory path.
+	 * @param string                         $label Artifact label.
+	 * @return void
+	 */
+	private function add_pre_restore_artifact_check( array &$checks, array $evidence, $key, $pre_backup_path, $label ) {
+		$artifact_path = isset( $evidence[ $key ] ) ? $this->normalize_path( (string) $evidence[ $key ] ) : '';
+
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_' . $key . '_configured',
+			'' !== $artifact_path,
+			'Pre-restore ' . $label . ' path is recorded.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_' . $key . '_under_pre_backup_path',
+			'' !== $artifact_path && '' !== $pre_backup_path && $this->path_is_within_directory( $pre_backup_path, $artifact_path ),
+			'Pre-restore ' . $label . ' path is inside the configured pre-restore backup path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_' . $key . '_readable',
+			is_file( $artifact_path ) && is_readable( $artifact_path ),
+			'Pre-restore ' . $label . ' file exists and is readable.'
 		);
 	}
 
@@ -2445,6 +2560,15 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Returns pre-restore backup evidence path.
+	 *
+	 * @return string
+	 */
+	private function restore_pre_backup_evidence_path() {
+		return $this->normalize_path( $this->config_string( 'restore_pre_backup_evidence_path' ) );
+	}
+
+	/**
 	 * Returns WP-CLI executable.
 	 *
 	 * @return string
@@ -2962,7 +3086,7 @@ function alynt_runner_usage() {
 		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
 		. '[--restore-path=/path/to/restores] [--staged-path=/path/to/staged/package] [--scope=files-and-database] '
-		. '[--write-report=1] [--older-than-days=14] [--confirm=delete-local-artifacts]';
+		. '[--pre-restore-evidence=/path/to/evidence.json] [--write-report=1] [--older-than-days=14] [--confirm=delete-local-artifacts]';
 }
 
 $parsed = alynt_runner_parse_args( $argv );

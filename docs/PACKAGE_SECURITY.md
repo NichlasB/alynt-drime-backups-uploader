@@ -92,9 +92,9 @@ This validation is a staging guard. It does not make an unknown third-party pack
 
 `restore-dry-run` is a preflight for the separate destructive restore project. It reads the runner config, a staged restore directory, and `RESTORE_REPORT.json`, then reports whether staging-only gates and evidence are present.
 
-The command checks that restore apply is explicitly enabled in config, the target environment is `staging`, the staged path is under `restore_path`, the staged report still says no database import or live file overwrite happened, the requested scope has the required staged files, the configured target WordPress path is not a broad system path, the pre-restore backup path is available, and minimum free space is present.
+The command checks that restore apply is explicitly enabled in config, the target environment is `staging`, the staged path is under `restore_path`, the staged report still says no database import or live file overwrite happened, the requested scope has the required staged files, the configured target WordPress path is not a broad system path, the pre-restore backup path is available, pre-restore backup evidence matches the package/scope/target, required pre-restore artifacts are readable under `restore_pre_backup_path`, and minimum free space is present.
 
-By default, the command writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under the configured `restore_reports_path`; failed dry runs do not create success evidence. The command does not create pre-restore backups, import databases, replace files, delete local files, contact Drime, or run shell restore commands. It reports `restore_apply_command_available: false` because destructive apply is not implemented in the current runner.
+By default, the command writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under the configured `restore_reports_path`; failed dry runs do not create success evidence. The command validates pre-restore backup evidence, but it does not create pre-restore backups, import databases, replace files, delete local files, contact Drime, or run shell restore commands. It reports `restore_apply_command_available: false` because destructive apply is not implemented in the current runner.
 
 ## Recommended Server Paths
 

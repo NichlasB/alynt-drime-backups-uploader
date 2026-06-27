@@ -187,9 +187,29 @@ After staging and inspection, run a read-only dry run if you are preparing for t
 php /path/to/alynt-backup-runner.php restore-dry-run \
   --config=/var/www/example.com/private/alynt-drime-backups/config.json \
   --staged-path=/var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMSS \
+  --pre-restore-evidence=/var/www/example.com/private/alynt-drime-backups/pre-restore/PRE_RESTORE_BACKUP_EVIDENCE-example-com-YYYYmmdd-HHMMSS.json \
   --scope=files-and-database \
   --format=json
 ```
+
+The evidence path can also be saved in runner config as `restore_pre_backup_evidence_path`.
+
+Minimum evidence JSON shape:
+
+```json
+{
+  "schema_version": 1,
+  "evidence_type": "pre_restore_backup",
+  "generated_at": "2026-06-27T15:30:00+00:00",
+  "package_id": "example-com-YYYYmmdd-HHMMSS",
+  "scope": "files-and-database",
+  "target_wordpress_path": "/var/www/example.com/htdocs",
+  "database_export_path": "/var/www/example.com/private/alynt-drime-backups/pre-restore/current-database.sql",
+  "file_backup_path": "/var/www/example.com/private/alynt-drime-backups/pre-restore/current-files.tar.gz"
+}
+```
+
+For `database` scope, `database_export_path` must be present, under `restore_pre_backup_path`, and readable. For `files` scope, `file_backup_path` must be present, under `restore_pre_backup_path`, and readable. For `files-and-database`, both are required.
 
 To write a persistent evidence report after a passing dry run, add `--write-report=1` and configure `restore_reports_path`:
 
@@ -224,9 +244,10 @@ The dry run reads config and staged evidence only. It checks:
 - Staged `database.sql` exists when database restore is requested.
 - `restore_target_wordpress_path` matches the runner `wordpress_path` and is not a broad system path.
 - `restore_pre_backup_path` exists or its parent is writable.
+- Pre-restore evidence exists, is valid JSON, matches package/scope/target, and points to readable backup artifacts under `restore_pre_backup_path`.
 - The target filesystem has the configured minimum free space.
 
-The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `restore_apply_command_available: false`. By default it writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under `restore_reports_path`; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
+The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, `pre_restore_backup_created: false`, and `restore_apply_command_available: false`. By default it writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under `restore_reports_path`; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
 
 ## Manual Disaster Restore Outline
 

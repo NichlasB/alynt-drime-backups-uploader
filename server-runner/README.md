@@ -27,6 +27,7 @@ php alynt-backup-runner.php inspect --config=/path/to/config.json --package=/pat
 php alynt-backup-runner.php fetch --config=/path/to/config.json --package-id=package-id --workspace-id=0 --folder-hash=hash --download-path=/path/to/downloads
 php alynt-backup-runner.php stage-restore --config=/path/to/config.json --package=/path/to/package.tar.gz
 php alynt-backup-runner.php restore-dry-run --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --format=json
+php alynt-backup-runner.php restore-dry-run --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --pre-restore-evidence=/path/to/pre-restore/evidence.json --format=json
 php alynt-backup-runner.php restore-dry-run --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --write-report=1 --format=json
 ```
 
@@ -132,9 +133,26 @@ The cleanup command deletes matching local outbox archives plus `.manifest.json`
 
 The first restore flow is intentionally non-destructive. `fetch` can download a known Drime package plus sidecars into a local download directory, and `stage-restore` verifies the package and sidecars, creates a new directory under `restore_path`, extracts the archive there, and writes `RESTORE_NOTES.txt` plus `RESTORE_REPORT.json`.
 
-`restore-dry-run` reads a staged restore directory and reports whether a future gated restore command would have enough evidence to proceed. It checks the staging-only restore config flags, confirms `--staged-path` is inside `restore_path`, validates `RESTORE_REPORT.json`, verifies required staged `htdocs/` and/or `database.sql` content for the selected scope, checks the configured target WordPress path, checks pre-restore backup path readiness, and confirms the target filesystem has the configured minimum free space.
+`restore-dry-run` reads a staged restore directory and reports whether a future gated restore command would have enough evidence to proceed. It checks the staging-only restore config flags, confirms `--staged-path` is inside `restore_path`, validates `RESTORE_REPORT.json`, verifies required staged `htdocs/` and/or `database.sql` content for the selected scope, checks the configured target WordPress path, checks pre-restore backup path readiness, validates pre-restore backup evidence, and confirms the target filesystem has the configured minimum free space.
 
 By default, dry run prints output only. Add `--write-report=1` to write a successful dry-run evidence report under configured `restore_reports_path`. The command writes that report only after the dry run passes; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
+
+Pre-restore backup evidence can come from the config key `restore_pre_backup_evidence_path` or from `--pre-restore-evidence=/path/to/evidence.json`. The evidence file must live under `restore_pre_backup_path`, be readable JSON, match the staged package ID, match the dry-run scope, match `restore_target_wordpress_path`, and point to readable backup artifacts under `restore_pre_backup_path`.
+
+Evidence JSON shape:
+
+```json
+{
+  "schema_version": 1,
+  "evidence_type": "pre_restore_backup",
+  "generated_at": "2026-06-27T15:30:00+00:00",
+  "package_id": "example-com-YYYYmmdd-HHMMSS",
+  "scope": "files-and-database",
+  "target_wordpress_path": "/var/www/example.com/htdocs",
+  "database_export_path": "/var/www/example.com/private/alynt-drime-backups/pre-restore/current-database.sql",
+  "file_backup_path": "/var/www/example.com/private/alynt-drime-backups/pre-restore/current-files.tar.gz"
+}
+```
 
 The restore commands now print operator guidance after successful `fetch`, `verify`, `inspect`, and `stage-restore` runs. This guidance points to the next inspection step, names the staged path after extraction, and repeats that database imports and live file replacement remain separately approved manual work.
 

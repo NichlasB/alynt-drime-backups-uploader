@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Added `.remote-catalog.json` folder catalog snapshot sidecars so each uploaded server-runner package can carry a non-secret catalog of the local outbox package set.
 - Added `server-runner restore-dry-run` as a read-only preflight that checks staged restore evidence, staging-only config gates, target path safety, pre-restore backup path readiness, and scope-specific staged files before any future destructive restore command exists.
 - Added optional `restore-dry-run --write-report=1` evidence reports under the configured `restore_reports_path` so successful dry runs can leave machine-readable proof for later restore gates.
+- Added pre-restore backup evidence checks to `restore-dry-run`, requiring a matching evidence JSON file and readable database/file backup artifacts under the configured pre-restore backup path.
 
 ### Changed
 
