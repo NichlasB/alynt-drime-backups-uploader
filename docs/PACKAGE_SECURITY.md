@@ -137,4 +137,4 @@ Before production rollout of the server-runner producer:
 - Stage the restore into a non-public restore directory.
 - Inspect `htdocs/`, `database.sql`, `manifest.json`, and `RESTORE_NOTES.txt`.
 
-No automated production restore command should ship until destructive restore has its own dry-run output, confirmation gates, pre-restore snapshot requirement, and staging evidence.
+No automated production restore command should ship until destructive restore has its own dry-run output, confirmation gates, pre-restore snapshot requirement, and staging evidence. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.

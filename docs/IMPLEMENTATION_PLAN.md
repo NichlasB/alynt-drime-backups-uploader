@@ -87,6 +87,8 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 - Restore documentation exists in `docs/RESTORE_RUNBOOK.md`.
 - Restore rehearsal checklist/report template exists in `docs/RESTORE_REHEARSAL_CHECKLIST.md`.
+- Destructive restore automation planning exists in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md` as a separate gated future project.
+- First read-only GridPane investigation findings for `alyntdrime.sitesmain.com` are recorded in that plan.
 - Remote discovery notes exist in `docs/REMOTE_RESTORE_DISCOVERY.md`.
 - Package security boundaries are documented in `docs/PACKAGE_SECURITY.md`.
 - Current restore support is intentionally non-destructive:
@@ -96,7 +98,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
   - stage the package into a separate restore directory;
   - write `RESTORE_NOTES.txt`.
 - The runner does not import the database or overwrite live WordPress files.
-- Destructive restore remains a manual, explicitly approved operator process until a separate destructive restore design is built and tested.
+- Destructive restore remains a manual, explicitly approved operator process until the separate gated design in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md` is implemented and proven on staging.
 
 ### Operator-Approved Local Cleanup
 
@@ -393,7 +395,7 @@ Remaining possible future work:
 
 - Mutable singleton remote package catalog only if future Drime API validation proves safe in-place replacement semantics.
 - Guided staging-restore wp-admin UI only if operator experience later proves that the browser is the right surface.
-- Destructive restore automation only as a separate, gated project with dry-run, confirmation, pre-restore safety evidence, and staging evidence.
+- Destructive restore automation only as the separate gated project documented in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md`, with dry-run, confirmation, pre-restore safety evidence, and staging evidence.
 
 ### 5. Central Dashboard Plugin Preparation
 

@@ -25,7 +25,7 @@ Not supported yet:
 - Replacing the live `htdocs` directory.
 - Running an automated production restore command.
 
-Any production restore must remain a manual, explicitly approved operation until a separate destructive restore workflow is designed and tested.
+Any production restore must remain a manual, explicitly approved operation until a separate destructive restore workflow is designed and tested. The future destructive restore automation plan is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md).
 
 ## Package Layout
 
@@ -192,7 +192,7 @@ This outline is not an automated production restore command. Use it only after a
 8. Run WordPress URL, permalink, cache, and login checks.
 9. Remove maintenance mode only after runtime checks pass.
 
-The plugin and runner should not perform steps 6 or 7 automatically until a destructive restore design has its own confirmation gates, dry-run output, and staging evidence.
+The plugin and runner should not perform steps 6 or 7 automatically until the destructive restore automation project has its own confirmation gates, dry-run output, pre-restore backup evidence, and staging evidence.
 
 For the package integrity, extraction safety, storage-path, and encryption boundaries behind this runbook, see [PACKAGE_SECURITY.md](PACKAGE_SECURITY.md).
 
