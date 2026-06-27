@@ -66,7 +66,7 @@ Recommended lifecycle:
 5. Stage the restore into a separate restore directory.
 6. Record the restore rehearsal result.
 7. Run `cleanup-preview` to see old local outbox and restore staging candidates without deleting anything.
-8. Only then consider removing local outbox, download, or restore staging artifacts.
+8. If retention policy allows it, run the guarded `cleanup` command with explicit operator confirmation.
 
 For production sites, keep at least one recently verified local package when disk space allows. If disk space is tight, cleanup should be an operator-approved server process, not an automatic plugin side effect.
 
@@ -77,6 +77,14 @@ php /path/to/alynt-backup-runner.php cleanup-preview --config=/path/to/config.js
 ```
 
 The command reports candidate archives and restore staging directories, includes sidecar readiness fields for outbox packages, and sets `destructive_actions_performed` to `false`. It does not delete local files.
+
+Run approved cleanup with:
+
+```bash
+php /path/to/alynt-backup-runner.php cleanup --config=/path/to/config.json --older-than-days=14 --confirm=delete-local-artifacts --format=json
+```
+
+The cleanup command deletes only candidates rebuilt from the configured outbox and restore paths. It removes selected outbox archives plus known sidecars and selected restore staging directories. It does not remove local fetched download copies unless those copies live in one of the configured cleanup paths, and it does not contact Drime.
 
 ## High-Write Sites
 
@@ -141,7 +149,7 @@ Review:
 The current implementation does not yet include:
 
 - Automatic cron installation.
-- Automatic local outbox cleanup. A read-only cleanup preview exists, but deletion remains manual.
+- Automatic local outbox cleanup. Cleanup execution exists, but it requires the explicit `--confirm=delete-local-artifacts` operator gate and should be run only after upload and restore proof.
 - A mutable singleton remote package catalog. Server-runner packages now upload package-level `.remote-index.json` and folder catalog snapshot `.remote-catalog.json` sidecars, but the plugin does not overwrite one rolling file in a Drime destination folder.
 - Alternative archive formats beyond runner-created `.tar.gz` packages.
 - Automatic maintenance mode or write-pausing for high-write sites.

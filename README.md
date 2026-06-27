@@ -22,7 +22,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
 - Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
 - Provides WP-CLI commands for server-driven scan/upload/status workflows.
-- Includes a first-pass PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, and preview old local artifacts before operator-approved cleanup.
+- Includes a first-pass PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, preview old local artifacts, and run operator-approved local cleanup behind an explicit confirmation flag.
 - Stores bounded, redacted diagnostics when diagnostics are explicitly enabled.
 - Keeps local backups after upload by default; deletion requires explicit opt-in.
 
@@ -94,7 +94,7 @@ For onboarding a new GridPane site from install through first upload and server-
 
 The plugin settings screen generates a GridPane runner config, runner install commands, runner health command, cron snippet, and server-cron review commands for the current site. The config is non-secret and can be saved as `config.json` beside the runner script. The install commands create the private directories and copy the bundled runner script only; cron installation and backup runs stay separate. The cron snippet creates one daily server-runner package, scans/uploads completed packages every 15 minutes through WP-CLI, and includes a lightweight status check line. The review commands build a proposed user crontab file and show a diff before the final install command, which remains commented until an operator approves it.
 
-For the broader server-side automation model, including scheduling, multiple standalone site layout, disk retention, cleanup preview, and high-write-site boundaries, see [docs/SERVER_BACKUP_AUTOMATION.md](docs/SERVER_BACKUP_AUTOMATION.md). For several separate WordPress sites on one server, see [docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md](docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md).
+For the broader server-side automation model, including scheduling, multiple standalone site layout, disk retention, cleanup preview/execution, and high-write-site boundaries, see [docs/SERVER_BACKUP_AUTOMATION.md](docs/SERVER_BACKUP_AUTOMATION.md). For several separate WordPress sites on one server, see [docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md](docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md).
 
 For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: the server runner can fetch a known package from Drime, verify it, stage it for inspection, and write local restore evidence, but it does not import databases or overwrite live site files.
 

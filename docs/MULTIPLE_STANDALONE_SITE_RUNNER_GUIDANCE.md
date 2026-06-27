@@ -174,6 +174,12 @@ Run cleanup preview per standalone site:
 php /var/www/site-a.com/private/alynt-drime-backups/runner/alynt-backup-runner.php cleanup-preview --config=/var/www/site-a.com/private/alynt-drime-backups/runner/config.json --older-than-days=14 --format=json
 ```
 
+After that site's upload and restore proof has been reviewed, run cleanup per standalone site only when approved:
+
+```bash
+php /var/www/site-a.com/private/alynt-drime-backups/runner/alynt-backup-runner.php cleanup --config=/var/www/site-a.com/private/alynt-drime-backups/runner/config.json --older-than-days=14 --confirm=delete-local-artifacts --format=json
+```
+
 Do not run broad server-level deletion commands across every site's backup folders unless each site's upload and restore proof has been reviewed. Cleanup should remain operator-approved and site-by-site.
 
 ## Common Mistakes To Avoid

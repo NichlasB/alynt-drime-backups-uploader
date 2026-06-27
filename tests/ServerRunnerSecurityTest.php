@@ -74,12 +74,27 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( "'destructive_actions_performed' => false", $source );
 		$this->assertStringContainsString( "'suggested_action'", $source );
 		$this->assertStringContainsString( "'operator_review'", $source );
-		$this->assertSame( 1, preg_match( '/private function cleanup_preview_command\(.*?private function verify_command/s', $source, $matches ) );
+		$this->assertSame( 1, preg_match( '/private function cleanup_preview_command\(.*?private function cleanup_command/s', $source, $matches ) );
 
 		$method_source = $matches[0];
 		$this->assertStringNotContainsString( 'unlink(', $method_source );
 		$this->assertStringNotContainsString( 'rmdir(', $method_source );
 		$this->assertStringNotContainsString( 'remove_directory', $method_source );
 		$this->assertStringNotContainsString( 'write_file', $method_source );
+	}
+
+	/**
+	 * Local cleanup execution must require an explicit operator confirmation phrase.
+	 *
+	 * @return void
+	 */
+	public function test_cleanup_execution_requires_confirmation_phrase() {
+		$source = $this->runner_source();
+
+		$this->assertStringContainsString( "case 'cleanup'", $source );
+		$this->assertStringContainsString( 'cleanup_command', $source );
+		$this->assertStringContainsString( "'delete-local-artifacts' !== \$confirm", $source );
+		$this->assertStringContainsString( '--confirm=delete-local-artifacts', $source );
+		$this->assertStringContainsString( "'destructive_actions_performed' => true", $source );
 	}
 }

@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Added `server-runner` JSON package inventory output through `list --format=json` for local restore discovery and sidecar readiness checks.
 - Added `RESTORE_REPORT.json` output after successful server-runner restore staging so restore rehearsals have machine-readable local evidence.
 - Added `server-runner cleanup-preview` for read-only local outbox and restore staging cleanup candidate reporting.
+- Added `server-runner cleanup` for operator-confirmed deletion of old local outbox package sets and restore staging directories.
 - Added Drime workspace destination guardrails that block workspace ID `0` and support optional `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` allowlisting.
 - Added server-runner light consistency mode so packages can record database/archive timing, archive warning counts, and clean versus file-changes-detected status for high-write-site review.
 - Added server-cron review commands to the settings screen so operators can build and diff a proposed crontab file before manually approving installation.

@@ -146,3 +146,15 @@ After the rehearsal:
 - Remove local outbox packages only when the site retention policy allows it and Drime restore proof has passed.
 
 Do not clean up the only known-good local copy unless the Drime copy and sidecars have been verified.
+
+For server-runner-managed outbox and restore staging paths, preview before cleanup:
+
+```bash
+php /path/to/alynt-backup-runner.php cleanup-preview --config=/var/www/example.com/private/alynt-drime-backups/runner/config.json --older-than-days=14 --format=json
+```
+
+When approved, run the guarded cleanup command:
+
+```bash
+php /path/to/alynt-backup-runner.php cleanup --config=/var/www/example.com/private/alynt-drime-backups/runner/config.json --older-than-days=14 --confirm=delete-local-artifacts --format=json
+```

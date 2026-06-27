@@ -21,6 +21,7 @@ php alynt-backup-runner.php list --config=/path/to/config.json
 php alynt-backup-runner.php list --config=/path/to/config.json --format=json
 php alynt-backup-runner.php cleanup-preview --config=/path/to/config.json --older-than-days=14
 php alynt-backup-runner.php cleanup-preview --config=/path/to/config.json --older-than-days=14 --format=json
+php alynt-backup-runner.php cleanup --config=/path/to/config.json --older-than-days=14 --confirm=delete-local-artifacts --format=json
 php alynt-backup-runner.php verify --config=/path/to/config.json --package=/path/to/package.tar.gz
 php alynt-backup-runner.php inspect --config=/path/to/config.json --package=/path/to/package.tar.gz
 php alynt-backup-runner.php fetch --config=/path/to/config.json --package-id=package-id --workspace-id=0 --folder-hash=hash --download-path=/path/to/downloads
@@ -30,6 +31,8 @@ php alynt-backup-runner.php stage-restore --config=/path/to/config.json --packag
 `list` keeps the original plain-text path output by default. Use `--format=json` to print a local package inventory with package IDs, archive names, sidecar names, manifest/checksum/remote-index validity flags, checksum metadata, manifest metadata, and `verification_ready` flags. The JSON inventory is read-only and does not verify hashes or contact Drime.
 
 `cleanup-preview` is also read-only. It reports outbox packages and restore staging directories older than the selected threshold, defaults to 14 days, and sets `destructive_actions_performed` to `false` in JSON output. It does not delete archives, sidecars, or restore staging folders.
+
+`cleanup` deletes only old candidates discovered from the configured outbox and restore staging paths. It refuses to run unless the exact `--confirm=delete-local-artifacts` flag is present, deletes known package sidecars beside a selected archive, and reports `destructive_actions_performed` as `true` in JSON output.
 
 Use server cron to call `run`, then call the plugin WP-CLI workflow to scan/upload the resulting package, for example:
 
@@ -113,7 +116,15 @@ The runner can preview old local artifacts before an operator-approved cleanup:
 php alynt-backup-runner.php cleanup-preview --config=/path/to/config.json --older-than-days=14 --format=json
 ```
 
-Use this after upload and restore rehearsal proof to see which local outbox packages and restore staging directories are old enough to review. The command does not remove anything; deletion remains a manual server operation.
+Use this after upload and restore rehearsal proof to see which local outbox packages and restore staging directories are old enough to review. The command does not remove anything.
+
+After the preview has been reviewed and local retention policy allows cleanup, run the explicit cleanup command:
+
+```bash
+php alynt-backup-runner.php cleanup --config=/path/to/config.json --older-than-days=14 --confirm=delete-local-artifacts --format=json
+```
+
+The cleanup command deletes matching local outbox archives plus `.manifest.json`, `.sha256`, `.sha256sum`, `.remote-index.json`, and `.remote-catalog.json` sidecars when present. It also deletes matching restore staging directories. It does not contact Drime, delete remote files, or touch arbitrary paths outside the configured outbox and restore directories.
 
 ## Restore Staging
 

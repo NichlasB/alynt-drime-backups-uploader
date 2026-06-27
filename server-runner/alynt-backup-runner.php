@@ -51,6 +51,8 @@ class Alynt_Server_Backup_Runner {
 				return $this->list_packages( $options );
 			case 'cleanup-preview':
 				return $this->cleanup_preview_command( $options );
+			case 'cleanup':
+				return $this->cleanup_command( $options );
 			case 'verify':
 				return $this->verify_command( $options );
 			case 'inspect':
@@ -501,6 +503,275 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		return $candidates;
+	}
+
+	/**
+	 * Deletes old local artifacts after explicit operator confirmation.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function cleanup_command( array $options ) {
+		$confirm = isset( $options['confirm'] ) ? trim( (string) $options['confirm'] ) : '';
+		if ( 'delete-local-artifacts' !== $confirm ) {
+			$this->error( 'Refusing cleanup without --confirm=delete-local-artifacts.' );
+			return 1;
+		}
+
+		$older_than_days = isset( $options['older-than-days'] ) ? max( 0, (int) $options['older-than-days'] ) : 14;
+		$preview         = $this->cleanup_preview_data( $older_than_days );
+		$outbox          = $this->delete_outbox_cleanup_candidates( $preview['outbox']['candidates'] );
+		$restore_staging = $this->delete_restore_cleanup_candidates( $preview['restore_staging']['candidates'] );
+		$failure_count   = count( $outbox['failures'] ) + count( $restore_staging['failures'] );
+
+		$result = array(
+			'schema_version'                => 1,
+			'generated_at'                  => gmdate( 'c' ),
+			'older_than_days'               => $older_than_days,
+			'confirmation'                  => $confirm,
+			'outbox'                        => $outbox,
+			'restore_staging'               => $restore_staging,
+			'total_candidate_count'         => $preview['total_candidate_count'],
+			'failure_count'                 => $failure_count,
+			'destructive_actions_performed' => true,
+		);
+
+		if ( isset( $options['format'] ) && 'json' === (string) $options['format'] ) {
+			$this->line( json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+
+			return 0 === $failure_count ? 0 : 1;
+		}
+
+		$this->line( 'Local cleanup completed.' );
+		$this->line( 'Older than days: ' . (string) $older_than_days );
+		$this->line( 'Outbox packages deleted: ' . (string) $outbox['deleted_package_count'] );
+		$this->line( 'Outbox files deleted: ' . (string) $outbox['deleted_file_count'] );
+		$this->line( 'Restore staging directories deleted: ' . (string) $restore_staging['deleted_directory_count'] );
+		$this->line( 'Failures: ' . (string) $failure_count );
+
+		return 0 === $failure_count ? 0 : 1;
+	}
+
+	/**
+	 * Deletes confirmed outbox cleanup candidates.
+	 *
+	 * @param array<int,array<string,mixed>> $candidates Candidates.
+	 * @return array<string,mixed>
+	 */
+	private function delete_outbox_cleanup_candidates( array $candidates ) {
+		$result = array(
+			'candidate_count'        => count( $candidates ),
+			'deleted_package_count'  => 0,
+			'deleted_file_count'     => 0,
+			'deleted'                => array(),
+			'failures'               => array(),
+		);
+
+		foreach ( $candidates as $candidate ) {
+			$archive_name = isset( $candidate['archive_name'] ) ? (string) $candidate['archive_name'] : '';
+			$deleted      = $this->delete_outbox_package_set( $archive_name );
+			if ( ! empty( $deleted['failure_reason'] ) ) {
+				$result['failures'][] = $deleted;
+				continue;
+			}
+
+			++$result['deleted_package_count'];
+			$result['deleted_file_count'] += $deleted['deleted_file_count'];
+			$result['deleted'][]           = $deleted;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Deletes one archive and its known server-runner sidecars.
+	 *
+	 * @param string $archive_name Archive basename.
+	 * @return array<string,mixed>
+	 */
+	private function delete_outbox_package_set( $archive_name ) {
+		if ( ! $this->safe_cleanup_child_name( $archive_name ) ) {
+			return $this->cleanup_failure( $archive_name, 'unsafe_archive_name' );
+		}
+
+		$archive = $this->outbox_path() . DIRECTORY_SEPARATOR . $archive_name;
+		if ( ! $this->path_is_expected_child( $this->outbox_path(), $archive, $archive_name ) || ! is_file( $archive ) ) {
+			return $this->cleanup_failure( $archive_name, 'archive_missing_or_outside_outbox' );
+		}
+
+		$deleted_files = array();
+		foreach ( $this->outbox_cleanup_paths( $archive ) as $path ) {
+			if ( ! file_exists( $path ) ) {
+				continue;
+			}
+
+			if ( ! is_file( $path ) || ! $this->path_is_expected_child( $this->outbox_path(), $path, basename( $path ) ) ) {
+				return $this->cleanup_failure( $archive_name, 'unsafe_outbox_file' );
+			}
+
+			if ( ! unlink( $path ) ) {
+				return $this->cleanup_failure( $archive_name, 'delete_failed' );
+			}
+
+			$deleted_files[] = basename( $path );
+		}
+
+		return array(
+			'archive_name'        => $archive_name,
+			'deleted_file_count'  => count( $deleted_files ),
+			'deleted_file_names'  => $deleted_files,
+			'failure_reason'      => '',
+		);
+	}
+
+	/**
+	 * Returns the archive and known sidecar paths for local cleanup.
+	 *
+	 * @param string $archive Archive path.
+	 * @return array<int,string>
+	 */
+	private function outbox_cleanup_paths( $archive ) {
+		$paths = array();
+		foreach ( array( '.manifest.json', '.sha256', '.sha256sum', '.remote-index.json', '.remote-catalog.json' ) as $suffix ) {
+			$paths[] = $archive . $suffix;
+		}
+		$paths[] = $archive;
+
+		return $paths;
+	}
+
+	/**
+	 * Deletes confirmed restore staging cleanup candidates.
+	 *
+	 * @param array<int,array<string,mixed>> $candidates Candidates.
+	 * @return array<string,mixed>
+	 */
+	private function delete_restore_cleanup_candidates( array $candidates ) {
+		$result = array(
+			'candidate_count'           => count( $candidates ),
+			'deleted_directory_count'   => 0,
+			'deleted'                   => array(),
+			'failures'                  => array(),
+		);
+
+		foreach ( $candidates as $candidate ) {
+			$directory_name = isset( $candidate['directory_name'] ) ? (string) $candidate['directory_name'] : '';
+			$deleted        = $this->delete_restore_staging_directory( $directory_name );
+			if ( ! empty( $deleted['failure_reason'] ) ) {
+				$result['failures'][] = $deleted;
+				continue;
+			}
+
+			++$result['deleted_directory_count'];
+			$result['deleted'][] = $deleted;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Deletes one restore staging directory under the configured restore path.
+	 *
+	 * @param string $directory_name Directory basename.
+	 * @return array<string,mixed>
+	 */
+	private function delete_restore_staging_directory( $directory_name ) {
+		if ( ! $this->safe_cleanup_child_name( $directory_name ) ) {
+			return $this->cleanup_failure( $directory_name, 'unsafe_directory_name' );
+		}
+
+		$directory = $this->restore_path() . DIRECTORY_SEPARATOR . $directory_name;
+		if ( ! $this->path_is_expected_child( $this->restore_path(), $directory, $directory_name ) || ! is_dir( $directory ) ) {
+			return $this->cleanup_failure( $directory_name, 'directory_missing_or_outside_restore_path' );
+		}
+
+		if ( ! $this->remove_restore_staging_directory( $directory ) ) {
+			return $this->cleanup_failure( $directory_name, 'delete_failed' );
+		}
+
+		return array(
+			'directory_name' => $directory_name,
+			'failure_reason' => '',
+		);
+	}
+
+	/**
+	 * Removes a restore staging directory after restore-path containment checks.
+	 *
+	 * @param string $directory Directory path.
+	 * @return bool
+	 */
+	private function remove_restore_staging_directory( $directory ) {
+		$restore_path = $this->restore_path();
+		$normalized   = $this->normalize_path( $directory );
+		$base         = $this->normalize_path( $restore_path );
+		if ( '' === $normalized || '' === $base || 0 !== strpos( $normalized, $base . '/' ) || ! is_dir( $directory ) ) {
+			return false;
+		}
+
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $directory, FilesystemIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ( $iterator as $item ) {
+			if ( $item->isDir() ) {
+				if ( ! rmdir( $item->getPathname() ) ) {
+					return false;
+				}
+				continue;
+			}
+
+			if ( ! unlink( $item->getPathname() ) ) {
+				return false;
+			}
+		}
+
+		return rmdir( $directory );
+	}
+
+	/**
+	 * Builds a cleanup failure record.
+	 *
+	 * @param string $name Name.
+	 * @param string $reason Reason.
+	 * @return array<string,mixed>
+	 */
+	private function cleanup_failure( $name, $reason ) {
+		return array(
+			'name'           => $name,
+			'failure_reason' => $reason,
+		);
+	}
+
+	/**
+	 * Checks whether a cleanup candidate basename is safe to reconstruct.
+	 *
+	 * @param string $name Basename.
+	 * @return bool
+	 */
+	private function safe_cleanup_child_name( $name ) {
+		return '' !== $name
+			&& '.' !== $name
+			&& '..' !== $name
+			&& false === strpos( $name, '/' )
+			&& false === strpos( $name, '\\' )
+			&& basename( $name ) === $name;
+	}
+
+	/**
+	 * Checks whether a path is the expected direct child of a base path.
+	 *
+	 * @param string $base Base path.
+	 * @param string $path Child path.
+	 * @param string $name Expected basename.
+	 * @return bool
+	 */
+	private function path_is_expected_child( $base, $path, $name ) {
+		$base = $this->normalize_path( $base );
+		$path = $this->normalize_path( $path );
+
+		return '' !== $base && $path === $base . '/' . $name;
 	}
 
 	/**
@@ -2121,10 +2392,10 @@ function alynt_runner_load_config( $path ) {
  * @return string
  */
 function alynt_runner_usage() {
-	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|verify|inspect|fetch|stage-restore> '
+	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore> '
 		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
-		. '[--restore-path=/path/to/restores] [--older-than-days=14]';
+		. '[--restore-path=/path/to/restores] [--older-than-days=14] [--confirm=delete-local-artifacts]';
 }
 
 $parsed = alynt_runner_parse_args( $argv );

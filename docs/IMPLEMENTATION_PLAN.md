@@ -15,7 +15,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
 - A real WordPress Plugins-screen update rehearsal passed by downgrading the LocalWP test copy to `0.1.0`, then updating to `0.1.1` through the rendered WordPress plugin UI.
-- The working tree was clean after the latest documentation readiness review and local validation pass.
+- The working tree was clean before the operator-approved local cleanup execution slice.
 
 ## What Is Complete
 
@@ -97,6 +97,14 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
   - write `RESTORE_NOTES.txt`.
 - The runner does not import the database or overwrite live WordPress files.
 - Destructive restore remains a manual, explicitly approved operator process until a separate destructive restore design is built and tested.
+
+### Operator-Approved Local Cleanup
+
+- The server runner supports `cleanup-preview` for read-only review of old local outbox package sets and restore staging directories.
+- The server runner supports `cleanup` only when the operator passes `--confirm=delete-local-artifacts`.
+- Cleanup execution deletes only candidates discovered from the configured outbox and restore paths.
+- Cleanup execution removes selected local archives plus known sidecars (`.manifest.json`, `.sha256`, `.sha256sum`, `.remote-index.json`, and `.remote-catalog.json`) and selected restore staging directories.
+- Cleanup execution does not contact Drime, delete remote files, import databases, overwrite WordPress files, or run automatically from plugin uninstall.
 
 ### Dashboard Readiness Foundation
 
@@ -214,7 +222,7 @@ Current artifact:
 
 ### 3. Broader Server-Side Backup Automation Support
 
-Status: documentation, local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, cleanup preview, light consistency mode, multiple standalone site guidance, and server-cron review UX implemented.
+Status: documentation, local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, cleanup preview/execution, light consistency mode, multiple standalone site guidance, and server-cron review UX implemented.
 
 Goal:
 
@@ -224,9 +232,10 @@ Implemented first slice:
 
 - Added `docs/SERVER_BACKUP_AUTOMATION.md` to document the split between package creation and plugin upload, typical cron shape, site-local multiple standalone site layout, disk retention policy, high-write-site boundaries, monitoring commands, and current automation boundaries.
 - Linked the guide from `README.md`, `server-runner/README.md`, and `docs/SITE_ROLLOUT_RUNBOOK.md`.
-- Kept automatic cron mutation and automatic local artifact deletion out of scope until the operator policy is clearer.
+- Kept automatic cron mutation and ungated automatic local artifact deletion out of scope.
 - Added `server-runner` JSON package inventory output through `list --format=json` so operators can review local package IDs, archive names, sidecar names, manifest/checksum validity, checksum metadata, manifest metadata, and `verification_ready` flags before restore discovery or cleanup decisions.
-- Added `server-runner cleanup-preview` so operators can review old local outbox packages and restore staging folders before any manual disk cleanup. The command is read-only, supports JSON output, and records `destructive_actions_performed` as `false`.
+- Added `server-runner cleanup-preview` so operators can review old local outbox packages and restore staging folders before disk cleanup. The command is read-only, supports JSON output, and records `destructive_actions_performed` as `false`.
+- Added `server-runner cleanup` so operators can delete old local outbox package sets and restore staging directories only after passing `--confirm=delete-local-artifacts`. The command reports `destructive_actions_performed` as `true`, deletes only paths reconstructed from configured local cleanup roots, and leaves Drime untouched.
 - Added light consistency mode for high-write-site review. Newly generated configs include `consistency_mode: "light"`, and completed manifest sidecars record database/archive timing, archive warning counts, live file-change warning counts, and `consistency_status` (`clean`, `file_changes_detected`, or `warnings_detected`).
 - Added generated **Server Cron Review Commands** so operators can capture the current crontab, build a proposed crontab file with the generated snippet, review a diff, and manually approve the final `crontab` install command.
 - Added `docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md` to clarify that this backlog item meant several separate WordPress sites on one server, not WordPress Multisite. The guide documents isolated runner configs, outboxes, work paths, restore paths, cron entries, Drime site folders, monitoring, cleanup-preview use, and common mistakes.
@@ -238,7 +247,7 @@ Remaining possible future work:
 - Additional archive formats after real server validation.
 - Stronger consistency modes for higher-write sites, such as maintenance-window runbooks, temporary maintenance mode, or host-level snapshots.
 - Mutable singleton remote package catalog if future Drime API validation proves safe in-place replacement semantics.
-- Operator-approved local cleanup execution after confirmed Drime upload and restore verification.
+- Optional stronger restore/operator helpers after more rollout evidence.
 
 Light consistency mode validation:
 
@@ -352,8 +361,17 @@ Local cleanup preview feature workflow results:
 - Feature Bloat And Structure Review: passed; measurement reported `server-runner/alynt-backup-runner.php` as an existing oversized standalone runner. New/changed test files remain under threshold, and shared runner CLI test helpers were extracted to avoid growing the inventory test file.
 - Feature UI/UX Implementation Review: not applicable; no admin UI or frontend UI changed.
 - Feature Security Review: passed; cleanup preview reads configured local outbox and restore staging paths, outputs basenames and sidecar readiness only, performs no deletion or writes, and records `destructive_actions_performed` as `false`.
-- Documentation Sync Audit: completed; `README.md`, `readme.txt`, server-runner docs, server automation docs, changelog, and this plan now document cleanup preview and keep actual deletion as a manual server operation.
+- Documentation Sync Audit: completed; `README.md`, `readme.txt`, server-runner docs, server automation docs, changelog, and this plan documented cleanup preview as read-only for that slice. Cleanup execution was added later behind an explicit operator confirmation gate.
 - Final validation: `npm.cmd test` passed with 127 tests and 667 assertions; `npm.cmd run lint` passed.
+
+Operator-approved local cleanup execution feature workflow results:
+
+- Feature Light Review: passed; change is limited to a CLI-only cleanup command, path-contained file operations, focused runner tests, and operator documentation.
+- Feature Bloat And Structure Review: completed with explicit base ref `728e52f`; measurement reported 3 changed PHP files and 1 oversized existing file (`server-runner/alynt-backup-runner.php`). The new tests remain under threshold, and splitting the standalone runner is deferred as architecture-sensitive rather than forced in this feature slice.
+- Feature UI/UX Implementation Review: not applicable; no admin UI or frontend UI changed.
+- Feature Security Review: passed; cleanup execution requires `--confirm=delete-local-artifacts`, reconstructs deletion paths from configured outbox/restore roots and basenames, rejects slash-containing names, leaves `cleanup-preview` read-only, and does not contact Drime or perform restore actions.
+- Documentation Sync Audit: completed; `README.md`, `readme.txt`, `CHANGELOG.md`, server-runner docs, server automation docs, multiple standalone site guidance, restore rehearsal docs, and this plan now document cleanup preview versus confirmed cleanup execution.
+- Final validation: `php -l server-runner/alynt-backup-runner.php` passed; focused cleanup/security PHPUnit passed with 8 tests and 72 assertions; `npm.cmd test` passed with 139 tests and 782 assertions; `npm.cmd run lint` passed across 53 files; `git diff --check` passed with only the existing `readme.txt` CRLF warning.
 
 Remaining possible future work:
 
