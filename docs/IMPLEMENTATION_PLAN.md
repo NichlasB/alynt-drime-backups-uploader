@@ -222,19 +222,19 @@ Goal:
 
 Implemented first slice:
 
-- Added `docs/SERVER_BACKUP_AUTOMATION.md` to document the split between package creation and plugin upload, typical cron shape, site-local multi-site layout, disk retention policy, high-write-site boundaries, monitoring commands, and current automation boundaries.
+- Added `docs/SERVER_BACKUP_AUTOMATION.md` to document the split between package creation and plugin upload, typical cron shape, site-local multiple standalone site layout, disk retention policy, high-write-site boundaries, monitoring commands, and current automation boundaries.
 - Linked the guide from `README.md`, `server-runner/README.md`, and `docs/SITE_ROLLOUT_RUNBOOK.md`.
 - Kept automatic cron mutation and automatic local artifact deletion out of scope until the operator policy is clearer.
 - Added `server-runner` JSON package inventory output through `list --format=json` so operators can review local package IDs, archive names, sidecar names, manifest/checksum validity, checksum metadata, manifest metadata, and `verification_ready` flags before restore discovery or cleanup decisions.
 - Added `server-runner cleanup-preview` so operators can review old local outbox packages and restore staging folders before any manual disk cleanup. The command is read-only, supports JSON output, and records `destructive_actions_performed` as `false`.
 - Added light consistency mode for high-write-site review. Newly generated configs include `consistency_mode: "light"`, and completed manifest sidecars record database/archive timing, archive warning counts, live file-change warning counts, and `consistency_status` (`clean`, `file_changes_detected`, or `warnings_detected`).
 - Added generated **Server Cron Review Commands** so operators can capture the current crontab, build a proposed crontab file with the generated snippet, review a diff, and manually approve the final `crontab` install command.
+- Added `docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md` to clarify that this backlog item meant several separate WordPress sites on one server, not WordPress Multisite. The guide documents isolated runner configs, outboxes, work paths, restore paths, cron entries, Drime site folders, monitoring, cleanup-preview use, and common mistakes.
 
 Remaining possible future work:
 
 - Additional archive formats after real server validation.
 - Stronger consistency modes for higher-write sites, such as maintenance-window runbooks, temporary maintenance mode, or host-level snapshots.
-- Multi-site runner config guidance.
 - Remote package inventory/index output for easier discovery when the original server is unavailable.
 - Operator-approved local cleanup execution after confirmed Drime upload and restore verification.
 
@@ -267,6 +267,14 @@ Server cron review UX feature workflow results:
 - Feature Security Review: passed; no new POST/GET/REST/AJAX surface was added, output is escaped through the existing admin rendering pattern, generated commands do not include Drime tokens, and the final `crontab` install command remains commented for operator approval.
 - Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, settings docs, server automation guide, rollout runbook, POT file, and this plan now describe the server-cron review workflow.
 - Final validation: `php -l` passed for the changed admin trait; focused `AdminPageSettingsTest` passed with 7 tests and 35 assertions; focused PHPCS passed; POT regeneration passed with WP-CLI deprecation warnings from the phar; `npm.cmd test` passed with 136 tests and 709 assertions; `npm.cmd run lint` passed; `npm.cmd run build` passed; `git diff --check` passed with only existing line-ending warnings for `readme.txt` and the generated POT file.
+
+Multiple standalone site runner guidance feature workflow results:
+
+- Feature Light Review: passed; change is documentation-only and clarifies the operator model for several separate WordPress sites on the same GridPane/VPS server.
+- Feature Bloat And Structure Review: not applicable; no production PHP, JavaScript, CSS, or file structure changed.
+- Feature UI/UX Implementation Review: not applicable; no admin UI or frontend UI changed.
+- Feature Security Review: completed as a boundary review; the guidance keeps runner configs, outboxes, restore paths, cron entries, and Drime site folders isolated per standalone site and warns against broad cleanup across several sites.
+- Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, server automation docs, rollout runbook, release checklist, and this plan now use "multiple standalone sites" wording and link the focused guidance.
 
 ### 4. Restore Flow Improvements
 
@@ -484,4 +492,4 @@ Do not run workflow prompts mechanically when their work is already complete and
 
 The plugin baseline is effectively complete for the validated MVP/new-plugin scope.
 
-The Broader Server-Side Backup Automation Support server-cron review UX slice is implemented and locally validated. The next plan step is Git Operations Prompt option C for the accumulated feature work unless another approved feature slice is intentionally added first.
+The Broader Server-Side Backup Automation Support multiple standalone site runner guidance slice is implemented as documentation. The next plan step is Git Operations Prompt option A to commit and push this docs-only slice, unless another approved feature slice is intentionally added first.

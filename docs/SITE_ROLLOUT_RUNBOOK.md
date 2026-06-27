@@ -16,7 +16,9 @@ Supported producer choices:
 
 The fetch, verify, inspect, and stage-restore commands in this runbook apply to server-runner `.tar.gz` packages. WPvivid-only sites need a separate WPvivid restore proof before they are considered restore-ready.
 
-For the broader server-side automation policy, including scheduling, multi-site layout, disk retention, and high-write-site boundaries, see `docs/SERVER_BACKUP_AUTOMATION.md`.
+For the broader server-side automation policy, including scheduling, multiple standalone site layout, disk retention, and high-write-site boundaries, see `docs/SERVER_BACKUP_AUTOMATION.md`.
+
+For multiple separate WordPress sites on the same GridPane or VPS server, see `docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md`. That guide is not WordPress Multisite guidance; it covers isolated runner configs and paths for separate standalone sites.
 
 Do not leave two tools uploading the same backup folder automatically. During migration, the old WPvivid-specific Alynt uploader may be active briefly, but the new plugin health summary should be checked and duplicate automation should be disabled before production use.
 

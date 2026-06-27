@@ -41,7 +41,7 @@ Recommended site-local layout:
 /var/www/example.com/restores/alynt-drime-backups
 ```
 
-Use `docs/SITE_ROLLOUT_RUNBOOK.md` for the full onboarding checklist. Do not share one outbox across multiple sites unless a future inventory format is built to make that safe and easy to audit.
+Use `docs/SITE_ROLLOUT_RUNBOOK.md` for the full onboarding checklist. For several separate WordPress sites on the same server, use `docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md`. Do not share one outbox across multiple standalone sites unless a future inventory format is built to make that safe and easy to audit.
 
 ## Scheduling Guidance
 

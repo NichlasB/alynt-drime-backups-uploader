@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added a restore rehearsal checklist and report template for documenting fetch, verify, inspect, stage-restore, and cleanup proof during onboarding or periodic restore confidence checks.
-- Added a server backup automation guide covering the runner/upload job split, cron scheduling, multi-site layout, local artifact retention, monitoring, and high-write-site boundaries.
+- Added a server backup automation guide covering the runner/upload job split, cron scheduling, multiple standalone site layout, local artifact retention, monitoring, and high-write-site boundaries.
 - Added central dashboard readiness documentation that records the existing redacted status foundation and keeps the dashboard plugin, enrollment, endpoint, and remote-control work as a separate future project.
 - Added a producer adapter backlog guide for deciding when a future backup source needs a dedicated adapter instead of the generic outbox.
 - Added `server-runner` JSON package inventory output through `list --format=json` for local restore discovery and sidecar readiness checks.
@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Added Drime workspace destination guardrails that block workspace ID `0` and support optional `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` allowlisting.
 - Added server-runner light consistency mode so packages can record database/archive timing, archive warning counts, and clean versus file-changes-detected status for high-write-site review.
 - Added server-cron review commands to the settings screen so operators can build and diff a proposed crontab file before manually approving installation.
+- Added multiple standalone site runner guidance for managing separate GridPane/VPS WordPress sites without sharing runner configs, outboxes, cron entries, or Drime site folders.
 
 ### Changed
 

@@ -52,7 +52,7 @@ The WordPress plugin setting `server_outbox_path` should point at the same outbo
 
 The plugin settings screen can generate a non-secret `config.json` snippet, conservative install commands, a health command, a cron snippet, and server-cron review commands for the current site. Review the generated paths, run the install commands as the site user, save the config beside `alynt-backup-runner.php`, then run the generated health command before adding cron. Use the generated review commands to build and diff a proposed crontab file before manually approving the final `crontab` install command.
 
-See [docs/SERVER_BACKUP_AUTOMATION.md](../docs/SERVER_BACKUP_AUTOMATION.md) for the broader automation model, including scheduling guidance, multi-site layout, disk retention policy, and high-write-site boundaries.
+See [docs/SERVER_BACKUP_AUTOMATION.md](../docs/SERVER_BACKUP_AUTOMATION.md) for the broader automation model, including scheduling guidance, multiple standalone site layout, disk retention policy, and high-write-site boundaries. For several separate WordPress sites on one server, see [docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md](../docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md).
 
 This runner currently supports `tar.gz` only. Additional archive formats should be added after live GridPane validation proves the first flow.
 

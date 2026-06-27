@@ -109,6 +109,7 @@ No public custom actions or filters are exposed.
 * Added Drime workspace destination guardrails so workspace ID 0 is blocked and optional wp-config.php allowlisting can restrict selectable backup workspaces.
 * Added server-runner light consistency metadata for database/archive timing, archive warning counts, and clean versus file-changes-detected status.
 * Added server-cron review commands that build and diff a proposed crontab file without installing it automatically.
+* Added multiple standalone site runner guidance for separate GridPane/VPS WordPress sites.
 * Changed server-runner archives to exclude symlink entries before restore staging.
 * Changed server-runner archive creation to recover from live file-change warnings only when a non-empty archive was produced.
 * Changed generated server-runner configs to use light consistency mode by default.
