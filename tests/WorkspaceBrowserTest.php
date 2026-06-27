@@ -76,6 +76,62 @@ class WorkspaceBrowserTest extends TestCase {
 		$this->assertSame( 'Team Backups', $result['workspaces'][0]['name'] );
 	}
 
+	public function test_list_workspaces_excludes_personal_workspace_zero() {
+		$browser = new Alynt_Drime_Backups_Uploader_Workspace_Browser(
+			new Alynt_Drime_Backups_Uploader_Test_Workspace_Client(
+				array(
+					'workspaces' => array(
+						array(
+							'id'   => 0,
+							'name' => 'Personal',
+						),
+						array(
+							'id'   => 42,
+							'name' => 'Team Backups',
+						),
+					),
+				)
+			)
+		);
+
+		$result = $browser->list_workspaces();
+
+		$this->assertCount( 1, $result['workspaces'] );
+		$this->assertSame( 42, $result['workspaces'][0]['id'] );
+	}
+
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_list_workspaces_filters_to_configured_allowlist() {
+		define( 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS', '42' );
+
+		$browser = new Alynt_Drime_Backups_Uploader_Workspace_Browser(
+			new Alynt_Drime_Backups_Uploader_Test_Workspace_Client(
+				array(
+					'workspaces' => array(
+						array(
+							'id'   => 42,
+							'name' => 'Allowed Backups',
+						),
+						array(
+							'id'   => 84,
+							'name' => 'Other Workspace',
+						),
+					),
+				)
+			)
+		);
+
+		$result = $browser->list_workspaces();
+
+		$this->assertTrue( $result['allowlist_enabled'] );
+		$this->assertSame( array( 42 ), $result['allowed_ids'] );
+		$this->assertCount( 1, $result['workspaces'] );
+		$this->assertSame( 42, $result['workspaces'][0]['id'] );
+	}
+
 	public function test_list_workspaces_passes_drime_errors_through() {
 		$browser = new Alynt_Drime_Backups_Uploader_Workspace_Browser(
 			new Alynt_Drime_Backups_Uploader_Test_Workspace_Client(

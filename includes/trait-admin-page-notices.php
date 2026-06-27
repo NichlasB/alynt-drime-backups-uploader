@@ -43,6 +43,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Notices {
 			'failed_upload_requeue_failed' => array( 'error', __( 'The failed upload could not be requeued. Review recent events, then try again.', 'alynt-drime-backups-uploader' ) ),
 			'diagnostics_cleared'          => array( 'success', __( 'Diagnostics cleared.', 'alynt-drime-backups-uploader' ) ),
 			'diagnostics_clear_failed'     => array( 'error', __( 'Diagnostics could not be cleared. Confirm the site database is writable, then try again.', 'alynt-drime-backups-uploader' ) ),
+			'settings_validation_failed'   => array( 'error', __( 'Settings were not saved because the selected Drime workspace is not allowed for backup destinations. Choose an allowed non-personal workspace, then save again.', 'alynt-drime-backups-uploader' ) ),
 			'settings_save_failed'         => array( 'error', __( 'Settings could not be saved. Confirm the site database is writable, then try again.', 'alynt-drime-backups-uploader' ) ),
 			'action_failed'                => array( 'error', __( 'The action could not be completed. Review the recent events, adjust the settings, and try again.', 'alynt-drime-backups-uploader' ) ),
 		);

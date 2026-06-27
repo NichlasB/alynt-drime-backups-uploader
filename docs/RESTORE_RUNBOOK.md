@@ -9,9 +9,11 @@ The current restore support is intentionally non-destructive. The runner can fet
 Supported now:
 
 - Verify a local `.tar.gz` package and its sidecars.
+- List local outbox package inventory as JSON for package discovery.
 - Fetch a known Drime package and its sidecars into a local download directory.
 - Inspect package metadata and archive contents.
 - Extract a verified package into a separate restore staging directory.
+- Write a local `RESTORE_REPORT.json` evidence file after successful restore staging.
 - Review restored files and `database.sql` without touching production.
 
 Not supported yet:
@@ -52,6 +54,16 @@ Before running a restore inspection:
 - Confirm `restore_path` points outside the public web root.
 - Confirm the action is inspection-only unless a separate manual restore approval is given.
 - Run the runner `health` command and confirm all resource checks pass.
+
+To review local outbox packages before choosing one:
+
+```bash
+php /path/to/alynt-backup-runner.php list \
+  --config=/var/www/example.com/private/alynt-drime-backups/config.json \
+  --format=json
+```
+
+Use the JSON inventory to confirm the package ID, archive name, sidecar names, manifest/checksum validity, checksum metadata, and whether `verification_ready` is true. This is a discovery helper only; still run `verify` before inspection or staging.
 
 For GridPane sites, the preferred restore staging path is:
 
@@ -122,6 +134,8 @@ The runner creates:
 
 ```text
 /var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMSS/
+/var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMSS/RESTORE_NOTES.txt
+/var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMSS/RESTORE_REPORT.json
 ```
 
 It refuses to overwrite an existing restore directory with the same package ID.
@@ -139,6 +153,8 @@ cat /var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMS
 ```
 
 `RESTORE_NOTES.txt` should state that no database import was performed and no live WordPress files were overwritten.
+
+`RESTORE_REPORT.json` is a machine-readable local evidence file. It records package ID, archive and sidecar names, checksum metadata, non-secret manifest fields, `package_verified`, `archive_members_safe`, `extracted_for_inspection`, `database_imported: false`, `live_files_overwritten: false`, and `manual_restore_required: true`.
 
 ## Manual Disaster Restore Outline
 
@@ -163,3 +179,9 @@ For the package integrity, extraction safety, storage-path, and encryption bound
 If the only copy is in Drime, prefer the CLI `fetch` command above when the package ID, workspace ID, destination folder hash, and token are available. Otherwise, download the package and both sidecars manually to the server first, then run the local verification workflow.
 
 See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the manual disaster discovery path, CLI fetch behavior, and remote index option.
+
+## Restore Rehearsal Report
+
+For onboarding or periodic confidence checks, use [RESTORE_REHEARSAL_CHECKLIST.md](RESTORE_REHEARSAL_CHECKLIST.md) after this runbook. It gives operators a compact checklist and report template for recording package ID, Drime location, verification result, staging path, `RESTORE_NOTES.txt` review, `RESTORE_REPORT.json` evidence, and cleanup decision.
+
+The report is evidence that a backup can be fetched, verified, inspected, and staged. It is not approval to import a database or overwrite live files.

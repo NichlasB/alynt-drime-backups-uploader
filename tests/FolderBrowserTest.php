@@ -245,6 +245,22 @@ class FolderBrowserTest extends TestCase {
 		$this->assertSame( 'drime_error', $result->get_error_code() );
 	}
 
+	public function test_list_folders_rejects_disallowed_workspace() {
+		$browser = $this->browser_with_client(
+			new Alynt_Drime_Backups_Uploader_Test_Folder_Client(
+				array(
+					'folders' => array(),
+				)
+			),
+			0
+		);
+
+		$result = $browser->list_folders();
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'alynt_drime_workspace_not_allowed', $result->get_error_code() );
+	}
+
 	/**
 	 * Builds a browser with a fake client.
 	 *
@@ -261,15 +277,15 @@ class FolderBrowserTest extends TestCase {
 	 * @param Alynt_Drime_Backups_Uploader_Test_Folder_Client $client Client.
 	 * @return Alynt_Drime_Backups_Uploader_Folder_Browser
 	 */
-	private function browser_with_client( Alynt_Drime_Backups_Uploader_Test_Folder_Client $client ) {
+	private function browser_with_client( Alynt_Drime_Backups_Uploader_Test_Folder_Client $client, $workspace_id = 1 ) {
 		Functions\when( 'get_option' )->alias(
-			function ( $name, $default = array() ) {
+			function ( $name, $default = array() ) use ( $workspace_id ) {
 				if ( Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME !== $name ) {
 					return $default;
 				}
 
 				return array(
-					'workspace_id' => 0,
+					'workspace_id' => $workspace_id,
 				);
 			}
 		);

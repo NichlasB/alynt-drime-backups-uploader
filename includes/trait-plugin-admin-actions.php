@@ -32,6 +32,13 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Admin_Actions {
 		$raw = isset( $_POST['alynt_drime_backups_settings'] ) && is_array( $_POST['alynt_drime_backups_settings'] ) ? wp_unslash( $_POST['alynt_drime_backups_settings'] ) : array();
 
 		$settings = $this->settings->update( $raw );
+		if ( is_wp_error( $settings ) ) {
+
+			$this->logger->event( 'admin_action', 'error', 'settings_validation_failed', 'Settings validation failed.', array( 'reason' => $settings->get_error_message() ) );
+
+			$this->redirect( 'settings_validation_failed' );
+
+		}
 
 		if ( ! $this->settings->is_persisted( $settings ) ) {
 

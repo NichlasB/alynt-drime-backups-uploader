@@ -32,4 +32,54 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( 'validate_download_redirect_url', $source );
 		$this->assertStringContainsString( '$this->download_url_to_temp_path( $redirect_url, $temp_path, \'\' )', $source );
 	}
+
+	/**
+	 * Restore staging notes must keep production restore boundaries explicit.
+	 *
+	 * @return void
+	 */
+	public function test_restore_notes_keep_destructive_restore_manual() {
+		$source = $this->runner_source();
+
+		$this->assertStringContainsString( 'No database import was performed.', $source );
+		$this->assertStringContainsString( 'No live WordPress files were overwritten.', $source );
+		$this->assertStringContainsString( 'Keep production restore steps manual until separately approved.', $source );
+		$this->assertStringContainsString( 'Review database.sql before any database import.', $source );
+	}
+
+	/**
+	 * Inventory output should stay local, read-only, and sidecar-focused.
+	 *
+	 * @return void
+	 */
+	public function test_list_json_outputs_read_only_inventory_fields() {
+		$source = $this->runner_source();
+
+		$this->assertStringContainsString( 'package_inventory_record', $source );
+		$this->assertStringContainsString( "'verification_ready'", $source );
+		$this->assertStringContainsString( 'read_package_manifest_quiet', $source );
+		$this->assertStringContainsString( 'read_checksum_sidecar', $source );
+		$this->assertStringNotContainsString( "'archive_path'", $source );
+	}
+
+	/**
+	 * Cleanup preview must stay read-only and operator-reviewed.
+	 *
+	 * @return void
+	 */
+	public function test_cleanup_preview_does_not_perform_destructive_actions() {
+		$source = $this->runner_source();
+
+		$this->assertStringContainsString( 'cleanup_preview_command', $source );
+		$this->assertStringContainsString( "'destructive_actions_performed' => false", $source );
+		$this->assertStringContainsString( "'suggested_action'", $source );
+		$this->assertStringContainsString( "'operator_review'", $source );
+		$this->assertSame( 1, preg_match( '/private function cleanup_preview_command\(.*?private function verify_command/s', $source, $matches ) );
+
+		$method_source = $matches[0];
+		$this->assertStringNotContainsString( 'unlink(', $method_source );
+		$this->assertStringNotContainsString( 'rmdir(', $method_source );
+		$this->assertStringNotContainsString( 'remove_directory', $method_source );
+		$this->assertStringNotContainsString( 'write_file', $method_source );
+	}
 }

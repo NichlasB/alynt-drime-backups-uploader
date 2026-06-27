@@ -68,9 +68,13 @@ class Alynt_Drime_Backups_Uploader_Folder_Browser {
 	public function list_folders( $folder_hash = '', $page = 1, $query = '' ) {
 		$settings     = $this->settings->get();
 		$workspace_id = absint( $settings['workspace_id'] );
-		$folder_hash  = $this->sanitize_hash( $folder_hash );
-		$page         = max( 1, absint( $page ) );
-		$query        = sanitize_text_field( $query );
+		if ( ! Alynt_Drime_Backups_Uploader_Settings::is_workspace_id_allowed( $workspace_id ) ) {
+			return new WP_Error( 'alynt_drime_workspace_not_allowed', Alynt_Drime_Backups_Uploader_Settings::workspace_not_allowed_message() );
+		}
+
+		$folder_hash = $this->sanitize_hash( $folder_hash );
+		$page        = max( 1, absint( $page ) );
+		$query       = sanitize_text_field( $query );
 
 		$response = '' === $folder_hash
 			? $this->client->list_user_folders( $workspace_id )
@@ -103,6 +107,13 @@ class Alynt_Drime_Backups_Uploader_Folder_Browser {
 	 */
 	public function preview_destination( $parent_folder_id, $parent_folder_hash, $relative_path ) {
 		$this->log_event( 'info', 'destination_preview_started', 'Drime destination preview started.' );
+
+		$settings = $this->settings->get();
+		if ( ! Alynt_Drime_Backups_Uploader_Settings::is_workspace_id_allowed( absint( $settings['workspace_id'] ) ) ) {
+			$error = new WP_Error( 'alynt_drime_workspace_not_allowed', Alynt_Drime_Backups_Uploader_Settings::workspace_not_allowed_message() );
+			$this->log_event( 'error', 'destination_preview_failed', 'Drime destination preview failed.', array( 'reason' => $error->get_error_message() ) );
+			return $error;
+		}
 
 		$parent_folder_id   = '' === trim( (string) $parent_folder_id ) ? '' : (string) absint( $parent_folder_id );
 		$parent_folder_hash = $this->sanitize_hash( $parent_folder_hash );

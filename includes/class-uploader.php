@@ -434,7 +434,11 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			return new WP_Error( 'alynt_drime_file_missing', __( 'The queued backup file is no longer readable.', 'alynt-drime-backups-uploader' ) );
 		}
 
-		$settings    = $this->settings->get();
+		$settings = $this->settings->get();
+		if ( ! Alynt_Drime_Backups_Uploader_Settings::is_workspace_id_allowed( absint( $settings['workspace_id'] ) ) ) {
+			return new WP_Error( 'alynt_drime_workspace_not_allowed', Alynt_Drime_Backups_Uploader_Settings::workspace_not_allowed_message() );
+		}
+
 		$size        = filesize( $path );
 		$mtime       = filemtime( $path );
 		$remote_name = basename( $path );

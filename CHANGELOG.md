@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added a restore rehearsal checklist and report template for documenting fetch, verify, inspect, stage-restore, and cleanup proof during onboarding or periodic restore confidence checks.
+- Added a server backup automation guide covering the runner/upload job split, cron scheduling, multi-site layout, local artifact retention, monitoring, and high-write-site boundaries.
+- Added central dashboard readiness documentation that records the existing redacted status foundation and keeps the dashboard plugin, enrollment, endpoint, and remote-control work as a separate future project.
+- Added a producer adapter backlog guide for deciding when a future backup source needs a dedicated adapter instead of the generic outbox.
+- Added `server-runner` JSON package inventory output through `list --format=json` for local restore discovery and sidecar readiness checks.
+- Added `RESTORE_REPORT.json` output after successful server-runner restore staging so restore rehearsals have machine-readable local evidence.
+- Added `server-runner cleanup-preview` for read-only local outbox and restore staging cleanup candidate reporting.
+- Added Drime workspace destination guardrails that block workspace ID `0` and support optional `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` allowlisting.
+- Added server-runner light consistency mode so packages can record database/archive timing, archive warning counts, and clean versus file-changes-detected status for high-write-site review.
+- Added server-cron review commands to the settings screen so operators can build and diff a proposed crontab file before manually approving installation.
+
+### Changed
+
+- Expanded server-runner `RESTORE_NOTES.txt` output with archive format, file root, database dump, and manual inspection reminders so staged restores are easier to audit before any approved production recovery work.
+- Changed newly generated server-runner configs to opt into light consistency metadata with `consistency_mode: "light"`.
+
 ## [0.1.1] - 2026-06-26
 
 ### Added

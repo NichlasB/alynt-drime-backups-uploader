@@ -23,6 +23,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Drime_Settings {
 	 * @return void
 	 */
 	private function render_drime_settings( array $settings ) {
+		$workspace_id_input_value = absint( $settings['workspace_id'] ) > 0 ? (string) absint( $settings['workspace_id'] ) : '';
 		?>
 		<h2><?php esc_html_e( 'Drime', 'alynt-drime-backups-uploader' ); ?></h2>
 		<table class="form-table" role="presentation">
@@ -36,15 +37,32 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Drime_Settings {
 			<tr>
 				<th scope="row"><label for="alynt-workspace-id"><?php esc_html_e( 'Workspace ID', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
-					<input id="alynt-workspace-id" name="alynt_drime_backups_settings[workspace_id]" type="number" min="0" value="<?php echo esc_attr( (string) $settings['workspace_id'] ); ?>" aria-describedby="alynt-workspace-id-description">
-					<p id="alynt-workspace-id-description" class="description"><?php esc_html_e( 'Use 0 for your personal/default Drime workspace.', 'alynt-drime-backups-uploader' ); ?></p>
+					<input id="alynt-workspace-id" name="alynt_drime_backups_settings[workspace_id]" type="number" min="1" value="<?php echo esc_attr( $workspace_id_input_value ); ?>" aria-describedby="alynt-workspace-id-description alynt-workspace-lock-description">
+					<p id="alynt-workspace-id-description" class="description"><?php esc_html_e( 'Choose a non-personal Drime workspace for backup destinations. Leave empty until the intended workspace is selected. Workspace ID 0 is blocked.', 'alynt-drime-backups-uploader' ); ?></p>
+					<p id="alynt-workspace-lock-description" class="description">
+						<?php
+						if ( Alynt_Drime_Backups_Uploader_Settings::workspace_allowlist_enabled() ) {
+							printf(
+								/* translators: %s: wp-config.php constant name. */
+								esc_html__( 'Workspace selection is restricted by %s in wp-config.php.', 'alynt-drime-backups-uploader' ),
+								'<code>' . esc_html( Alynt_Drime_Backups_Uploader_Settings::ALLOWED_WORKSPACE_IDS_CONSTANT ) . '</code>'
+							);
+						} else {
+							printf(
+								/* translators: %s: wp-config.php constant example. */
+								esc_html__( 'After choosing the intended workspace, lock this site by adding %s to wp-config.php.', 'alynt-drime-backups-uploader' ),
+								'<code>define( \'' . esc_html( Alynt_Drime_Backups_Uploader_Settings::ALLOWED_WORKSPACE_IDS_CONSTANT ) . '\', \'12345\' );</code>'
+							);
+						}
+						?>
+					</p>
 					<div class="alynt-drime-workspace-tools" data-alynt-workspace-browser>
 						<button type="button" class="button" data-alynt-workspaces-load><?php esc_html_e( 'Load Drime Workspaces', 'alynt-drime-backups-uploader' ); ?></button>
 						<span class="spinner" aria-hidden="true" data-alynt-workspace-spinner></span>
 						<label class="screen-reader-text" for="alynt-workspace-select"><?php esc_html_e( 'Choose Drime workspace', 'alynt-drime-backups-uploader' ); ?></label>
 						<select id="alynt-workspace-select" data-alynt-workspace-select hidden>
 							<?php /* translators: %d: saved Drime workspace ID. */ ?>
-							<option value="<?php echo esc_attr( (string) absint( $settings['workspace_id'] ) ); ?>"><?php echo esc_html( 0 === absint( $settings['workspace_id'] ) ? __( 'Personal/default workspace', 'alynt-drime-backups-uploader' ) : sprintf( __( 'Workspace ID %d', 'alynt-drime-backups-uploader' ), absint( $settings['workspace_id'] ) ) ); ?></option>
+							<option value="<?php echo esc_attr( $workspace_id_input_value ); ?>"><?php echo esc_html( '' === $workspace_id_input_value ? __( 'Select a workspace', 'alynt-drime-backups-uploader' ) : sprintf( __( 'Workspace ID %d', 'alynt-drime-backups-uploader' ), absint( $settings['workspace_id'] ) ) ); ?></option>
 						</select>
 						<div class="alynt-drime-workspace-status" aria-live="polite" aria-atomic="true" data-alynt-workspace-status></div>
 					</div>

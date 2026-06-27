@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Pre-Release Checklist
 
-Updated: 2026-06-26
+Updated: 2026-06-27
 
 Use this checklist to track workflow progress for the `Alynt Drime Backups Uploader` plugin before release or release-candidate promotion. Mark a workflow complete only after its verification gate has passed or after confirming the workflow is not needed because the equivalent work is already complete.
 
@@ -11,6 +11,10 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] WP Plugin Toolkit Feature Bloat And Structure Review Prompt: completed for implemented feature slices. Large runtime classes were split into focused traits where useful.
 - [x] WP Plugin Toolkit Documentation Sync Audit Prompt: completed for the `0.1.0` release line and refreshed after the GridPane runner hardening/admin UI polish pass.
 - [x] Alynt Plugin Updater Compatibility Guide: completed. GitHub release asset install and Alynt Plugin Updater detection/update validation passed for `v0.1.0`; follow-up validation passed for the `v0.1.1` GitHub release asset on `plugin-tester.local`.
+
+## Current Unreleased Feature Workflow Tracking
+
+- [x] Server cron review UX: feature light review passed; feature bloat and structure review completed with explicit `origin/master` base and deferred a cosmetic split of `includes/trait-admin-page-source-settings.php`; UI/UX review passed; security review passed; documentation sync audit passed; local validation passed with 136 PHPUnit tests and 709 assertions, PHPCS, build, POT regeneration, and diff whitespace check.
 
 ## Pre-Release Review Sequence
 

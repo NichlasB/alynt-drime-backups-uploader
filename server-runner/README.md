@@ -9,6 +9,7 @@ This first runner is intentionally conservative:
 - It uses WP-CLI for database exports.
 - It uses `tar` for WordPress file archives.
 - It writes manifest and SHA-256 sidecars.
+- It can record light consistency metadata for high-write-site review.
 - It writes temporary files first, then atomically renames completed artifacts into the outbox.
 
 ## Commands
@@ -17,11 +18,18 @@ This first runner is intentionally conservative:
 php alynt-backup-runner.php health --config=/path/to/config.json
 php alynt-backup-runner.php run --config=/path/to/config.json
 php alynt-backup-runner.php list --config=/path/to/config.json
+php alynt-backup-runner.php list --config=/path/to/config.json --format=json
+php alynt-backup-runner.php cleanup-preview --config=/path/to/config.json --older-than-days=14
+php alynt-backup-runner.php cleanup-preview --config=/path/to/config.json --older-than-days=14 --format=json
 php alynt-backup-runner.php verify --config=/path/to/config.json --package=/path/to/package.tar.gz
 php alynt-backup-runner.php inspect --config=/path/to/config.json --package=/path/to/package.tar.gz
 php alynt-backup-runner.php fetch --config=/path/to/config.json --package-id=package-id --workspace-id=0 --folder-hash=hash --download-path=/path/to/downloads
 php alynt-backup-runner.php stage-restore --config=/path/to/config.json --package=/path/to/package.tar.gz
 ```
+
+`list` keeps the original plain-text path output by default. Use `--format=json` to print a local package inventory with package IDs, archive names, sidecar names, manifest/checksum validity flags, checksum metadata, manifest metadata, and `verification_ready` flags. The JSON inventory is read-only and does not verify hashes or contact Drime.
+
+`cleanup-preview` is also read-only. It reports outbox packages and restore staging directories older than the selected threshold, defaults to 14 days, and sets `destructive_actions_performed` to `false` in JSON output. It does not delete archives, sidecars, or restore staging folders.
 
 Use server cron to call `run`, then call the plugin WP-CLI workflow to scan/upload the resulting package, for example:
 
@@ -42,9 +50,32 @@ For a GridPane site, keep the outbox outside the public web root when possible:
 
 The WordPress plugin setting `server_outbox_path` should point at the same outbox path.
 
-The plugin settings screen can generate a non-secret `config.json` snippet and conservative install commands for the current site. Review the generated paths, run the install commands as the site user, save the config beside `alynt-backup-runner.php`, then run the generated health command before adding cron.
+The plugin settings screen can generate a non-secret `config.json` snippet, conservative install commands, a health command, a cron snippet, and server-cron review commands for the current site. Review the generated paths, run the install commands as the site user, save the config beside `alynt-backup-runner.php`, then run the generated health command before adding cron. Use the generated review commands to build and diff a proposed crontab file before manually approving the final `crontab` install command.
+
+See [docs/SERVER_BACKUP_AUTOMATION.md](../docs/SERVER_BACKUP_AUTOMATION.md) for the broader automation model, including scheduling guidance, multi-site layout, disk retention policy, and high-write-site boundaries.
 
 This runner currently supports `tar.gz` only. Additional archive formats should be added after live GridPane validation proves the first flow.
+
+## Consistency Mode
+
+Generated configs include:
+
+```json
+"consistency_mode": "light"
+```
+
+Light mode does not put WordPress into maintenance mode and does not pause writes. It records non-secret consistency evidence in the completed manifest sidecar:
+
+- `consistency_mode`
+- `consistency_status`
+- database dump timing
+- file archive start/finish timing
+- archive exit code
+- archive warning counts
+- file-change warning counts
+- up to five warning samples
+
+`consistency_status` is `clean` when the archive completed without warnings, `file_changes_detected` when tar reported files changing while they were read, and `warnings_detected` when other archive warnings were captured. Existing configs without this key behave as `standard` and report `not_checked` for final consistency status.
 
 The runner excludes symlink entries from new archives. This keeps restore staging focused on regular files and directories, and avoids extracting links that point outside the staged restore directory.
 
@@ -66,16 +97,34 @@ example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
 
 The plugin can detect the archive and read the manifest/checksum sidecars.
 
+The runner can also print a local inventory for the outbox:
+
+```bash
+php alynt-backup-runner.php list --config=/path/to/config.json --format=json
+```
+
+Use this before restore discovery or cleanup decisions to confirm which package sets have archive, manifest, and checksum files locally. `verification_ready` means the manifest has a package ID and the checksum sidecar has a parseable SHA-256 value; still run `verify` before restore staging.
+
+The runner can preview old local artifacts before an operator-approved cleanup:
+
+```bash
+php alynt-backup-runner.php cleanup-preview --config=/path/to/config.json --older-than-days=14 --format=json
+```
+
+Use this after upload and restore rehearsal proof to see which local outbox packages and restore staging directories are old enough to review. The command does not remove anything; deletion remains a manual server operation.
+
 ## Restore Staging
 
-The first restore flow is intentionally non-destructive. `fetch` can download a known Drime package plus sidecars into a local download directory, and `stage-restore` verifies the package and sidecars, creates a new directory under `restore_path`, extracts the archive there, and writes `RESTORE_NOTES.txt`.
+The first restore flow is intentionally non-destructive. `fetch` can download a known Drime package plus sidecars into a local download directory, and `stage-restore` verifies the package and sidecars, creates a new directory under `restore_path`, extracts the archive there, and writes `RESTORE_NOTES.txt` plus `RESTORE_REPORT.json`.
 
 `fetch` reads the Drime bearer token from `ALYNT_DRIME_TOKEN` by default, or from the environment variable named by `--token-env`. It requires exact filename matches for the archive, manifest sidecar, and checksum sidecar, refuses local overwrites unless `--overwrite=1` is provided, and verifies the package immediately after download.
 
 Before extraction, `stage-restore` lists the archive and rejects unsafe member paths, including absolute paths, parent-directory traversal, empty path segments, and archive links. This keeps restore staging focused on runner-created packages and prevents a malformed archive from writing outside the new staging directory.
 
-It does not import `database.sql`, does not overwrite the live WordPress path, and refuses to use an existing restore directory.
+It does not import `database.sql`, does not overwrite the live WordPress path, and refuses to use an existing restore directory. `RESTORE_REPORT.json` records the package ID, archive and sidecar names, checksum metadata, manifest fields, and explicit booleans confirming that no database import or live file overwrite was performed.
 
 See [docs/RESTORE_RUNBOOK.md](../docs/RESTORE_RUNBOOK.md) for the operator runbook, GridPane staging checks, and the currently gated manual disaster restore outline. See [docs/PACKAGE_SECURITY.md](../docs/PACKAGE_SECURITY.md) for the package integrity, extraction safety, storage-path, and encryption boundaries.
+
+See [docs/RESTORE_REHEARSAL_CHECKLIST.md](../docs/RESTORE_REHEARSAL_CHECKLIST.md) for the onboarding and periodic restore proof checklist.
 
 See [docs/CONSISTENCY_MODEL.md](../docs/CONSISTENCY_MODEL.md) for the logical backup timing model, manifest timing fields, and high-write site caveats.

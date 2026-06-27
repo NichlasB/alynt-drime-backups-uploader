@@ -41,7 +41,7 @@
       }
     }
     function optionLabel(workspace) {
-      const details = [];
+      const details = [`${text("workspaceIdLabel")} ${workspace.id}`];
       if (workspace.role) {
         details.push(workspace.role);
       }
@@ -56,17 +56,15 @@
         return;
       }
       select.textContent = "";
-      select.appendChild(new window.Option(text("personalWorkspace"), "0"));
       workspaces.forEach((workspace) => {
         select.appendChild(new window.Option(optionLabel(workspace), String(workspace.id)));
       });
       const input = document.getElementById("alynt-workspace-id");
       const currentValue = input ? input.value || "0" : "0";
-      if (currentValue !== "0" && !workspaces.some((workspace) => String(workspace.id) === currentValue)) {
-        select.appendChild(new window.Option(`${text("workspaceIdPrefix")} ${currentValue}`, currentValue));
+      if (currentValue !== "0" && workspaces.some((workspace) => String(workspace.id) === currentValue)) {
+        select.value = currentValue;
       }
       select.hidden = false;
-      select.value = currentValue;
     }
     function clearSelectedFolder() {
       const parentId = document.getElementById("alynt-parent-folder-id");

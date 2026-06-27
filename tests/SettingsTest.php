@@ -226,7 +226,7 @@ class SettingsTest extends TestCase {
 	public function test_workspace_change_clears_saved_parent_folder_selection() {
 		$options  = array(
 			Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME => array(
-				'workspace_id'                => 0,
+				'workspace_id'                => 42,
 				'parent_folder_id'            => '123',
 				'parent_folder_hash'          => 'hash-123',
 				'parent_folder_display_path'  => 'General/Files/Backups',

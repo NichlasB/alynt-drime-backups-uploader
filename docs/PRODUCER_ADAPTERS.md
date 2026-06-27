@@ -4,6 +4,8 @@ Producer adapters let the plugin discover completed local backup packages withou
 
 The scanner asks each registered producer for normalized package records. The queue, uploader, registry, diagnostics, and restore tooling should be able to handle those records without knowing which producer created the package.
 
+For deciding whether a future backup tool needs a dedicated adapter or should use the generic outbox, see `docs/PRODUCER_ADAPTER_BACKLOG.md`.
+
 ## Current Producers
 
 | Producer Key | Class | Purpose |
@@ -129,3 +131,5 @@ Use `Alynt_Drime_Backups_Uploader_Test_Producer_Adapter_Assertions` for the shar
 The producer key becomes part of persisted queue, uploaded-registry, failed-registry, diagnostics, and future monitoring payloads. Treat it as a stable contract.
 
 Adding a producer should not require changes to Drime client behavior. If it does, first check whether the package record shape needs a generic field instead of a producer-specific branch.
+
+Do not choose or build a new third-party producer adapter until the target producer is confirmed and representative complete/incomplete package evidence has been collected.

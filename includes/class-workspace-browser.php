@@ -46,7 +46,9 @@ class Alynt_Drime_Backups_Uploader_Workspace_Browser {
 		$workspaces = $this->extract_workspaces( $response );
 
 		return array(
-			'workspaces' => array_values( array_filter( array_map( array( $this, 'normalize_workspace' ), $workspaces ) ) ),
+			'workspaces'        => $this->filter_allowed_workspaces( array_values( array_filter( array_map( array( $this, 'normalize_workspace' ), $workspaces ) ) ) ),
+			'allowlist_enabled' => Alynt_Drime_Backups_Uploader_Settings::workspace_allowlist_enabled(),
+			'allowed_ids'       => Alynt_Drime_Backups_Uploader_Settings::allowed_workspace_ids(),
 		);
 	}
 
@@ -94,6 +96,23 @@ class Alynt_Drime_Backups_Uploader_Workspace_Browser {
 			'members_count' => isset( $workspace['members_count'] ) ? absint( $workspace['members_count'] ) : 0,
 			'role'          => $this->workspace_role( $workspace ),
 			'is_owner'      => $this->workspace_is_owner( $workspace ),
+		);
+	}
+
+	/**
+	 * Filters normalized workspaces to allowed backup destinations.
+	 *
+	 * @param array<int,array<string,mixed>> $workspaces Workspaces.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function filter_allowed_workspaces( array $workspaces ) {
+		return array_values(
+			array_filter(
+				$workspaces,
+				function ( array $workspace ) {
+					return isset( $workspace['id'] ) && Alynt_Drime_Backups_Uploader_Settings::is_workspace_id_allowed( absint( $workspace['id'] ) );
+				}
+			)
 		);
 	}
 

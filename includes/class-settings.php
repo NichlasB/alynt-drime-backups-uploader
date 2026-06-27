@@ -25,6 +25,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	const DEFAULT_REMOTE_RETENTION_DAYS   = 60;
 	const MAX_RELATIVE_PATH_SEGMENTS      = 20;
 	const MAX_RELATIVE_PATH_SEGMENT_CHARS = 120;
+	const PERSONAL_WORKSPACE_ID           = 0;
+	const ALLOWED_WORKSPACE_IDS_CONSTANT  = 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS';
 
 	/**
 	 * Returns default settings.
@@ -96,12 +98,17 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	 * Updates settings after sanitization.
 	 *
 	 * @param array<string,mixed> $raw Raw settings.
-	 * @return array<string,mixed>
+	 * @return array<string,mixed>|WP_Error
 	 *
 	 * @since 0.1.0
 	 */
 	public function update( array $raw ) {
-		$sanitized = $this->sanitize( $raw, $this->get() );
+		$sanitized              = $this->sanitize( $raw, $this->get() );
+		$workspace_id_submitted = array_key_exists( 'workspace_id', $raw ) && '' !== trim( (string) wp_unslash( $raw['workspace_id'] ) );
+		if ( $workspace_id_submitted && ! self::is_workspace_id_allowed( absint( $sanitized['workspace_id'] ) ) ) {
+			return new WP_Error( 'alynt_drime_workspace_not_allowed', self::workspace_not_allowed_message() );
+		}
+
 		update_option( self::OPTION_NAME, $sanitized, false );
 		$this->sync_option_cache( $sanitized );
 
@@ -169,8 +176,13 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	 * @return void
 	 */
 	private function sanitize_destination_settings( array $raw, array $current, array &$settings ) {
-		$current_workspace_id     = isset( $current['workspace_id'] ) ? absint( $current['workspace_id'] ) : 0;
-		$settings['workspace_id'] = isset( $raw['workspace_id'] ) ? max( 0, absint( $raw['workspace_id'] ) ) : 0;
+		$current_workspace_id = isset( $current['workspace_id'] ) ? absint( $current['workspace_id'] ) : 0;
+		if ( array_key_exists( 'workspace_id', $raw ) ) {
+			$raw_workspace_id         = trim( (string) wp_unslash( $raw['workspace_id'] ) );
+			$settings['workspace_id'] = '' === $raw_workspace_id ? 0 : max( 0, absint( $raw_workspace_id ) );
+		} else {
+			$settings['workspace_id'] = $current_workspace_id;
+		}
 
 		if ( isset( $raw['parent_folder_id'] ) ) {
 			$parent_folder_id             = trim( (string) wp_unslash( $raw['parent_folder_id'] ) );
@@ -268,6 +280,80 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		$settings = $this->get();
 
 		return '' !== trim( (string) $settings['api_token'] );
+	}
+
+	/**
+	 * Returns allowed Drime workspace IDs from wp-config.php.
+	 *
+	 * @return array<int,int>
+	 */
+	public static function allowed_workspace_ids() {
+		if ( ! defined( self::ALLOWED_WORKSPACE_IDS_CONSTANT ) ) {
+			return array();
+		}
+
+		$value = constant( self::ALLOWED_WORKSPACE_IDS_CONSTANT );
+		if ( is_array( $value ) ) {
+			$raw_ids = $value;
+		} else {
+			$raw_ids = preg_split( '/[\s,]+/', (string) $value );
+		}
+
+		$ids = array();
+		foreach ( $raw_ids as $raw_id ) {
+			$id = absint( $raw_id );
+			if ( self::PERSONAL_WORKSPACE_ID === $id ) {
+				continue;
+			}
+
+			if ( $id > 0 ) {
+				$ids[] = $id;
+			}
+		}
+
+		return array_values( array_unique( $ids ) );
+	}
+
+	/**
+	 * Returns whether workspace allowlisting is enabled.
+	 *
+	 * @return bool
+	 */
+	public static function workspace_allowlist_enabled() {
+		return defined( self::ALLOWED_WORKSPACE_IDS_CONSTANT );
+	}
+
+	/**
+	 * Returns whether a workspace ID may be used for backups.
+	 *
+	 * @param int $workspace_id Workspace ID.
+	 * @return bool
+	 */
+	public static function is_workspace_id_allowed( $workspace_id ) {
+		$workspace_id = absint( $workspace_id );
+		if ( self::PERSONAL_WORKSPACE_ID === $workspace_id ) {
+			return false;
+		}
+
+		$allowed = self::allowed_workspace_ids();
+		if ( empty( $allowed ) ) {
+			return true;
+		}
+
+		return in_array( $workspace_id, $allowed, true );
+	}
+
+	/**
+	 * Returns the admin-facing workspace restriction message.
+	 *
+	 * @return string
+	 */
+	public static function workspace_not_allowed_message() {
+		if ( self::workspace_allowlist_enabled() ) {
+			return __( 'The selected Drime workspace is not allowed by this site configuration. Choose an allowed workspace or update ALYNT_DRIME_ALLOWED_WORKSPACE_IDS in wp-config.php.', 'alynt-drime-backups-uploader' );
+		}
+
+		return __( 'The personal/default Drime workspace cannot be used for backup destinations. Choose a team/workspace destination before saving or uploading.', 'alynt-drime-backups-uploader' );
 	}
 
 	/**

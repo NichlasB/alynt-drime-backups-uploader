@@ -28,6 +28,28 @@ class AdminPageSettingsTest extends TestCase {
 		$this->assertStringNotContainsString( 'secret-token', $snippet );
 	}
 
+	public function test_server_cron_review_commands_build_review_file_without_auto_install() {
+		$page     = $this->admin_page();
+		$commands = $this->call_private(
+			$page,
+			'server_cron_review_commands',
+			array(
+				array(
+					'server_outbox_path' => '/var/www/example.com/private/alynt-drime-backups/outbox',
+					'api_token'          => 'secret-token',
+				),
+			)
+		);
+
+		$this->assertStringContainsString( 'crontab -l > "$HOME/alynt-drime-backups-crontab.current" 2>/dev/null || true', $commands );
+		$this->assertStringContainsString( 'cat >> "$HOME/alynt-drime-backups-crontab.new" <<\'ALYNT_DRIME_CRON\'', $commands );
+		$this->assertStringContainsString( "17 2 * * * php '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' run --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $commands );
+		$this->assertStringContainsString( 'diff -u "$HOME/alynt-drime-backups-crontab.current" "$HOME/alynt-drime-backups-crontab.new" || true', $commands );
+		$this->assertStringContainsString( '# crontab "$HOME/alynt-drime-backups-crontab.new"', $commands );
+		$this->assertStringNotContainsString( "\ncrontab \"\$HOME/alynt-drime-backups-crontab.new\"", $commands );
+		$this->assertStringNotContainsString( 'secret-token', $commands );
+	}
+
 	public function test_server_runner_config_json_uses_configured_server_outbox_base() {
 		$page = $this->admin_page();
 		$json = $this->call_private(
@@ -48,6 +70,7 @@ class AdminPageSettingsTest extends TestCase {
 		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups/work', $data['work_path'] );
 		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups', $this->call_private( $page, 'runner_base_path', array( array( 'server_outbox_path' => '/var/www/example.com/private/alynt-drime-backups/outbox' ) ) ) );
 		$this->assertSame( 1073741824, $data['minimum_free_space_bytes'] );
+		$this->assertSame( 'light', $data['consistency_mode'] );
 		$this->assertSame( 'example-test', $data['package_prefix'] );
 		$this->assertSame( 'wp', $data['wp_cli_path'] );
 		$this->assertTrue( $data['database']['enabled'] );

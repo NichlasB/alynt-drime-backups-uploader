@@ -16,6 +16,7 @@ if ( PHP_SAPI !== 'cli' ) {
  */
 class Alynt_Server_Backup_Runner {
 	const VERSION = '0.1.0';
+	const DAY_IN_SECONDS = 86400;
 
 	/**
 	 * Config.
@@ -47,7 +48,9 @@ class Alynt_Server_Backup_Runner {
 			case 'run':
 				return $this->run();
 			case 'list':
-				return $this->list_packages();
+				return $this->list_packages( $options );
+			case 'cleanup-preview':
+				return $this->cleanup_preview_command( $options );
 			case 'verify':
 				return $this->verify_command( $options );
 			case 'inspect':
@@ -118,6 +121,7 @@ class Alynt_Server_Backup_Runner {
 		$package_started_at = gmdate( 'c' );
 		$package_id         = $this->package_id();
 		$work_dir           = $this->work_path() . DIRECTORY_SEPARATOR . $package_id;
+		$archive_started_at = gmdate( 'c' );
 		if ( ! $this->ensure_directory( $work_dir ) ) {
 			$this->error( 'Could not create package work directory.' );
 			return 1;
@@ -144,7 +148,8 @@ class Alynt_Server_Backup_Runner {
 				'package_started_at'          => $package_started_at,
 				'database_dump_started_at'    => $database_dump_started_at,
 				'database_dump_finished_at'   => $database_dump_finished_at,
-				'file_archive_started_at'     => gmdate( 'c' ),
+				'file_archive_started_at'     => $archive_started_at,
+				'consistency_status'          => 'pending',
 			)
 		);
 		if ( ! $this->write_json( $manifest_path, $manifest ) ) {
@@ -156,9 +161,27 @@ class Alynt_Server_Backup_Runner {
 		$temp_archive = $this->work_path() . DIRECTORY_SEPARATOR . $archive_name . '.tmp';
 		$final_archive = $this->outbox_path() . DIRECTORY_SEPARATOR . $archive_name;
 
-		if ( ! $this->create_archive( $temp_archive, $work_dir, $db_path, $manifest_path ) ) {
+		$archive_result = $this->create_archive( $temp_archive, $work_dir, $db_path, $manifest_path );
+		if ( false === $archive_result ) {
 			return 1;
 		}
+
+		$manifest = $this->manifest(
+			$package_id,
+			$db_path,
+			array(
+				'package_started_at'                       => $package_started_at,
+				'database_dump_started_at'                 => $database_dump_started_at,
+				'database_dump_finished_at'                => $database_dump_finished_at,
+				'file_archive_started_at'                  => $archive_started_at,
+				'file_archive_finished_at'                 => gmdate( 'c' ),
+				'file_archive_exit_code'                   => (string) $archive_result['exit_code'],
+				'file_archive_warning_count'               => (string) $archive_result['warning_count'],
+				'file_archive_live_change_warning_count'   => (string) $archive_result['live_change_warning_count'],
+				'consistency_status'                       => $this->consistency_status( $archive_result ),
+			)
+		);
+		$manifest['file_archive_warning_samples'] = $archive_result['warning_samples'];
 
 		$checksum = hash_file( 'sha256', $temp_archive );
 		if ( false === $checksum ) {
@@ -195,20 +218,217 @@ class Alynt_Server_Backup_Runner {
 	/**
 	 * Lists completed packages.
 	 *
+	 * @param array<string,mixed> $options Options.
 	 * @return int Exit code.
 	 */
-	private function list_packages() {
-		$packages = glob( $this->outbox_path() . DIRECTORY_SEPARATOR . '*.tar.gz' );
+	private function list_packages( array $options ) {
+		$packages = glob( $this->outbox_path() . DIRECTORY_SEPARATOR . '*.' . $this->archive_format() );
 		if ( ! is_array( $packages ) ) {
 			return 0;
 		}
 
 		sort( $packages );
+		if ( isset( $options['format'] ) && 'json' === (string) $options['format'] ) {
+			$this->line(
+				json_encode(
+					array(
+						'schema_version' => 1,
+						'generated_at'   => gmdate( 'c' ),
+						'archive_format' => $this->archive_format(),
+						'package_count'  => count( $packages ),
+						'packages'       => array_map( array( $this, 'package_inventory_record' ), $packages ),
+					),
+					JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+				)
+			);
+
+			return 0;
+		}
+
 		foreach ( $packages as $package ) {
 			$this->line( $package );
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Builds a package inventory record for restore discovery.
+	 *
+	 * @param string $package Package path.
+	 * @return array<string,mixed>
+	 */
+	private function package_inventory_record( $package ) {
+		$manifest_path    = $package . '.manifest.json';
+		$checksum_path    = $package . '.sha256';
+		$manifest         = $this->read_package_manifest_quiet( $package );
+		$checksum         = $this->read_checksum_sidecar( $package );
+		$basename         = basename( $package );
+		$manifest_present = is_readable( $manifest_path );
+		$checksum_present = is_readable( $checksum_path );
+		$manifest_valid   = ! empty( $manifest['package_id'] );
+		$checksum_valid   = ! empty( $checksum['value'] );
+		$package_id       = $manifest_valid ? $this->manifest_value( $manifest, 'package_id' ) : $this->package_id_from_archive_name( $basename );
+
+		return array(
+			'package_id'         => $package_id,
+			'archive_name'       => $basename,
+			'archive_size'       => is_file( $package ) ? (int) filesize( $package ) : 0,
+			'archive_modified_at' => is_file( $package ) ? gmdate( 'c', (int) filemtime( $package ) ) : '',
+			'manifest_name'      => basename( $manifest_path ),
+			'manifest_present'   => $manifest_present,
+			'manifest_valid'     => $manifest_valid,
+			'checksum_name'      => basename( $checksum_path ),
+			'checksum_present'   => $checksum_present,
+			'checksum_valid'     => $checksum_valid,
+			'checksum_algorithm' => isset( $checksum['algorithm'] ) ? (string) $checksum['algorithm'] : '',
+			'checksum_value'     => isset( $checksum['value'] ) ? (string) $checksum['value'] : '',
+			'site_url'           => $this->manifest_value( $manifest, 'site_url' ),
+			'created_at'         => $this->manifest_value( $manifest, 'created_at' ),
+			'producer'           => $this->manifest_value( $manifest, 'producer' ),
+			'backup_type'        => $this->manifest_value( $manifest, 'backup_type' ),
+			'archive_format'     => $this->manifest_value( $manifest, 'archive_format' ),
+			'file_root'          => $this->manifest_value( $manifest, 'file_root' ),
+			'database_dump'      => $this->manifest_value( $manifest, 'database_dump' ),
+			'consistency_mode'   => $this->manifest_value( $manifest, 'consistency_mode' ),
+			'consistency_status' => $this->manifest_value( $manifest, 'consistency_status' ),
+			'verification_ready' => $manifest_valid && $checksum_valid,
+		);
+	}
+
+	/**
+	 * Prints read-only cleanup candidates for local package artifacts.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function cleanup_preview_command( array $options ) {
+		$older_than_days = isset( $options['older-than-days'] ) ? max( 0, (int) $options['older-than-days'] ) : 14;
+		$preview         = $this->cleanup_preview_data( $older_than_days );
+
+		if ( isset( $options['format'] ) && 'json' === (string) $options['format'] ) {
+			$this->line( json_encode( $preview, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+
+			return 0;
+		}
+
+		$this->line( 'Cleanup preview only. No files were deleted.' );
+		$this->line( 'Older than days: ' . (string) $preview['older_than_days'] );
+		$this->line( 'Outbox candidates: ' . (string) $preview['outbox']['candidate_count'] );
+		foreach ( $preview['outbox']['candidates'] as $candidate ) {
+			$this->line( '- outbox package: ' . $candidate['archive_name'] . ' (age_days=' . (string) $candidate['age_days'] . ')' );
+		}
+
+		$this->line( 'Restore staging candidates: ' . (string) $preview['restore_staging']['candidate_count'] );
+		foreach ( $preview['restore_staging']['candidates'] as $candidate ) {
+			$this->line( '- restore directory: ' . $candidate['directory_name'] . ' (age_days=' . (string) $candidate['age_days'] . ')' );
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Builds read-only cleanup preview data.
+	 *
+	 * @param int $older_than_days Minimum age.
+	 * @return array<string,mixed>
+	 */
+	private function cleanup_preview_data( $older_than_days ) {
+		$cutoff_timestamp = time() - ( $older_than_days * self::DAY_IN_SECONDS );
+		$outbox           = $this->cleanup_preview_outbox_candidates( $cutoff_timestamp );
+		$restore_staging  = $this->cleanup_preview_restore_candidates( $cutoff_timestamp );
+
+		return array(
+			'schema_version'                => 1,
+			'generated_at'                  => gmdate( 'c' ),
+			'older_than_days'               => $older_than_days,
+			'cutoff_timestamp'              => $cutoff_timestamp,
+			'cutoff_at'                     => gmdate( 'c', $cutoff_timestamp ),
+			'outbox'                        => array(
+				'candidate_count' => count( $outbox ),
+				'candidates'      => $outbox,
+			),
+			'restore_staging'               => array(
+				'candidate_count' => count( $restore_staging ),
+				'candidates'      => $restore_staging,
+			),
+			'total_candidate_count'         => count( $outbox ) + count( $restore_staging ),
+			'destructive_actions_performed' => false,
+		);
+	}
+
+	/**
+	 * Finds local outbox packages that are old enough for operator review.
+	 *
+	 * @param int $cutoff_timestamp Cutoff Unix timestamp.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function cleanup_preview_outbox_candidates( $cutoff_timestamp ) {
+		$packages = glob( $this->outbox_path() . DIRECTORY_SEPARATOR . '*.' . $this->archive_format() );
+		if ( ! is_array( $packages ) ) {
+			return array();
+		}
+
+		sort( $packages );
+
+		$candidates = array();
+		foreach ( $packages as $package ) {
+			$modified_at = is_file( $package ) ? (int) filemtime( $package ) : 0;
+			if ( 0 === $modified_at || $modified_at > $cutoff_timestamp ) {
+				continue;
+			}
+
+			$record                     = $this->package_inventory_record( $package );
+			$record['age_days']         = $this->age_days( $modified_at );
+			$record['suggested_action'] = 'operator_review';
+			$candidates[]               = $record;
+		}
+
+		return $candidates;
+	}
+
+	/**
+	 * Finds restore staging directories that are old enough for operator review.
+	 *
+	 * @param int $cutoff_timestamp Cutoff Unix timestamp.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function cleanup_preview_restore_candidates( $cutoff_timestamp ) {
+		$directories = glob( $this->restore_path() . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR );
+		if ( ! is_array( $directories ) ) {
+			return array();
+		}
+
+		sort( $directories );
+
+		$candidates = array();
+		foreach ( $directories as $directory ) {
+			$modified_at = is_dir( $directory ) ? (int) filemtime( $directory ) : 0;
+			if ( 0 === $modified_at || $modified_at > $cutoff_timestamp ) {
+				continue;
+			}
+
+			$candidates[] = array(
+				'directory_name'         => basename( $directory ),
+				'modified_at'            => gmdate( 'c', $modified_at ),
+				'age_days'               => $this->age_days( $modified_at ),
+				'restore_notes_present'  => is_readable( $directory . DIRECTORY_SEPARATOR . 'RESTORE_NOTES.txt' ),
+				'restore_report_present' => is_readable( $directory . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json' ),
+				'suggested_action'       => 'operator_review',
+			);
+		}
+
+		return $candidates;
+	}
+
+	/**
+	 * Calculates whole days elapsed since a timestamp.
+	 *
+	 * @param int $timestamp Unix timestamp.
+	 * @return int
+	 */
+	private function age_days( $timestamp ) {
+		return max( 0, (int) floor( ( time() - $timestamp ) / self::DAY_IN_SECONDS ) );
 	}
 
 	/**
@@ -415,13 +635,73 @@ class Alynt_Server_Backup_Runner {
 			'Package ID: ' . (string) $manifest['package_id'],
 			'Created At: ' . $this->manifest_value( $manifest, 'created_at' ),
 			'Site URL: ' . $this->manifest_value( $manifest, 'site_url' ),
+			'Archive Format: ' . $this->manifest_value( $manifest, 'archive_format' ),
+			'File Root: ' . $this->manifest_value( $manifest, 'file_root' ),
+			'Database Dump: ' . $this->manifest_value( $manifest, 'database_dump' ),
+			'',
+			'Recommended inspection:',
+			'- Review htdocs/ before any file replacement.',
+			'- Review database.sql before any database import.',
+			'- Review manifest.json and package sidecars before approving recovery work.',
+			'- Keep production restore steps manual until separately approved.',
 		);
 
 		$this->write_file( $restore_dir . DIRECTORY_SEPARATOR . 'RESTORE_NOTES.txt', implode( "\n", $notes ) . "\n" );
+		if ( ! $this->write_json( $restore_dir . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json', $this->restore_report( $package, $restore_dir, $manifest ) ) ) {
+			$this->error( 'Warning: package was staged, but RESTORE_REPORT.json could not be written.' );
+		}
+
 		$this->line( 'Package staged at: ' . $restore_dir );
 		$this->line( 'No database import or production overwrite was performed.' );
 
 		return 0;
+	}
+
+	/**
+	 * Builds a non-destructive restore staging report.
+	 *
+	 * @param string              $package Package path.
+	 * @param string              $restore_dir Restore staging directory.
+	 * @param array<string,mixed> $manifest Manifest.
+	 * @return array<string,mixed>
+	 */
+	private function restore_report( $package, $restore_dir, array $manifest ) {
+		$checksum = $this->read_checksum_sidecar( $package );
+
+		return array(
+			'schema_version'             => 1,
+			'generated_at'               => gmdate( 'c' ),
+			'status'                     => 'staged_for_inspection',
+			'package_id'                 => $this->manifest_value( $manifest, 'package_id' ),
+			'archive_name'               => basename( $package ),
+			'archive_size'               => is_file( $package ) ? (int) filesize( $package ) : 0,
+			'manifest_name'              => basename( $package . '.manifest.json' ),
+			'checksum_name'              => basename( $package . '.sha256' ),
+			'checksum_algorithm'         => isset( $checksum['algorithm'] ) ? (string) $checksum['algorithm'] : '',
+			'checksum_value'             => isset( $checksum['value'] ) ? (string) $checksum['value'] : '',
+			'site_url'                   => $this->manifest_value( $manifest, 'site_url' ),
+			'created_at'                 => $this->manifest_value( $manifest, 'created_at' ),
+			'producer'                   => $this->manifest_value( $manifest, 'producer' ),
+			'backup_type'                => $this->manifest_value( $manifest, 'backup_type' ),
+			'archive_format'             => $this->manifest_value( $manifest, 'archive_format' ),
+			'file_root'                  => $this->manifest_value( $manifest, 'file_root' ),
+			'database_dump'              => $this->manifest_value( $manifest, 'database_dump' ),
+			'consistency_mode'           => $this->manifest_value( $manifest, 'consistency_mode' ),
+			'consistency_status'         => $this->manifest_value( $manifest, 'consistency_status' ),
+			'restore_directory_name'     => basename( $restore_dir ),
+			'package_verified'           => true,
+			'archive_members_safe'       => true,
+			'extracted_for_inspection'   => true,
+			'database_imported'          => false,
+			'live_files_overwritten'     => false,
+			'manual_restore_required'    => true,
+			'recommended_next_steps'     => array(
+				'Review RESTORE_NOTES.txt.',
+				'Review htdocs before any file replacement.',
+				'Review database.sql before any database import.',
+				'Keep production restore steps manual until separately approved.',
+			),
+		);
 	}
 
 	/**
@@ -485,6 +765,61 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		return $manifest;
+	}
+
+	/**
+	 * Reads a package manifest sidecar without writing errors.
+	 *
+	 * @param string $package Package path.
+	 * @return array<string,mixed>
+	 */
+	private function read_package_manifest_quiet( $package ) {
+		$manifest_path = $package . '.manifest.json';
+		if ( ! is_readable( $manifest_path ) ) {
+			return array();
+		}
+
+		$manifest = json_decode( (string) file_get_contents( $manifest_path ), true );
+
+		return is_array( $manifest ) ? $manifest : array();
+	}
+
+	/**
+	 * Reads checksum sidecar metadata without hashing package bytes.
+	 *
+	 * @param string $package Package path.
+	 * @return array<string,string>
+	 */
+	private function read_checksum_sidecar( $package ) {
+		$checksum_path = $package . '.sha256';
+		if ( ! is_readable( $checksum_path ) ) {
+			return array();
+		}
+
+		$checksum_line = trim( (string) file_get_contents( $checksum_path ) );
+		if ( ! preg_match( '/^([a-fA-F0-9]{64})\s+/', $checksum_line, $matches ) ) {
+			return array();
+		}
+
+		return array(
+			'algorithm' => 'sha256',
+			'value'     => strtolower( $matches[1] ),
+		);
+	}
+
+	/**
+	 * Derives a package ID from the archive basename.
+	 *
+	 * @param string $archive_name Archive basename.
+	 * @return string
+	 */
+	private function package_id_from_archive_name( $archive_name ) {
+		$suffix = '.' . $this->archive_format();
+		if ( substr( $archive_name, -strlen( $suffix ) ) === $suffix ) {
+			return substr( $archive_name, 0, -strlen( $suffix ) );
+		}
+
+		return $archive_name;
 	}
 
 	/**
@@ -962,7 +1297,7 @@ class Alynt_Server_Backup_Runner {
 	 * @param string $work_dir Work directory.
 	 * @param string $db_path Database path.
 	 * @param string $manifest_path Manifest path.
-	 * @return bool
+	 * @return array{exit_code:int,warning_count:int,live_change_warning_count:int,warning_samples:array<int,string>}|false
 	 */
 	private function create_archive( $temp_archive, $work_dir, $db_path, $manifest_path ) {
 		$exclude_file = $work_dir . DIRECTORY_SEPARATOR . 'tar-excludes.txt';
@@ -973,7 +1308,7 @@ class Alynt_Server_Backup_Runner {
 
 		$wp_parent = dirname( $this->wordpress_path() );
 		$wp_base   = basename( $this->wordpress_path() );
-		$command   = 'tar --ignore-failed-read --exclude-from=' . escapeshellarg( $exclude_file )
+		$command   = 'tar ' . $this->tar_ignore_failed_read_option() . '--exclude-from=' . escapeshellarg( $exclude_file )
 			. ' -czf ' . escapeshellarg( $temp_archive )
 			. ' -C ' . escapeshellarg( $wp_parent ) . ' ' . escapeshellarg( $wp_base )
 			. ' -C ' . escapeshellarg( $work_dir );
@@ -991,7 +1326,19 @@ class Alynt_Server_Backup_Runner {
 			return false;
 		}
 
-		return is_file( $temp_archive ) && filesize( $temp_archive ) > 0;
+		if ( ! is_file( $temp_archive ) || filesize( $temp_archive ) <= 0 ) {
+			return false;
+		}
+
+		$warning_lines = $this->archive_warning_lines( $result );
+		$live_warnings = $this->archive_live_file_change_warning_lines( $warning_lines );
+
+		return array(
+			'exit_code'                 => (int) $result['exit_code'],
+			'warning_count'             => count( $warning_lines ),
+			'live_change_warning_count' => count( $live_warnings ),
+			'warning_samples'           => array_slice( $warning_lines, 0, 5 ),
+		);
 	}
 
 	/**
@@ -1033,6 +1380,53 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Returns non-empty archive warning/output lines.
+	 *
+	 * @param array{exit_code:int,output:array<int,string>} $result Command result.
+	 * @return array<int,string>
+	 */
+	private function archive_warning_lines( array $result ) {
+		$output = isset( $result['output'] ) && is_array( $result['output'] ) ? $result['output'] : array();
+		$lines  = array();
+		foreach ( $output as $line ) {
+			$line = trim( (string) $line );
+			if ( '' !== $line ) {
+				$lines[] = $line;
+			}
+		}
+
+		return $lines;
+	}
+
+	/**
+	 * Returns live file-change warning lines.
+	 *
+	 * @param array<int,string> $warning_lines Warning lines.
+	 * @return array<int,string>
+	 */
+	private function archive_live_file_change_warning_lines( array $warning_lines ) {
+		return array_values(
+			array_filter(
+				$warning_lines,
+				function ( $line ) {
+					return false !== strpos( (string) $line, 'file changed as we read it' );
+				}
+			)
+		);
+	}
+
+	/**
+	 * Returns the optional GNU tar live-read flag when supported.
+	 *
+	 * @return string
+	 */
+	private function tar_ignore_failed_read_option() {
+		$result = $this->run_shell_command( 'tar --ignore-failed-read --help' );
+
+		return 0 === $result['exit_code'] ? '--ignore-failed-read ' : '';
+	}
+
+	/**
 	 * Builds package manifest.
 	 *
 	 * @param string $package_id Package ID.
@@ -1052,11 +1446,17 @@ class Alynt_Server_Backup_Runner {
 			'created_at'                => $this->timing_value( $timing, 'package_started_at' ),
 			'backup_type'               => 'logical_wordpress_backup',
 			'archive_format'            => $this->archive_format(),
+			'consistency_mode'          => $this->consistency_mode(),
+			'consistency_status'        => $this->timing_value( $timing, 'consistency_status' ),
 			'wordpress_path'            => $this->wordpress_path(),
 			'database_dump'             => '' !== $db_path ? basename( $db_path ) : '',
 			'database_dump_started_at'  => $this->timing_value( $timing, 'database_dump_started_at' ),
 			'database_dump_finished_at' => $this->timing_value( $timing, 'database_dump_finished_at' ),
 			'file_archive_started_at'   => $this->timing_value( $timing, 'file_archive_started_at' ),
+			'file_archive_finished_at'  => $this->timing_value( $timing, 'file_archive_finished_at' ),
+			'file_archive_exit_code'    => $this->timing_int_value( $timing, 'file_archive_exit_code' ),
+			'file_archive_warning_count' => $this->timing_int_value( $timing, 'file_archive_warning_count' ),
+			'file_archive_live_change_warning_count' => $this->timing_int_value( $timing, 'file_archive_live_change_warning_count' ),
 			'file_root'                 => basename( $this->wordpress_path() ),
 			'exclude_paths'             => $this->exclude_paths(),
 		);
@@ -1071,6 +1471,17 @@ class Alynt_Server_Backup_Runner {
 	 */
 	private function timing_value( array $timing, $key ) {
 		return isset( $timing[ $key ] ) ? (string) $timing[ $key ] : '';
+	}
+
+	/**
+	 * Returns a timing integer value.
+	 *
+	 * @param array<string,string> $timing Timing values.
+	 * @param string               $key Key.
+	 * @return int
+	 */
+	private function timing_int_value( array $timing, $key ) {
+		return isset( $timing[ $key ] ) ? max( 0, (int) $timing[ $key ] ) : 0;
 	}
 
 	/**
@@ -1129,6 +1540,39 @@ class Alynt_Server_Backup_Runner {
 		$format = strtolower( $this->config_string( 'archive_format' ) );
 
 		return '' !== $format ? $format : 'tar.gz';
+	}
+
+	/**
+	 * Returns the configured consistency mode.
+	 *
+	 * @return string
+	 */
+	private function consistency_mode() {
+		$mode = strtolower( $this->config_string( 'consistency_mode' ) );
+
+		return 'light' === $mode ? 'light' : 'standard';
+	}
+
+	/**
+	 * Returns the final consistency status for a completed package.
+	 *
+	 * @param array{exit_code:int,warning_count:int,live_change_warning_count:int,warning_samples:array<int,string>} $archive_result Archive result.
+	 * @return string
+	 */
+	private function consistency_status( array $archive_result ) {
+		if ( 'light' !== $this->consistency_mode() ) {
+			return 'not_checked';
+		}
+
+		if ( $archive_result['live_change_warning_count'] > 0 ) {
+			return 'file_changes_detected';
+		}
+
+		if ( $archive_result['warning_count'] > 0 ) {
+			return 'warnings_detected';
+		}
+
+		return 'clean';
 	}
 
 	/**
@@ -1375,7 +1819,8 @@ class Alynt_Server_Backup_Runner {
 			return is_file( $command ) && is_executable( $command );
 		}
 
-		$result = $this->run_shell_command( 'command -v ' . escapeshellarg( $command ) );
+		$probe  = 'Windows' === PHP_OS_FAMILY ? 'where ' : 'command -v ';
+		$result = $this->run_shell_command( $probe . escapeshellarg( $command ) );
 
 		return 0 === $result['exit_code'];
 	}
@@ -1563,10 +2008,10 @@ function alynt_runner_load_config( $path ) {
  * @return string
  */
 function alynt_runner_usage() {
-	return 'Usage: php alynt-backup-runner.php <health|run|list|verify|inspect|fetch|stage-restore> '
-		. '--config=/path/to/config.json [--package=/path/to/archive.tar.gz] '
+	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|verify|inspect|fetch|stage-restore> '
+		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
-		. '[--restore-path=/path/to/restores]';
+		. '[--restore-path=/path/to/restores] [--older-than-days=14]';
 }
 
 $parsed = alynt_runner_parse_args( $argv );

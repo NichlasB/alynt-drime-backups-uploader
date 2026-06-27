@@ -103,6 +103,8 @@ The runner health check verifies writable paths, minimum free disk space, and sa
 
 The plugin uploads package bytes to the configured Drime workspace and destination folder. For generic server-runner packages, it also uploads the manifest and checksum sidecars to the same Drime folder. It does not currently upload a separate signed inventory or restore index.
 
+Workspace ID `0`, the personal/default Drime workspace, is blocked for backup destinations. A blank workspace is allowed only as an initial "not configured yet" setup state and cannot be used for folder browsing, destination preview, or uploads. Operators can also define `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` in `wp-config.php` to restrict the site to one or more approved workspace IDs. The workspace picker, settings save, folder browser, destination preview, and upload worker enforce the same workspace rules so bypassing the dropdown does not allow uploads into a disallowed workspace.
+
 See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the current manual discovery path and future remote index option.
 
 The server runner's CLI `fetch` command reads the Drime bearer token from an environment variable, downloads exact package/sidecar matches, and verifies the package before restore staging. If Drime returns a redirected download URL, the runner validates that redirect target as HTTPS and repeats the download without forwarding the bearer token.
@@ -111,13 +113,15 @@ Remote retention is disabled by default and only runs from manual administrator 
 
 Diagnostics must not expose Drime tokens, signed upload URLs, raw request bodies, package contents, or absolute server paths in remote/dashboard-safe payloads.
 
+See [CENTRAL_DASHBOARD_READINESS.md](CENTRAL_DASHBOARD_READINESS.md) for the future central monitoring boundary. The uploader should stay read-only for a first dashboard integration and must not expose restore, deletion, credential, or settings mutation controls as part of dashboard preparation.
+
 ## Encryption Status
 
 The MVP does not encrypt packages before upload.
 
 This is intentional for the first restore-tested loop. Backup encryption should not be added until there is a tested key storage, key rotation, and key recovery process. An encrypted backup without recoverable keys is not a usable backup.
 
-Until encryption is designed, treat Drime account access and package downloads as sensitive. Store packages only in the intended Drime workspace/folder, restrict API token access, and avoid sharing package links outside the restore operators.
+Until encryption is designed, treat Drime account access and package downloads as sensitive. Store packages only in the intended Drime workspace/folder, restrict API token access, use `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` when a site should be locked to a specific workspace, and avoid sharing package links outside the restore operators.
 
 ## Release Gates
 

@@ -109,11 +109,11 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 					'requestFailed'           => __( 'The request failed. Check your connection and try again.', 'alynt-drime-backups-uploader' ),
 					'loadFailed'              => __( 'Could not load Drime folders.', 'alynt-drime-backups-uploader' ),
 					'workspacesLoadFailed'    => __( 'Could not load Drime workspaces.', 'alynt-drime-backups-uploader' ),
-					'noWorkspaces'            => __( 'No team workspaces found. The personal/default workspace remains available.', 'alynt-drime-backups-uploader' ),
+					'noWorkspaces'            => __( 'No allowed non-personal workspaces were found for this token.', 'alynt-drime-backups-uploader' ),
 					'workspacesLoaded'        => __( 'Workspaces loaded. Choose one, then save settings.', 'alynt-drime-backups-uploader' ),
-					'personalWorkspace'       => __( 'Personal/default workspace', 'alynt-drime-backups-uploader' ),
 					'workspaceIdPrefix'       => __( 'Workspace ID', 'alynt-drime-backups-uploader' ),
 					'workspaceSelectedPrefix' => __( 'Selected workspace:', 'alynt-drime-backups-uploader' ),
+					'workspaceIdLabel'        => __( 'ID', 'alynt-drime-backups-uploader' ),
 					'workspaceMemberSingular' => __( '1 member', 'alynt-drime-backups-uploader' ),
 					/* translators: %d: workspace member count. */
 					'workspaceMembers'        => __( '%d members', 'alynt-drime-backups-uploader' ),

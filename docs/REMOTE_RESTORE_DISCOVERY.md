@@ -2,7 +2,7 @@
 
 This document defines how operators should think about finding restorable packages when the local WordPress site, plugin options, or uploaded registry are unavailable.
 
-The current MVP can create, upload, fetch, verify, inspect, and stage packages. It does not maintain a remote restore index and does not perform destructive restores.
+The current MVP can create, upload, list local package inventory, fetch, verify, inspect, and stage packages. It does not maintain a remote restore index and does not perform destructive restores.
 
 ## Current MVP Path
 
@@ -10,9 +10,10 @@ If the original WordPress site is still available:
 
 1. Use the plugin uploaded registry and diagnostics to identify the uploaded package.
 2. Confirm the Drime workspace and destination folder from plugin settings.
-3. Use the server-runner `fetch` command, or download the archive and both sidecars from Drime manually.
-4. Place all three files on the server if using manual download.
-5. Run the server-runner `verify`, `inspect`, and `stage-restore` commands.
+3. Use `php alynt-backup-runner.php list --format=json` against the site runner config to review local package IDs, archive names, sidecar names, checksum metadata, and `verification_ready` flags.
+4. Use the server-runner `fetch` command, or download the archive and both sidecars from Drime manually.
+5. Place all three files on the server if using manual download.
+6. Run the server-runner `verify`, `inspect`, and `stage-restore` commands.
 
 If the original WordPress site is unavailable:
 
@@ -23,6 +24,29 @@ If the original WordPress site is unavailable:
 5. Run local verification and staging restore from the server runner.
 
 This manual path is acceptable for MVP testing, but it is not enough for a fast disaster workflow across many sites.
+
+## Local Inventory Command
+
+The server runner `list` command can print a package inventory from the configured outbox:
+
+```bash
+php /path/to/alynt-backup-runner.php list \
+  --config=/var/www/example.com/private/alynt-drime-backups/config.json \
+  --format=json
+```
+
+The JSON output includes:
+
+- Schema version and generation time.
+- Package count.
+- Archive filename and size.
+- Package ID from the manifest when available.
+- Manifest sidecar name, presence, and validity.
+- Checksum sidecar name, presence, validity, algorithm, and value.
+- Non-secret manifest fields such as site URL, created time, producer, backup type, archive format, file root, and database dump name.
+- `verification_ready` when both required sidecars are present.
+
+The inventory is local and read-only. It does not hash package bytes, contact Drime, upload an index, delete files, or approve restore work. `verification_ready` means the manifest has a package ID and the checksum sidecar has a parseable SHA-256 value; use `verify` before trusting a package for restore staging.
 
 ## Package Naming
 
@@ -148,5 +172,6 @@ Before claiming disaster restore readiness:
 - Prove CLI fetch of archive plus sidecars from Drime.
 - Verify the downloaded package locally.
 - Stage the downloaded package into a restore directory.
+- Complete the restore rehearsal report in `RESTORE_REHEARSAL_CHECKLIST.md`.
 - Confirm the package can be discovered without relying on the original WordPress uploaded registry.
 - Decide whether package-level sidecar discovery is sufficient for the first production rollout or whether a remote index must be implemented first.

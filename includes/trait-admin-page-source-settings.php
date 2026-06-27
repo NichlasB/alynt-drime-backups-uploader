@@ -74,6 +74,13 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 				</td>
 			</tr>
 			<tr>
+				<th scope="row"><label for="alynt-server-cron-review-commands"><?php esc_html_e( 'Server Cron Review Commands', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<textarea id="alynt-server-cron-review-commands" class="large-text code alynt-drime-command-snippet" readonly rows="14" aria-describedby="alynt-server-cron-review-commands-description"><?php echo esc_textarea( $this->server_cron_review_commands( $settings ) ); ?></textarea>
+					<p id="alynt-server-cron-review-commands-description" class="description"><?php esc_html_e( 'Run these as the site user to build and review a proposed crontab file. The final install command stays commented until you approve it.', 'alynt-drime-backups-uploader' ); ?></p>
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><?php esc_html_e( 'WPvivid Detected Path', 'alynt-drime-backups-uploader' ); ?></th>
 				<td><code><?php echo esc_html( $detected_path ); ?></code></td>
 			</tr>
@@ -123,6 +130,31 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 	}
 
 	/**
+	 * Builds conservative server cron review commands.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_cron_review_commands( array $settings ) {
+		$current = '$HOME/alynt-drime-backups-crontab.current';
+		$next    = '$HOME/alynt-drime-backups-crontab.new';
+
+		return implode(
+			"\n",
+			array(
+				'crontab -l > "' . $current . '" 2>/dev/null || true',
+				'cp "' . $current . '" "' . $next . '"',
+				'cat >> "' . $next . '" <<\'ALYNT_DRIME_CRON\'',
+				$this->gridpane_cron_snippet( $settings ),
+				'ALYNT_DRIME_CRON',
+				'diff -u "' . $current . '" "' . $next . '" || true',
+				'# After reviewing the diff, install with:',
+				'# crontab "' . $next . '"',
+			)
+		);
+	}
+
+	/**
 	 * Builds server runner config JSON for the current site.
 	 *
 	 * @param array<string,mixed> $settings Settings.
@@ -141,6 +173,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 			'work_path'                => $runner_base . '/work',
 			'restore_path'             => dirname( $wordpress_path ) . '/restores/alynt-drime-backups',
 			'archive_format'           => 'tar.gz',
+			'consistency_mode'         => 'light',
 			'minimum_free_space_bytes' => 1073741824,
 			'package_prefix'           => $this->package_prefix_for_runner( $site_host ),
 			'wp_cli_path'              => 'wp',

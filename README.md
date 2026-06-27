@@ -13,7 +13,8 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Uploads small files through Drime direct upload and larger files through resumable multipart upload.
 - Uploads generic server-runner manifest and checksum sidecars with the main archive so fetched packages can be verified before restore staging.
 - Shows failed uploads with per-file retry actions when the local file is still readable.
-- Lets administrators load Drime workspaces, browse existing Drime folders, and preview the resolved upload destination before backups run.
+- Lets administrators load allowed Drime workspaces, browse existing Drime folders, and preview the resolved upload destination before backups run.
+- Blocks the personal/default Drime workspace ID `0` for backup destinations and supports an optional `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` constant to lock a site to approved workspace IDs.
 - Caches resolved Drime parent folder IDs so remote duplicate checks work after relative-path uploads.
 - Supports duplicate handling by skipping existing remote files or asking Drime for an available filename.
 - Provides manual admin actions for connection testing, scanning, upload, diagnostics export, diagnostics clearing, and active-upload recovery.
@@ -21,7 +22,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
 - Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
 - Provides WP-CLI commands for server-driven scan/upload/status workflows.
-- Includes a first-pass PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox.
+- Includes a first-pass PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, and preview old local artifacts before operator-approved cleanup.
 - Stores bounded, redacted diagnostics when diagnostics are explicitly enabled.
 - Keeps local backups after upload by default; deletion requires explicit opt-in.
 
@@ -55,7 +56,7 @@ The plugin includes `GitHub Plugin URI: NichlasB/alynt-drime-backups-uploader` f
 
 The settings screen controls:
 
-- Drime API token, workspace ID with optional workspace picker, selected or manually entered parent folder ID, and optional relative subpath.
+- Drime API token, non-personal workspace ID with optional workspace picker, selected or manually entered parent folder ID, and optional relative subpath.
 - Optional WPvivid backup path override.
 - Optional server outbox path for generic packages produced outside WordPress.
 - Duplicate handling mode: skip existing files or rename new uploads.
@@ -81,15 +82,23 @@ Backup sources are implemented as producer adapters. A producer discovers comple
 
 See [docs/PRODUCER_ADAPTERS.md](docs/PRODUCER_ADAPTERS.md) for the adapter contract, package record shape, stability rules, and test expectations for future producers.
 
+See [docs/PRODUCER_ADAPTER_BACKLOG.md](docs/PRODUCER_ADAPTER_BACKLOG.md) for the decision guide to use before adding any additional third-party producer adapter.
+
 ## Server Runner
 
 The `server-runner/` directory contains a standalone PHP CLI runner for GridPane-style servers. It exports the WordPress database with WP-CLI, archives the WordPress files with `tar`, writes manifest/checksum sidecars, and atomically places completed packages in the configured outbox.
 
 See [server-runner/README.md](server-runner/README.md) for the runner config shape and commands.
 
-The plugin settings screen generates a GridPane runner config, runner install commands, runner health command, and cron snippet for the current site. The config is non-secret and can be saved as `config.json` beside the runner script. The install commands create the private directories and copy the bundled runner script only; cron installation and backup runs stay separate. The cron snippet creates one daily server-runner package, scans/uploads completed packages every 15 minutes through WP-CLI, and includes a lightweight status check line.
+For onboarding a new GridPane site from install through first upload and server-runner restore staging proof, see [docs/SITE_ROLLOUT_RUNBOOK.md](docs/SITE_ROLLOUT_RUNBOOK.md).
 
-For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: the server runner can fetch a known package from Drime, verify it, and stage it for inspection, but it does not import databases or overwrite live site files.
+The plugin settings screen generates a GridPane runner config, runner install commands, runner health command, cron snippet, and server-cron review commands for the current site. The config is non-secret and can be saved as `config.json` beside the runner script. The install commands create the private directories and copy the bundled runner script only; cron installation and backup runs stay separate. The cron snippet creates one daily server-runner package, scans/uploads completed packages every 15 minutes through WP-CLI, and includes a lightweight status check line. The review commands build a proposed user crontab file and show a diff before the final install command, which remains commented until an operator approves it.
+
+For the broader server-side automation model, including scheduling, multi-site layout, disk retention, cleanup preview, and high-write-site boundaries, see [docs/SERVER_BACKUP_AUTOMATION.md](docs/SERVER_BACKUP_AUTOMATION.md).
+
+For restore validation, see [docs/RESTORE_RUNBOOK.md](docs/RESTORE_RUNBOOK.md). The current restore flow is non-destructive: the server runner can fetch a known package from Drime, verify it, stage it for inspection, and write local restore evidence, but it does not import databases or overwrite live site files.
+
+For recording restore proof during onboarding or periodic confidence checks, see [docs/RESTORE_REHEARSAL_CHECKLIST.md](docs/RESTORE_REHEARSAL_CHECKLIST.md).
 
 For package integrity, extraction safety, storage-path, and encryption boundaries, see [docs/PACKAGE_SECURITY.md](docs/PACKAGE_SECURITY.md).
 
@@ -104,6 +113,8 @@ Diagnostics are disabled by default. When enabled, the plugin stores a bounded e
 Diagnostics redact bearer tokens, authorization headers, cookies, nonces, passwords, request bodies, presigned URLs, and HTTP URLs embedded in scalar values.
 
 See [docs/STATUS_PAYLOAD.md](docs/STATUS_PAYLOAD.md) for the redacted health/status payload contract prepared for future dashboard work.
+
+For the future central monitoring dashboard boundary, see [docs/CENTRAL_DASHBOARD_READINESS.md](docs/CENTRAL_DASHBOARD_READINESS.md). The dashboard plugin is a separate future project; this uploader does not expose a public dashboard endpoint by default.
 
 ## Cron Health
 
@@ -133,7 +144,21 @@ Select an existing Drime base folder, then enter the site folder or subpath in *
 
 ### How does workspace selection work?
 
-Use **Load Drime Workspaces** to retrieve workspaces available to the saved API token. Choosing a workspace updates the numeric **Workspace ID** field and clears the selected base folder so folders from another workspace are not reused accidentally. Save settings after choosing a workspace.
+Use **Load Drime Workspaces** to retrieve workspaces available to the saved API token. During first setup, the workspace field may stay blank while you save the token and discover the correct destination. Choosing a workspace updates the numeric **Workspace ID** field and clears the selected base folder so folders from another workspace are not reused accidentally. Save settings after choosing a workspace.
+
+Workspace ID `0` is blocked by default so backups cannot be configured into the personal/default Drime workspace. To lock a site to one or more approved workspaces after discovery, add a constant to `wp-config.php`:
+
+```php
+define( 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS', '12345' );
+```
+
+Use comma-separated IDs when more than one workspace should be selectable:
+
+```php
+define( 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS', '12345,67890' );
+```
+
+When the constant is present, the workspace picker, settings save, folder browser, destination preview, and upload worker all reject disallowed workspace IDs.
 
 ### Does this upload incomplete WPvivid files?
 

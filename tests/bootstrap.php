@@ -13,6 +13,7 @@ define( 'WPINC', 'wp-includes' );
 
 require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/vendor/autoload.php';
 require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/tests/Support/ProducerAdapterAssertions.php';
+require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/tests/Support/ServerRunnerCliTestCase.php';
 
 if ( ! function_exists( 'trailingslashit' ) ) {
 	function trailingslashit( $value ) {

@@ -7,7 +7,7 @@ Option name: `alynt_drime_backups_settings`
 | Option Key | Type | Default | Sanitization | UI Area | Description |
 | --- | --- | --- | --- | --- | --- |
 | `api_token` | string | `''` | `sanitize_text_field`; masked value preserves existing token | Drime | Drime bearer token used for API requests. Stored with autoload disabled. |
-| `workspace_id` | integer | `0` | `absint`, minimum `0`; changing it clears selected base-folder metadata | Drime | Drime workspace ID. `0` means the personal/default workspace. The workspace picker can populate this value from `GET /me/workspaces`. |
+| `workspace_id` | integer | `0` | `absint`; blank is allowed as the first-setup "not configured yet" state; submitted workspace ID `0` and IDs outside `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` are rejected; changing it clears selected base-folder metadata | Drime | Drime workspace ID for backup destinations. The personal/default workspace ID `0` is blocked by default. The workspace picker can populate this value from `GET /me/workspaces`. |
 | `parent_folder_id` | string | `''` | empty string or `absint` string; cleared when workspace changes | Drime | Optional concrete Drime base folder ID, either manually entered or selected through the folder browser. |
 | `parent_folder_hash` | string | `''` | alphanumeric, underscore, and hyphen only; cleared when `parent_folder_id` is empty or workspace changes | Drime | Optional non-secret Drime folder hash used for browsing children and previewing destinations. |
 | `parent_folder_display_path` | string | `''` | `sanitize_text_field`, slash normalization; cleared when `parent_folder_id` is empty or workspace changes | Drime | Optional non-secret display breadcrumb for the selected base folder. |
@@ -50,6 +50,28 @@ These options are owned by the plugin and are removed on uninstall.
 | `alynt_drime_backups_upload_lock` | array | `array()` | `Alynt_Drime_Backups_Uploader_Uploader` | Short-lived upload worker lock to prevent concurrent queue processing. |
 
 Uninstall removes the plugin-owned options above and the plugin cron hooks from each site on multisite installs. It intentionally does not remove backup archives, sidecars, restore staging folders, or manually installed server-runner directories outside WordPress option storage.
+
+The admin setup screen also generates read-only server-runner helper snippets from saved settings. The **Server Cron Review Commands** snippet is not persisted as a setting; it builds and diffs a proposed user crontab file and leaves the final install command commented until an operator approves it.
+
+## Workspace Destination Guardrails
+
+Workspace ID `0` is the personal/default Drime workspace and is not allowed for backup destinations. A blank workspace field is allowed only as the first-setup "not configured yet" state so the operator can save the token before loading workspaces.
+
+Without a workspace allowlist, the workspace picker shows non-personal workspaces returned by Drime so the operator can discover and choose the intended workspace ID.
+
+After discovery, lock the site to one approved workspace in `wp-config.php`:
+
+```php
+define( 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS', '12345' );
+```
+
+Multiple approved workspaces can be configured with comma-separated IDs:
+
+```php
+define( 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS', '12345,67890' );
+```
+
+When the constant is present, the workspace picker filters to those IDs. Settings save, folder browsing, destination preview, and upload processing also reject disallowed workspace IDs server-side.
 
 ## Health Payload Fields
 

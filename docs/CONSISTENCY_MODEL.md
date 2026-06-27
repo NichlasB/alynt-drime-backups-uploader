@@ -13,7 +13,7 @@ The server runner creates one package in this order:
 3. Export the database with WP-CLI when database export is enabled.
 4. Write `manifest.json`.
 5. Archive the WordPress file tree, database dump, and manifest into a `.tar.gz`.
-6. Write manifest and checksum sidecars beside the completed archive.
+6. Write final manifest and checksum sidecars beside the completed archive.
 7. Move the completed package into the outbox atomically.
 
 The package manifest uses:
@@ -34,8 +34,16 @@ New server-runner packages include non-secret UTC timing fields:
 | `database_dump_started_at` | Time the WP-CLI database export started, or empty when database export is disabled. |
 | `database_dump_finished_at` | Time the WP-CLI database export finished, or empty when database export is disabled. |
 | `file_archive_started_at` | Time the runner began preparing the manifest/archive step after the database dump was ready. |
+| `file_archive_finished_at` | Time the file archive completed. |
+| `file_archive_exit_code` | Exit code returned by the archive command. |
+| `file_archive_warning_count` | Count of non-empty archive command output lines captured as warnings. |
+| `file_archive_live_change_warning_count` | Count of archive warnings that indicate files changed while they were read. |
+| `consistency_mode` | `light` for generated configs that record archive consistency evidence, or `standard` for older/basic configs. |
+| `consistency_status` | `clean`, `file_changes_detected`, `warnings_detected`, `pending`, or `not_checked` depending on mode and archive result. |
 
 These fields help an operator understand package timing during restore inspection. They do not convert the package into a transactionally consistent snapshot.
+
+The manifest sidecar beside the completed archive is the authoritative source for final consistency fields. The manifest embedded inside the archive is written before the archive command runs, so it can show `pending` for fields that are only known after archive creation.
 
 ## What Is Consistent
 
@@ -48,7 +56,7 @@ The package completion workflow is consistent:
 
 The database dump is internally produced by WP-CLI and is captured before the file archive starts.
 
-The manifest records the site, producer, runner version, package ID, database dump name, file root, exclusions, backup type, and timing fields.
+The manifest records the site, producer, runner version, package ID, database dump name, file root, exclusions, backup type, timing fields, and light consistency fields when enabled.
 
 ## What Is Not Guaranteed
 
@@ -86,7 +94,7 @@ Examples:
 - Busy form or booking sites.
 - Sites with frequent media uploads or imports.
 
-For these sites, the MVP should not be treated as a fully proven production backup strategy until a stricter consistency mode is designed and tested.
+For these sites, light consistency mode should be used as the first stricter mode. It does not freeze the site. It records whether archive creation looked clean or whether file-change warnings were captured.
 
 Potential future modes:
 
@@ -105,6 +113,10 @@ During restore inspection, compare:
 - `database_dump_started_at`
 - `database_dump_finished_at`
 - `file_archive_started_at`
+- `file_archive_finished_at`
+- `consistency_mode`
+- `consistency_status`
+- `file_archive_live_change_warning_count`
 - `manifest.json`
 - `database.sql`
 - `RESTORE_NOTES.txt`

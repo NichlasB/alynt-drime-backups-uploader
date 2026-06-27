@@ -4,6 +4,8 @@ The plugin has an internal health/status payload for wp-admin, WP-CLI, diagnosti
 
 No public dashboard REST endpoint is enabled by default in the current MVP. Any future external endpoint must use this contract as a read-only, redacted baseline and must add explicit authentication before exposure.
 
+See `docs/CENTRAL_DASHBOARD_READINESS.md` for the future dashboard boundary and endpoint requirements.
+
 ## Versioning
 
 Current schema version: `1`
@@ -51,6 +53,8 @@ Current default fields:
 | `backup_path_override` | string | Configured WPvivid path override. |
 
 Do not use path mode for a future central dashboard payload unless the dashboard security model explicitly allows path disclosure.
+
+The existing WP-CLI status command is local operator output and may use path mode. A future remote dashboard endpoint should call the health summary with path output disabled.
 
 ## Redaction Boundary
 
