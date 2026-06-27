@@ -60,7 +60,7 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( "'destructive_actions_performed'   => false", $source );
 		$this->assertStringContainsString( "'database_imported'               => false", $source );
 		$this->assertStringContainsString( "'live_files_overwritten'          => false", $source );
-		$this->assertStringContainsString( "'restore_apply_command_available' => false", $source );
+		$this->assertStringContainsString( "'restore_apply_command_available' => 'database' === \$scope", $source );
 		$this->assertStringContainsString( '--write-report=1', $source );
 		$this->assertStringContainsString( '--pre-restore-evidence=/path/to/evidence.json', $source );
 		$this->assertStringContainsString( 'restore_reports_path', $source );
@@ -70,13 +70,33 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( 'database_export_path', $source );
 		$this->assertStringContainsString( 'file_backup_path', $source );
 		$this->assertStringContainsString( 'Dry run failed; success evidence report was not written.', $source );
-		$this->assertStringNotContainsString( "case 'restore-apply'", $source );
-		$this->assertSame( 1, preg_match( '/private function restore_dry_run_command\(.*?private function print_verify_next_steps/s', $source, $matches ) );
+		$this->assertSame( 1, preg_match( '/private function restore_dry_run_command\(.*?private function restore_apply_command/s', $source, $matches ) );
 
 		$method_source = $matches[0];
 		$this->assertStringNotContainsString( 'run_shell_command', $method_source );
 		$this->assertStringNotContainsString( 'unlink(', $method_source );
 		$this->assertStringNotContainsString( 'rmdir(', $method_source );
+	}
+
+	/**
+	 * Restore apply must stay database-only and confirmation-gated for this slice.
+	 *
+	 * @return void
+	 */
+	public function test_restore_apply_database_scope_is_confirmation_gated() {
+		$source = $this->runner_source();
+
+		$this->assertStringContainsString( "case 'restore-apply'", $source );
+		$this->assertStringContainsString( 'restore_apply_command', $source );
+		$this->assertStringContainsString( "'restore-staging-site' !== \$confirm", $source );
+		$this->assertStringContainsString( "'database' !== \$scope", $source );
+		$this->assertStringContainsString( 'restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path )', $source );
+		$this->assertStringContainsString( 'import_database( $database_dump_path, (string) $result[\'target_wordpress_path\'] )', $source );
+		$this->assertStringContainsString( ' db import ', $source );
+		$this->assertStringContainsString( "'file_restore_attempted'            => false", $source );
+		$this->assertStringContainsString( "'file_restore_succeeded'            => false", $source );
+		$this->assertStringContainsString( "'live_files_overwritten'            => false", $source );
+		$this->assertStringContainsString( 'RESTORE_APPLY_REPORT-', $source );
 	}
 
 	/**

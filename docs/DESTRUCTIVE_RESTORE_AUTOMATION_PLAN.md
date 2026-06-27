@@ -73,7 +73,7 @@ Recommended first implementation path:
 1. Build `restore-dry-run`. Current source status: implemented as a preflight.
 2. Add report generation. Current source status: implemented as optional `--write-report=1` success evidence under configured `restore_reports_path`.
 3. Add pre-restore backup evidence checks. Current source status: implemented as validation of a matching evidence JSON file and readable backup artifacts.
-4. Add `restore-apply --scope=database`.
+4. Add `restore-apply --scope=database`. Current source status: implemented for staging database imports after confirmation, dry-run checks, and pre-restore evidence validation.
 5. Add `restore-apply --scope=files`.
 6. Combine as `restore-apply --scope=files-and-database`.
 
@@ -254,10 +254,22 @@ Current `restore-dry-run` behavior:
 - Refuses to write success evidence when the dry run fails.
 - Requires pre-restore backup evidence to match package ID, scope, and target path.
 - Requires scope-specific backup artifact files to be readable and under `restore_pre_backup_path`.
-- Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, `pre_restore_backup_created: false`, and `restore_apply_command_available: false`.
+- Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true only for `database` scope in the current partial implementation.
 - Does not create pre-restore backups yet.
 - Does not check target database connectivity yet.
-- Does not implement `restore-apply`.
+- Does not import the database itself.
+
+Current `restore-apply --scope=database` behavior:
+
+- Requires `--confirm=restore-staging-site`.
+- Refuses `files` and `files-and-database` scopes.
+- Runs the existing dry-run/evidence checks with `database` scope.
+- Refuses to import when any dry-run check fails.
+- Imports staged `database.sql` with WP-CLI against the configured target WordPress path.
+- Writes `RESTORE_APPLY_REPORT-*.json` under configured `restore_reports_path`.
+- Reports database import attempt/success, dry-run checks, report path, failure step, and manual recovery notes.
+- Does not create the pre-restore backup evidence automatically yet.
+- Does not restore files yet.
 
 Current dry-run report fields:
 

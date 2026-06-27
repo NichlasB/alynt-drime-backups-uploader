@@ -63,6 +63,8 @@ class Alynt_Server_Backup_Runner {
 				return $this->stage_restore_command( $options );
 			case 'restore-dry-run':
 				return $this->restore_dry_run_command( $options );
+			case 'restore-apply':
+				return $this->restore_apply_command( $options );
 			default:
 				$this->error( 'Unknown command: ' . $command );
 				$this->usage();
@@ -1104,6 +1106,128 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Applies a staged restore after destructive gates pass.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function restore_apply_command( array $options ) {
+		$staged_path              = isset( $options['staged-path'] ) ? $this->normalize_path( (string) $options['staged-path'] ) : '';
+		$scope                    = isset( $options['scope'] ) ? strtolower( trim( (string) $options['scope'] ) ) : 'files-and-database';
+		$confirm                  = isset( $options['confirm'] ) ? (string) $options['confirm'] : '';
+		$pre_backup_evidence_path = isset( $options['pre-restore-evidence'] ) ? $this->normalize_path( (string) $options['pre-restore-evidence'] ) : $this->restore_pre_backup_evidence_path();
+
+		if ( '' === $staged_path ) {
+			$this->error( 'Missing --staged-path=/path/to/staged/package.' );
+			return 1;
+		}
+
+		if ( 'restore-staging-site' !== $confirm ) {
+			$this->error( 'Restore apply requires --confirm=restore-staging-site.' );
+			return 1;
+		}
+
+		if ( 'database' !== $scope ) {
+			$this->error( 'Only --scope=database is implemented for restore-apply in this release.' );
+			return 1;
+		}
+
+		$result = $this->restore_apply_database_result( $staged_path, $pre_backup_evidence_path );
+
+		if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
+			$this->line( json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+		} else {
+			$this->print_restore_apply_result( $result );
+		}
+
+		return 'succeeded' === $result['status'] ? 0 : 1;
+	}
+
+	/**
+	 * Imports a staged database after dry-run gates pass.
+	 *
+	 * @param string $staged_path Staged restore path.
+	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
+	 * @return array<string,mixed>
+	 */
+	private function restore_apply_database_result( $staged_path, $pre_backup_evidence_path ) {
+		$scope       = 'database';
+		$dry_run     = $this->restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path );
+		$result      = array(
+			'schema_version'                    => 1,
+			'generated_at'                      => gmdate( 'c' ),
+			'command'                           => 'restore-apply',
+			'status'                            => 'failed',
+			'scope'                             => $scope,
+			'package_id'                        => $dry_run['package_id'],
+			'staged_path'                       => $staged_path,
+			'target_wordpress_path'             => $dry_run['target_wordpress_path'],
+			'restore_environment'               => $dry_run['restore_environment'],
+			'confirmation_phrase_accepted'      => true,
+			'dry_run_checks_passed'             => 0 === (int) $dry_run['failure_count'],
+			'dry_run_failure_count'             => (int) $dry_run['failure_count'],
+			'dry_run_checks'                    => $dry_run['checks'],
+			'pre_restore_backup_path'           => $dry_run['pre_restore_backup_path'],
+			'pre_restore_evidence_path'         => $dry_run['pre_restore_evidence_path'],
+			'database_dump_path'                => '',
+			'database_import_attempted'         => false,
+			'database_import_succeeded'         => false,
+			'database_import_exit_code'         => null,
+			'database_import_output'            => array(),
+			'database_imported'                 => false,
+			'file_restore_attempted'            => false,
+			'file_restore_succeeded'            => false,
+			'live_files_overwritten'            => false,
+			'destructive_actions_performed'     => false,
+			'pre_restore_backup_created'        => false,
+			'restore_apply_report_written'      => false,
+			'restore_apply_report_path'         => '',
+			'restore_apply_report_error'        => '',
+			'failure_step'                      => '',
+			'manual_recovery_notes'             => array(),
+		);
+
+		if ( ! $result['dry_run_checks_passed'] ) {
+			$result['failure_step']          = 'restore-dry-run';
+			$result['manual_recovery_notes'] = array( 'No database import was attempted because restore dry-run checks failed.' );
+			return $this->write_restore_apply_report( $result );
+		}
+
+		$report_path = $this->restore_apply_report_path( (string) $result['package_id'] );
+		if ( '' === $report_path ) {
+			$result['failure_step']               = 'restore-apply-report-path';
+			$result['restore_apply_report_error'] = 'Restore apply reports path is missing, unsafe, or not writable.';
+			$result['manual_recovery_notes']      = array( 'No database import was attempted because the restore apply report path was not ready.' );
+			return $result;
+		}
+		$result['restore_apply_report_path'] = $report_path;
+
+		$database_dump_path = $this->restore_apply_database_dump_path( $staged_path );
+		$result['database_dump_path'] = $database_dump_path;
+		if ( '' === $database_dump_path || ! is_readable( $database_dump_path ) ) {
+			$result['failure_step']          = 'staged-database-dump';
+			$result['manual_recovery_notes'] = array( 'No database import was attempted because the staged database dump was not readable.' );
+			return $this->write_restore_apply_report( $result );
+		}
+
+		$result['database_import_attempted']     = true;
+		$result['destructive_actions_performed'] = true;
+		$import_result                           = $this->import_database( $database_dump_path, (string) $result['target_wordpress_path'] );
+		$result['database_import_exit_code']     = (int) $import_result['exit_code'];
+		$result['database_import_output']        = array_slice( $import_result['output'], 0, 20 );
+		$result['database_import_succeeded']     = 0 === (int) $import_result['exit_code'];
+		$result['database_imported']             = $result['database_import_succeeded'];
+		$result['status']                        = $result['database_import_succeeded'] ? 'succeeded' : 'failed';
+
+		if ( ! $result['database_import_succeeded'] ) {
+			$result['failure_step']          = 'database-import';
+			$result['manual_recovery_notes'] = array( 'Review pre-restore backup evidence before attempting manual database recovery.' );
+		}
+
+		return $this->write_restore_apply_report( $result );
+	}
+
+	/**
 	 * Builds a read-only restore dry-run result.
 	 *
 	 * @param string $staged_path Staged restore path.
@@ -1266,7 +1390,7 @@ class Alynt_Server_Backup_Runner {
 			'database_imported'               => false,
 			'live_files_overwritten'          => false,
 			'pre_restore_backup_created'      => false,
-			'restore_apply_command_available' => false,
+			'restore_apply_command_available' => 'database' === $scope,
 			'report_write_requested'          => false,
 			'report_written'                  => false,
 			'report_path'                     => '',
@@ -1440,6 +1564,67 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		return $this->finalize_restore_dry_run_result( $result );
+	}
+
+	/**
+	 * Returns a restore apply report path if reporting is ready.
+	 *
+	 * @param string $package_id Package ID.
+	 * @return string
+	 */
+	private function restore_apply_report_path( $package_id ) {
+		$reports_path = $this->restore_reports_path();
+		if ( '' === $reports_path || $this->dangerous_restore_target_path( $reports_path ) || ! $this->ensure_directory( $reports_path ) || ! is_writable( $reports_path ) ) {
+			return '';
+		}
+
+		return $reports_path . DIRECTORY_SEPARATOR . 'RESTORE_APPLY_REPORT-' . $this->safe_slug( $package_id ) . '-' . gmdate( 'Ymd-His' ) . '.json';
+	}
+
+	/**
+	 * Writes a restore apply report when a path was prepared.
+	 *
+	 * @param array<string,mixed> $result Apply result.
+	 * @return array<string,mixed>
+	 */
+	private function write_restore_apply_report( array $result ) {
+		if ( empty( $result['restore_apply_report_path'] ) ) {
+			$result['restore_apply_report_path'] = $this->restore_apply_report_path( (string) $result['package_id'] );
+		}
+
+		if ( empty( $result['restore_apply_report_path'] ) ) {
+			$result['restore_apply_report_error'] = 'Restore apply reports path is missing, unsafe, or not writable.';
+			return $result;
+		}
+
+		$result['restore_apply_report_written'] = true;
+		if ( ! $this->write_json_atomic( $result['restore_apply_report_path'], $result ) ) {
+			$result['restore_apply_report_written'] = false;
+			$result['restore_apply_report_error']   = 'Could not write restore apply report.';
+			$result['status']                       = 'failed';
+			if ( '' === $result['failure_step'] ) {
+				$result['failure_step'] = 'restore-apply-report-write';
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Returns the staged database dump path for a restore apply.
+	 *
+	 * @param string $staged_path Staged restore path.
+	 * @return string
+	 */
+	private function restore_apply_database_dump_path( $staged_path ) {
+		$report = $this->read_restore_report( $staged_path . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json' );
+		$dump   = isset( $report['database_dump'] ) ? (string) $report['database_dump'] : '';
+
+		if ( ! $this->restore_report_relative_name_is_safe( $dump ) ) {
+			return '';
+		}
+
+		return $staged_path . DIRECTORY_SEPARATOR . $dump;
 	}
 
 	/**
@@ -1624,6 +1809,38 @@ class Alynt_Server_Backup_Runner {
 		$this->line( '- No destructive actions were performed.' );
 		$this->line( '- No database import was performed.' );
 		$this->line( '- No live WordPress files were overwritten.' );
+	}
+
+	/**
+	 * Prints a restore apply result.
+	 *
+	 * @param array<string,mixed> $result Apply result.
+	 * @return void
+	 */
+	private function print_restore_apply_result( array $result ) {
+		$this->line( 'succeeded' === $result['status'] ? 'Restore apply succeeded.' : 'Restore apply failed.' );
+		$this->line( 'Scope: ' . $result['scope'] );
+		$this->line( 'Staged path: ' . $result['staged_path'] );
+		$this->line( 'Target WordPress path: ' . $result['target_wordpress_path'] );
+		$this->line( 'Dry-run checks passed: ' . ( ! empty( $result['dry_run_checks_passed'] ) ? 'yes' : 'no' ) );
+		$this->line( 'Database import attempted: ' . ( ! empty( $result['database_import_attempted'] ) ? 'yes' : 'no' ) );
+		$this->line( 'Database import succeeded: ' . ( ! empty( $result['database_import_succeeded'] ) ? 'yes' : 'no' ) );
+		$this->line( 'Live files overwritten: no' );
+		if ( ! empty( $result['restore_apply_report_path'] ) ) {
+			$this->line( 'Report path: ' . $result['restore_apply_report_path'] );
+			$this->line( 'Report written: ' . ( ! empty( $result['restore_apply_report_written'] ) ? 'yes' : 'no' ) );
+		}
+		if ( ! empty( $result['failure_step'] ) ) {
+			$this->line( 'Failure step: ' . $result['failure_step'] );
+		}
+		if ( ! empty( $result['restore_apply_report_error'] ) ) {
+			$this->line( 'Report error: ' . $result['restore_apply_report_error'] );
+		}
+		$this->line( '' );
+		$this->line( 'Safety boundary:' );
+		$this->line( '- This command can import the staging database only.' );
+		$this->line( '- No live WordPress files were overwritten.' );
+		$this->line( '- File restore still requires a separate implementation slice.' );
 	}
 
 	/**
@@ -2316,6 +2533,21 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		return is_file( $db_path ) && filesize( $db_path ) > 0;
+	}
+
+	/**
+	 * Imports a database dump through WP-CLI.
+	 *
+	 * @param string $db_path Database dump path.
+	 * @param string $target_path Target WordPress path.
+	 * @return array{exit_code:int,output:array<int,string>}
+	 */
+	private function import_database( $db_path, $target_path ) {
+		$command = escapeshellarg( $this->wp_cli_path() )
+			. ' --path=' . escapeshellarg( $target_path )
+			. ' db import ' . escapeshellarg( $db_path );
+
+		return $this->run_shell_command( $command );
 	}
 
 	/**
@@ -3082,11 +3314,11 @@ function alynt_runner_load_config( $path ) {
  * @return string
  */
 function alynt_runner_usage() {
-	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore|restore-dry-run> '
+	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore|restore-dry-run|restore-apply> '
 		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
 		. '[--restore-path=/path/to/restores] [--staged-path=/path/to/staged/package] [--scope=files-and-database] '
-		. '[--pre-restore-evidence=/path/to/evidence.json] [--write-report=1] [--older-than-days=14] [--confirm=delete-local-artifacts]';
+		. '[--pre-restore-evidence=/path/to/evidence.json] [--write-report=1] [--older-than-days=14] [--confirm=delete-local-artifacts|restore-staging-site]';
 }
 
 $parsed = alynt_runner_parse_args( $argv );

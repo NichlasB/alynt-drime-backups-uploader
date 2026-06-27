@@ -94,7 +94,13 @@ This validation is a staging guard. It does not make an unknown third-party pack
 
 The command checks that restore apply is explicitly enabled in config, the target environment is `staging`, the staged path is under `restore_path`, the staged report still says no database import or live file overwrite happened, the requested scope has the required staged files, the configured target WordPress path is not a broad system path, the pre-restore backup path is available, pre-restore backup evidence matches the package/scope/target, required pre-restore artifacts are readable under `restore_pre_backup_path`, and minimum free space is present.
 
-By default, the command writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under the configured `restore_reports_path`; failed dry runs do not create success evidence. The command validates pre-restore backup evidence, but it does not create pre-restore backups, import databases, replace files, delete local files, contact Drime, or run shell restore commands. It reports `restore_apply_command_available: false` because destructive apply is not implemented in the current runner.
+By default, the command writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under the configured `restore_reports_path`; failed dry runs do not create success evidence. The command validates pre-restore backup evidence, but it does not create pre-restore backups, import databases, replace files, delete local files, contact Drime, or run shell restore commands.
+
+## Restore Apply Boundary
+
+`restore-apply --scope=database` is the first destructive-capable restore command. It is staging-only, requires `--confirm=restore-staging-site`, reruns the dry-run/evidence checks, and refuses to import if any preflight check fails. It imports only the staged `database.sql` through WP-CLI and writes a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
+
+This command does not restore files, delete files, run `rsync`, create pre-restore backups, contact Drime, or support production restore. `files` and `files-and-database` scopes are intentionally refused until separate implementation slices prove those paths.
 
 ## Recommended Server Paths
 
@@ -146,4 +152,4 @@ Before production rollout of the server-runner producer:
 - Stage the restore into a non-public restore directory.
 - Inspect `htdocs/`, `database.sql`, `manifest.json`, and `RESTORE_NOTES.txt`.
 
-No automated production restore command should ship. The current `restore-dry-run` provides preflight output and optional success evidence reports only; destructive restore still needs separate confirmation gates, pre-restore snapshot evidence, staging evidence, and apply implementation. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.
+No automated production restore command should ship. The current destructive-capable path is limited to staging database import after explicit confirmation, dry-run checks, and pre-restore evidence validation. File restore, combined restore, automatic pre-restore backup creation, and production restore still need separate gated implementation and proof. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.
