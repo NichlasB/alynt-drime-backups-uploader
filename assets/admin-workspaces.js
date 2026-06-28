@@ -2,7 +2,7 @@
   // assets/src/admin/workspaces.js
   (function() {
     "use strict";
-    const config = window.alyntDrimeWPvivid || {};
+    const config = window.alyntDrimeBackups || {};
     const i18n = config.i18n || {};
     function text(key) {
       return i18n[key] || "";

@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-06-27
+Updated: 2026-06-28
 
 ## Purpose
 
@@ -10,15 +10,15 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
-- Current accepted stable release: `v0.1.1`.
+- Current released stable version: `v0.1.1`.
 - Accepted as stable on 2026-06-26.
+- Current unreleased release-candidate scope: all `[Unreleased]` server-runner, restore automation, workspace guardrail, cleanup, catalog/sidecar, rollout, and documentation slices validated after `v0.1.1`.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
 - A real WordPress Plugins-screen update rehearsal passed by downgrading the LocalWP test copy to `0.1.0`, then updating to `0.1.1` through the rendered WordPress plugin UI.
-- The working tree was clean before the operator-approved local cleanup execution slice.
+- The working tree was clean before this final pre-release/documentation hygiene pass.
 
 ## What Is Complete
-
 ### Plugin Foundation
 
 - Clean plugin scaffold, settings, queue, registry, uploader, Drime client, cron, admin page, WP-CLI command class, uninstall cleanup, README, changelog, settings docs, and hook docs are in place.
@@ -91,17 +91,20 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - First read-only GridPane investigation findings for `alyntdrime.sitesmain.com` are recorded in that plan.
 - Remote discovery notes exist in `docs/REMOTE_RESTORE_DISCOVERY.md`.
 - Package security boundaries are documented in `docs/PACKAGE_SECURITY.md`.
-- Current restore support is intentionally non-destructive:
+- Current restore support includes non-destructive and staging-only destructive gates:
   - fetch a known Drime package plus sidecars;
   - verify manifest/checksum sidecars;
   - inspect package metadata and archive contents;
   - stage the package into a separate restore directory;
-  - write `RESTORE_NOTES.txt`.
-- The runner does not import the database or overwrite live WordPress files.
-- Destructive restore remains a manual, explicitly approved operator process until the separate gated design in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md` is implemented and proven on staging.
+  - write `RESTORE_NOTES.txt` and `RESTORE_REPORT.json`;
+  - run `restore-dry-run` with optional evidence reports;
+  - validate matching pre-restore backup evidence before any apply;
+  - run staging-only `restore-apply --scope=database`, `--scope=files`, or `--scope=files-and-database` only with `--confirm=restore-staging-site`.
+- Database, file, and combined staging restore rehearsals passed on `alyntdrime.sitesmain.com`.
+- Restore apply reports include missing symlink/drop-in and post-restore manual-review guidance for known drop-ins such as Query Monitor's `wp-content/db.php`.
+- Automatic pre-restore backup creation and production restore remain future gated projects.
 
 ### Operator-Approved Local Cleanup
-
 - The server runner supports `cleanup-preview` for read-only review of old local outbox package sets and restore staging directories.
 - The server runner supports `cleanup` only when the operator passes `--confirm=delete-local-artifacts`.
 - Cleanup execution deletes only candidates discovered from the configured outbox and restore paths.
@@ -124,21 +127,24 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Latest Validation Snapshot
 
-Latest read-only readiness review and local validation pass: 2026-06-27.
+Latest release-candidate validation snapshot after the final pre-release and E2E pass: 2026-06-28.
 
-Passed locally:
+Passed locally for the latest restore/reporting source state:
 
-- `npm.cmd test`: 121 tests, 589 assertions.
+- `npm.cmd test`: 155 tests, 1043 assertions, with the expected Windows symlink skip.
 - `npm.cmd run lint`: PHPCS passed across configured files.
 - `npm.cmd run build`: build completed.
-- `npm.cmd audit`: 0 vulnerabilities.
-- PHP syntax sweep across plugin PHP files excluding `vendor` and `node_modules`: no syntax errors.
-- Git worktree remained clean after validation.
+- PHP syntax sweep passed for 86 PHP files.
+- `npm.cmd audit`: passed with 0 vulnerabilities.
+- `git diff --check` passed with only known line-ending warnings in text/generated files where noted.
+- Composer audit remains blocked in this environment because Composer is unavailable.
 
 Historical E2E validation recorded in this plan and supporting docs:
 
 - LocalWP `plugin-tester.local` admin/settings/package/update validation.
 - GridPane staging site `alyntdrime.sitesmain.com` server-runner package creation, manifest/checksum sidecars, package inspection, plugin scan/queue, retry upload to Drime, uploaded registry recording, and clean queue/failed state afterward.
+- Final 2026-06-28 LocalWP E2E passed after refreshing the runtime copy from source: admin UI rendered with rebuilt assets and clean `alyntDrimeBackups` namespace, status tables measured consistently, generic outbox scanning queued one package, the empty-token/workspace upload guardrail failed safely, and temporary state/artifacts were restored.
+- Final 2026-06-28 GridPane staging E2E passed after refreshing plugin and runner runtime files from source: runner health passed, package `alyntdrime-sitesmain-com-20260628-145312.tar.gz` was created and verified, scan queued it, retry upload completed, uploaded registry recorded Drime file entry `766821258` plus four sidecars, diagnostics settings were restored, and final status was queue `0`, failed `0`, uploaded `7`, active upload `false`.
 - Staging package verified after GridPane tar-warning hardening: `alyntdrime-sitesmain-com-20260626-165727.tar.gz`.
 - Site-by-site rollout runbook dry run passed on GridPane staging `alyntdrime.sitesmain.com` on 2026-06-27: plugin updated to `0.1.1`, runner health passed, package `alyntdrime-sitesmain-com-20260627-103909.tar.gz` was created, verified, scanned after the configured 900-second stability window, uploaded to Drime with manifest/checksum sidecars, fetched back from Drime, verified, inspected, and staged to `/var/www/alyntdrime.sitesmain.com/restores/alynt-drime-backups/alyntdrime-sitesmain-com-20260627-103909` with no database import or live file overwrite.
 - Approved local cleanup after the dry run removed the `alyntdrime-sitesmain-com-20260627-103909` outbox package/sidecars, fetched download copy/sidecars, and restore staging directory. Staging disk usage returned from 82% to 66%; the Drime uploaded copy remains available.
@@ -170,7 +176,7 @@ Historical E2E validation recorded in this plan and supporting docs:
 - Full backup-engine-generated WPvivid split backup remains untested.
 - Live rate-limit induction remains intentionally untested to avoid abusive Drime API traffic.
 - Composer audit has previously been blocked locally when Composer was unavailable; rerun when Composer is available in the relevant environment.
-- The first restore flow is inspection/staging only; production database import and file replacement are intentionally manual.
+- Staging restore apply is implemented and rehearsed, but production database import and file replacement remain intentionally gated future work.
 - Centralized dashboard work is not implemented yet; only the redacted status payload foundation exists.
 - Third-party producer adapters beyond WPvivid and generic outbox are not implemented yet.
 - Drime workspace destination guardrails are implemented in source/docs and passed feature-stage review workflows.
@@ -179,7 +185,7 @@ Historical E2E validation recorded in this plan and supporting docs:
 
 ### 1. Plan And Documentation Hygiene
 
-Status: active now.
+Status: completed for the current pre-release preparation pass.
 
 Goal:
 
@@ -527,7 +533,7 @@ Feature-stage workflow results:
 
 ### 8. Future Release Workflow
 
-Status: repeat as needed.
+Status: active for this final pre-release/release-candidate pass.
 
 After each new feature slice is added, run the applicable feature-stage workflows from `wp-plugin-toolkit` in this order, whichever are necessary for the actual change:
 

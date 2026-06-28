@@ -32,7 +32,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Cron_Health {
 
 		?>
 		<h3><?php esc_html_e( 'Scan State', 'alynt-drime-backups-uploader' ); ?></h3>
-		<table class="widefat striped alynt-drime-wpvivid-scan-state">
+		<table class="widefat striped alynt-drime-backups-scan-state">
 			<caption class="screen-reader-text"><?php esc_html_e( 'Automated scan timing state', 'alynt-drime-backups-uploader' ); ?></caption>
 			<tbody>
 				<tr><th scope="row"><?php esc_html_e( 'Current UTC Time', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( $this->format_utc_time( time() ) ); ?></td></tr>

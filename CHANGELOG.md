@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-28
+
 ### Added
 
 - Added a restore rehearsal checklist and report template for documenting fetch, verify, inspect, stage-restore, and cleanup proof during onboarding or periodic restore confidence checks.

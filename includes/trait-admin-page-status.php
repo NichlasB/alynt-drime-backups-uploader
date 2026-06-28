@@ -24,7 +24,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 	private function render_manual_actions() {
 		?>
 		<h2><?php esc_html_e( 'Manual Actions', 'alynt-drime-backups-uploader' ); ?></h2>
-		<div class="alynt-drime-wpvivid-actions">
+		<div class="alynt-drime-backups-actions">
 			<?php $this->render_action_button( 'alynt_drime_backups_test_connection', __( 'Test Drime Connection', 'alynt-drime-backups-uploader' ) ); ?>
 			<?php $this->render_action_button( 'alynt_drime_backups_send_test_failure_email', __( 'Send Test Email', 'alynt-drime-backups-uploader' ) ); ?>
 			<?php $this->render_action_button( 'alynt_drime_backups_scan_now', __( 'Scan Backup Folder', 'alynt-drime-backups-uploader' ) ); ?>
@@ -46,7 +46,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 	private function render_status_summary( array $queue, array $uploaded, array $failed ) {
 		?>
 		<h2><?php esc_html_e( 'Status', 'alynt-drime-backups-uploader' ); ?></h2>
-		<div class="alynt-drime-wpvivid-status-grid">
+		<div class="alynt-drime-backups-status-grid">
 			<?php $this->render_status_box( __( 'Queued', 'alynt-drime-backups-uploader' ), count( $queue ) ); ?>
 			<?php $this->render_status_box( __( 'Uploaded', 'alynt-drime-backups-uploader' ), count( $uploaded ) ); ?>
 			<?php $this->render_status_box( __( 'Failed', 'alynt-drime-backups-uploader' ), count( $failed ) ); ?>
@@ -63,7 +63,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 	private function render_health_summary( array $health ) {
 		?>
 		<h3><?php esc_html_e( 'Server Runner Status', 'alynt-drime-backups-uploader' ); ?></h3>
-		<table class="widefat striped alynt-drime-wpvivid-health-summary">
+		<table class="widefat striped alynt-drime-backups-health-summary">
 			<caption class="screen-reader-text"><?php esc_html_e( 'Server runner and uploader health summary', 'alynt-drime-backups-uploader' ); ?></caption>
 			<tbody>
 				<tr><th scope="row"><?php esc_html_e( 'Health Schema', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( number_format_i18n( isset( $health['schema_version'] ) ? absint( $health['schema_version'] ) : 0 ) ); ?></td></tr>
@@ -78,7 +78,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 			</tbody>
 		</table>
 		<?php if ( ! empty( $health['warnings'] ) && is_array( $health['warnings'] ) ) : ?>
-			<ul class="alynt-drime-wpvivid-health-warnings">
+			<ul class="alynt-drime-backups-health-warnings">
 				<?php foreach ( $health['warnings'] as $warning ) : ?>
 					<?php if ( is_array( $warning ) ) : ?>
 						<li><strong><?php echo esc_html( isset( $warning['code'] ) ? (string) $warning['code'] : '' ); ?></strong>: <?php echo esc_html( isset( $warning['message'] ) ? (string) $warning['message'] : '' ); ?></li>
@@ -102,7 +102,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 
 		?>
 		<h3><?php esc_html_e( 'Active Upload', 'alynt-drime-backups-uploader' ); ?></h3>
-		<table class="widefat striped alynt-drime-wpvivid-active-upload">
+		<table class="widefat striped alynt-drime-backups-active-upload">
 			<caption class="screen-reader-text"><?php esc_html_e( 'Active upload details', 'alynt-drime-backups-uploader' ); ?></caption>
 			<tbody>
 				<tr><th scope="row"><?php esc_html_e( 'File', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( isset( $active['remote_name'] ) ? basename( (string) $active['remote_name'] ) : '' ); ?></td></tr>
@@ -111,7 +111,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 				<tr><th scope="row"><?php esc_html_e( 'Updated', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( ! empty( $active['updated_at'] ) ? wp_date( 'Y-m-d H:i:s', absint( $active['updated_at'] ) ) : '' ); ?></td></tr>
 			</tbody>
 		</table>
-		<div class="alynt-drime-wpvivid-active-actions">
+		<div class="alynt-drime-backups-active-actions">
 			<?php $this->render_action_button( 'alynt_drime_backups_clear_active_upload', __( 'Clear Active Upload', 'alynt-drime-backups-uploader' ), __( 'Clear active upload state? The current multipart upload may need to restart.', 'alynt-drime-backups-uploader' ) ); ?>
 		</div>
 		<?php
@@ -127,7 +127,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 	private function render_remote_retention_status( array $settings, array $candidates ) {
 		?>
 		<h3><?php esc_html_e( 'Remote Retention', 'alynt-drime-backups-uploader' ); ?></h3>
-		<table class="widefat striped alynt-drime-wpvivid-retention">
+		<table class="widefat striped alynt-drime-backups-retention">
 				<caption class="screen-reader-text"><?php esc_html_e( 'Remote retention summary', 'alynt-drime-backups-uploader' ); ?></caption>
 			<tbody>
 				<tr><th scope="row"><?php esc_html_e( 'Enabled', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo ! empty( $settings['remote_retention_enabled'] ) ? esc_html__( 'Yes', 'alynt-drime-backups-uploader' ) : esc_html__( 'No', 'alynt-drime-backups-uploader' ); ?></td></tr>
@@ -139,7 +139,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 			</tbody>
 		</table>
 		<?php if ( ! empty( $candidates ) ) : ?>
-			<table class="widefat striped alynt-drime-wpvivid-retention-candidates">
+			<table class="widefat striped alynt-drime-backups-retention-candidates">
 				<caption class="screen-reader-text"><?php esc_html_e( 'Remote retention candidates', 'alynt-drime-backups-uploader' ); ?></caption>
 				<thead>
 					<tr>
@@ -172,11 +172,11 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 	private function render_diagnostics_panel( array $settings, array $diagnostics ) {
 		?>
 		<h3><?php esc_html_e( 'Diagnostics', 'alynt-drime-backups-uploader' ); ?></h3>
-		<div class="alynt-drime-wpvivid-diagnostics-actions">
+		<div class="alynt-drime-backups-diagnostics-actions">
 			<?php $this->render_action_button( 'alynt_drime_backups_export_diagnostics', __( 'Export Diagnostics', 'alynt-drime-backups-uploader' ) ); ?>
 			<?php $this->render_action_button( 'alynt_drime_backups_clear_diagnostics', __( 'Clear Diagnostics', 'alynt-drime-backups-uploader' ), true ); ?>
 		</div>
-		<table class="widefat striped alynt-drime-wpvivid-health">
+		<table class="widefat striped alynt-drime-backups-health">
 			<caption class="screen-reader-text"><?php esc_html_e( 'Diagnostics health summary', 'alynt-drime-backups-uploader' ); ?></caption>
 			<tbody>
 				<tr><th scope="row"><?php esc_html_e( 'Plugin Version', 'alynt-drime-backups-uploader' ); ?></th><td><?php echo esc_html( ALYNT_DRIME_BACKUPS_UPLOADER_VERSION ); ?></td></tr>
@@ -207,7 +207,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 			$this->format_utc_time( time() )
 		);
 		?>
-		<p class="alynt-drime-wpvivid-time-reference"><?php echo esc_html( $current_utc_time_reference ); ?></p>
+		<p class="alynt-drime-backups-time-reference"><?php echo esc_html( $current_utc_time_reference ); ?></p>
 		<?php
 		if ( empty( $events ) ) {
 			$this->render_empty_events();
@@ -224,7 +224,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 	 */
 	private function render_empty_events() {
 		?>
-		<div class="alynt-drime-wpvivid-empty">
+		<div class="alynt-drime-backups-empty">
 			<h4><?php esc_html_e( 'No events yet', 'alynt-drime-backups-uploader' ); ?></h4>
 			<p><?php esc_html_e( 'Scans, uploads, and connection checks will appear here.', 'alynt-drime-backups-uploader' ); ?></p>
 		</div>
@@ -319,7 +319,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Status {
 	 */
 	private function render_status_box( $label, $count ) {
 		?>
-		<div class="alynt-drime-wpvivid-status-box">
+		<div class="alynt-drime-backups-status-box">
 			<strong><?php echo esc_html( number_format_i18n( $count ) ); ?></strong>
 			<span><?php echo esc_html( $label ); ?></span>
 		</div>

@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.1.1
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -104,16 +104,7 @@ No public custom actions or filters are exposed.
 
 == Changelog ==
 
-= 0.1.1 =
-* Initial Alynt Drime Backups Uploader plugin line with Drime settings, queue/registry storage, WPvivid source support, generic server-outbox support, direct and multipart uploads, duplicate handling, retry limits, diagnostics, uninstall cleanup, and build/test tooling.
-* Added producer-adapter documentation for future backup-source support.
-* Added a health warning for old WPvivid-specific uploader coexistence during migration.
-* Added package-security documentation for server-runner package integrity and restore staging boundaries.
-* Added logical backup consistency documentation and server-runner manifest timing fields.
-* Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
-* Added CLI-only server-runner fetch support for known Drime packages and sidecars.
-* Added generic-outbox sidecar uploads for server-runner manifest and checksum files.
-* Added WP-CLI scan, upload, run, status, failed-upload, diagnostics, and restore-support commands for server-driven workflows.
+= 0.2.0 =
 * Added Drime workspace destination guardrails so workspace ID 0 is blocked and optional wp-config.php allowlisting can restrict selectable backup workspaces.
 * Added server-runner light consistency metadata for database/archive timing, archive warning counts, and clean versus file-changes-detected status.
 * Added server-cron review commands that build and diff a proposed crontab file without installing it automatically.
@@ -125,9 +116,23 @@ No public custom actions or filters are exposed.
 * Added read-only server-runner restore dry-run checks for staged restore evidence, staging-only config gates, target path safety, and scope-specific staged files.
 * Added optional server-runner restore dry-run evidence reports with `--write-report=1` and configured `restore_reports_path`.
 * Added server-runner pre-restore backup evidence checks for a matching evidence JSON file and readable database/file backup artifacts.
+* Added staging-only `restore-apply` support for database, files, and combined files-and-database restores behind explicit confirmation and pre-restore evidence gates.
+* Added restore apply reports for missing symlinked drop-ins and known post-restore manual-review items such as Query Monitor's `wp-content/db.php`.
+* Changed generated server-runner configs to use light consistency mode by default.
+* Changed admin JavaScript and CSS internals to use the new `alynt-drime-backups` namespace instead of the old WPvivid-specific namespace.
+
+= 0.1.1 =
+* Initial Alynt Drime Backups Uploader plugin line with Drime settings, queue/registry storage, WPvivid source support, generic server-outbox support, direct and multipart uploads, duplicate handling, retry limits, diagnostics, uninstall cleanup, and build/test tooling.
+* Added producer-adapter documentation for future backup-source support.
+* Added a health warning for old WPvivid-specific uploader coexistence during migration.
+* Added package-security documentation for server-runner package integrity and restore staging boundaries.
+* Added logical backup consistency documentation and server-runner manifest timing fields.
+* Added remote restore discovery notes for WordPress-unavailable disaster scenarios.
+* Added CLI-only server-runner fetch support for known Drime packages and sidecars.
+* Added generic-outbox sidecar uploads for server-runner manifest and checksum files.
+* Added WP-CLI scan, upload, run, status, failed-upload, diagnostics, and restore-support commands for server-driven workflows.
 * Changed server-runner archives to exclude symlink entries before restore staging.
 * Changed server-runner archive creation to recover from live file-change warnings only when a non-empty archive was produced.
-* Changed generated server-runner configs to use light consistency mode by default.
 * Changed the build script to regenerate the served admin JavaScript and CSS assets that WordPress enqueues.
 * Fixed the Server Runner Status admin table width so it matches the other status panels.
 * Clarified uninstall scope for plugin-owned WordPress state versus operator-managed local backup files.
@@ -136,6 +141,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.2.0 =
+No breaking changes. Adds staging-only restore apply commands, stronger restore evidence gates, server-runner package discovery sidecars, operator-approved local cleanup, workspace guardrails, and server-cron review guidance.
 
 = 0.1.1 =
 No breaking changes. Includes server-runner hardening, admin UI polish, release validation, and documentation sync updates.

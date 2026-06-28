@@ -1,7 +1,7 @@
 (function () {
 	'use strict';
 
-	const config = window.alyntDrimeWPvivid || {};
+	const config = window.alyntDrimeBackups || {};
 	const i18n = config.i18n || {};
 
 	function text(key) {

@@ -29,7 +29,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Failed_Uploads {
 
 		?>
 		<h3><?php esc_html_e( 'Failed Uploads', 'alynt-drime-backups-uploader' ); ?></h3>
-		<table class="widefat striped alynt-drime-wpvivid-failed-uploads">
+		<table class="widefat striped alynt-drime-backups-failed-uploads">
 			<caption class="screen-reader-text"><?php esc_html_e( 'Failed upload details', 'alynt-drime-backups-uploader' ); ?></caption>
 			<thead>
 				<tr>

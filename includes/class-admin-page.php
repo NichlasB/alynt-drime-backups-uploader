@@ -99,7 +99,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 
 		wp_localize_script(
 			'alynt-drime-backups-uploader-admin',
-			'alyntDrimeWPvivid',
+			'alyntDrimeBackups',
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'alynt_drime_backups_folder_browser' ),
@@ -158,7 +158,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 		$notice = isset( $_GET['alynt_notice'] ) ? sanitize_key( wp_unslash( $_GET['alynt_notice'] ) ) : '';
 
 		?>
-		<div class="wrap alynt-drime-wpvivid">
+		<div class="wrap alynt-drime-backups">
 			<h1><?php esc_html_e( 'Drime Backups Uploader', 'alynt-drime-backups-uploader' ); ?></h1>
 			<?php $this->render_notice( $notice ); ?>
 			<?php $this->render_cron_health_notice( $settings, $cron_health ); ?>

@@ -50,6 +50,23 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] 12 Documentation Review.
 - [x] 13 Security Audit.
 
+### Final 2026-06-28 Pre-Release Refresh
+
+- [x] 00 Plugin Model Assessment completed; result: Large/High enough for careful review, no Extra High model requirement justified. Temporary assessment notes were written to `pre-release-model-recommendations.tmp.txt` and should not be included in the release commit.
+- [x] 01 Code Cleanup Review refreshed; no runtime debug/TODO debris found. Build-helper console output is intentional.
+- [x] 02 File Structure Review refreshed; oversized files are known architecture-sensitive files, especially the portable server runner, and no safe pre-release split is needed.
+- [x] 03 Error Handling Review refreshed for admin actions, upload flow, and restore runner reporting.
+- [x] 04 WP Best Practices Review refreshed; capability and nonce gates remain in place for admin and AJAX actions.
+- [x] 05 Database Review refreshed; no custom tables are used and uninstall coverage still matches plugin-owned options/cron hooks.
+- [x] 06 Performance Review refreshed; no new performance blocker found in the final pre-release pass.
+- [x] 07 Edge Cases Review refreshed; restore apply remains gated by dry-run evidence, staging-only config, report paths, and explicit confirmation.
+- [x] 08 Uninstall Review refreshed; uninstall deletes plugin-owned options and clears scan/upload cron hooks while preserving backup files/artifacts.
+- [x] 09 I18N Review refreshed; POT regenerated with WP-CLI 2.12.0 phar. WP-CLI emitted PHP 8.5 deprecation warnings from its own dependencies, but generation succeeded.
+- [x] 10 Accessibility Review refreshed; admin tables retain captions/scope attributes and async workspace/folder controls retain busy/status semantics.
+- [x] 11 Code Quality Review refreshed; old internal UI namespace remnants from the previous WPvivid-specific plugin line were renamed to `alynt-drime-backups` / `alyntDrimeBackups` and rebuilt.
+- [x] 12 Documentation Review refreshed; implementation plan now distinguishes released stable `v0.1.1` from the current unreleased release-candidate scope and current restore behavior.
+- [x] 13 Security Audit refreshed; restore apply remains staging-only, requires pre-restore evidence, validates staged reports/paths, rejects broad target paths, and writes apply reports. Composer audit is blocked locally because neither global Composer nor `composer.phar` is available.
+
 ## Release Validation
 
 - [x] PHP syntax sweep passed.
@@ -57,6 +74,13 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] PHPCS passed: 53 files.
 - [x] npm build passed.
 - [x] npm audit passed when run during the release validation flow.
+- [x] Final 2026-06-28 PHP syntax sweep passed for 86 PHP files.
+- [x] Final 2026-06-28 PHPUnit passed: 155 tests, 1043 assertions, 1 expected Windows symlink skip.
+- [x] Final 2026-06-28 PHPCS passed across 53 files.
+- [x] Final 2026-06-28 npm build passed after admin namespace cleanup.
+- [x] Final 2026-06-28 npm audit passed with 0 vulnerabilities.
+- [ ] Composer audit not run in this environment: global `composer` is unavailable and repo-local `composer.phar` is absent. Production dependency risk is limited because `composer.json` has no runtime packages beyond PHP itself; dev dependency audit should be run on a machine with Composer before final release if required.
+- [x] Final 2026-06-28 `git diff --check` passed with line-ending normalization warnings only for `PRE_RELEASE_CHECKLIST.md`, `docs/IMPLEMENTATION_PLAN.md`, `languages/alynt-drime-backups-uploader.pot`, `package-lock.json`, `package.json`, and `readme.txt`.
 - [x] Distribution zip audit passed for `alynt-drime-backups-uploader-v0.1.0.zip`.
 - [x] GitHub release asset was published and install-tested.
 - [x] Alynt Plugin Updater detected and installed the GitHub release asset.
@@ -68,22 +92,22 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 
 - [x] LocalWP target confirmed: `plugin-tester.local`, path `C:\Users\Captain\Local Sites\plugin-tester\app\public`.
 - [x] Novamira MCP available for `plugin-tester.local`.
-- [x] LocalWP admin page rendered with expected controls and no blocking browser errors.
-- [x] LocalWP no-op settings save preserved configured paths/settings.
-- [x] LocalWP generic outbox scan queued exactly one stable backup package.
-- [x] LocalWP missing-token upload failed safely, left active upload empty, retained retryable queue state, and recorded failed state.
-- [x] LocalWP temporary E2E artifacts and plugin state were restored after the pass.
+- [x] LocalWP runtime copy was refreshed from the source tree for the final E2E pass.
+- [x] LocalWP admin page rendered with expected controls, rebuilt admin assets, `alyntDrimeBackups` namespace, no stale `alyntDrimeWPvivid` namespace, and no blocking browser errors.
+- [x] LocalWP admin status-table width check passed: `Server Runner Status`, `Scan State`, `Remote Retention`, and `Diagnostics` all measured `760px` wide in Playwright.
+- [x] LocalWP generic outbox scan queued exactly one stable backup package from the E2E outbox.
+- [x] LocalWP missing-token/workspace guardrail upload failed safely with `alynt_drime_workspace_not_allowed`, left active upload empty, and recorded failed state.
+- [x] LocalWP temporary E2E artifacts, settings snapshot, queue, failed state, and active upload state were restored after the pass.
 - [x] GridPane staging target confirmed: `sites-main`, `alyntdrime.sitesmain.com`, WordPress path `/var/www/alyntdrime.sitesmain.com/htdocs`.
-- [x] Staging runner health passed before package creation.
-- [x] Staging old approved restore/download artifacts were removed before the write-heavy pass.
-- [x] Staging runner created and verified `alyntdrime-sitesmain-com-20260626-165727.tar.gz` with manifest and SHA-256 sidecars.
+- [x] Staging plugin and runner runtime files were refreshed from the source tree for the final E2E pass.
+- [x] Staging runner health passed before package creation with correct command ordering: `health --config=...`.
+- [x] Staging runner created and verified `alyntdrime-sitesmain-com-20260628-145312.tar.gz` with manifest, SHA-256, remote-index, and remote-catalog sidecars.
 - [x] Staging plugin scan queued the fresh server-runner package after minimum-age was temporarily lowered and then restored to `900`.
-- [x] Staging upload retry completed successfully; final status showed queue `0`, failed `0`, uploaded `5`, and no active upload.
-- [x] Staging uploaded registry recorded Drime file entry `765316863`, parent folder `764729789`, and two sidecars for the fresh package.
+- [x] Staging upload retry completed successfully after one transient Drime API error; final status showed queue `0`, failed `0`, uploaded `7`, and no active upload.
+- [x] Staging uploaded registry recorded Drime file entry `766821258`, parent folder `764729789`, archive size `1802205159`, and all four sidecars for the fresh package.
 - [x] Staging diagnostics settings were restored to disabled plus `warning` threshold after the pass.
 - [x] Staging runner work directory was clean after the pass.
-- [x] Staging outbox cleanup completed after E2E: older `20260625-225948` and `20260626-094942` package sets were removed, newest verified `20260626-165727` package set was retained, outbox dropped from about `5.1G` to `1.7G`, and filesystem availability rose to about `13G`.
-- [x] LocalWP admin status-table width check passed after the UI polish: `Server Runner Status`, `Scan State`, `Remote Retention`, and `Diagnostics` all measured `760px` wide in Playwright after loading the rebuilt admin stylesheet.
+- [x] Staging final package set remains in the outbox for now: archive size about `1.7G`, outbox total about `3.4G`, and deletion remains an explicit operator-approved cleanup action.
 
 ## Open Items
 
