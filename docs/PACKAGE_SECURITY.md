@@ -98,9 +98,11 @@ By default, the command writes nothing. With `--write-report=1`, it writes only 
 
 ## Restore Apply Boundary
 
-`restore-apply --scope=database` is the first destructive-capable restore command. It is staging-only, requires `--confirm=restore-staging-site`, reruns the dry-run/evidence checks, and refuses to import if any preflight check fails. It imports only the staged `database.sql` through WP-CLI and writes a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
+`restore-apply` is destructive-capable and intentionally scope-limited. It is staging-only, requires `--confirm=restore-staging-site`, reruns the dry-run/evidence checks, and refuses to apply if any preflight check fails.
 
-This command does not restore files, delete files, run `rsync`, create pre-restore backups, contact Drime, or support production restore. `files` and `files-and-database` scopes are intentionally refused until separate implementation slices prove those paths.
+`restore-apply --scope=database` imports only the staged `database.sql` through WP-CLI. `restore-apply --scope=files` replaces only the configured staging WordPress path from staged `htdocs/`. Both write a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
+
+These commands do not create pre-restore backups, contact Drime, support production restore, or run combined files-and-database restore. `files-and-database` scope is intentionally refused until a separate implementation slice proves that path. Because runner archives exclude symlink entries, operators should inspect staged files and post-restore drop-ins carefully; symlinked drop-ins may need host/plugin regeneration after a file restore.
 
 ## Recommended Server Paths
 
@@ -152,4 +154,4 @@ Before production rollout of the server-runner producer:
 - Stage the restore into a non-public restore directory.
 - Inspect `htdocs/`, `database.sql`, `manifest.json`, and `RESTORE_NOTES.txt`.
 
-No automated production restore command should ship. The current destructive-capable path is limited to staging database import after explicit confirmation, dry-run checks, and pre-restore evidence validation. File restore, combined restore, automatic pre-restore backup creation, and production restore still need separate gated implementation and proof. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.
+No automated production restore command should ship. The current destructive-capable path is limited to staging database import or staging file replacement after explicit confirmation, dry-run checks, and pre-restore evidence validation. Combined restore, automatic pre-restore backup creation, and production restore still need separate gated implementation and proof. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.

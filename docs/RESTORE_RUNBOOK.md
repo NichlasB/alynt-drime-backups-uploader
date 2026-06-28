@@ -247,7 +247,7 @@ The dry run reads config and staged evidence only. It checks:
 - Pre-restore evidence exists, is valid JSON, matches package/scope/target, and points to readable backup artifacts under `restore_pre_backup_path`.
 - The target filesystem has the configured minimum free space.
 
-The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true only for `database` scope in this release. By default it writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under `restore_reports_path`; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
+The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true for `database` and `files` scopes in this release. By default it writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under `restore_reports_path`; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
 
 ## Staging Database Apply
 
@@ -265,14 +265,39 @@ php /path/to/alynt-backup-runner.php restore-apply \
 
 This command is intentionally narrow:
 
-- It only supports `--scope=database` in this release.
+- It only imports the database for `--scope=database`.
 - It refuses to run without the exact `--confirm=restore-staging-site` phrase.
 - It runs the existing dry-run/evidence checks before importing anything.
 - It imports only the staged `database.sql` through WP-CLI.
 - It writes a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
-- It does not restore files, combine files plus database, create a pre-restore backup, or support production restore.
+- It does not restore files in this scope, combine files plus database, create a pre-restore backup, or support production restore.
 
 Before running it, confirm that the pre-restore evidence points to a readable database export created before the restore attempt. If apply fails, stop and inspect the apply report plus the pre-restore evidence before attempting manual recovery.
+
+## Staging File Apply
+
+After staging, inspection, and a passing file-scope dry run, staging files can be replaced with the explicit confirmation phrase:
+
+```bash
+php /path/to/alynt-backup-runner.php restore-apply \
+  --config=/var/www/example.com/private/alynt-drime-backups/config.json \
+  --staged-path=/var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMSS \
+  --pre-restore-evidence=/var/www/example.com/private/alynt-drime-backups/pre-restore/PRE_RESTORE_BACKUP_EVIDENCE-example-com-YYYYmmdd-HHMMSS.json \
+  --scope=files \
+  --confirm=restore-staging-site \
+  --format=json
+```
+
+This command is also narrow:
+
+- It only replaces files for `--scope=files`.
+- It refuses to run without the exact `--confirm=restore-staging-site` phrase.
+- It runs the existing dry-run/evidence checks before replacing files.
+- It replaces the configured staging WordPress path from staged `htdocs/`.
+- It writes a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
+- It does not import the database in this scope, combine files plus database, create a pre-restore backup, or support production restore.
+
+Before running it, confirm that the pre-restore evidence points to a readable file backup created before the restore attempt. If apply fails, stop and inspect the apply report plus the pre-restore evidence before attempting manual recovery.
 
 ## Manual Disaster Restore Outline
 
@@ -288,7 +313,7 @@ This outline is not an automated production restore command. Use it only after a
 8. Run WordPress URL, permalink, cache, and login checks.
 9. Remove maintenance mode only after runtime checks pass.
 
-The plugin and runner should not perform steps 6 or 7 automatically until the destructive restore automation project has its own confirmation gates, dry-run output, pre-restore backup evidence, and staging evidence.
+The runner now supports staging-only, separately scoped database and file apply commands after confirmation gates, dry-run output, pre-restore backup evidence, and staging evidence. Production restore and combined files-and-database restore remain outside the automated scope.
 
 For the package integrity, extraction safety, storage-path, and encryption boundaries behind this runbook, see [PACKAGE_SECURITY.md](PACKAGE_SECURITY.md).
 

@@ -27,7 +27,7 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 		$this->assertSame( array(), $result['output'] );
 	}
 
-	public function test_restore_apply_rejects_file_scopes_for_now() {
+	public function test_restore_apply_rejects_combined_scope_for_now() {
 		$config = $this->write_config( $this->make_directory( 'outbox-scope' ) );
 
 		$result = $this->run_runner(
@@ -42,7 +42,7 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 		);
 
 		$this->assertSame( 1, $result['exit_code'] );
-		$this->assertStringContainsString( 'Only --scope=database is implemented for restore-apply in this release.', implode( "\n", $result['error'] ) );
+		$this->assertStringContainsString( 'Only --scope=database or --scope=files is implemented for restore-apply in this release.', implode( "\n", $result['error'] ) );
 		$this->assertSame( array(), $result['output'] );
 	}
 
@@ -53,7 +53,7 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 
 		$wp_cli_log = $this->root . DIRECTORY_SEPARATOR . 'wp-cli.log';
 		$wp_cli     = $this->create_fake_wp_cli( $wp_cli_log );
-		$fixture    = $this->create_database_restore_fixture( 'example-com-20260627-160000', $wp_cli );
+		$fixture    = $this->create_restore_fixture( 'example-com-20260627-160000', 'database', $wp_cli );
 
 		$result = $this->run_restore_apply_fixture( $fixture );
 
@@ -86,6 +86,44 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 		$this->assertFalse( $report['live_files_overwritten'] );
 	}
 
+	public function test_restore_apply_files_replaces_target_files_and_writes_report() {
+		if ( ! $this->tar_available() ) {
+			$this->markTestSkipped( 'The tar command is required for restore apply coverage.' );
+		}
+
+		$fixture = $this->create_restore_fixture( 'example-com-20260627-160500', 'files' );
+
+		$result = $this->run_restore_apply_fixture( $fixture, 'files' );
+
+		$this->assertSame( 0, $result['exit_code'], implode( "\n", $result['error'] ) );
+
+		$apply = json_decode( implode( "\n", $result['output'] ), true );
+		$this->assertSame( 'restore-apply', $apply['command'] );
+		$this->assertSame( 'succeeded', $apply['status'] );
+		$this->assertSame( 'files', $apply['scope'] );
+		$this->assertTrue( $apply['dry_run_checks_passed'] );
+		$this->assertFalse( $apply['database_import_attempted'] );
+		$this->assertFalse( $apply['database_imported'] );
+		$this->assertTrue( $apply['file_restore_attempted'] );
+		$this->assertTrue( $apply['file_restore_succeeded'] );
+		$this->assertTrue( $apply['live_files_overwritten'] );
+		$this->assertTrue( $apply['destructive_actions_performed'] );
+		$this->assertTrue( $apply['restore_apply_report_written'] );
+		$this->assertFileExists( $apply['restore_apply_report_path'] );
+
+		$this->assertFileExists( $fixture['wordpress_path'] . DIRECTORY_SEPARATOR . 'index.php' );
+		$this->assertSame( '<?php echo "ok";', file_get_contents( $fixture['wordpress_path'] . DIRECTORY_SEPARATOR . 'index.php' ) );
+		$this->assertFileExists( $fixture['wordpress_path'] . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'staged.txt' );
+		$this->assertFileDoesNotExist( $fixture['wordpress_path'] . DIRECTORY_SEPARATOR . 'old.php' );
+		$this->assertFileDoesNotExist( $fixture['wordpress_path'] . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'stale.txt' );
+
+		$report = json_decode( (string) file_get_contents( $apply['restore_apply_report_path'] ), true );
+		$this->assertSame( 'restore-apply', $report['command'] );
+		$this->assertSame( 'succeeded', $report['status'] );
+		$this->assertTrue( $report['file_restore_succeeded'] );
+		$this->assertTrue( $report['live_files_overwritten'] );
+	}
+
 	public function test_restore_apply_database_refuses_when_dry_run_fails() {
 		if ( ! $this->tar_available() ) {
 			$this->markTestSkipped( 'The tar command is required for restore apply coverage.' );
@@ -93,8 +131,9 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 
 		$wp_cli_log = $this->root . DIRECTORY_SEPARATOR . 'wp-cli-fail.log';
 		$wp_cli     = $this->create_fake_wp_cli( $wp_cli_log );
-		$fixture    = $this->create_database_restore_fixture(
+		$fixture    = $this->create_restore_fixture(
 			'example-com-20260627-161000',
+			'database',
 			$wp_cli,
 			array(
 				'restore_apply_enabled' => false,
@@ -115,14 +154,15 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 	}
 
 	/**
-	 * Creates a staged database restore fixture.
+	 * Creates a staged restore fixture.
 	 *
 	 * @param string              $package_id Package ID.
+	 * @param string              $scope Restore scope.
 	 * @param string              $wp_cli Fake WP-CLI path.
 	 * @param array<string,mixed> $overrides Config overrides.
-	 * @return array{config:string,staged_path:string,pre_restore_evidence_path:string}
+	 * @return array{config:string,staged_path:string,pre_restore_evidence_path:string,wordpress_path:string}
 	 */
-	private function create_database_restore_fixture( $package_id, $wp_cli, array $overrides = array() ) {
+	private function create_restore_fixture( $package_id, $scope, $wp_cli = 'wp', array $overrides = array() ) {
 		$outbox          = $this->make_directory( 'outbox-' . $package_id );
 		$wordpress_path  = $this->make_directory( 'target-' . $package_id );
 		$pre_backup_path = $this->make_directory( 'pre-restore-' . $package_id );
@@ -149,10 +189,15 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 		$source          = $this->make_directory( 'package-source-' . $package_id );
 
 		mkdir( $source . DIRECTORY_SEPARATOR . 'htdocs' );
+		mkdir( $source . DIRECTORY_SEPARATOR . 'htdocs' . DIRECTORY_SEPARATOR . 'wp-content' );
 		file_put_contents( $source . DIRECTORY_SEPARATOR . 'htdocs' . DIRECTORY_SEPARATOR . 'index.php', '<?php echo "ok";' );
+		file_put_contents( $source . DIRECTORY_SEPARATOR . 'htdocs' . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'staged.txt', 'staged file' );
 		file_put_contents( $source . DIRECTORY_SEPARATOR . 'database.sql', '-- staged db' );
 		file_put_contents( $source . DIRECTORY_SEPARATOR . 'manifest.json', '{}' );
 		$this->create_tar_archive( $archive, $source );
+		mkdir( $wordpress_path . DIRECTORY_SEPARATOR . 'wp-content' );
+		file_put_contents( $wordpress_path . DIRECTORY_SEPARATOR . 'old.php', 'old file' );
+		file_put_contents( $wordpress_path . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'stale.txt', 'stale file' );
 
 		$manifest = array(
 			'package_id'         => $package_id,
@@ -169,7 +214,9 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 		file_put_contents( $archive . '.sha256', hash_file( 'sha256', $archive ) . '  ' . basename( $archive ) );
 
 		$database_export_path = $pre_backup_path . DIRECTORY_SEPARATOR . 'current-database.sql';
+		$file_backup_path     = $pre_backup_path . DIRECTORY_SEPARATOR . 'current-files.tar.gz';
 		file_put_contents( $database_export_path, '-- current db' );
+		file_put_contents( $file_backup_path, 'current files' );
 		file_put_contents(
 			$evidence_path,
 			json_encode(
@@ -178,9 +225,10 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 					'evidence_type'         => 'pre_restore_backup',
 					'generated_at'          => '2026-06-27T16:05:00+00:00',
 					'package_id'            => $package_id,
-					'scope'                 => 'database',
+					'scope'                 => $scope,
 					'target_wordpress_path' => $wordpress_path,
 					'database_export_path'  => $database_export_path,
+					'file_backup_path'      => $file_backup_path,
 				)
 			)
 		);
@@ -192,16 +240,17 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 			'config'       => $config,
 			'staged_path'  => $this->root . DIRECTORY_SEPARATOR . 'restores' . DIRECTORY_SEPARATOR . $package_id,
 			'pre_restore_evidence_path' => $evidence_path,
+			'wordpress_path' => $wordpress_path,
 		);
 	}
 
-	private function run_restore_apply_fixture( array $fixture ) {
+	private function run_restore_apply_fixture( array $fixture, $scope = 'database' ) {
 		return $this->run_runner(
 			'restore-apply',
 			$fixture['config'],
 			array(
 				'--staged-path=' . escapeshellarg( $fixture['staged_path'] ),
-				'--scope=database',
+				'--scope=' . $scope,
 				'--pre-restore-evidence=' . escapeshellarg( $fixture['pre_restore_evidence_path'] ),
 				'--confirm=restore-staging-site',
 				'--format=json',

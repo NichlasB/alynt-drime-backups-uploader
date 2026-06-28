@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Added optional `restore-dry-run --write-report=1` evidence reports under the configured `restore_reports_path` so successful dry runs can leave machine-readable proof for later restore gates.
 - Added pre-restore backup evidence checks to `restore-dry-run`, requiring a matching evidence JSON file and readable database/file backup artifacts under the configured pre-restore backup path.
 - Added `server-runner restore-apply --scope=database` for staging-only, confirmation-gated database imports after restore dry-run and pre-restore evidence checks pass.
+- Added `server-runner restore-apply --scope=files` for staging-only, confirmation-gated file replacement after restore dry-run and pre-restore evidence checks pass.
 
 ### Changed
 

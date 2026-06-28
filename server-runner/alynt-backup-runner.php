@@ -1127,12 +1127,14 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
-		if ( 'database' !== $scope ) {
-			$this->error( 'Only --scope=database is implemented for restore-apply in this release.' );
+		if ( ! in_array( $scope, array( 'database', 'files' ), true ) ) {
+			$this->error( 'Only --scope=database or --scope=files is implemented for restore-apply in this release.' );
 			return 1;
 		}
 
-		$result = $this->restore_apply_database_result( $staged_path, $pre_backup_evidence_path );
+		$result = 'database' === $scope
+			? $this->restore_apply_database_result( $staged_path, $pre_backup_evidence_path )
+			: $this->restore_apply_files_result( $staged_path, $pre_backup_evidence_path );
 
 		if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
 			$this->line( json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
@@ -1222,6 +1224,88 @@ class Alynt_Server_Backup_Runner {
 		if ( ! $result['database_import_succeeded'] ) {
 			$result['failure_step']          = 'database-import';
 			$result['manual_recovery_notes'] = array( 'Review pre-restore backup evidence before attempting manual database recovery.' );
+		}
+
+		return $this->write_restore_apply_report( $result );
+	}
+
+	/**
+	 * Replaces target files from staged htdocs after dry-run gates pass.
+	 *
+	 * @param string $staged_path Staged restore path.
+	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
+	 * @return array<string,mixed>
+	 */
+	private function restore_apply_files_result( $staged_path, $pre_backup_evidence_path ) {
+		$scope   = 'files';
+		$dry_run = $this->restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path );
+		$result  = array(
+			'schema_version'                    => 1,
+			'generated_at'                      => gmdate( 'c' ),
+			'command'                           => 'restore-apply',
+			'status'                            => 'failed',
+			'scope'                             => $scope,
+			'package_id'                        => $dry_run['package_id'],
+			'staged_path'                       => $staged_path,
+			'target_wordpress_path'             => $dry_run['target_wordpress_path'],
+			'restore_environment'               => $dry_run['restore_environment'],
+			'confirmation_phrase_accepted'      => true,
+			'dry_run_checks_passed'             => 0 === (int) $dry_run['failure_count'],
+			'dry_run_failure_count'             => (int) $dry_run['failure_count'],
+			'dry_run_checks'                    => $dry_run['checks'],
+			'pre_restore_backup_path'           => $dry_run['pre_restore_backup_path'],
+			'pre_restore_evidence_path'         => $dry_run['pre_restore_evidence_path'],
+			'database_dump_path'                => '',
+			'database_import_attempted'         => false,
+			'database_import_succeeded'         => false,
+			'database_import_exit_code'         => null,
+			'database_import_output'            => array(),
+			'database_imported'                 => false,
+			'file_root_path'                    => '',
+			'file_restore_attempted'            => false,
+			'file_restore_succeeded'            => false,
+			'live_files_overwritten'            => false,
+			'destructive_actions_performed'     => false,
+			'pre_restore_backup_created'        => false,
+			'restore_apply_report_written'      => false,
+			'restore_apply_report_path'         => '',
+			'restore_apply_report_error'        => '',
+			'failure_step'                      => '',
+			'manual_recovery_notes'             => array(),
+		);
+
+		if ( ! $result['dry_run_checks_passed'] ) {
+			$result['failure_step']          = 'restore-dry-run';
+			$result['manual_recovery_notes'] = array( 'No file restore was attempted because restore dry-run checks failed.' );
+			return $this->write_restore_apply_report( $result );
+		}
+
+		$report_path = $this->restore_apply_report_path( (string) $result['package_id'] );
+		if ( '' === $report_path ) {
+			$result['failure_step']               = 'restore-apply-report-path';
+			$result['restore_apply_report_error'] = 'Restore apply reports path is missing, unsafe, or not writable.';
+			$result['manual_recovery_notes']      = array( 'No file restore was attempted because the restore apply report path was not ready.' );
+			return $result;
+		}
+		$result['restore_apply_report_path'] = $report_path;
+
+		$file_root_path = $this->restore_apply_file_root_path( $staged_path );
+		$result['file_root_path'] = $file_root_path;
+		if ( '' === $file_root_path || ! is_dir( $file_root_path ) || ! is_readable( $file_root_path ) ) {
+			$result['failure_step']          = 'staged-file-root';
+			$result['manual_recovery_notes'] = array( 'No file restore was attempted because the staged file root was not readable.' );
+			return $this->write_restore_apply_report( $result );
+		}
+
+		$result['file_restore_attempted']        = true;
+		$result['destructive_actions_performed'] = true;
+		$result['file_restore_succeeded']        = $this->replace_target_files_from_staging( $file_root_path, (string) $result['target_wordpress_path'] );
+		$result['live_files_overwritten']        = $result['file_restore_succeeded'];
+		$result['status']                        = $result['file_restore_succeeded'] ? 'succeeded' : 'failed';
+
+		if ( ! $result['file_restore_succeeded'] ) {
+			$result['failure_step']          = 'file-restore';
+			$result['manual_recovery_notes'] = array( 'Review pre-restore file backup evidence before attempting manual file recovery.' );
 		}
 
 		return $this->write_restore_apply_report( $result );
@@ -1390,7 +1474,7 @@ class Alynt_Server_Backup_Runner {
 			'database_imported'               => false,
 			'live_files_overwritten'          => false,
 			'pre_restore_backup_created'      => false,
-			'restore_apply_command_available' => 'database' === $scope,
+			'restore_apply_command_available' => in_array( $scope, array( 'database', 'files' ), true ),
 			'report_write_requested'          => false,
 			'report_written'                  => false,
 			'report_path'                     => '',
@@ -1628,6 +1712,128 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Returns the staged file root path for a restore apply.
+	 *
+	 * @param string $staged_path Staged restore path.
+	 * @return string
+	 */
+	private function restore_apply_file_root_path( $staged_path ) {
+		$report    = $this->read_restore_report( $staged_path . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json' );
+		$file_root = isset( $report['file_root'] ) ? (string) $report['file_root'] : '';
+
+		if ( ! $this->restore_report_relative_name_is_safe( $file_root ) ) {
+			return '';
+		}
+
+		return $staged_path . DIRECTORY_SEPARATOR . $file_root;
+	}
+
+	/**
+	 * Replaces the configured WordPress target files from staged files.
+	 *
+	 * @param string $source_path Staged file root.
+	 * @param string $target_path Target WordPress path.
+	 * @return bool
+	 */
+	private function replace_target_files_from_staging( $source_path, $target_path ) {
+		$target_path = $this->normalize_path( $target_path );
+
+		if ( '' === $source_path || '' === $target_path || $target_path !== $this->wordpress_path() || $this->dangerous_restore_target_path( $target_path ) ) {
+			return false;
+		}
+
+		if ( ! is_dir( $source_path ) || ! is_readable( $source_path ) || ! $this->directory_has_entries( $source_path ) || ! is_dir( $target_path ) || ! is_writable( $target_path ) ) {
+			return false;
+		}
+
+		return $this->remove_restore_target_contents( $target_path ) && $this->copy_restore_directory_contents( $source_path, $target_path );
+	}
+
+	/**
+	 * Returns whether a directory has at least one child.
+	 *
+	 * @param string $path Directory path.
+	 * @return bool
+	 */
+	private function directory_has_entries( $path ) {
+		if ( ! is_dir( $path ) ) {
+			return false;
+		}
+
+		$iterator = new FilesystemIterator( $path, FilesystemIterator::SKIP_DOTS );
+
+		return $iterator->valid();
+	}
+
+	/**
+	 * Removes target directory contents for a file restore.
+	 *
+	 * @param string $target_path Target WordPress path.
+	 * @return bool
+	 */
+	private function remove_restore_target_contents( $target_path ) {
+		if ( '' === $target_path || $this->dangerous_restore_target_path( $target_path ) || $target_path !== $this->wordpress_path() || ! is_dir( $target_path ) ) {
+			return false;
+		}
+
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $target_path, FilesystemIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ( $iterator as $item ) {
+			if ( $item->isLink() || $item->isFile() ) {
+				if ( ! unlink( $item->getPathname() ) ) {
+					return false;
+				}
+				continue;
+			}
+
+			if ( $item->isDir() && ! rmdir( $item->getPathname() ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Copies staged directory contents into a target directory.
+	 *
+	 * @param string $source_path Source directory.
+	 * @param string $target_path Target directory.
+	 * @return bool
+	 */
+	private function copy_restore_directory_contents( $source_path, $target_path ) {
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $source_path, FilesystemIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::SELF_FIRST
+		);
+
+		foreach ( $iterator as $item ) {
+			if ( $item->isLink() ) {
+				return false;
+			}
+
+			$relative_path = substr( $item->getPathname(), strlen( $source_path ) + 1 );
+			$target_item   = $target_path . DIRECTORY_SEPARATOR . $relative_path;
+
+			if ( $item->isDir() ) {
+				if ( ! is_dir( $target_item ) && ! mkdir( $target_item, 0755, true ) ) {
+					return false;
+				}
+				continue;
+			}
+
+			if ( ! copy( $item->getPathname(), $target_item ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Adds a restore dry-run check record.
 	 *
 	 * @param array<int,array<string,mixed>> $checks Checks.
@@ -1825,7 +2031,9 @@ class Alynt_Server_Backup_Runner {
 		$this->line( 'Dry-run checks passed: ' . ( ! empty( $result['dry_run_checks_passed'] ) ? 'yes' : 'no' ) );
 		$this->line( 'Database import attempted: ' . ( ! empty( $result['database_import_attempted'] ) ? 'yes' : 'no' ) );
 		$this->line( 'Database import succeeded: ' . ( ! empty( $result['database_import_succeeded'] ) ? 'yes' : 'no' ) );
-		$this->line( 'Live files overwritten: no' );
+		$this->line( 'File restore attempted: ' . ( ! empty( $result['file_restore_attempted'] ) ? 'yes' : 'no' ) );
+		$this->line( 'File restore succeeded: ' . ( ! empty( $result['file_restore_succeeded'] ) ? 'yes' : 'no' ) );
+		$this->line( 'Live files overwritten: ' . ( ! empty( $result['live_files_overwritten'] ) ? 'yes' : 'no' ) );
 		if ( ! empty( $result['restore_apply_report_path'] ) ) {
 			$this->line( 'Report path: ' . $result['restore_apply_report_path'] );
 			$this->line( 'Report written: ' . ( ! empty( $result['restore_apply_report_written'] ) ? 'yes' : 'no' ) );
@@ -1838,9 +2046,9 @@ class Alynt_Server_Backup_Runner {
 		}
 		$this->line( '' );
 		$this->line( 'Safety boundary:' );
-		$this->line( '- This command can import the staging database only.' );
-		$this->line( '- No live WordPress files were overwritten.' );
-		$this->line( '- File restore still requires a separate implementation slice.' );
+		$this->line( '- This command is staging-only and requires pre-restore evidence.' );
+		$this->line( '- Database and file restore scopes run separately.' );
+		$this->line( '- Combined files-and-database restore still requires a separate implementation slice.' );
 	}
 
 	/**

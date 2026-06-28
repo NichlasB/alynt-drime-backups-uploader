@@ -74,7 +74,7 @@ Recommended first implementation path:
 2. Add report generation. Current source status: implemented as optional `--write-report=1` success evidence under configured `restore_reports_path`.
 3. Add pre-restore backup evidence checks. Current source status: implemented as validation of a matching evidence JSON file and readable backup artifacts.
 4. Add `restore-apply --scope=database`. Current source status: implemented for staging database imports after confirmation, dry-run checks, and pre-restore evidence validation.
-5. Add `restore-apply --scope=files`.
+5. Add `restore-apply --scope=files`. Current source status: implemented for staging file replacement after confirmation, dry-run checks, and pre-restore evidence validation.
 6. Combine as `restore-apply --scope=files-and-database`.
 
 ## Required Config Additions
@@ -254,7 +254,7 @@ Current `restore-dry-run` behavior:
 - Refuses to write success evidence when the dry run fails.
 - Requires pre-restore backup evidence to match package ID, scope, and target path.
 - Requires scope-specific backup artifact files to be readable and under `restore_pre_backup_path`.
-- Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true only for `database` scope in the current partial implementation.
+- Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true for `database` and `files` scopes in the current partial implementation.
 - Does not create pre-restore backups yet.
 - Does not check target database connectivity yet.
 - Does not import the database itself.
@@ -262,14 +262,29 @@ Current `restore-dry-run` behavior:
 Current `restore-apply --scope=database` behavior:
 
 - Requires `--confirm=restore-staging-site`.
-- Refuses `files` and `files-and-database` scopes.
 - Runs the existing dry-run/evidence checks with `database` scope.
 - Refuses to import when any dry-run check fails.
 - Imports staged `database.sql` with WP-CLI against the configured target WordPress path.
 - Writes `RESTORE_APPLY_REPORT-*.json` under configured `restore_reports_path`.
 - Reports database import attempt/success, dry-run checks, report path, failure step, and manual recovery notes.
 - Does not create the pre-restore backup evidence automatically yet.
-- Does not restore files yet.
+
+Current `restore-apply --scope=files` behavior:
+
+- Requires `--confirm=restore-staging-site`.
+- Runs the existing dry-run/evidence checks with `files` scope.
+- Refuses to replace files when any dry-run check fails.
+- Replaces the configured staging WordPress path from staged `htdocs/`.
+- Writes `RESTORE_APPLY_REPORT-*.json` under configured `restore_reports_path`.
+- Reports file restore attempt/success, dry-run checks, report path, failure step, and manual recovery notes.
+- Does not create the pre-restore backup evidence automatically yet.
+- Does not import the database in this scope.
+
+Current combined-scope boundary:
+
+- `restore-apply --scope=files-and-database` is still refused.
+- Combined restore remains a separate implementation slice.
+- Because runner archives exclude symlink entries, file restore may not recreate symlinked drop-ins such as Query Monitor's `wp-content/db.php`; this must be inspected during staging rehearsal and may require host/plugin regeneration.
 
 Staging rehearsal status:
 
@@ -280,6 +295,7 @@ Staging rehearsal status:
 - `restore-dry-run --scope=database --write-report=1` passed with `failure_count: 0`.
 - `restore-apply --scope=database --confirm=restore-staging-site` succeeded, imported the staged `database.sql`, and wrote `RESTORE_APPLY_REPORT-alyntdrime-sitesmain-com-20260628-081212-20260628-081847.json`.
 - Post-apply verification passed: WP-CLI returned the expected `home` and `siteurl`, WordPress core version `7.0`, `wp db check` succeeded, and HTTPS returned `200`.
+- Large rehearsal artifacts were cleaned up after the pass: the fresh `20260628-081212` outbox package set, staged restore directory, and temporary `/tmp` copies were removed. The small dry-run/apply reports and pre-restore database evidence were retained.
 
 Current dry-run report fields:
 

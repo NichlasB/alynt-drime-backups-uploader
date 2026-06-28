@@ -50,9 +50,9 @@ The runner verifies the package checksum and manifest sidecar, prints next-step 
 
 Yes. The runner supports `restore-dry-run --staged-path=/path/to/staged/package --scope=files-and-database --format=json`. It reads config, staged restore evidence, and pre-restore backup evidence, then reports whether staging-only restore gates, target path safety, pre-restore backup artifacts, and required staged files are present. Add `--write-report=1` to write a successful dry-run evidence report under configured `restore_reports_path`. It does not import databases, overwrite files, or create backups.
 
-= Can the server runner apply a staged database restore? =
+= Can the server runner apply a staged restore? =
 
-Yes, for staging database restores only. `restore-apply --scope=database --confirm=restore-staging-site` first runs the existing dry-run/evidence checks, then imports the staged `database.sql` with WP-CLI and writes a restore apply report. File restore, combined files-and-database restore, pre-restore backup creation, and production restore are not included yet.
+Yes, for staging database or file restores only. `restore-apply --scope=database --confirm=restore-staging-site` first runs the existing dry-run/evidence checks, then imports the staged `database.sql` with WP-CLI and writes a restore apply report. `restore-apply --scope=files --confirm=restore-staging-site` first runs the file-scope dry-run/evidence checks, then replaces the staging target files from staged `htdocs/` and writes a restore apply report. Combined files-and-database restore, pre-restore backup creation, and production restore are not included yet.
 
 = Can I list local server-runner packages before choosing one to restore? =
 
@@ -68,7 +68,7 @@ No. The server runner creates a logical WordPress backup from a WP-CLI database 
 
 = Can I restore if the original WordPress site is unavailable? =
 
-The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies, inspects, prints review guidance, and stages locally. Staging-only database apply is available through the gated CLI command. wp-admin restore, live file overwrite, combined restore, production restore, and a mutable singleton remote catalog are not included.
+The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies, inspects, prints review guidance, and stages locally. Staging-only database and file apply are available through gated CLI commands. wp-admin restore, combined restore, production restore, and a mutable singleton remote catalog are not included.
 
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
