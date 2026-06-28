@@ -95,6 +95,10 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( ' db import ', $source );
 		$this->assertStringContainsString( 'restore_apply_files_result', $source );
 		$this->assertStringContainsString( 'replace_target_files_from_staging', $source );
+		$this->assertStringContainsString( 'restore_apply_missing_symlink_warnings', $source );
+		$this->assertStringContainsString( 'parse_tar_symlink_entry', $source );
+		$this->assertStringContainsString( "'file_restore_manual_review_required'", $source );
+		$this->assertStringContainsString( 'Pre-restore file backup includes symlink entries', $source );
 		$this->assertStringContainsString( 'remove_restore_target_contents', $source );
 		$this->assertStringContainsString( 'copy_restore_directory_contents', $source );
 		$this->assertStringContainsString( '$target_path !== $this->wordpress_path()', $source );

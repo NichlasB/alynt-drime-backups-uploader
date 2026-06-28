@@ -102,7 +102,7 @@ By default, the command writes nothing. With `--write-report=1`, it writes only 
 
 `restore-apply --scope=database` imports only the staged `database.sql` through WP-CLI. `restore-apply --scope=files` replaces only the configured staging WordPress path from staged `htdocs/`. Both write a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
 
-These commands do not create pre-restore backups, contact Drime, support production restore, or run combined files-and-database restore. `files-and-database` scope is intentionally refused until a separate implementation slice proves that path. Because runner archives exclude symlink entries, operators should inspect staged files and post-restore drop-ins carefully; symlinked drop-ins may need host/plugin regeneration after a file restore.
+These commands do not create pre-restore backups, contact Drime, support production restore, or run combined files-and-database restore. `files-and-database` scope is intentionally refused until a separate implementation slice proves that path. Because runner archives exclude symlink entries, file apply inspects the pre-restore file backup for symlinked drop-ins that are absent from the staged files and reports them in `file_restore_missing_symlink_count`, `file_restore_missing_symlink_samples`, and `file_restore_manual_review_required`. Operators should inspect post-restore drop-ins carefully; symlinked drop-ins may need host/plugin regeneration after a file restore.
 
 ## Recommended Server Paths
 

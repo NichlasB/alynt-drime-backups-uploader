@@ -2,7 +2,7 @@
 
 This runbook covers the first restore workflow for Alynt Drime Backups Uploader server-runner packages.
 
-The current restore support is intentionally non-destructive. The runner can fetch a known package from Drime, verify it, and stage it for inspection, but it does not import the database or overwrite live WordPress files.
+The restore support is intentionally gated. The runner can fetch a known package from Drime, verify it, stage it for inspection, run read-only dry-run checks, and apply database-only or files-only restores to a staging target after explicit confirmation and pre-restore evidence checks.
 
 The runner prints next-step guidance after successful `fetch`, `verify`, `inspect`, and `stage-restore` commands. Treat that output as an operator checklist, not as approval to perform a live restore.
 
@@ -22,8 +22,7 @@ Supported now:
 
 Not supported yet:
 
-- Importing `database.sql` into WordPress.
-- Replacing the live `htdocs` directory.
+- Combined files-and-database apply in one command.
 - Running an automated production restore command.
 
 Any production restore must remain a manual, explicitly approved operation until a separate destructive restore workflow is designed and tested. The future destructive restore automation plan is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md).
@@ -295,9 +294,10 @@ This command is also narrow:
 - It runs the existing dry-run/evidence checks before replacing files.
 - It replaces the configured staging WordPress path from staged `htdocs/`.
 - It writes a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
+- It reports pre-restore symlinked drop-ins that are absent from the staged files as `file_restore_missing_symlink_count`, `file_restore_missing_symlink_samples`, and `file_restore_manual_review_required`.
 - It does not import the database in this scope, combine files plus database, create a pre-restore backup, or support production restore.
 
-Before running it, confirm that the pre-restore evidence points to a readable file backup created before the restore attempt. If apply fails, stop and inspect the apply report plus the pre-restore evidence before attempting manual recovery.
+Before running it, confirm that the pre-restore evidence points to a readable file backup created before the restore attempt. After apply, inspect the apply report for missing symlink/drop-in warnings. If warnings exist, check files such as `wp-content/db.php` and regenerate or restore plugin-owned drop-ins manually as needed. If apply fails, stop and inspect the apply report plus the pre-restore evidence before attempting manual recovery.
 
 ## Manual Disaster Restore Outline
 

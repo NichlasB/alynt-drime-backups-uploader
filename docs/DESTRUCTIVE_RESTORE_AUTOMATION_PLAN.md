@@ -74,7 +74,7 @@ Recommended first implementation path:
 2. Add report generation. Current source status: implemented as optional `--write-report=1` success evidence under configured `restore_reports_path`.
 3. Add pre-restore backup evidence checks. Current source status: implemented as validation of a matching evidence JSON file and readable backup artifacts.
 4. Add `restore-apply --scope=database`. Current source status: implemented for staging database imports after confirmation, dry-run checks, and pre-restore evidence validation.
-5. Add `restore-apply --scope=files`. Current source status: implemented for staging file replacement after confirmation, dry-run checks, and pre-restore evidence validation.
+5. Add `restore-apply --scope=files`. Current source status: implemented for staging file replacement after confirmation, dry-run checks, pre-restore evidence validation, and symlink/drop-in warning reporting.
 6. Combine as `restore-apply --scope=files-and-database`.
 
 ## Required Config Additions
@@ -159,7 +159,7 @@ Filesystem:
 - Available filesystem space was about `13G` on `/dev/sda1`.
 - `wp-config.php` lives outside `htdocs` at `/var/www/alyntdrime.sitesmain.com/wp-config.php`.
 - File restore v1 must target `htdocs` only and must not overwrite the site root, `wp-config.php`, `private`, `nginx`, `logs`, `modsec`, `dns`, or `restores`.
-- One symlink was found in `htdocs`: `wp-content/db.php` points into the Query Monitor plugin. Current server-runner archives exclude symlink entries, so destructive file restore must either recreate/validate expected drop-ins or document that excluded symlinked drop-ins may need regeneration.
+- One symlink was found in `htdocs`: `wp-content/db.php` points into the Query Monitor plugin. Current server-runner archives exclude symlink entries, and file restore apply reports pre-restore symlinked drop-ins that are absent from staged files so the operator can inspect or regenerate them after apply.
 
 Current runner/install state:
 
@@ -276,7 +276,7 @@ Current `restore-apply --scope=files` behavior:
 - Refuses to replace files when any dry-run check fails.
 - Replaces the configured staging WordPress path from staged `htdocs/`.
 - Writes `RESTORE_APPLY_REPORT-*.json` under configured `restore_reports_path`.
-- Reports file restore attempt/success, dry-run checks, report path, failure step, and manual recovery notes.
+- Reports file restore attempt/success, dry-run checks, report path, failure step, manual recovery notes, and missing pre-restore symlink/drop-in samples.
 - Does not create the pre-restore backup evidence automatically yet.
 - Does not import the database in this scope.
 
@@ -284,7 +284,7 @@ Current combined-scope boundary:
 
 - `restore-apply --scope=files-and-database` is still refused.
 - Combined restore remains a separate implementation slice.
-- Because runner archives exclude symlink entries, file restore may not recreate symlinked drop-ins such as Query Monitor's `wp-content/db.php`; this must be inspected during staging rehearsal and may require host/plugin regeneration.
+- Because runner archives exclude symlink entries, file restore may not recreate symlinked drop-ins such as Query Monitor's `wp-content/db.php`; file apply reports pre-restore symlinks that are absent from staged files, and operators must inspect or regenerate those drop-ins after apply.
 
 Staging rehearsal status:
 
@@ -307,7 +307,7 @@ Staging file-apply rehearsal status:
 - `restore-dry-run --scope=files --write-report=1` passed with `failure_count: 0`.
 - `restore-apply --scope=files --confirm=restore-staging-site` succeeded, replaced staging files from staged `htdocs/`, removed the marker file, and wrote `RESTORE_APPLY_REPORT-alyntdrime-sitesmain-com-20260628-083838-20260628-084720.json`.
 - Post-apply verification passed: WP-CLI returned the expected `home` and `siteurl`, Query Monitor remained active, and HTTPS returned `200`.
-- Query Monitor's `wp-content/db.php` drop-in symlink was restored from the pre-restore file backup after the apply. Its target file was missing both after apply and from the restored package state, so this remains an explicit symlink/drop-in caveat for the combined restore design.
+- Query Monitor's `wp-content/db.php` drop-in symlink was restored from the pre-restore file backup after the apply. Its target file was missing both after apply and from the restored package state; current source now reports this class of missing pre-restore symlink/drop-in for manual review instead of silently relying on package contents.
 - Large rehearsal artifacts were cleaned up after the pass: the fresh `20260628-083838` outbox package set, staged restore directory, pre-restore file tarball, and temporary `/tmp` copies were removed. The small dry-run/apply reports and pre-restore evidence JSON were retained.
 
 Current dry-run report fields:

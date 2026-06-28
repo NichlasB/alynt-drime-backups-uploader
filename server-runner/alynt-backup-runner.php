@@ -1180,6 +1180,9 @@ class Alynt_Server_Backup_Runner {
 			'file_restore_attempted'            => false,
 			'file_restore_succeeded'            => false,
 			'live_files_overwritten'            => false,
+			'file_restore_missing_symlink_count' => 0,
+			'file_restore_missing_symlink_samples' => array(),
+			'file_restore_manual_review_required' => false,
 			'destructive_actions_performed'     => false,
 			'pre_restore_backup_created'        => false,
 			'restore_apply_report_written'      => false,
@@ -1265,6 +1268,9 @@ class Alynt_Server_Backup_Runner {
 			'file_restore_attempted'            => false,
 			'file_restore_succeeded'            => false,
 			'live_files_overwritten'            => false,
+			'file_restore_missing_symlink_count' => 0,
+			'file_restore_missing_symlink_samples' => array(),
+			'file_restore_manual_review_required' => false,
 			'destructive_actions_performed'     => false,
 			'pre_restore_backup_created'        => false,
 			'restore_apply_report_written'      => false,
@@ -1295,6 +1301,14 @@ class Alynt_Server_Backup_Runner {
 			$result['failure_step']          = 'staged-file-root';
 			$result['manual_recovery_notes'] = array( 'No file restore was attempted because the staged file root was not readable.' );
 			return $this->write_restore_apply_report( $result );
+		}
+
+		$missing_symlinks = $this->restore_apply_missing_symlink_warnings( $file_root_path, $pre_backup_evidence_path );
+		if ( ! empty( $missing_symlinks ) ) {
+			$result['file_restore_missing_symlink_count']     = count( $missing_symlinks );
+			$result['file_restore_missing_symlink_samples']   = array_slice( $missing_symlinks, 0, 10 );
+			$result['file_restore_manual_review_required']    = true;
+			$result['manual_recovery_notes'][]                = 'Pre-restore file backup includes symlink entries that are absent from the staged files. Inspect drop-ins after apply.';
 		}
 
 		$result['file_restore_attempted']        = true;
@@ -1750,6 +1764,91 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Reports pre-restore symlinks that a file apply will not recreate.
+	 *
+	 * @param string $file_root_path Staged file root path.
+	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
+	 * @return array<int,string>
+	 */
+	private function restore_apply_missing_symlink_warnings( $file_root_path, $pre_backup_evidence_path ) {
+		$evidence         = $this->read_restore_report( $pre_backup_evidence_path );
+		$file_backup_path = isset( $evidence['file_backup_path'] ) ? $this->normalize_path( (string) $evidence['file_backup_path'] ) : '';
+
+		if ( '' === $file_backup_path || ! is_file( $file_backup_path ) || ! is_readable( $file_backup_path ) ) {
+			return array();
+		}
+
+		$result = $this->run_shell_command( 'tar -tvzf ' . escapeshellarg( $file_backup_path ) );
+		if ( 0 !== (int) $result['exit_code'] ) {
+			return array( 'Could not inspect pre-restore file backup symlink entries.' );
+		}
+
+		$warnings = array();
+		foreach ( $result['output'] as $line ) {
+			$entry = $this->parse_tar_symlink_entry( $line );
+			if ( empty( $entry ) || 0 !== strpos( $entry['path'], 'htdocs/' ) ) {
+				continue;
+			}
+
+			$relative_path = substr( $entry['path'], strlen( 'htdocs/' ) );
+			if ( ! $this->restore_report_relative_path_is_safe( $relative_path ) ) {
+				continue;
+			}
+
+			$staged_path = $file_root_path . DIRECTORY_SEPARATOR . str_replace( '/', DIRECTORY_SEPARATOR, $relative_path );
+			if ( ! file_exists( $staged_path ) && ! is_link( $staged_path ) ) {
+				$warnings[] = $entry['path'] . ' -> ' . $entry['target'];
+			}
+		}
+
+		return $warnings;
+	}
+
+	/**
+	 * Parses a tar verbose symlink entry.
+	 *
+	 * @param string $line Tar verbose output line.
+	 * @return array{path:string,target:string}|array<string,string>
+	 */
+	private function parse_tar_symlink_entry( $line ) {
+		$line = trim( $line );
+		if ( '' === $line || 'l' !== $line[0] || false === strpos( $line, ' -> ' ) ) {
+			return array();
+		}
+
+		list( $left, $target ) = explode( ' -> ', $line, 2 );
+		if ( 1 !== preg_match( '/^\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(.+)$/', trim( $left ), $matches ) ) {
+			return array();
+		}
+
+		return array(
+			'path'   => trim( $matches[1] ),
+			'target' => trim( $target ),
+		);
+	}
+
+	/**
+	 * Returns whether a restore report nested relative path is safe.
+	 *
+	 * @param string $value Report value.
+	 * @return bool
+	 */
+	private function restore_report_relative_path_is_safe( $value ) {
+		$value = trim( str_replace( '\\', '/', $value ) );
+		if ( '' === $value || '/' === $value[0] || false !== strpos( $value, ':' ) ) {
+			return false;
+		}
+
+		foreach ( explode( '/', $value ) as $segment ) {
+			if ( '' === $segment || '.' === $segment || '..' === $segment ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Returns whether a directory has at least one child.
 	 *
 	 * @param string $path Directory path.
@@ -2034,6 +2133,10 @@ class Alynt_Server_Backup_Runner {
 		$this->line( 'File restore attempted: ' . ( ! empty( $result['file_restore_attempted'] ) ? 'yes' : 'no' ) );
 		$this->line( 'File restore succeeded: ' . ( ! empty( $result['file_restore_succeeded'] ) ? 'yes' : 'no' ) );
 		$this->line( 'Live files overwritten: ' . ( ! empty( $result['live_files_overwritten'] ) ? 'yes' : 'no' ) );
+		if ( isset( $result['file_restore_missing_symlink_count'] ) ) {
+			$this->line( 'Missing symlink/drop-in warnings: ' . (int) $result['file_restore_missing_symlink_count'] );
+			$this->line( 'File restore manual review required: ' . ( ! empty( $result['file_restore_manual_review_required'] ) ? 'yes' : 'no' ) );
+		}
 		if ( ! empty( $result['restore_apply_report_path'] ) ) {
 			$this->line( 'Report path: ' . $result['restore_apply_report_path'] );
 			$this->line( 'Report written: ' . ( ! empty( $result['restore_apply_report_written'] ) ? 'yes' : 'no' ) );
