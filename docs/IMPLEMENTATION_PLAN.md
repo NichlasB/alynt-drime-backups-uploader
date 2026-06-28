@@ -67,7 +67,9 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Uses a runner-level lock to avoid overlapping package creation.
 - Health checks verify required paths, free space, `tar`, WP-CLI, and WordPress path assumptions.
 - Handles GNU tar live-file churn warnings conservatively when a usable archive was created.
-- Settings screen generates non-secret runner config, install commands, health command, cron snippet, and server-cron review commands.
+- Settings screen generates guided single-line setup commands for runner install/update, first package verification, scan/upload, and cron review.
+- The runner install command embeds non-secret `config.json` content so operators do not have to manually save a separate config file.
+- Generated server cron runs the plugin's scheduled scan/upload hooks through WP-CLI so cron health evidence stays accurate.
 
 ### Upload Flow
 
@@ -246,6 +248,8 @@ Implemented first slice:
 - Added `server-runner cleanup` so operators can delete old local outbox package sets and restore staging directories only after passing `--confirm=delete-local-artifacts`. The command reports `destructive_actions_performed` as `true`, deletes only paths reconstructed from configured local cleanup roots, and leaves Drime untouched.
 - Added light consistency mode for high-write-site review. Newly generated configs include `consistency_mode: "light"`, and completed manifest sidecars record database/archive timing, archive warning counts, live file-change warning counts, and `consistency_status` (`clean`, `file_changes_detected`, or `warnings_detected`).
 - Added generated **Server Cron Review Commands** so operators can capture the current crontab, build a proposed crontab file with the generated snippet, review a diff, and manually approve the final `crontab` install command.
+- Streamlined the server setup UI into four guided copy-paste blocks: install/update the runner, create and verify one test package, scan/upload completed packages, and review/install cron. Each generated shell command is inline/single-line friendly; the cron review block uses several single-line commands instead of a heredoc. The first-test backup command echoes runner output and reports a clear error when no created package path can be detected.
+- Updated generated cron upload commands to run `wp cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event`, matching the plugin's scheduled-scan health evidence model.
 - Added `docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md` to clarify that this backlog item meant several separate WordPress sites on one server, not WordPress Multisite. The guide documents isolated runner configs, outboxes, work paths, restore paths, cron entries, Drime site folders, monitoring, cleanup-preview use, and common mistakes.
 - Added package-level `.remote-index.json` sidecars for server-runner packages. The generic outbox producer reads and uploads those sidecars with the archive, manifest, and checksum so each Drime package set carries non-secret restore discovery metadata.
 - Added `.remote-catalog.json` folder catalog snapshot sidecars for server-runner packages. The generic outbox producer reads and uploads those sidecars with the package set so the latest uploaded package can carry a non-secret catalog of the local outbox package set.
@@ -286,6 +290,15 @@ Server cron review UX feature workflow results:
 - Feature Security Review: passed; no new POST/GET/REST/AJAX surface was added, output is escaped through the existing admin rendering pattern, generated commands do not include Drime tokens, and the final `crontab` install command remains commented for operator approval.
 - Documentation Sync Audit: completed; README, readme.txt, changelog, server-runner docs, settings docs, server automation guide, rollout runbook, POT file, and this plan now describe the server-cron review workflow.
 - Final validation: `php -l` passed for the changed admin trait; focused `AdminPageSettingsTest` passed with 7 tests and 35 assertions; focused PHPCS passed; POT regeneration passed with WP-CLI deprecation warnings from the phar; `npm.cmd test` passed with 136 tests and 709 assertions; `npm.cmd run lint` passed; `npm.cmd run build` passed; `git diff --check` passed with only existing line-ending warnings for `readme.txt` and the generated POT file.
+
+Guided manual server setup commands feature workflow results:
+
+- Feature Light Review: passed after one small auto-fix. The first-test backup command now keeps runner output visible and prints a clear failure message if the created package path cannot be parsed.
+- Feature Bloat And Structure Review: completed with default `origin/master` boundary. Measurement reported four changed PHP/CSS files and one oversized existing file, `includes/trait-admin-page-source-settings.php` at 349 total lines, 49 over the feature-stage guideline. A feature-stage split remains deferred because the server-runner command helpers are tightly coupled to the existing admin source settings trait and a cosmetic split would add churn without reducing setup risk.
+- Feature UI/UX Implementation Review: passed; the setup UI uses the existing WordPress form-table pattern with matching labels, readonly textareas, associated descriptions, and no automatic destructive cron install action.
+- Feature Security Review: passed; generated commands are escaped through existing admin rendering, shell arguments are POSIX-quoted, Drime credentials are not exposed in command snippets, and cron installation remains operator-approved.
+- Documentation Sync Audit: completed; README, readme.txt, changelog, settings docs, server automation docs, rollout runbook, multiple standalone site guide, server-runner README, POT file, checklist, and this plan now describe the guided inline-command setup flow.
+- Final validation: `php -l` passed for the changed admin trait and focused test file; focused `AdminPageSettingsTest` passed with 10 tests and 54 assertions; `npm.cmd test` passed with 158 tests, 1062 assertions, and 1 skipped test; `npm.cmd run lint` passed across 53 files; `npm.cmd run build` passed; POT regeneration passed with WP-CLI dependency deprecation warnings; `git diff --check` passed with line-ending normalization warnings only.
 
 Multiple standalone site runner guidance feature workflow results:
 

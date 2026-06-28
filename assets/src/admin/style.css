@@ -138,6 +138,10 @@
 	width: min(100%, var(--alynt-drime-panel-width));
 }
 
+.alynt-drime-backups .form-table td > textarea.alynt-drime-command-snippet--compact {
+	min-height: 76px;
+}
+
 .alynt-drime-workspace-tools {
 	margin-top: 8px;
 	max-width: var(--alynt-drime-panel-width);

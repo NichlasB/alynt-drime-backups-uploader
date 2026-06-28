@@ -83,7 +83,7 @@ Example for `site-a.com`:
 # Alynt Drime Backups: create one server-side package daily for site-a.com.
 17 2 * * * php '/var/www/site-a.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' run --config='/var/www/site-a.com/private/alynt-drime-backups/runner/config.json'
 # Alynt Drime Backups: scan/upload completed packages for site-a.com.
-*/15 * * * * wp --path='/var/www/site-a.com/htdocs' alynt-drime-backups run --max-uploads=1
+*/15 * * * * wp --path='/var/www/site-a.com/htdocs' cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event
 ```
 
 Example for `site-b.com`:
@@ -92,12 +92,12 @@ Example for `site-b.com`:
 # Alynt Drime Backups: create one server-side package daily for site-b.com.
 47 2 * * * php '/var/www/site-b.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' run --config='/var/www/site-b.com/private/alynt-drime-backups/runner/config.json'
 # Alynt Drime Backups: scan/upload completed packages for site-b.com.
-7,22,37,52 * * * * wp --path='/var/www/site-b.com/htdocs' alynt-drime-backups run --max-uploads=1
+7,22,37,52 * * * * wp --path='/var/www/site-b.com/htdocs' cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event
 ```
 
 Stagger package creation times so multiple sites do not start database exports and file archives at the same minute. The runner has a per-site lock, but it does not coordinate load across other standalone sites on the server.
 
-Use the generated **Server Cron Review Commands** from each site's plugin settings screen. Review the crontab diff before installing the proposed cron lines.
+Use the generated **Review And Install Cron** commands from each site's plugin settings screen. Review the crontab diff before installing the proposed cron lines.
 
 ## Onboarding Checklist
 
@@ -106,15 +106,13 @@ For each standalone site:
 1. Install or update the plugin.
 2. Configure Drime token, workspace, base folder, and relative path for that site.
 3. Configure that site's **Server Outbox Path**.
-4. Generate that site's runner config from the settings screen.
-5. Save the config beside that site's runner script.
-6. Run runner health for that site.
-7. Create one manual package for that site.
-8. Verify the local package and sidecars.
-9. Scan and upload the package through that site's WP-CLI command.
-10. Confirm the archive and sidecars land in the intended Drime folder.
-11. Fetch, verify, and stage a restore proof for that package.
-12. Add that site's cron only after the manual package, upload, and restore proof pass.
+4. Run that site's generated install/update runner command from the settings screen.
+5. Confirm runner health passes for that site.
+6. Create and verify one manual package for that site.
+7. Scan and upload the package through that site's scheduled WP-CLI hook command.
+8. Confirm the archive and sidecars land in the intended Drime folder.
+9. Fetch, verify, and stage a restore proof for that package.
+10. Add that site's cron only after the manual package, upload, and restore proof pass.
 
 Do not copy a working `config.json` from one site to another unless every path, URL, package prefix, and restore path is reviewed and changed.
 

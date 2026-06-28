@@ -125,16 +125,13 @@ wp --path=/var/www/example.com/htdocs alynt-drime-backups status --format=json
 
 Skip this phase if the site will only upload WPvivid backups.
 
-1. In **Tools > Drime Backups**, review the generated server-runner config.
-2. Save the generated JSON as `config.json` beside the runner script on the server.
-3. Review the generated install commands.
-4. Run the install commands as the GridPane site user.
-5. Run the generated health command.
-6. Fix any health failure before creating a backup package.
+1. In **Tools > Drime Backups**, review the generated **Install / Update Server Runner** command.
+2. Run the command as the GridPane site user.
+3. Fix any health failure before creating a backup package.
 
-The generated config is non-secret. It should include site URL, WordPress path, outbox path, work path, restore path, archive format, package prefix, WP-CLI path, database export setting, and exclude paths.
+The generated install command embeds the non-secret config JSON, writes it as `config.json` beside the runner, creates private directories, copies the runner script, sets permissions, and runs health. The config includes site URL, WordPress path, outbox path, work path, restore path, archive format, package prefix, WP-CLI path, database export setting, and exclude paths.
 
-The generated install commands create directories and copy the runner script. They do not add cron and do not run a backup.
+The generated install command does not add cron and does not run a backup.
 
 Acceptance:
 
@@ -154,25 +151,15 @@ php /var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.
 
 For server-runner sites:
 
-1. Run the runner manually once.
-2. List or inspect the generated package.
-3. Verify the package and sidecars locally.
-4. Run the plugin WP-CLI scan/upload command.
-5. Check the plugin status payload.
-6. Confirm the archive, `.manifest.json`, and `.sha256` sidecars are visible in the intended Drime folder.
+1. Run the generated **Create First Test Backup** command.
+2. Run the generated **Scan And Upload Completed Packages** command after the package is old enough to pass the minimum file age and stability checks.
+3. Check the plugin status payload.
+4. Confirm the archive, `.manifest.json`, `.sha256`, `.remote-index.json`, and `.remote-catalog.json` sidecars are visible in the intended Drime folder.
 
 Example commands:
 
 ```bash
-php /var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php run \
-  --config=/var/www/example.com/private/alynt-drime-backups/runner/config.json
-
-php /var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php list \
-  --config=/var/www/example.com/private/alynt-drime-backups/runner/config.json
-
-php /var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php verify \
-  --config=/var/www/example.com/private/alynt-drime-backups/runner/config.json \
-  --package=/var/www/example.com/private/alynt-drime-backups/outbox/example-com-YYYYmmdd-HHMMSS.tar.gz
+PACKAGE=$(php /var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php run --config=/var/www/example.com/private/alynt-drime-backups/runner/config.json | tee /dev/stderr | awk '/^Created package:/ {print $3}') && if test -n "$PACKAGE"; then php /var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php verify --config=/var/www/example.com/private/alynt-drime-backups/runner/config.json --package="$PACKAGE"; else echo 'Could not detect created package path from runner output.' >&2; exit 1; fi
 
 wp --path=/var/www/example.com/htdocs alynt-drime-backups run --max-uploads=1
 wp --path=/var/www/example.com/htdocs alynt-drime-backups status --format=json
@@ -201,10 +188,10 @@ Acceptance:
 
 Add cron only after the manual runner health check and first manual package/upload pass succeed.
 
-Use the generated GridPane cron snippet and **Server Cron Review Commands** from the plugin settings screen. The cron snippet should include:
+Use the generated **Review And Install Cron** commands from the plugin settings screen. The cron snippet should include:
 
 - one daily server-runner package creation line;
-- one frequent WP-CLI scan/upload line;
+- one frequent WP-CLI scheduled scan/upload hook line;
 - one optional status log line.
 
 Typical shape:
@@ -213,14 +200,14 @@ Typical shape:
 # Alynt Drime Backups: create one server-side package daily.
 17 2 * * * php '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' run --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'
 # Alynt Drime Backups: scan/upload completed packages every 15 minutes.
-*/15 * * * * wp --path='/var/www/example.com/htdocs' alynt-drime-backups run --max-uploads=1
+*/15 * * * * wp --path='/var/www/example.com/htdocs' cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event
 # Alynt Drime Backups: optional status log check.
 7 3 * * * wp --path='/var/www/example.com/htdocs' alynt-drime-backups status --format=json
 ```
 
 Recommended install flow:
 
-1. Copy the generated **Server Cron Review Commands**.
+1. Copy the generated **Review And Install Cron** commands.
 2. Run them as the intended site user.
 3. Review the diff between the current crontab and proposed crontab.
 4. Confirm the schedule, paths, and site user are correct.

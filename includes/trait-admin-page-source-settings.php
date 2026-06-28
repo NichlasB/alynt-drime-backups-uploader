@@ -35,49 +35,31 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="alynt-server-runner-config"><?php esc_html_e( 'Server Runner Config', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<th scope="row"><label for="alynt-server-runner-install-command"><?php esc_html_e( '1. Install / Update Server Runner', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
-					<textarea id="alynt-server-runner-config" class="large-text code alynt-drime-command-snippet" readonly rows="18" aria-describedby="alynt-server-runner-config-description"><?php echo esc_textarea( $this->server_runner_config_json( $settings ) ); ?></textarea>
-					<p id="alynt-server-runner-config-description" class="description"><?php esc_html_e( 'Save this as config.json beside the server runner script for this site. It does not include Drime credentials.', 'alynt-drime-backups-uploader' ); ?></p>
+					<textarea id="alynt-server-runner-install-command" class="large-text code alynt-drime-command-snippet alynt-drime-command-snippet--compact" readonly rows="4" aria-describedby="alynt-server-runner-install-command-description"><?php echo esc_textarea( $this->server_runner_install_commands( $settings ) ); ?></textarea>
+					<p id="alynt-server-runner-install-command-description" class="description"><?php esc_html_e( 'Run this as the site user. It creates private directories, writes config.json, installs the runner, sets permissions, and runs health.', 'alynt-drime-backups-uploader' ); ?></p>
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="alynt-server-runner-install-commands"><?php esc_html_e( 'Server Runner Install Commands', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<th scope="row"><label for="alynt-server-runner-test-command"><?php esc_html_e( '2. Create First Test Backup', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
-					<textarea id="alynt-server-runner-install-commands" class="large-text code alynt-drime-command-snippet" readonly rows="8" aria-describedby="alynt-server-runner-install-commands-description"><?php echo esc_textarea( $this->server_runner_install_commands( $settings ) ); ?></textarea>
-					<p id="alynt-server-runner-install-commands-description" class="description"><?php esc_html_e( 'Run these as the site user after reviewing the generated config. They install the runner script and directories only; they do not add cron or run a backup.', 'alynt-drime-backups-uploader' ); ?></p>
+					<textarea id="alynt-server-runner-test-command" class="large-text code alynt-drime-command-snippet alynt-drime-command-snippet--compact" readonly rows="3" aria-describedby="alynt-server-runner-test-command-description"><?php echo esc_textarea( $this->server_runner_test_command( $settings ) ); ?></textarea>
+					<p id="alynt-server-runner-test-command-description" class="description"><?php esc_html_e( 'Run this as the site user to create one package and verify the package path printed by the runner.', 'alynt-drime-backups-uploader' ); ?></p>
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="alynt-server-runner-health-command"><?php esc_html_e( 'Server Runner Health Command', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<th scope="row"><label for="alynt-wp-cli-upload-command"><?php esc_html_e( '3. Scan And Upload Completed Packages', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
-					<input id="alynt-server-runner-health-command" type="text" class="large-text code" readonly value="<?php echo esc_attr( $this->server_runner_command( 'health', $settings ) ); ?>">
+					<textarea id="alynt-wp-cli-upload-command" class="large-text code alynt-drime-command-snippet alynt-drime-command-snippet--compact" readonly rows="3" aria-describedby="alynt-wp-cli-upload-command-description"><?php echo esc_textarea( $this->wp_cli_scan_upload_command() ); ?></textarea>
+					<p id="alynt-wp-cli-upload-command-description" class="description"><?php esc_html_e( 'Run this as the site user after the package is old enough to pass the minimum file age and stability checks.', 'alynt-drime-backups-uploader' ); ?></p>
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="alynt-wp-cli-run-command"><?php esc_html_e( 'WP-CLI Runner Command', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<th scope="row"><label for="alynt-server-cron-review-commands"><?php esc_html_e( '4. Review And Install Cron', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
-					<input id="alynt-wp-cli-run-command" type="text" class="large-text code" readonly value="<?php echo esc_attr( $this->wp_cli_command( 'run --max-uploads=1' ) ); ?>">
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><label for="alynt-wp-cli-status-command"><?php esc_html_e( 'WP-CLI Status Command', 'alynt-drime-backups-uploader' ); ?></label></th>
-				<td>
-					<input id="alynt-wp-cli-status-command" type="text" class="large-text code" readonly value="<?php echo esc_attr( $this->wp_cli_command( 'status --format=json' ) ); ?>">
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><label for="alynt-gridpane-cron-snippet"><?php esc_html_e( 'GridPane Cron Snippet', 'alynt-drime-backups-uploader' ); ?></label></th>
-				<td>
-					<textarea id="alynt-gridpane-cron-snippet" class="large-text code alynt-drime-cron-snippet" readonly rows="6" aria-describedby="alynt-gridpane-cron-snippet-description"><?php echo esc_textarea( $this->gridpane_cron_snippet( $settings ) ); ?></textarea>
-					<p id="alynt-gridpane-cron-snippet-description" class="description"><?php esc_html_e( 'Copy this into the site user crontab after the server runner is installed and health checks pass.', 'alynt-drime-backups-uploader' ); ?></p>
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><label for="alynt-server-cron-review-commands"><?php esc_html_e( 'Server Cron Review Commands', 'alynt-drime-backups-uploader' ); ?></label></th>
-				<td>
-					<textarea id="alynt-server-cron-review-commands" class="large-text code alynt-drime-command-snippet" readonly rows="14" aria-describedby="alynt-server-cron-review-commands-description"><?php echo esc_textarea( $this->server_cron_review_commands( $settings ) ); ?></textarea>
-					<p id="alynt-server-cron-review-commands-description" class="description"><?php esc_html_e( 'Run these as the site user to build and review a proposed crontab file. The final install command stays commented until you approve it.', 'alynt-drime-backups-uploader' ); ?></p>
+					<textarea id="alynt-server-cron-review-commands" class="large-text code alynt-drime-command-snippet" readonly rows="8" aria-describedby="alynt-server-cron-review-commands-description"><?php echo esc_textarea( $this->server_cron_review_commands( $settings ) ); ?></textarea>
+					<p id="alynt-server-cron-review-commands-description" class="description"><?php esc_html_e( 'Run these as the site user to build and review a proposed crontab file. Each shell command is single-line. The final install command stays commented until you approve it.', 'alynt-drime-backups-uploader' ); ?></p>
 				</td>
 			</tr>
 			<tr>
@@ -113,7 +95,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 	 */
 	private function gridpane_cron_snippet( array $settings ) {
 		$runner_command = $this->server_runner_command( 'run', $settings );
-		$upload_command = $this->wp_cli_command_posix( 'run --max-uploads=1' );
+		$upload_command = $this->wp_cli_scheduled_upload_command();
 		$status_command = $this->wp_cli_command_posix( 'status --format=json' );
 
 		return implode(
@@ -138,15 +120,19 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 	private function server_cron_review_commands( array $settings ) {
 		$current = '$HOME/alynt-drime-backups-crontab.current';
 		$next    = '$HOME/alynt-drime-backups-crontab.new';
+		$lines   = explode( "\n", $this->gridpane_cron_snippet( $settings ) );
+		$printf  = 'printf ' . $this->posix_shell_arg( '%s\n' );
+		foreach ( $lines as $line ) {
+			$printf .= ' ' . $this->posix_shell_arg( $line );
+		}
+		$printf .= ' >> "' . $next . '"';
 
 		return implode(
 			"\n",
 			array(
 				'crontab -l > "' . $current . '" 2>/dev/null || true',
 				'cp "' . $current . '" "' . $next . '"',
-				'cat >> "' . $next . '" <<\'ALYNT_DRIME_CRON\'',
-				$this->gridpane_cron_snippet( $settings ),
-				'ALYNT_DRIME_CRON',
+				$printf,
 				'diff -u "' . $current . '" "' . $next . '" || true',
 				'# After reviewing the diff, install with:',
 				'# crontab "' . $next . '"',
@@ -158,9 +144,10 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 	 * Builds server runner config JSON for the current site.
 	 *
 	 * @param array<string,mixed> $settings Settings.
+	 * @param bool                $pretty   Whether to pretty-print JSON.
 	 * @return string
 	 */
-	private function server_runner_config_json( array $settings ) {
+	private function server_runner_config_json( array $settings, $pretty = true ) {
 		$runner_base    = $this->runner_base_path( $settings );
 		$wordpress_path = untrailingslashit( ABSPATH );
 		$site_url       = untrailingslashit( $this->site_url_for_runner() );
@@ -191,11 +178,16 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 			),
 		);
 
-		if ( function_exists( 'wp_json_encode' ) ) {
-			return wp_json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		$options = JSON_UNESCAPED_SLASHES;
+		if ( $pretty ) {
+			$options |= JSON_PRETTY_PRINT;
 		}
 
-		return json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		if ( function_exists( 'wp_json_encode' ) ) {
+			return wp_json_encode( $config, $options );
+		}
+
+		return json_encode( $config, $options );
 	}
 
 	/**
@@ -214,17 +206,50 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 		$target_runner  = $runner_dir . '/alynt-backup-runner.php';
 		$target_config  = $runner_dir . '/config.json';
 		$health_command = $this->server_runner_command( 'health', $settings );
+		$config_json    = $this->server_runner_config_json( $settings, false );
 
 		return implode(
-			"\n",
+			' && ',
 			array(
 				'mkdir -p ' . $this->posix_shell_arg( $runner_dir ) . ' ' . $this->posix_shell_arg( $outbox_path ) . ' ' . $this->posix_shell_arg( $work_path ) . ' ' . $this->posix_shell_arg( $restore_path ),
 				'cp ' . $this->posix_shell_arg( $source_runner ) . ' ' . $this->posix_shell_arg( $target_runner ),
+				"printf '%s' " . $this->posix_shell_arg( $config_json ) . ' > ' . $this->posix_shell_arg( $target_config ),
 				'chmod 750 ' . $this->posix_shell_arg( $target_runner ),
-				'chmod 640 ' . $this->posix_shell_arg( $target_config ) . ' # after saving the generated config.json',
+				'chmod 640 ' . $this->posix_shell_arg( $target_config ),
 				$health_command,
 			)
 		);
+	}
+
+	/**
+	 * Builds a one-line first package creation and verify command.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_runner_test_command( array $settings ) {
+		$run_command    = $this->server_runner_command( 'run', $settings );
+		$verify_command = $this->server_runner_command( 'verify', $settings );
+
+		return 'PACKAGE=$(' . $run_command . ' | tee /dev/stderr | awk \'/^Created package:/ {print $3}\') && if test -n "$PACKAGE"; then ' . $verify_command . ' --package="$PACKAGE"; else echo \'Could not detect created package path from runner output.\' >&2; exit 1; fi';
+	}
+
+	/**
+	 * Builds a direct WP-CLI scan/upload command for first setup.
+	 *
+	 * @return string
+	 */
+	private function wp_cli_scan_upload_command() {
+		return $this->wp_cli_command_posix( 'run --max-uploads=1' );
+	}
+
+	/**
+	 * Builds a WP-CLI command that runs scheduled scan/upload hooks.
+	 *
+	 * @return string
+	 */
+	private function wp_cli_scheduled_upload_command() {
+		return 'wp --path=' . $this->posix_shell_arg( untrailingslashit( ABSPATH ) ) . ' cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event';
 	}
 
 	/**

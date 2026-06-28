@@ -23,7 +23,7 @@ class AdminPageSettingsTest extends TestCase {
 
 		$this->assertStringContainsString( "17 2 * * * php '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' run --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $snippet );
 		$this->assertStringContainsString( "*/15 * * * * wp --path='", $snippet );
-		$this->assertStringContainsString( "alynt-drime-backups run --max-uploads=1", $snippet );
+		$this->assertStringContainsString( 'cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event', $snippet );
 		$this->assertStringContainsString( "alynt-drime-backups status --format=json", $snippet );
 		$this->assertStringNotContainsString( 'secret-token', $snippet );
 	}
@@ -42,8 +42,10 @@ class AdminPageSettingsTest extends TestCase {
 		);
 
 		$this->assertStringContainsString( 'crontab -l > "$HOME/alynt-drime-backups-crontab.current" 2>/dev/null || true', $commands );
-		$this->assertStringContainsString( 'cat >> "$HOME/alynt-drime-backups-crontab.new" <<\'ALYNT_DRIME_CRON\'', $commands );
-		$this->assertStringContainsString( "17 2 * * * php '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' run --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $commands );
+		$this->assertStringContainsString( "printf '%s\\n'", $commands );
+		$this->assertStringNotContainsString( 'ALYNT_DRIME_CRON', $commands );
+		$this->assertStringContainsString( "17 2 * * * php '\\''/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php'\\'' run --config='\\''/var/www/example.com/private/alynt-drime-backups/runner/config.json'\\'''", $commands );
+		$this->assertStringContainsString( 'cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event', $commands );
 		$this->assertStringContainsString( 'diff -u "$HOME/alynt-drime-backups-crontab.current" "$HOME/alynt-drime-backups-crontab.new" || true', $commands );
 		$this->assertStringContainsString( '# crontab "$HOME/alynt-drime-backups-crontab.new"', $commands );
 		$this->assertStringNotContainsString( "\ncrontab \"\$HOME/alynt-drime-backups-crontab.new\"", $commands );
@@ -108,11 +110,55 @@ class AdminPageSettingsTest extends TestCase {
 
 		$this->assertStringContainsString( "mkdir -p '/var/www/example.com/private/alynt-drime-backups/runner'", $commands );
 		$this->assertStringContainsString( "cp '" . untrailingslashit( ALYNT_DRIME_BACKUPS_UPLOADER_PATH ) . "/server-runner/alynt-backup-runner.php' '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php'", $commands );
+		$this->assertStringContainsString( "printf '%s' '{\"site_id\":\"example.test\"", $commands );
 		$this->assertStringContainsString( "chmod 750 '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php'", $commands );
-		$this->assertStringContainsString( "chmod 640 '/var/www/example.com/private/alynt-drime-backups/runner/config.json' # after saving the generated config.json", $commands );
+		$this->assertStringContainsString( "chmod 640 '/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $commands );
 		$this->assertStringContainsString( "php '/var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php' health --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $commands );
+		$this->assertStringNotContainsString( "\n", $commands );
 		$this->assertStringNotContainsString( 'crontab', $commands );
 		$this->assertStringNotContainsString( ' run --config=', $commands );
+	}
+
+	public function test_server_runner_test_command_is_single_line_and_verifies_created_package() {
+		$page    = $this->admin_page();
+		$command = $this->call_private(
+			$page,
+			'server_runner_test_command',
+			array(
+				array(
+					'server_outbox_path' => '/var/www/example.com/private/alynt-drime-backups/outbox',
+					'api_token'          => 'secret-token',
+				),
+			)
+		);
+
+		$this->assertStringContainsString( 'PACKAGE=$(', $command );
+		$this->assertStringContainsString( "run --config='/var/www/example.com/private/alynt-drime-backups/runner/config.json'", $command );
+		$this->assertStringContainsString( 'tee /dev/stderr', $command );
+		$this->assertStringContainsString( "awk '/^Created package:/ {print $3}'", $command );
+		$this->assertStringContainsString( 'verify --config=', $command );
+		$this->assertStringContainsString( '--package="$PACKAGE"', $command );
+		$this->assertStringContainsString( 'Could not detect created package path from runner output.', $command );
+		$this->assertStringNotContainsString( "\n", $command );
+		$this->assertStringNotContainsString( 'secret-token', $command );
+	}
+
+	public function test_wp_cli_scheduled_upload_command_is_single_line_and_runs_cron_hooks() {
+		$page    = $this->admin_page();
+		$command = $this->call_private( $page, 'wp_cli_scheduled_upload_command', array() );
+
+		$this->assertStringContainsString( 'cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event', $command );
+		$this->assertStringNotContainsString( 'alynt-drime-backups run --max-uploads=1', $command );
+		$this->assertStringNotContainsString( "\n", $command );
+	}
+
+	public function test_wp_cli_scan_upload_command_is_single_line_and_does_not_require_scheduled_events() {
+		$page    = $this->admin_page();
+		$command = $this->call_private( $page, 'wp_cli_scan_upload_command', array() );
+
+		$this->assertStringContainsString( 'alynt-drime-backups run --max-uploads=1', $command );
+		$this->assertStringNotContainsString( 'cron event run', $command );
+		$this->assertStringNotContainsString( "\n", $command );
 	}
 
 	public function test_gridpane_cron_snippet_falls_back_to_gridpane_private_path() {

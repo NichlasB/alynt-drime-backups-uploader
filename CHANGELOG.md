@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Streamlined the settings-page server-runner setup into guided single-line command blocks for install/update, first package verification, scan/upload, and cron review.
+- Changed generated server-cron upload lines to run the plugin's scheduled scan/upload hooks through WP-CLI so cron health evidence stays accurate.
+
 ## [0.2.0] - 2026-06-28
 
 ### Added

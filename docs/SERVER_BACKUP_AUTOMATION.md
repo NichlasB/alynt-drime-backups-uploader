@@ -20,13 +20,13 @@ Typical cron shape:
 15 2 * * * php /var/www/example.com/private/alynt-drime-backups/runner/alynt-backup-runner.php run --config=/var/www/example.com/private/alynt-drime-backups/runner/config.json
 
 # Scan and upload completed packages regularly.
-*/15 * * * * wp --path=/var/www/example.com/htdocs alynt-drime-backups run --max-uploads=1
+*/15 * * * * wp --path=/var/www/example.com/htdocs cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event
 
 # Optional lightweight status capture for server logs.
 5 * * * * wp --path=/var/www/example.com/htdocs alynt-drime-backups status --format=json
 ```
 
-The plugin settings screen can generate the site-specific config, install commands, health command, cron snippet, and server-cron review commands. The review commands save the current user crontab, append the generated snippet to a proposed crontab file, and show a diff before install. Cron installation is still an operator step; the final `crontab` install command is commented until an operator approves it.
+The plugin settings screen generates guided setup commands for runner install/update, first package verification, scan/upload, and server-cron review. The install command embeds the site-specific non-secret config JSON and runs health after installing the runner, so the operator does not have to save `config.json` manually. The review commands save the current user crontab, append the generated snippet to a proposed crontab file with single-line shell commands, and show a diff before install. Cron installation is still an operator step; the final `crontab` install command is commented until an operator approves it.
 
 ## Adding Another Site
 
@@ -51,7 +51,7 @@ For most small sites, one daily package creation job plus a 15-minute scan/uploa
 
 Avoid overlapping package creation jobs. The runner has a lock, but cron should still be scheduled so normal runs finish before the next package creation attempt.
 
-Use the generated **Server Cron Review Commands** during setup instead of pasting directly into an active crontab. Run them as the intended site user, inspect the diff, then uncomment and run the final install command only after the proposed schedule and paths are correct.
+Use the generated **Review And Install Cron** commands during setup instead of pasting directly into an active crontab. Run them as the intended site user, inspect the diff, then uncomment and run the final install command only after the proposed schedule and paths are correct.
 
 ## Disk And Retention Policy
 
@@ -126,7 +126,7 @@ Useful checks:
 php /path/to/alynt-backup-runner.php health --config=/path/to/config.json
 php /path/to/alynt-backup-runner.php list --config=/path/to/config.json --format=json
 wp --path=/var/www/example.com/htdocs alynt-drime-backups status --format=json
-wp --path=/var/www/example.com/htdocs alynt-drime-backups run --max-uploads=1
+wp --path=/var/www/example.com/htdocs cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event
 ```
 
 Review:

@@ -51,7 +51,7 @@ These options are owned by the plugin and are removed on uninstall.
 
 Uninstall removes the plugin-owned options above and the plugin cron hooks from each site on multisite installs. It intentionally does not remove backup archives, sidecars, restore staging folders, or manually installed server-runner directories outside WordPress option storage.
 
-The admin setup screen also generates read-only server-runner helper snippets from saved settings. The **Server Cron Review Commands** snippet is not persisted as a setting; it builds and diffs a proposed user crontab file and leaves the final install command commented until an operator approves it.
+The admin setup screen also generates read-only server-runner helper snippets from saved settings. The server setup area is organized into guided copy-paste blocks for runner install/update, first package verification, scan/upload, and cron review. The install command embeds the non-secret runner config JSON so the operator does not have to save `config.json` manually. The **Server Cron Review Commands** snippet is not persisted as a setting; it uses single-line shell commands to build and diff a proposed user crontab file and leaves the final install command commented until an operator approves it.
 
 ## Workspace Destination Guardrails
 

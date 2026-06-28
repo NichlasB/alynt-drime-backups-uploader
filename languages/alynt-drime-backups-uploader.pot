@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-28T15:13:10+00:00\n"
+"POT-Creation-Date: 2026-06-28T19:53:15+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: alynt-drime-backups-uploader\n"
@@ -770,58 +770,46 @@ msgid "Directory where the server backup runner writes completed backup packages
 msgstr ""
 
 #: includes/trait-admin-page-source-settings.php:38
-msgid "Server Runner Config"
+msgid "1. Install / Update Server Runner"
 msgstr ""
 
 #: includes/trait-admin-page-source-settings.php:41
-msgid "Save this as config.json beside the server runner script for this site. It does not include Drime credentials."
+msgid "Run this as the site user. It creates private directories, writes config.json, installs the runner, sets permissions, and runs health."
 msgstr ""
 
 #: includes/trait-admin-page-source-settings.php:45
-msgid "Server Runner Install Commands"
+msgid "2. Create First Test Backup"
 msgstr ""
 
 #: includes/trait-admin-page-source-settings.php:48
-msgid "Run these as the site user after reviewing the generated config. They install the runner script and directories only; they do not add cron or run a backup."
+msgid "Run this as the site user to create one package and verify the package path printed by the runner."
 msgstr ""
 
 #: includes/trait-admin-page-source-settings.php:52
-msgid "Server Runner Health Command"
+msgid "3. Scan And Upload Completed Packages"
 msgstr ""
 
-#: includes/trait-admin-page-source-settings.php:58
-msgid "WP-CLI Runner Command"
+#: includes/trait-admin-page-source-settings.php:55
+msgid "Run this as the site user after the package is old enough to pass the minimum file age and stability checks."
 msgstr ""
 
-#: includes/trait-admin-page-source-settings.php:64
-msgid "WP-CLI Status Command"
+#: includes/trait-admin-page-source-settings.php:59
+msgid "4. Review And Install Cron"
 msgstr ""
 
-#: includes/trait-admin-page-source-settings.php:70
-msgid "GridPane Cron Snippet"
+#: includes/trait-admin-page-source-settings.php:62
+msgid "Run these as the site user to build and review a proposed crontab file. Each shell command is single-line. The final install command stays commented until you approve it."
 msgstr ""
 
-#: includes/trait-admin-page-source-settings.php:73
-msgid "Copy this into the site user crontab after the server runner is installed and health checks pass."
-msgstr ""
-
-#: includes/trait-admin-page-source-settings.php:77
-msgid "Server Cron Review Commands"
-msgstr ""
-
-#: includes/trait-admin-page-source-settings.php:80
-msgid "Run these as the site user to build and review a proposed crontab file. The final install command stays commented until you approve it."
-msgstr ""
-
-#: includes/trait-admin-page-source-settings.php:84
+#: includes/trait-admin-page-source-settings.php:66
 msgid "WPvivid Detected Path"
 msgstr ""
 
-#: includes/trait-admin-page-source-settings.php:88
+#: includes/trait-admin-page-source-settings.php:70
 msgid "WPvivid Path Override"
 msgstr ""
 
-#: includes/trait-admin-page-source-settings.php:91
+#: includes/trait-admin-page-source-settings.php:73
 msgid "Optional. Use only if WPvivid stores local backups outside the detected path."
 msgstr ""
 

@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -84,7 +84,7 @@ It records runtime evidence. A scheduled scan run from WP-CLI is shown as likely
 
 = Does this install server cron automatically? =
 
-No. The settings screen can generate a cron snippet and review commands that build a proposed crontab file and show a diff. The final crontab install command is commented until an operator reviews and approves it.
+No. The settings screen generates single-line review commands that build a proposed crontab file and show a diff. The final crontab install command is commented until an operator reviews and approves it.
 
 = How are failed upload emails delivered? =
 
@@ -103,6 +103,10 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= Unreleased =
+* Streamlined server-runner setup into guided single-line command blocks for install/update, first package verification, scan/upload, and cron review.
+* Changed generated server-cron upload lines to run the plugin's scheduled scan/upload hooks through WP-CLI so cron health evidence stays accurate.
 
 = 0.2.0 =
 * Added Drime workspace destination guardrails so workspace ID 0 is blocked and optional wp-config.php allowlisting can restrict selectable backup workspaces.
