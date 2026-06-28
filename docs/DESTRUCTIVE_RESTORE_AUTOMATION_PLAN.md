@@ -317,6 +317,20 @@ Staging file-apply rehearsal status:
 - Query Monitor's `wp-content/db.php` drop-in symlink was restored from the pre-restore file backup after the apply. Its target file was missing both after apply and from the restored package state; current source now reports this class of missing pre-restore symlink/drop-in for manual review instead of silently relying on package contents.
 - Large rehearsal artifacts were cleaned up after the pass: the fresh `20260628-083838` outbox package set, staged restore directory, pre-restore file tarball, and temporary `/tmp` copies were removed. The small dry-run/apply reports and pre-restore evidence JSON were retained.
 
+Staging combined-apply rehearsal status:
+
+- Passed on `alyntdrime.sitesmain.com` on 2026-06-28.
+- Updated runner with combined apply support was installed under `/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/runner/alynt-backup-runner.php`, with the previous runner retained as a timestamped `.bak-*` file.
+- Fresh package `alyntdrime-sitesmain-com-20260628-115011.tar.gz` was created, verified, and staged.
+- A harmless marker file was added to `htdocs` after package creation so combined file apply could prove replacement by removing it.
+- Pre-restore evidence was created with a fresh database export, file backup tarball, and valid combined-scope evidence JSON at `/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/pre-restore/PRE_RESTORE_BACKUP_EVIDENCE-alyntdrime-sitesmain-com-20260628-115011-combined.json`.
+- `restore-dry-run --scope=files-and-database --write-report=1` passed with `failure_count: 0` and wrote `RESTORE_DRY_RUN_REPORT-alyntdrime-sitesmain-com-20260628-115011-20260628-120158.json`.
+- `restore-apply --scope=files-and-database --confirm=restore-staging-site` succeeded, replaced staging files from staged `htdocs/`, imported staged `database.sql`, and wrote `RESTORE_APPLY_REPORT-alyntdrime-sitesmain-com-20260628-115011-20260628-122016.json`.
+- Post-apply verification passed: the marker file was removed, WP-CLI returned the expected `home` and `siteurl`, WordPress core version `7.0`, `wp db check` succeeded, Query Monitor remained active, and HTTPS returned `200`.
+- The apply report recorded `combined_restore_order: ["files", "database"]`, `file_restore_succeeded: true`, `database_import_succeeded: true`, `database_imported: true`, and `live_files_overwritten: true`.
+- The apply report also recorded `file_restore_missing_symlink_count: 1` for Query Monitor's `htdocs/wp-content/db.php` symlink. After combined apply, `wp-content/db.php` and its Query Monitor target file were absent, so this remains an explicit manual-review item after file or combined restore.
+- Large rehearsal artifacts were cleaned up after the pass: the fresh `20260628-115011` outbox package set, staged restore directory, pre-restore file tarball, and temporary `/tmp` copies were removed. Filesystem availability returned to about `13G`. The small dry-run/apply reports, evidence JSON, and pre-restore database export were retained.
+
 Current dry-run report fields:
 
 - `report_write_requested`
