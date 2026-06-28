@@ -297,6 +297,19 @@ Staging rehearsal status:
 - Post-apply verification passed: WP-CLI returned the expected `home` and `siteurl`, WordPress core version `7.0`, `wp db check` succeeded, and HTTPS returned `200`.
 - Large rehearsal artifacts were cleaned up after the pass: the fresh `20260628-081212` outbox package set, staged restore directory, and temporary `/tmp` copies were removed. The small dry-run/apply reports and pre-restore database evidence were retained.
 
+Staging file-apply rehearsal status:
+
+- Passed on `alyntdrime.sitesmain.com` on 2026-06-28.
+- Updated runner was installed under `/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/runner/alynt-backup-runner.php`, with the previous runner retained as a timestamped `.bak-*` file.
+- Fresh package `alyntdrime-sitesmain-com-20260628-083838.tar.gz` was created, verified, and staged. The package recorded a live file-change warning for `htdocs/wp-content`.
+- A harmless marker file was added to `htdocs` after package creation so file apply could prove replacement by removing it.
+- Pre-restore file backup evidence was created at `/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/pre-restore/current-files-before-alyntdrime-sitesmain-com-20260628-083838.tar.gz`.
+- `restore-dry-run --scope=files --write-report=1` passed with `failure_count: 0`.
+- `restore-apply --scope=files --confirm=restore-staging-site` succeeded, replaced staging files from staged `htdocs/`, removed the marker file, and wrote `RESTORE_APPLY_REPORT-alyntdrime-sitesmain-com-20260628-083838-20260628-084720.json`.
+- Post-apply verification passed: WP-CLI returned the expected `home` and `siteurl`, Query Monitor remained active, and HTTPS returned `200`.
+- Query Monitor's `wp-content/db.php` drop-in symlink was restored from the pre-restore file backup after the apply. Its target file was missing both after apply and from the restored package state, so this remains an explicit symlink/drop-in caveat for the combined restore design.
+- Large rehearsal artifacts were cleaned up after the pass: the fresh `20260628-083838` outbox package set, staged restore directory, pre-restore file tarball, and temporary `/tmp` copies were removed. The small dry-run/apply reports and pre-restore evidence JSON were retained.
+
 Current dry-run report fields:
 
 - `report_write_requested`
