@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -104,7 +104,7 @@ No public custom actions or filters are exposed.
 
 == Changelog ==
 
-= Unreleased =
+= 0.2.1 =
 * Streamlined server-runner setup into guided single-line command blocks for install/update, first package verification, scan/upload, and cron review.
 * Changed generated server-cron upload lines to run the plugin's scheduled scan/upload hooks through WP-CLI so cron health evidence stays accurate.
 
@@ -145,6 +145,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.2.1 =
+No breaking changes. Improves the guided server setup commands and cron scan/upload evidence alignment.
 
 = 0.2.0 =
 No breaking changes. Adds staging-only restore apply commands, stronger restore evidence gates, server-runner package discovery sidecars, operator-approved local cleanup, workspace guardrails, and server-cron review guidance.

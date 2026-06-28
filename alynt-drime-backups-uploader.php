@@ -3,7 +3,7 @@
  * Plugin Name:       Alynt Drime Backups Uploader
  * Plugin URI:        https://alynt.com/
  * Description:       Upload completed backup packages to Drime.
- * Version:           0.2.0
+ * Version:           0.2.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Alynt
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ALYNT_DRIME_BACKUPS_UPLOADER_VERSION', '0.2.0' );
+define( 'ALYNT_DRIME_BACKUPS_UPLOADER_VERSION', '0.2.1' );
 define( 'ALYNT_DRIME_BACKUPS_UPLOADER_MINIMUM_WP', '6.0' );
 define( 'ALYNT_DRIME_BACKUPS_UPLOADER_MINIMUM_PHP', '7.4' );
 define( 'ALYNT_DRIME_BACKUPS_UPLOADER_FILE', __FILE__ );

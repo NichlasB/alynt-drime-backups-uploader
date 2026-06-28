@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-28
+
 ### Changed
 
 - Streamlined the settings-page server-runner setup into guided single-line command blocks for install/update, first package verification, scan/upload, and cron review.
