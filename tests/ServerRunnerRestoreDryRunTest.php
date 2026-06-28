@@ -31,7 +31,7 @@ class ServerRunnerRestoreDryRunTest extends Alynt_Drime_Backups_Uploader_Server_
 		$this->assertFalse( $dry_run['database_imported'] );
 		$this->assertFalse( $dry_run['live_files_overwritten'] );
 		$this->assertFalse( $dry_run['pre_restore_backup_created'] );
-		$this->assertFalse( $dry_run['restore_apply_command_available'] );
+		$this->assertTrue( $dry_run['restore_apply_command_available'] );
 		$this->assertFalse( $dry_run['report_write_requested'] );
 		$this->assertFalse( $dry_run['report_written'] );
 		$this->assertSame( '', $dry_run['report_path'] );

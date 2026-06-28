@@ -100,9 +100,9 @@ By default, the command writes nothing. With `--write-report=1`, it writes only 
 
 `restore-apply` is destructive-capable and intentionally scope-limited. It is staging-only, requires `--confirm=restore-staging-site`, reruns the dry-run/evidence checks, and refuses to apply if any preflight check fails.
 
-`restore-apply --scope=database` imports only the staged `database.sql` through WP-CLI. `restore-apply --scope=files` replaces only the configured staging WordPress path from staged `htdocs/`. Both write a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
+`restore-apply --scope=database` imports only the staged `database.sql` through WP-CLI. `restore-apply --scope=files` replaces only the configured staging WordPress path from staged `htdocs/`. `restore-apply --scope=files-and-database` replaces staged files first, then imports the staged database. All apply scopes write a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
 
-These commands do not create pre-restore backups, contact Drime, support production restore, or run combined files-and-database restore. `files-and-database` scope is intentionally refused until a separate implementation slice proves that path. Because runner archives exclude symlink entries, file apply inspects the pre-restore file backup for symlinked drop-ins that are absent from the staged files and reports them in `file_restore_missing_symlink_count`, `file_restore_missing_symlink_samples`, and `file_restore_manual_review_required`. Operators should inspect post-restore drop-ins carefully; symlinked drop-ins may need host/plugin regeneration after a file restore.
+These commands do not create pre-restore backups, contact Drime, or support production restore. Because runner archives exclude symlink entries, file and combined apply inspect the pre-restore file backup for symlinked drop-ins that are absent from the staged files and report them in `file_restore_missing_symlink_count`, `file_restore_missing_symlink_samples`, and `file_restore_manual_review_required`. Operators should inspect post-restore drop-ins carefully; symlinked drop-ins may need host/plugin regeneration after a file restore.
 
 ## Recommended Server Paths
 
@@ -154,4 +154,4 @@ Before production rollout of the server-runner producer:
 - Stage the restore into a non-public restore directory.
 - Inspect `htdocs/`, `database.sql`, `manifest.json`, and `RESTORE_NOTES.txt`.
 
-No automated production restore command should ship. The current destructive-capable path is limited to staging database import or staging file replacement after explicit confirmation, dry-run checks, and pre-restore evidence validation. Combined restore, automatic pre-restore backup creation, and production restore still need separate gated implementation and proof. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.
+No automated production restore command should ship. The current destructive-capable path is limited to staging database import, staging file replacement, or combined staging file/database apply after explicit confirmation, dry-run checks, and pre-restore evidence validation. Automatic pre-restore backup creation and production restore still need separate gated implementation and proof. See [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md) for the separate gated project plan.

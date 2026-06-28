@@ -2,7 +2,7 @@
 
 This runbook covers the first restore workflow for Alynt Drime Backups Uploader server-runner packages.
 
-The restore support is intentionally gated. The runner can fetch a known package from Drime, verify it, stage it for inspection, run read-only dry-run checks, and apply database-only or files-only restores to a staging target after explicit confirmation and pre-restore evidence checks.
+The restore support is intentionally gated. The runner can fetch a known package from Drime, verify it, stage it for inspection, run read-only dry-run checks, and apply database-only, files-only, or combined files-and-database restores to a staging target after explicit confirmation and pre-restore evidence checks.
 
 The runner prints next-step guidance after successful `fetch`, `verify`, `inspect`, and `stage-restore` commands. Treat that output as an operator checklist, not as approval to perform a live restore.
 
@@ -18,11 +18,11 @@ Supported now:
 - Extract a verified package into a separate restore staging directory.
 - Write a local `RESTORE_REPORT.json` evidence file after successful restore staging.
 - Run a read-only `restore-dry-run` preflight against staged evidence.
+- Apply database-only, files-only, or combined files-and-database restores to a staging target after explicit gates pass.
 - Review restored files and `database.sql` without touching production.
 
 Not supported yet:
 
-- Combined files-and-database apply in one command.
 - Running an automated production restore command.
 
 Any production restore must remain a manual, explicitly approved operation until a separate destructive restore workflow is designed and tested. The future destructive restore automation plan is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md).
@@ -246,7 +246,7 @@ The dry run reads config and staged evidence only. It checks:
 - Pre-restore evidence exists, is valid JSON, matches package/scope/target, and points to readable backup artifacts under `restore_pre_backup_path`.
 - The target filesystem has the configured minimum free space.
 
-The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true for `database` and `files` scopes in this release. By default it writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under `restore_reports_path`; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
+The dry run reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true for `database`, `files`, and `files-and-database` scopes in this release. By default it writes nothing. With `--write-report=1`, it writes only a successful dry-run evidence report under `restore_reports_path`; failed dry runs do not create success evidence. It does not create a pre-restore backup, import a database, overwrite files, delete files, or run shell restore commands.
 
 ## Staging Database Apply
 
@@ -299,6 +299,24 @@ This command is also narrow:
 
 Before running it, confirm that the pre-restore evidence points to a readable file backup created before the restore attempt. After apply, inspect the apply report for missing symlink/drop-in warnings. If warnings exist, check files such as `wp-content/db.php` and regenerate or restore plugin-owned drop-ins manually as needed. If apply fails, stop and inspect the apply report plus the pre-restore evidence before attempting manual recovery.
 
+## Staging Combined Apply
+
+After staging, inspection, and a passing combined-scope dry run, staging files and database can be restored in one gated command:
+
+```bash
+php /path/to/alynt-backup-runner.php restore-apply \
+  --config=/var/www/example.com/private/alynt-drime-backups/config.json \
+  --staged-path=/var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMSS \
+  --pre-restore-evidence=/var/www/example.com/private/alynt-drime-backups/pre-restore/PRE_RESTORE_BACKUP_EVIDENCE-example-com-YYYYmmdd-HHMMSS.json \
+  --scope=files-and-database \
+  --confirm=restore-staging-site \
+  --format=json
+```
+
+The command runs the same dry-run/evidence checks with `files-and-database` scope, replaces staged files first, and imports the staged database second. If file replacement fails, database import is not attempted. If database import fails after files are restored, the apply report marks the database phase failed and records manual recovery notes.
+
+The apply report includes `combined_restore_order: ["files", "database"]`, the existing file/database phase booleans, and the same symlink/drop-in warning fields used by file-only apply.
+
 ## Manual Disaster Restore Outline
 
 This outline is not an automated production restore command. Use it only after a human has approved a real restore and the staged files have been inspected.
@@ -313,7 +331,7 @@ This outline is not an automated production restore command. Use it only after a
 8. Run WordPress URL, permalink, cache, and login checks.
 9. Remove maintenance mode only after runtime checks pass.
 
-The runner now supports staging-only, separately scoped database and file apply commands after confirmation gates, dry-run output, pre-restore backup evidence, and staging evidence. Production restore and combined files-and-database restore remain outside the automated scope.
+The runner now supports staging-only database, file, and combined files-and-database apply commands after confirmation gates, dry-run output, pre-restore backup evidence, and staging evidence. Production restore remains outside the automated scope.
 
 For the package integrity, extraction safety, storage-path, and encryption boundaries behind this runbook, see [PACKAGE_SECURITY.md](PACKAGE_SECURITY.md).
 

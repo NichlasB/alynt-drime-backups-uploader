@@ -27,7 +27,7 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 		$this->assertSame( array(), $result['output'] );
 	}
 
-	public function test_restore_apply_rejects_combined_scope_for_now() {
+	public function test_restore_apply_rejects_unknown_scope() {
 		$config = $this->write_config( $this->make_directory( 'outbox-scope' ) );
 
 		$result = $this->run_runner(
@@ -35,14 +35,14 @@ class ServerRunnerRestoreApplyTest extends Alynt_Drime_Backups_Uploader_Server_R
 			$config,
 			array(
 				'--staged-path=' . escapeshellarg( $this->root . DIRECTORY_SEPARATOR . 'restores' . DIRECTORY_SEPARATOR . 'missing' ),
-				'--scope=files-and-database',
+				'--scope=everything',
 				'--confirm=restore-staging-site',
 				'--format=json',
 			)
 		);
 
 		$this->assertSame( 1, $result['exit_code'] );
-		$this->assertStringContainsString( 'Only --scope=database or --scope=files is implemented for restore-apply in this release.', implode( "\n", $result['error'] ) );
+		$this->assertStringContainsString( 'Only --scope=database, --scope=files, or --scope=files-and-database is implemented for restore-apply.', implode( "\n", $result['error'] ) );
 		$this->assertSame( array(), $result['output'] );
 	}
 

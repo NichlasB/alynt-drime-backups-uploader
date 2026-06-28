@@ -60,7 +60,7 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( "'destructive_actions_performed'   => false", $source );
 		$this->assertStringContainsString( "'database_imported'               => false", $source );
 		$this->assertStringContainsString( "'live_files_overwritten'          => false", $source );
-		$this->assertStringContainsString( "'restore_apply_command_available' => in_array( \$scope, array( 'database', 'files' ), true )", $source );
+		$this->assertStringContainsString( "'restore_apply_command_available' => in_array( \$scope, array( 'database', 'files', 'files-and-database' ), true )", $source );
 		$this->assertStringContainsString( '--write-report=1', $source );
 		$this->assertStringContainsString( '--pre-restore-evidence=/path/to/evidence.json', $source );
 		$this->assertStringContainsString( 'restore_reports_path', $source );
@@ -79,7 +79,7 @@ class ServerRunnerSecurityTest extends TestCase {
 	}
 
 	/**
-	 * Restore apply must stay scope-limited and confirmation-gated for this slice.
+	 * Restore apply must stay scope-limited and confirmation-gated.
 	 *
 	 * @return void
 	 */
@@ -89,11 +89,13 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( "case 'restore-apply'", $source );
 		$this->assertStringContainsString( 'restore_apply_command', $source );
 		$this->assertStringContainsString( "'restore-staging-site' !== \$confirm", $source );
-		$this->assertStringContainsString( "in_array( \$scope, array( 'database', 'files' ), true )", $source );
+		$this->assertStringContainsString( "in_array( \$scope, array( 'database', 'files', 'files-and-database' ), true )", $source );
 		$this->assertStringContainsString( 'restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path )', $source );
 		$this->assertStringContainsString( 'import_database( $database_dump_path, (string) $result[\'target_wordpress_path\'] )', $source );
 		$this->assertStringContainsString( ' db import ', $source );
 		$this->assertStringContainsString( 'restore_apply_files_result', $source );
+		$this->assertStringContainsString( 'restore_apply_combined_result', $source );
+		$this->assertStringContainsString( "'combined_restore_order'", $source );
 		$this->assertStringContainsString( 'replace_target_files_from_staging', $source );
 		$this->assertStringContainsString( 'restore_apply_missing_symlink_warnings', $source );
 		$this->assertStringContainsString( 'parse_tar_symlink_entry', $source );

@@ -75,7 +75,7 @@ Recommended first implementation path:
 3. Add pre-restore backup evidence checks. Current source status: implemented as validation of a matching evidence JSON file and readable backup artifacts.
 4. Add `restore-apply --scope=database`. Current source status: implemented for staging database imports after confirmation, dry-run checks, and pre-restore evidence validation.
 5. Add `restore-apply --scope=files`. Current source status: implemented for staging file replacement after confirmation, dry-run checks, pre-restore evidence validation, and symlink/drop-in warning reporting.
-6. Combine as `restore-apply --scope=files-and-database`.
+6. Combine as `restore-apply --scope=files-and-database`. Current source status: implemented for staging file replacement followed by database import after confirmation, dry-run checks, pre-restore evidence validation, and symlink/drop-in warning reporting.
 
 ## Required Config Additions
 
@@ -254,7 +254,7 @@ Current `restore-dry-run` behavior:
 - Refuses to write success evidence when the dry run fails.
 - Requires pre-restore backup evidence to match package ID, scope, and target path.
 - Requires scope-specific backup artifact files to be readable and under `restore_pre_backup_path`.
-- Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true for `database` and `files` scopes in the current partial implementation.
+- Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true for `database`, `files`, and `files-and-database` scopes.
 - Does not create pre-restore backups yet.
 - Does not check target database connectivity yet.
 - Does not import the database itself.
@@ -280,11 +280,18 @@ Current `restore-apply --scope=files` behavior:
 - Does not create the pre-restore backup evidence automatically yet.
 - Does not import the database in this scope.
 
-Current combined-scope boundary:
+Current `restore-apply --scope=files-and-database` behavior:
 
-- `restore-apply --scope=files-and-database` is still refused.
-- Combined restore remains a separate implementation slice.
-- Because runner archives exclude symlink entries, file restore may not recreate symlinked drop-ins such as Query Monitor's `wp-content/db.php`; file apply reports pre-restore symlinks that are absent from staged files, and operators must inspect or regenerate those drop-ins after apply.
+- Requires `--confirm=restore-staging-site`.
+- Runs the existing dry-run/evidence checks with `files-and-database` scope.
+- Refuses to apply when any dry-run check fails.
+- Validates both staged `htdocs/` and staged `database.sql` before destructive work begins.
+- Replaces the configured staging WordPress path from staged `htdocs/` first.
+- Imports staged `database.sql` with WP-CLI second, only after file replacement succeeds.
+- Writes `RESTORE_APPLY_REPORT-*.json` under configured `restore_reports_path`.
+- Reports `combined_restore_order: ["files", "database"]`, both file/database phase booleans, and missing pre-restore symlink/drop-in samples.
+- Does not create the pre-restore backup evidence automatically yet.
+- Does not support production restore.
 
 Staging rehearsal status:
 
