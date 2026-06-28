@@ -1187,6 +1187,9 @@ class Alynt_Server_Backup_Runner {
 			'file_restore_missing_symlink_count' => 0,
 			'file_restore_missing_symlink_samples' => array(),
 			'file_restore_manual_review_required' => false,
+			'post_restore_manual_review_required' => false,
+			'post_restore_cleanup_required'    => false,
+			'post_restore_manual_review_items' => array(),
 			'destructive_actions_performed'     => false,
 			'pre_restore_backup_created'        => false,
 			'restore_apply_report_written'      => false,
@@ -1275,6 +1278,9 @@ class Alynt_Server_Backup_Runner {
 			'file_restore_missing_symlink_count' => 0,
 			'file_restore_missing_symlink_samples' => array(),
 			'file_restore_manual_review_required' => false,
+			'post_restore_manual_review_required' => false,
+			'post_restore_cleanup_required'    => false,
+			'post_restore_manual_review_items' => array(),
 			'destructive_actions_performed'     => false,
 			'pre_restore_backup_created'        => false,
 			'restore_apply_report_written'      => false,
@@ -1324,6 +1330,8 @@ class Alynt_Server_Backup_Runner {
 		if ( ! $result['file_restore_succeeded'] ) {
 			$result['failure_step']          = 'file-restore';
 			$result['manual_recovery_notes'] = array( 'Review pre-restore file backup evidence before attempting manual file recovery.' );
+		} else {
+			$result = $this->add_post_restore_manual_review_items( $result, (string) $result['target_wordpress_path'], $pre_backup_evidence_path );
 		}
 
 		return $this->write_restore_apply_report( $result );
@@ -1368,6 +1376,9 @@ class Alynt_Server_Backup_Runner {
 			'file_restore_missing_symlink_count' => 0,
 			'file_restore_missing_symlink_samples' => array(),
 			'file_restore_manual_review_required' => false,
+			'post_restore_manual_review_required' => false,
+			'post_restore_cleanup_required'    => false,
+			'post_restore_manual_review_items' => array(),
 			'combined_restore_order'            => array( 'files', 'database' ),
 			'destructive_actions_performed'     => false,
 			'pre_restore_backup_created'        => false,
@@ -1426,6 +1437,7 @@ class Alynt_Server_Backup_Runner {
 			$result['manual_recovery_notes'][]  = 'Database import was not attempted because file restore failed.';
 			return $this->write_restore_apply_report( $result );
 		}
+		$result = $this->add_post_restore_manual_review_items( $result, (string) $result['target_wordpress_path'], $pre_backup_evidence_path );
 
 		$result['database_import_attempted']     = true;
 		$import_result                           = $this->import_database( $database_dump_path, (string) $result['target_wordpress_path'] );
@@ -1923,6 +1935,148 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Adds known post-restore drop-in review items to an apply result.
+	 *
+	 * @param array<string,mixed> $result Apply result.
+	 * @param string              $target_wordpress_path Target WordPress path.
+	 * @param string              $pre_backup_evidence_path Pre-restore evidence path.
+	 * @return array<string,mixed>
+	 */
+	private function add_post_restore_manual_review_items( array $result, $target_wordpress_path, $pre_backup_evidence_path ) {
+		$items = $this->restore_apply_post_restore_manual_review_items( $target_wordpress_path, $pre_backup_evidence_path );
+		if ( empty( $items ) ) {
+			return $result;
+		}
+
+		$result['post_restore_manual_review_items']    = $items;
+		$result['post_restore_manual_review_required'] = true;
+		foreach ( $items as $item ) {
+			if ( ! empty( $item['cleanup_required'] ) ) {
+				$result['post_restore_cleanup_required'] = true;
+				break;
+			}
+		}
+		$result['manual_recovery_notes'][] = 'Post-restore manual review is required for known drop-in paths.';
+
+		return $result;
+	}
+
+	/**
+	 * Builds post-restore review items for known symlinked drop-ins.
+	 *
+	 * @param string $target_wordpress_path Target WordPress path.
+	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function restore_apply_post_restore_manual_review_items( $target_wordpress_path, $pre_backup_evidence_path ) {
+		$target_wordpress_path = $this->normalize_path( $target_wordpress_path );
+		$known_drop_ins        = $this->known_restore_drop_in_relative_paths();
+		$entries               = $this->restore_apply_pre_restore_symlink_entries( $pre_backup_evidence_path );
+		$items                 = array();
+
+		foreach ( $entries as $entry ) {
+			if ( empty( $entry['path'] ) || 0 !== strpos( $entry['path'], 'htdocs/' ) ) {
+				continue;
+			}
+
+			$relative_path = substr( $entry['path'], strlen( 'htdocs/' ) );
+			if ( ! isset( $known_drop_ins[ $relative_path ] ) ) {
+				continue;
+			}
+
+			$path        = $target_wordpress_path . DIRECTORY_SEPARATOR . str_replace( '/', DIRECTORY_SEPARATOR, $relative_path );
+			$exists      = file_exists( $path ) || is_link( $path );
+			$is_link     = is_link( $path );
+			$link_target = $is_link ? (string) readlink( $path ) : '';
+			$target_path = '' !== $link_target && 0 === strpos( $link_target, '/' )
+				? $link_target
+				: ( '' !== $link_target ? dirname( $path ) . DIRECTORY_SEPARATOR . $link_target : '' );
+			$target_exists = '' !== $target_path && file_exists( $target_path );
+
+			if ( $exists && ( ! $is_link || $target_exists ) ) {
+				continue;
+			}
+
+			$definition = $known_drop_ins[ $relative_path ];
+			$items[]    = array(
+				'type'                         => $is_link ? 'known_drop_in_broken_symlink' : 'known_drop_in_missing_after_restore',
+				'path'                         => $relative_path,
+				'post_restore_path'            => $path,
+				'post_restore_exists'          => $exists,
+				'post_restore_is_symlink'      => $is_link,
+				'post_restore_symlink_target'  => $link_target,
+				'post_restore_target_exists'   => $target_exists,
+				'previous_symlink_target'      => $entry['target'],
+				'owner_hint'                   => $this->restore_drop_in_owner_hint( $relative_path, $entry['target'], (string) $definition['owner_hint'] ),
+				'cleanup_required'             => $is_link && ! $target_exists,
+				'recommended_action'           => (string) $definition['recommended_action'],
+			);
+		}
+
+		return $items;
+	}
+
+	/**
+	 * Returns known WordPress drop-in paths that need manual post-restore review.
+	 *
+	 * @return array<string,array<string,string>>
+	 */
+	private function known_restore_drop_in_relative_paths() {
+		return array(
+			'wp-content/db.php' => array(
+				'owner_hint'         => 'Database drop-in. Query Monitor can own this path when it is enabled.',
+				'recommended_action' => 'Inspect the owning plugin after restore. For Query Monitor, regenerate the drop-in through the plugin workflow if needed; remove only broken stale links after operator review.',
+			),
+		);
+	}
+
+	/**
+	 * Returns an owner hint for a known drop-in.
+	 *
+	 * @param string $relative_path Relative path.
+	 * @param string $previous_target Previous symlink target.
+	 * @param string $fallback Fallback hint.
+	 * @return string
+	 */
+	private function restore_drop_in_owner_hint( $relative_path, $previous_target, $fallback ) {
+		if ( 'wp-content/db.php' === $relative_path && false !== strpos( strtolower( $previous_target ), 'query-monitor' ) ) {
+			return 'Query Monitor likely owns this database drop-in.';
+		}
+
+		return $fallback;
+	}
+
+	/**
+	 * Returns symlink entries from the pre-restore file backup.
+	 *
+	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
+	 * @return array<int,array{path:string,target:string}>
+	 */
+	private function restore_apply_pre_restore_symlink_entries( $pre_backup_evidence_path ) {
+		$evidence         = $this->read_restore_report( $pre_backup_evidence_path );
+		$file_backup_path = isset( $evidence['file_backup_path'] ) ? $this->normalize_path( (string) $evidence['file_backup_path'] ) : '';
+
+		if ( '' === $file_backup_path || ! is_file( $file_backup_path ) || ! is_readable( $file_backup_path ) ) {
+			return array();
+		}
+
+		$result = $this->run_shell_command( 'tar -tvzf ' . escapeshellarg( $file_backup_path ) );
+		if ( 0 !== (int) $result['exit_code'] ) {
+			return array();
+		}
+
+		$entries = array();
+		foreach ( $result['output'] as $line ) {
+			$entry = $this->parse_tar_symlink_entry( $line );
+			if ( ! empty( $entry ) ) {
+				$entries[] = $entry;
+			}
+		}
+
+		return $entries;
+	}
+
+	/**
 	 * Parses a tar verbose symlink entry.
 	 *
 	 * @param string $line Tar verbose output line.
@@ -2254,6 +2408,10 @@ class Alynt_Server_Backup_Runner {
 		if ( isset( $result['file_restore_missing_symlink_count'] ) ) {
 			$this->line( 'Missing symlink/drop-in warnings: ' . (int) $result['file_restore_missing_symlink_count'] );
 			$this->line( 'File restore manual review required: ' . ( ! empty( $result['file_restore_manual_review_required'] ) ? 'yes' : 'no' ) );
+		}
+		if ( isset( $result['post_restore_manual_review_items'] ) ) {
+			$this->line( 'Post-restore manual review items: ' . count( $result['post_restore_manual_review_items'] ) );
+			$this->line( 'Post-restore cleanup required: ' . ( ! empty( $result['post_restore_cleanup_required'] ) ? 'yes' : 'no' ) );
 		}
 		if ( ! empty( $result['restore_apply_report_path'] ) ) {
 			$this->line( 'Report path: ' . $result['restore_apply_report_path'] );

@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - Added `server-runner restore-apply --scope=files` for staging-only, confirmation-gated file replacement after restore dry-run and pre-restore evidence checks pass.
 - Added file-restore reporting for pre-restore symlinked drop-ins that are absent from staged files, including a manual-review flag in restore apply reports.
 - Added `server-runner restore-apply --scope=files-and-database` for staging-only combined restores that replace files first, then import the staged database after the same confirmation and evidence gates pass.
+- Added post-restore manual-review reporting for known symlinked drop-ins such as Query Monitor's `wp-content/db.php`, including whether broken-link cleanup needs operator review.
 
 ### Changed
 

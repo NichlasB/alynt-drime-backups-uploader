@@ -39,7 +39,16 @@ class ServerRunnerRestoreApplySymlinkTest extends Alynt_Drime_Backups_Uploader_S
 		$this->assertSame( 1, $apply['file_restore_missing_symlink_count'] );
 		$this->assertTrue( $apply['file_restore_manual_review_required'] );
 		$this->assertStringContainsString( 'htdocs/wp-content/db.php -> ', $apply['file_restore_missing_symlink_samples'][0] );
+		$this->assertTrue( $apply['post_restore_manual_review_required'] );
+		$this->assertFalse( $apply['post_restore_cleanup_required'] );
+		$this->assertCount( 1, $apply['post_restore_manual_review_items'] );
+		$this->assertSame( 'known_drop_in_missing_after_restore', $apply['post_restore_manual_review_items'][0]['type'] );
+		$this->assertSame( 'wp-content/db.php', $apply['post_restore_manual_review_items'][0]['path'] );
+		$this->assertFalse( $apply['post_restore_manual_review_items'][0]['post_restore_exists'] );
+		$this->assertFalse( $apply['post_restore_manual_review_items'][0]['cleanup_required'] );
+		$this->assertStringContainsString( 'Query Monitor', $apply['post_restore_manual_review_items'][0]['owner_hint'] );
 		$this->assertStringContainsString( 'Pre-restore file backup includes symlink entries', implode( "\n", $apply['manual_recovery_notes'] ) );
+		$this->assertStringContainsString( 'Post-restore manual review is required', implode( "\n", $apply['manual_recovery_notes'] ) );
 
 		$this->assertFileExists( $fixture['wordpress_path'] . DIRECTORY_SEPARATOR . 'index.php' );
 		$this->assertFileDoesNotExist( $fixture['wordpress_path'] . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'db.php' );

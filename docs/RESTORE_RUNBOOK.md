@@ -295,9 +295,10 @@ This command is also narrow:
 - It replaces the configured staging WordPress path from staged `htdocs/`.
 - It writes a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
 - It reports pre-restore symlinked drop-ins that are absent from the staged files as `file_restore_missing_symlink_count`, `file_restore_missing_symlink_samples`, and `file_restore_manual_review_required`.
+- It reports known post-restore drop-in review items such as `wp-content/db.php` as `post_restore_manual_review_items`.
 - It does not import the database in this scope, combine files plus database, create a pre-restore backup, or support production restore.
 
-Before running it, confirm that the pre-restore evidence points to a readable file backup created before the restore attempt. After apply, inspect the apply report for missing symlink/drop-in warnings. If warnings exist, check files such as `wp-content/db.php` and regenerate or restore plugin-owned drop-ins manually as needed. If apply fails, stop and inspect the apply report plus the pre-restore evidence before attempting manual recovery.
+Before running it, confirm that the pre-restore evidence points to a readable file backup created before the restore attempt. After apply, inspect the apply report for missing symlink/drop-in warnings and `post_restore_manual_review_items`. If warnings exist, check files such as `wp-content/db.php` and regenerate or restore plugin-owned drop-ins manually as needed. If `post_restore_cleanup_required` is true, remove or regenerate broken links only after operator review. If apply fails, stop and inspect the apply report plus the pre-restore evidence before attempting manual recovery.
 
 ## Staging Combined Apply
 
@@ -315,7 +316,7 @@ php /path/to/alynt-backup-runner.php restore-apply \
 
 The command runs the same dry-run/evidence checks with `files-and-database` scope, replaces staged files first, and imports the staged database second. If file replacement fails, database import is not attempted. If database import fails after files are restored, the apply report marks the database phase failed and records manual recovery notes.
 
-The apply report includes `combined_restore_order: ["files", "database"]`, the existing file/database phase booleans, and the same symlink/drop-in warning fields used by file-only apply.
+The apply report includes `combined_restore_order: ["files", "database"]`, the existing file/database phase booleans, the same symlink/drop-in warning fields used by file-only apply, and `post_restore_manual_review_items` for known drop-ins such as Query Monitor's `wp-content/db.php`.
 
 ## Manual Disaster Restore Outline
 

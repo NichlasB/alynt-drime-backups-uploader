@@ -40,7 +40,7 @@ The server runner writes archives in a work directory first, then renames comple
 
 The generic outbox producer ignores temporary and partial files, then waits until a discovered archive is old enough and stable before queueing it.
 
-The server runner excludes symlink entries from new archives. If a site relies on a symlinked WordPress drop-in or plugin-owned link, the restored staging package will not recreate that link automatically; the operator should inspect the source site and recreate any required link manually after approving a real restore.
+The server runner excludes symlink entries from new archives. If a site relies on a symlinked WordPress drop-in or plugin-owned link, the restored staging package will not recreate that link automatically; the operator should inspect the source site and recreate any required link manually after approving a real restore. Restore apply reports known missing or broken drop-ins such as `wp-content/db.php` in `post_restore_manual_review_items` so operators have an explicit cleanup/regeneration checklist.
 
 A completed server-runner package has:
 
@@ -102,7 +102,7 @@ By default, the command writes nothing. With `--write-report=1`, it writes only 
 
 `restore-apply --scope=database` imports only the staged `database.sql` through WP-CLI. `restore-apply --scope=files` replaces only the configured staging WordPress path from staged `htdocs/`. `restore-apply --scope=files-and-database` replaces staged files first, then imports the staged database. All apply scopes write a `RESTORE_APPLY_REPORT-*.json` file under `restore_reports_path`.
 
-These commands do not create pre-restore backups, contact Drime, or support production restore. Because runner archives exclude symlink entries, file and combined apply inspect the pre-restore file backup for symlinked drop-ins that are absent from the staged files and report them in `file_restore_missing_symlink_count`, `file_restore_missing_symlink_samples`, and `file_restore_manual_review_required`. Operators should inspect post-restore drop-ins carefully; symlinked drop-ins may need host/plugin regeneration after a file restore.
+These commands do not create pre-restore backups, contact Drime, or support production restore. Because runner archives exclude symlink entries, file and combined apply inspect the pre-restore file backup for symlinked drop-ins that are absent from the staged files and report them in `file_restore_missing_symlink_count`, `file_restore_missing_symlink_samples`, and `file_restore_manual_review_required`. They also add known drop-ins such as Query Monitor's `wp-content/db.php` to `post_restore_manual_review_items` when the path is missing or the restored symlink is broken. Operators should inspect post-restore drop-ins carefully; symlinked drop-ins may need host/plugin regeneration after a file restore. The runner does not automatically remove or recreate these files.
 
 ## Recommended Server Paths
 
