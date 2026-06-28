@@ -10,12 +10,12 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
-- Current released stable version: `v0.2.0`.
+- Current released stable version: `v0.2.1`.
 - Accepted as stable on 2026-06-28.
-- Current release-candidate scope has been promoted into `v0.2.0`; no active unreleased feature scope is open right now.
+- Current guided server setup command scope has been promoted into `v0.2.1`; no active unreleased feature scope is open right now.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
-- Real WordPress Plugins-screen update rehearsals passed for both `v0.1.1` and `v0.2.0`; the latest rehearsal updated the LocalWP test copy from `0.1.1` to `0.2.0` through the rendered WordPress plugin UI.
+- Real WordPress Plugins-screen update rehearsals passed for both `v0.1.1` and `v0.2.0`; the `v0.2.1` updater rehearsal passed through Alynt Plugin Updater's WordPress update response and installed the GitHub release asset on `plugin-tester.local`.
 - The working tree was clean before this final pre-release/documentation hygiene pass.
 
 ## What Is Complete
@@ -124,8 +124,9 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 - Pre-release review workflows have been run where they made sense for the completed baseline.
 - The plugin has been added to the release/checklist tracking flow through the wp-plugin-toolkit process.
-- GitHub release asset install/update validation passed for `v0.2.0`.
-- Alynt Plugin Updater compatibility passed for `v0.2.0`.
+- GitHub release asset install/update validation passed for `v0.2.1`.
+- Alynt Plugin Updater compatibility passed for `v0.2.1`.
+- GridPane staging parity passed for `alyntdrime.sitesmain.com` at active plugin version `0.2.1`.
 
 ## Latest Validation Snapshot
 
