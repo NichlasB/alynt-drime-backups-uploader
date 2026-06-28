@@ -87,6 +87,9 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] Alynt Plugin Updater detected `v0.1.1` from the GitHub release asset, populated WordPress's update transient with `alynt-drime-backups-uploader-v0.1.1.zip`, installed the update on `plugin-tester.local`, and final verification showed version `0.1.1`, active plugin state, clean queue/failed counts, and no remaining update response.
 - [x] Final real UI-click updater rehearsal passed: `plugin-tester.local` was downgraded to `0.1.0`, the WordPress Plugins screen showed the Alynt Plugin Updater `0.1.1` update notice, Playwright clicked the rendered `update now` link, the UI reported `Updated!`, and runtime verification returned version `0.1.1`, active plugin state, clean queue/failed counts, no active upload, and no remaining update response.
 - [x] Release `v0.1.1` accepted as the current stable baseline on 2026-06-26.
+- [x] GitHub release `v0.2.0` published on 2026-06-28 with release asset `alynt-drime-backups-uploader-v0.2.0.zip`; the release workflow completed successfully.
+- [x] Alynt Plugin Updater detected `v0.2.0` from the GitHub release asset, populated WordPress's update transient with `alynt-drime-backups-uploader-v0.2.0.zip`, installed the update through the rendered WordPress Plugins screen on `plugin-tester.local`, and final verification showed version `0.2.0`, active plugin state, clean queue/failed counts, no active upload, and no remaining update response.
+- [x] Release `v0.2.0` accepted as the current stable baseline on 2026-06-28.
 
 ## E2E Validation
 
