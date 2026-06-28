@@ -271,6 +271,16 @@ Current `restore-apply --scope=database` behavior:
 - Does not create the pre-restore backup evidence automatically yet.
 - Does not restore files yet.
 
+Staging rehearsal status:
+
+- Passed on `alyntdrime.sitesmain.com` on 2026-06-28.
+- Updated runner was installed under `/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/runner/alynt-backup-runner.php`, with the previous runner retained as a timestamped `.bak-*` file.
+- Fresh package `alyntdrime-sitesmain-com-20260628-081212.tar.gz` was created, verified, and staged.
+- Pre-restore database export evidence was created at `/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/pre-restore/current-database-before-alyntdrime-sitesmain-com-20260628-081212.sql`.
+- `restore-dry-run --scope=database --write-report=1` passed with `failure_count: 0`.
+- `restore-apply --scope=database --confirm=restore-staging-site` succeeded, imported the staged `database.sql`, and wrote `RESTORE_APPLY_REPORT-alyntdrime-sitesmain-com-20260628-081212-20260628-081847.json`.
+- Post-apply verification passed: WP-CLI returned the expected `home` and `siteurl`, WordPress core version `7.0`, `wp db check` succeeded, and HTTPS returned `200`.
+
 Current dry-run report fields:
 
 - `report_write_requested`
