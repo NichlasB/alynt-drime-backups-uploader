@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-30
+
+### Added
+
+- Added optional per-source Drime relative paths so generic outbox/server-runner packages and WPvivid packages can upload into separate subfolders while sharing the same workspace/base folder.
+
+### Changed
+
+- Changed default minimum file age from 900 seconds to 300 seconds.
+- Changed default multipart chunk size from 32 MB to 128 MB for large-backup-oriented uploads, while keeping supported range validation.
+
 ## [0.2.1] - 2026-06-28
 
 ### Changed

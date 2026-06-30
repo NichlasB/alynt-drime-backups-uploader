@@ -76,6 +76,8 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Direct small-file upload and multipart upload are implemented.
 - Duplicate handling supports skip and rename behavior.
 - Destination folder preview, workspace selection, and relative-path upload handling are implemented.
+- Optional per-source Drime relative paths are implemented so generic outbox/server-runner packages and WPvivid packages can upload to separate subfolders while sharing the same workspace/base folder. Empty per-source paths fall back to the shared relative path.
+- Production-oriented upload defaults are implemented for new installs: minimum file age defaults to 300 seconds and multipart chunk size defaults to 128 MB for large backups when server resources support it.
 - Multipart resume, stale active upload clearing, retry handling, and failure registry behavior are implemented.
 - Manifest/checksum/remote-index/remote-catalog sidecars are uploaded with server-runner packages.
 - Manual remote retention is implemented conservatively:

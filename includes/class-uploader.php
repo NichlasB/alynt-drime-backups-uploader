@@ -248,7 +248,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	 * @return array<string,mixed>|WP_Error
 	 */
 	private function complete_successful_upload( array $item, array $result ) {
-		$this->remember_remote_parent_from_result( $result );
+		$this->remember_remote_parent_from_result( $result, $item );
 
 		$record = array_merge( $result, $this->registry_item_context( $item ) );
 
@@ -434,7 +434,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			return new WP_Error( 'alynt_drime_file_missing', __( 'The queued backup file is no longer readable.', 'alynt-drime-backups-uploader' ) );
 		}
 
-		$settings = $this->settings->get();
+		$settings = $this->effective_upload_settings( $this->settings->get(), $item );
 		if ( ! Alynt_Drime_Backups_Uploader_Settings::is_workspace_id_allowed( absint( $settings['workspace_id'] ) ) ) {
 			return new WP_Error( 'alynt_drime_workspace_not_allowed', Alynt_Drime_Backups_Uploader_Settings::workspace_not_allowed_message() );
 		}
@@ -469,13 +469,14 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 
 			if ( ! empty( $sidecars ) ) {
 				return array(
-					'path'        => $path,
-					'remote_name' => basename( $path ),
-					'size'        => (int) $size,
-					'drime'       => array(
+					'path'                      => $path,
+					'remote_name'               => basename( $path ),
+					'size'                      => (int) $size,
+					'destination_relative_path' => (string) $settings['relative_path'],
+					'drime'                     => array(
 						'duplicate_skipped' => true,
 					),
-					'sidecars'    => $sidecars,
+					'sidecars'                  => $sidecars,
 				);
 			}
 
@@ -499,7 +500,47 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			$result['sidecars'] = $sidecars;
 		}
 
+		$result['destination_relative_path'] = (string) $settings['relative_path'];
+
 		return $result;
+	}
+
+	/**
+	 * Returns settings with a producer-specific Drime relative path applied.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @param array<string,mixed> $item Queue item.
+	 * @return array<string,mixed>
+	 */
+	private function effective_upload_settings( array $settings, array $item ) {
+		$relative_path = $this->source_relative_path( $settings, $item );
+
+		if ( '' !== $relative_path ) {
+			$settings['relative_path'] = $relative_path;
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Returns a source-specific Drime relative path when configured.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @param array<string,mixed> $item Queue item.
+	 * @return string
+	 */
+	private function source_relative_path( array $settings, array $item ) {
+		$producer_key = isset( $item['producer_key'] ) ? (string) $item['producer_key'] : '';
+
+		if ( 'generic_outbox' === $producer_key && ! empty( $settings['server_relative_path'] ) ) {
+			return (string) $settings['server_relative_path'];
+		}
+
+		if ( 'wpvivid' === $producer_key && ! empty( $settings['wpvivid_relative_path'] ) ) {
+			return (string) $settings['wpvivid_relative_path'];
+		}
+
+		return '';
 	}
 
 	/**
@@ -641,10 +682,11 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	 * Remembers the Drime parent ID returned after a relative-path upload.
 	 *
 	 * @param array<string,mixed> $result Upload result.
+	 * @param array<string,mixed> $item Queue item.
 	 * @return void
 	 */
-	private function remember_remote_parent_from_result( array $result ) {
-		$settings = $this->settings->get();
+	private function remember_remote_parent_from_result( array $result, array $item ) {
+		$settings = $this->effective_upload_settings( $this->settings->get(), $item );
 
 		if ( empty( $settings['relative_path'] ) ) {
 			return;

@@ -73,6 +73,18 @@ Each candidate should also include the producer-neutral fields:
 
 Producer-specific fields are allowed when needed, but upload behavior should not depend on them unless the logic is deliberately producer-specific. Existing example: WPvivid set-aware local deletion uses the `wpvivid` metadata block.
 
+## Source-Specific Drime Destinations
+
+Producer adapters still return normalized package records; they do not upload to Drime directly. The uploader resolves the effective destination before duplicate checks, folder creation, archive upload, sidecar upload, and registry updates.
+
+Current source-specific destination settings:
+
+- `server_relative_path` applies to the built-in `generic_outbox` producer, including server-runner packages.
+- `wpvivid_relative_path` applies to the built-in `wpvivid` producer.
+- Empty source-specific paths fall back to the shared `relative_path`.
+
+Uploaded registry records include `destination_relative_path` so operators can audit whether a package used the shared path or a source-specific path.
+
 ## Stability Rules
 
 Adapters must not queue files that may still be changing.

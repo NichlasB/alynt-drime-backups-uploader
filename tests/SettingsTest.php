@@ -84,6 +84,15 @@ class SettingsTest extends TestCase {
 		$this->assertSame( 256, $high['multipart_chunk_size_mb'] );
 	}
 
+	public function test_defaults_are_production_oriented_for_server_backups() {
+		Functions\when( 'get_option' )->justReturn( '' );
+
+		$defaults = Alynt_Drime_Backups_Uploader_Settings::defaults();
+
+		$this->assertSame( 300, $defaults['min_file_age_seconds'] );
+		$this->assertSame( 128, $defaults['multipart_chunk_size_mb'] );
+	}
+
 	public function test_multipart_chunk_size_accepts_supported_validation_targets() {
 		$options  = array();
 		$settings = $this->settings_with_options( $options );
@@ -165,6 +174,21 @@ class SettingsTest extends TestCase {
 		);
 
 		$this->assertSame( ' /var/www/example.com/private/backups ', $saved['server_outbox_path'] );
+	}
+
+	public function test_source_specific_relative_paths_are_sanitized() {
+		$options  = array();
+		$settings = $this->settings_with_options( $options );
+
+		$saved = $settings->update(
+			array(
+				'server_relative_path'  => 'example.com//server',
+				'wpvivid_relative_path' => '\\example.com\\wpvivid',
+			)
+		);
+
+		$this->assertSame( '/example.com/server', $saved['server_relative_path'] );
+		$this->assertSame( '/example.com/wpvivid', $saved['wpvivid_relative_path'] );
 	}
 
 	public function test_site_uuid_is_generated_and_persisted() {

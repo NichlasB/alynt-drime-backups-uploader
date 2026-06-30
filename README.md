@@ -59,6 +59,7 @@ The settings screen controls:
 - Drime API token, non-personal workspace ID with optional workspace picker, selected or manually entered parent folder ID, and optional relative subpath.
 - Optional WPvivid backup path override.
 - Optional server outbox path for generic packages produced outside WordPress.
+- Optional per-source Drime relative paths for separating server-runner/generic-outbox uploads from WPvivid uploads.
 - Duplicate handling mode: skip existing files or rename new uploads.
 - Automatic WP-Cron scanning.
 - Optional server-cron expectation reminders for WP-CLI-driven scheduled scans.
@@ -141,6 +142,8 @@ Yes. Failed uploads appear in the admin status area with a retry action when the
 ### How do the Drime base folder and relative path work?
 
 Select an existing Drime base folder, then enter the site folder or subpath in **Relative Path**. For example, selecting `General/Files/Backups` and entering `site1.com` resolves uploads to `General/Files/Backups/site1.com`. Browsing and previewing are read-only; missing subfolders are created only when an upload needs them.
+
+When multiple producers are enabled, source-specific Drime relative paths can keep package types separate. For example, keep the shared path as `/site1.com`, then set the server path to `/site1.com/server` and the WPvivid path to `/site1.com/wpvivid`. Empty source-specific fields fall back to the shared **Relative Path**.
 
 ### How does workspace selection work?
 

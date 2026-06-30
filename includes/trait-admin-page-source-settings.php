@@ -35,6 +35,13 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 				</td>
 			</tr>
 			<tr>
+				<th scope="row"><label for="alynt-server-relative-path"><?php esc_html_e( 'Server Drime Relative Path', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<input id="alynt-server-relative-path" name="alynt_drime_backups_settings[server_relative_path]" type="text" class="regular-text" value="<?php echo esc_attr( (string) $settings['server_relative_path'] ); ?>" placeholder="<?php echo esc_attr__( '/example.com/server', 'alynt-drime-backups-uploader' ); ?>" aria-describedby="alynt-server-relative-path-description">
+					<p id="alynt-server-relative-path-description" class="description"><?php esc_html_e( 'Optional destination subpath for server-runner/generic-outbox packages. Leave empty to use the shared Drime relative path.', 'alynt-drime-backups-uploader' ); ?></p>
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><label for="alynt-server-runner-install-command"><?php esc_html_e( '1. Install / Update Server Runner', 'alynt-drime-backups-uploader' ); ?></label></th>
 				<td>
 					<textarea id="alynt-server-runner-install-command" class="large-text code alynt-drime-command-snippet alynt-drime-command-snippet--compact" readonly rows="4" aria-describedby="alynt-server-runner-install-command-description"><?php echo esc_textarea( $this->server_runner_install_commands( $settings ) ); ?></textarea>
@@ -71,6 +78,13 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 				<td>
 					<input id="alynt-backup-path-override" name="alynt_drime_backups_settings[backup_path_override]" type="text" class="large-text code" value="<?php echo esc_attr( (string) $settings['backup_path_override'] ); ?>" aria-describedby="alynt-backup-path-override-description">
 					<p id="alynt-backup-path-override-description" class="description"><?php esc_html_e( 'Optional. Use only if WPvivid stores local backups outside the detected path.', 'alynt-drime-backups-uploader' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="alynt-wpvivid-relative-path"><?php esc_html_e( 'WPvivid Drime Relative Path', 'alynt-drime-backups-uploader' ); ?></label></th>
+				<td>
+					<input id="alynt-wpvivid-relative-path" name="alynt_drime_backups_settings[wpvivid_relative_path]" type="text" class="regular-text" value="<?php echo esc_attr( (string) $settings['wpvivid_relative_path'] ); ?>" placeholder="<?php echo esc_attr__( '/example.com/wpvivid', 'alynt-drime-backups-uploader' ); ?>" aria-describedby="alynt-wpvivid-relative-path-description">
+					<p id="alynt-wpvivid-relative-path-description" class="description"><?php esc_html_e( 'Optional destination subpath for WPvivid packages. Leave empty to use the shared Drime relative path.', 'alynt-drime-backups-uploader' ); ?></p>
 				</td>
 			</tr>
 		</table>

@@ -238,7 +238,7 @@ class UploaderTest extends TestCase {
 			'key'         => 'existing-key',
 			'upload_id'   => 'existing-upload',
 			'signature'   => 'sig-one',
-			'chunk_size'  => Alynt_Drime_Backups_Uploader_Drime_Client::DEFAULT_MULTIPART_SIZE,
+			'chunk_size'  => 32 * 1048576,
 			'updated_at'  => time(),
 		);
 
@@ -338,6 +338,50 @@ class UploaderTest extends TestCase {
 		$this->assertArrayNotHasKey( 'relativePath', $client->validate_files[0] );
 		$this->assertSame( 654, $client->create_multipart_parent_id );
 		$this->assertSame( 654, $client->create_s3_parent_id );
+	}
+
+	public function test_generic_outbox_upload_uses_server_relative_path_when_configured() {
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['parent_folder_id']      = '321';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['parent_folder_hash']    = 'basehash';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['relative_path']         = '/site1.com/shared';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['server_relative_path']  = '/site1.com/server';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['wpvivid_relative_path'] = '/site1.com/wpvivid';
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['producer_key'] = 'generic_outbox';
+
+		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertSame( array( 'site1.com' => 321, 'server' => 654 ), $client->created_folders );
+		$this->assertSame( '/site1.com/server', $record['destination_relative_path'] );
+		$this->assertArrayHasKey( $this->location_key( 1, '/site1.com/server', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
+		$this->assertArrayNotHasKey( $this->location_key( 1, '/site1.com/shared', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
+	}
+
+	public function test_wpvivid_upload_uses_wpvivid_relative_path_when_configured() {
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['parent_folder_id']      = '321';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['parent_folder_hash']    = 'basehash';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['relative_path']         = '/site1.com/shared';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['server_relative_path']  = '/site1.com/server';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['wpvivid_relative_path'] = '/site1.com/wpvivid';
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['producer_key'] = 'wpvivid';
+
+		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertSame( array( 'site1.com' => 321, 'wpvivid' => 654 ), $client->created_folders );
+		$this->assertSame( '/site1.com/wpvivid', $record['destination_relative_path'] );
+		$this->assertArrayHasKey( $this->location_key( 1, '/site1.com/wpvivid', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
+		$this->assertArrayNotHasKey( $this->location_key( 1, '/site1.com/shared', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
 	}
 
 	public function test_successful_relative_path_upload_remembers_drime_parent_id() {
@@ -610,9 +654,10 @@ class UploaderTest extends TestCase {
 	private function base_options() {
 		return array(
 			Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME => array(
-				'api_token'           => 'token',
-				'workspace_id'        => 1,
-				'diagnostics_enabled' => false,
+				'api_token'                => 'token',
+				'workspace_id'             => 1,
+				'multipart_chunk_size_mb'  => 32,
+				'diagnostics_enabled'      => false,
 			),
 			Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION => array(
 				'sig-one' => array(
@@ -702,7 +747,7 @@ class UploaderTest extends TestCase {
 	 */
 	private function write_large_file( $path ) {
 		$handle = fopen( $path, 'wb' );
-		fseek( $handle, Alynt_Drime_Backups_Uploader_Drime_Client::DEFAULT_MULTIPART_SIZE + 100 );
+		fseek( $handle, 32 * 1048576 + 100 );
 		fwrite( $handle, 'x' );
 		fclose( $handle );
 	}
@@ -744,8 +789,13 @@ class UploaderTest extends TestCase {
 	 * @param string $relative_path Relative path.
 	 * @return string
 	 */
-	private function location_key( $workspace_id, $relative_path ) {
-		return hash( 'sha256', absint( $workspace_id ) . '|' . $relative_path );
+	private function location_key( $workspace_id, $relative_path, $base_parent_id = 0 ) {
+		$key = absint( $workspace_id ) . '|';
+		if ( $base_parent_id > 0 ) {
+			$key .= absint( $base_parent_id ) . '|';
+		}
+
+		return hash( 'sha256', $key . $relative_path );
 	}
 }
 

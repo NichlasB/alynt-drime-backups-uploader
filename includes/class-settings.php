@@ -19,7 +19,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	const OPTION_NAME                     = 'alynt_drime_backups_settings';
 	const MIN_MULTIPART_CHUNK_SIZE_MB     = 5;
 	const MAX_MULTIPART_CHUNK_SIZE_MB     = 256;
-	const DEFAULT_MULTIPART_CHUNK_SIZE_MB = 32;
+	const DEFAULT_MULTIPART_CHUNK_SIZE_MB = 128;
+	const DEFAULT_MIN_FILE_AGE_SECONDS    = 300;
 	const MIN_REMOTE_RETENTION_DAYS       = 1;
 	const MAX_REMOTE_RETENTION_DAYS       = 365;
 	const DEFAULT_REMOTE_RETENTION_DAYS   = 60;
@@ -45,12 +46,14 @@ class Alynt_Drime_Backups_Uploader_Settings {
 			'relative_path'              => '',
 			'backup_path_override'       => '',
 			'server_outbox_path'         => '',
+			'server_relative_path'       => '',
+			'wpvivid_relative_path'      => '',
 			'site_uuid'                  => '',
 			'duplicate_mode'             => 'skip',
 			'auto_scan_enabled'          => false,
 			'server_cron_expected'       => false,
 			'scan_interval'              => 'fifteen_minutes',
-			'min_file_age_seconds'       => 900,
+			'min_file_age_seconds'       => self::DEFAULT_MIN_FILE_AGE_SECONDS,
 			'multipart_chunk_size_mb'    => self::DEFAULT_MULTIPART_CHUNK_SIZE_MB,
 			'delete_local_after_upload'  => false,
 			'remote_retention_enabled'   => false,
@@ -220,6 +223,14 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		if ( isset( $raw['server_outbox_path'] ) ) {
 			$settings['server_outbox_path'] = sanitize_text_field( wp_unslash( $raw['server_outbox_path'] ) );
 		}
+
+		if ( isset( $raw['server_relative_path'] ) ) {
+			$settings['server_relative_path'] = $this->sanitize_relative_path( (string) wp_unslash( $raw['server_relative_path'] ) );
+		}
+
+		if ( isset( $raw['wpvivid_relative_path'] ) ) {
+			$settings['wpvivid_relative_path'] = $this->sanitize_relative_path( (string) wp_unslash( $raw['wpvivid_relative_path'] ) );
+		}
 	}
 
 	/**
@@ -236,7 +247,7 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		$settings['auto_scan_enabled']         = ! empty( $raw['auto_scan_enabled'] );
 		$settings['server_cron_expected']      = ! empty( $raw['server_cron_expected'] );
 		$settings['scan_interval']             = 'fifteen_minutes';
-		$settings['min_file_age_seconds']      = isset( $raw['min_file_age_seconds'] ) ? max( 60, absint( $raw['min_file_age_seconds'] ) ) : 900;
+		$settings['min_file_age_seconds']      = isset( $raw['min_file_age_seconds'] ) ? max( 60, absint( $raw['min_file_age_seconds'] ) ) : self::DEFAULT_MIN_FILE_AGE_SECONDS;
 		$settings['multipart_chunk_size_mb']   = isset( $raw['multipart_chunk_size_mb'] ) ? max( self::MIN_MULTIPART_CHUNK_SIZE_MB, min( self::MAX_MULTIPART_CHUNK_SIZE_MB, absint( $raw['multipart_chunk_size_mb'] ) ) ) : self::DEFAULT_MULTIPART_CHUNK_SIZE_MB;
 		$settings['delete_local_after_upload'] = ! empty( $raw['delete_local_after_upload'] );
 		$settings['remote_retention_enabled']  = ! empty( $raw['remote_retention_enabled'] );

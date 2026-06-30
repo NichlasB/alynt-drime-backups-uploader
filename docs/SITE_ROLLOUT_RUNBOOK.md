@@ -45,7 +45,9 @@ Site root:
 Plugin source/version:
 Drime workspace:
 Drime base folder:
-Drime relative path/site folder:
+Shared Drime relative path/site folder:
+Server Drime relative path:
+WPvivid Drime relative path:
 Producer choice: WPvivid / server runner / both
 Server outbox path:
 Runner path:
@@ -95,18 +97,19 @@ wp --path=/var/www/example.com/htdocs alynt-drime-backups status --format=json
 2. Use **Test Drime Connection**.
 3. Load Drime workspaces if the site should upload to a team workspace.
 4. Select or enter the Drime base folder.
-5. Enter the relative path for this site, usually the domain or site slug.
-6. Preview the destination.
-7. Choose duplicate behavior:
+5. Enter the shared relative path for this site, usually the domain or site slug.
+6. If both server-runner/generic-outbox packages and WPvivid packages should upload to separate Drime folders, enter source-specific relative paths such as `/example.com/server` and `/example.com/wpvivid`. Leave a source-specific path empty when that source should use the shared relative path.
+7. Preview the destination.
+8. Choose duplicate behavior:
    - `skip` for conservative production behavior.
    - `rename` only when duplicate retention is intentional.
-8. Decide whether the site uses WPvivid, server runner, or both.
-9. Configure the source paths:
+9. Decide whether the site uses WPvivid, server runner, or both.
+10. Configure the source paths:
    - Leave WPvivid override blank unless WPvivid stores backups outside the detected path.
    - Set **Server Outbox Path** when using the server runner or another server-side backup producer.
-10. Enable **Server Cron Expected** when scan/upload will be driven by WP-CLI cron.
-11. Keep **Delete Local Files** disabled until restore rehearsal has passed.
-12. Keep remote retention disabled until upload and restore behavior is proven.
+11. Enable **Server Cron Expected** when scan/upload will be driven by WP-CLI cron.
+12. Keep **Delete Local Files** disabled until restore rehearsal has passed.
+13. Keep remote retention disabled until upload and restore behavior is proven.
 
 Acceptance:
 
@@ -334,7 +337,7 @@ A site is onboarded only when all applicable items are true:
 
 - Plugin is active at the expected version.
 - Drime connection test passes.
-- Drime workspace/base folder/relative path are confirmed.
+- Drime workspace/base folder/relative paths are confirmed.
 - Producer choice is intentional and duplicate automation is avoided.
 - Server outbox path is configured when using the generic outbox.
 - Server runner health passes when using the server runner.

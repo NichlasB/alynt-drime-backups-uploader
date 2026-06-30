@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.2.1
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, WPvivid path detection, generic server-outbox scanning with sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -94,6 +94,8 @@ Failure emails are disabled by default and use WordPress mail, so the active sit
 
 Select an existing Drime base folder, then enter the site folder or subpath in Relative Path. Browsing and previewing are read-only; missing subfolders are created only when an upload needs them.
 
+When multiple producers are enabled, source-specific Drime relative paths can keep package types separate. For example, use `/site1.com/server` for server-runner packages and `/site1.com/wpvivid` for WPvivid packages. Empty source-specific fields fall back to the shared Relative Path.
+
 = How does workspace selection work? =
 
 Load Drime Workspaces retrieves allowed non-personal workspaces available to the saved API token. During first setup, Workspace ID may stay blank while you save the token and discover the correct destination. Choosing a workspace updates Workspace ID and clears the selected base folder so folders from another workspace are not reused accidentally. Workspace ID `0` is blocked by default. To lock a site to approved workspace IDs, add `define( 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS', '12345' );` to `wp-config.php`.
@@ -103,6 +105,11 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= 0.3.0 =
+* Added optional source-specific Drime relative paths so server-runner/generic-outbox uploads and WPvivid uploads can be stored in separate folders while sharing the same workspace and base folder.
+* Changed the default minimum file age from 900 seconds to 300 seconds.
+* Changed the default multipart chunk size from 32 MB to 128 MB for large-backup-oriented uploads, while keeping supported range validation.
 
 = 0.2.1 =
 * Streamlined server-runner setup into guided single-line command blocks for install/update, first package verification, scan/upload, and cron review.
@@ -145,6 +152,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.3.0 =
+No breaking changes. New installs use more production-oriented upload defaults, and sites can separate server-runner and WPvivid uploads into different Drime relative paths.
 
 = 0.2.1 =
 No breaking changes. Improves the guided server setup commands and cron scan/upload evidence alignment.
