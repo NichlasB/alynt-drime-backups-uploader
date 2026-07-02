@@ -65,7 +65,9 @@ server_relative_path: /example.com/server
 wpvivid_relative_path: /example.com/wpvivid
 ```
 
-If `server_relative_path` is empty, generic outbox/server-runner packages use `relative_path`. If `wpvivid_relative_path` is empty, WPvivid packages use `relative_path`. Uploaded registry records include `destination_relative_path` for the effective path used by that package.
+If `server_relative_path` is empty, generic outbox/server-runner packages use `relative_path`. Generic outbox packages always append a package-ID folder under that effective path before uploading the archive and sidecars. For example, `server_relative_path: /example.com/server` and `package_id: example-com-20260702-010001` resolve to `/example.com/server/example-com-20260702-010001`.
+
+If `wpvivid_relative_path` is empty, WPvivid packages use `relative_path`. WPvivid uploads do not receive the generic outbox package-folder treatment. Uploaded registry records include `destination_relative_path` for the effective path used by that package.
 
 ## Workspace Destination Guardrails
 

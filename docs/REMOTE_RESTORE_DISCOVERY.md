@@ -18,10 +18,11 @@ If the original WordPress site is still available:
 If the original WordPress site is unavailable:
 
 1. Use the Drime web UI to browse the known backup workspace and folder.
-2. Locate the archive and matching `.manifest.json`, `.sha256`, optional `.remote-index.json`, and optional `.remote-catalog.json` sidecars by filename.
-3. Download the archive plus required manifest/checksum sidecars to a safe server path manually, or use `fetch` if the package ID, workspace, folder hash, and token are available.
-4. Use the manifest sidecar to confirm site ID, site URL, package ID, producer, backup type, timing fields, file root, and database dump path.
-5. Run local verification and staging restore from the server runner.
+2. Open the package folder named after the package ID, such as `example-com-YYYYmmdd-HHMMSS`.
+3. Locate the archive and matching `.manifest.json`, `.sha256`, optional `.remote-index.json`, and optional `.remote-catalog.json` sidecars inside that package folder.
+4. Download the archive plus required manifest/checksum sidecars to a safe server path manually, or use `fetch` if the package ID, workspace, package-folder hash, and token are available.
+5. Use the manifest sidecar to confirm site ID, site URL, package ID, producer, backup type, timing fields, file root, and database dump path.
+6. Run local verification and staging restore from the server runner.
 
 This manual path is acceptable for MVP testing, but it is not enough for a fast disaster workflow across many sites.
 
@@ -54,6 +55,7 @@ The inventory is local and read-only. It does not hash package bytes, contact Dr
 Server-runner packages should keep a predictable basename:
 
 ```text
+example-com-YYYYmmdd-HHMMSS/
 example-com-YYYYmmdd-HHMMSS.tar.gz
 example-com-YYYYmmdd-HHMMSS.tar.gz.manifest.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.sha256
@@ -61,7 +63,7 @@ example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
 example-com-YYYYmmdd-HHMMSS.tar.gz.remote-catalog.json
 ```
 
-The archive, manifest sidecar, and checksum sidecar must travel together. The remote-index and remote-catalog sidecars should travel with them when available because they make Drime-side discovery easier, but verification still depends on the manifest and checksum sidecars. A package without required sidecars should not be staged unless the operator has a separate, approved recovery procedure.
+The Drime upload layout for generic outbox/server-runner packages is one child folder per package ID. The archive, manifest sidecar, and checksum sidecar must travel together inside that package folder. The remote-index and remote-catalog sidecars should travel with them when available because they make Drime-side discovery easier, but verification still depends on the manifest and checksum sidecars. A package without required sidecars should not be staged unless the operator has a separate, approved recovery procedure.
 
 ## Self-Describing Packages
 
@@ -93,13 +95,13 @@ php /path/to/alynt-backup-runner.php fetch \
   --config=/var/www/example.com/private/alynt-drime-backups/config.json \
   --package-id=example-com-YYYYmmdd-HHMMSS \
   --workspace-id=0 \
-  --folder-hash=DRIME_FOLDER_HASH \
+  --folder-hash=DRIME_PACKAGE_FOLDER_HASH \
   --download-path=/var/www/example.com/private/alynt-drime-backups/downloads
 ```
 
 Fetch behavior:
 
-- Requires `--package-id`, `--folder-hash`, and `--download-path`.
+- Requires `--package-id`, `--folder-hash`, and `--download-path`. For current generic outbox/server-runner uploads, `--folder-hash` should be the Drime hash of the package folder named after the package ID, not the parent `server` folder.
 - Reads the Drime bearer token from an environment variable only. The default is `ALYNT_DRIME_TOKEN`; override with `--token-env=NAME` if needed.
 - Uses Drime file listing to find exact filename matches for the archive, `.manifest.json`, and `.sha256` sidecar before downloading bytes.
 - Refuses to overwrite existing local files unless `--overwrite=1` is supplied.
@@ -118,7 +120,7 @@ Server-runner packages now write a package-level remote-index sidecar beside the
 example-com-YYYYmmdd-HHMMSS.tar.gz.remote-index.json
 ```
 
-The generic outbox uploader sends this sidecar to the same Drime folder as the archive, manifest, checksum, and catalog snapshot. This gives each package set a small, non-secret discovery file even when the original WordPress uploaded registry is unavailable.
+The generic outbox uploader sends this sidecar to the same Drime package folder as the archive, manifest, checksum, and catalog snapshot. This gives each package set a small, non-secret discovery file even when the original WordPress uploaded registry is unavailable.
 
 Current shape:
 

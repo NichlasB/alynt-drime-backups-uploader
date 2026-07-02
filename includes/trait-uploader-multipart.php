@@ -19,14 +19,15 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart {
 	/**
 	 * Uploads a file through Drime multipart flow.
 	 *
-	 * @param string              $path Path.
-	 * @param string              $remote_name Remote name.
-	 * @param int                 $size Size.
-	 * @param array<string,mixed> $item Queue item.
-	 * @param int|null            $parent_id Concrete upload parent folder ID.
+	 * @param string                   $path Path.
+	 * @param string                   $remote_name Remote name.
+	 * @param int                      $size Size.
+	 * @param array<string,mixed>      $item Queue item.
+	 * @param int|null                 $parent_id Concrete upload parent folder ID.
+	 * @param array<string,mixed>|null $settings Effective upload settings.
 	 * @return array<string,mixed>|WP_Error
 	 */
-	private function multipart_upload( $path, $remote_name, $size, array $item, $parent_id = null ) {
+	private function multipart_upload( $path, $remote_name, $size, array $item, $parent_id = null, ?array $settings = null ) {
 		$extension = $this->multipart_extension( $remote_name );
 		$this->log_multipart_started( $remote_name, $size );
 
@@ -35,7 +36,7 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart {
 			return $memory_ok;
 		}
 
-		$session = $this->multipart_session( $path, $remote_name, $size, $extension, $item, $parent_id );
+		$session = $this->multipart_session( $path, $remote_name, $size, $extension, $item, $parent_id, $settings );
 		if ( is_wp_error( $session ) ) {
 			return $session;
 		}
@@ -50,7 +51,7 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart {
 			return $parts;
 		}
 
-		return $this->complete_multipart_session( $path, $remote_name, $size, $extension, $session, $parts, $parent_id );
+		return $this->complete_multipart_session( $path, $remote_name, $size, $extension, $session, $parts, $parent_id, $settings );
 	}
 
 	/**
@@ -88,18 +89,19 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart {
 	/**
 	 * Creates or resumes a multipart session.
 	 *
-	 * @param string              $path Path.
-	 * @param string              $remote_name Remote name.
-	 * @param int                 $size Size.
-	 * @param string              $extension Extension.
-	 * @param array<string,mixed> $item Queue item.
-	 * @param int|null            $parent_id Concrete upload parent folder ID.
+	 * @param string                   $path Path.
+	 * @param string                   $remote_name Remote name.
+	 * @param int                      $size Size.
+	 * @param string                   $extension Extension.
+	 * @param array<string,mixed>      $item Queue item.
+	 * @param int|null                 $parent_id Concrete upload parent folder ID.
+	 * @param array<string,mixed>|null $settings Effective upload settings.
 	 * @return array{key:string,upload_id:string,total:int}|WP_Error
 	 */
-	private function multipart_session( $path, $remote_name, $size, $extension, array $item, $parent_id = null ) {
+	private function multipart_session( $path, $remote_name, $size, $extension, array $item, $parent_id = null, ?array $settings = null ) {
 		$chunk_size   = $this->multipart_chunk_size();
 		$resume_state = $this->get_resume_state( $item, $path, $remote_name, $chunk_size );
-		$created      = null === $resume_state ? $this->client->create_multipart_upload( $remote_name, $size, $extension, $parent_id ) : $resume_state;
+		$created      = null === $resume_state ? $this->client->create_multipart_upload( $remote_name, $size, $extension, $parent_id, $settings ) : $resume_state;
 
 		if ( is_wp_error( $created ) ) {
 			return $created;

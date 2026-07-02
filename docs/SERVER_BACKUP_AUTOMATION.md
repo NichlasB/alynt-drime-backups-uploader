@@ -68,6 +68,8 @@ Recommended lifecycle:
 7. Run `cleanup-preview` to see old local outbox and restore staging candidates without deleting anything.
 8. If retention policy allows it, run the guarded `cleanup` command with explicit operator confirmation.
 
+Generic outbox/server-runner uploads create or reuse one Drime child folder per package ID under the effective server destination path. For example, with `server_relative_path` set to `/example.com/server`, package `example-com-20260702-010001` uploads into `/example.com/server/example-com-20260702-010001/`. The archive and recognized sidecars are uploaded inside that package folder, keeping the parent `server` folder readable.
+
 For production sites, keep at least one recently verified local package when disk space allows. If disk space is tight, cleanup should be an operator-approved server process, not an automatic plugin side effect.
 
 Preview candidates with:

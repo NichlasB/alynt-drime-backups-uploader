@@ -110,7 +110,7 @@ For each standalone site:
 5. Confirm runner health passes for that site.
 6. Create and verify one manual package for that site.
 7. Scan and upload the package through that site's scheduled WP-CLI hook command.
-8. Confirm the archive and sidecars land in the intended Drime folder.
+8. Confirm the archive and sidecars land inside a package-ID child folder under the intended Drime server destination.
 9. Fetch, verify, and stage a restore proof for that package.
 10. Add that site's cron only after the manual package, upload, and restore proof pass.
 

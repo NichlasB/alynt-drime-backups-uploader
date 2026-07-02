@@ -27,7 +27,7 @@ Date:
 
 - Confirm the exact site and server.
 - Confirm the package ID and filename.
-- Confirm the archive, `.manifest.json`, and `.sha256` sidecar are available together. For current server-runner packages, also confirm the `.remote-index.json` and `.remote-catalog.json` sidecars are present or document why the package predates them.
+- Confirm the archive, `.manifest.json`, and `.sha256` sidecar are available together inside the package-ID Drime folder. For current server-runner packages, also confirm the `.remote-index.json` and `.remote-catalog.json` sidecars are present or document why the package predates them.
 - Confirm the restore staging path is outside the public web root.
 - Confirm there is enough disk space for the downloaded archive and extracted copy.
 - Confirm this rehearsal is inspection-only.

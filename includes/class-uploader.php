@@ -484,8 +484,8 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 		}
 
 		$result = $size < Alynt_Drime_Backups_Uploader_Drime_Client::MIN_MULTIPART_CHUNK_SIZE
-			? $this->simple_upload_item( $path, $remote_name, (int) $size, $parent_id )
-			: $this->multipart_upload( $path, $remote_name, (int) $size, $item, $parent_id );
+			? $this->simple_upload_item( $path, $remote_name, (int) $size, $parent_id, $settings )
+			: $this->multipart_upload( $path, $remote_name, (int) $size, $item, $parent_id, $settings );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -519,6 +519,13 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			$settings['relative_path'] = $relative_path;
 		}
 
+		if ( $this->is_generic_outbox_item( $item ) ) {
+			$package_folder = $this->generic_package_folder_name( $item );
+			if ( '' !== $package_folder ) {
+				$settings['relative_path'] = $this->append_upload_relative_segment( (string) $settings['relative_path'], $package_folder );
+			}
+		}
+
 		return $settings;
 	}
 
@@ -541,6 +548,69 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Checks whether a queued item is a generic server outbox package.
+	 *
+	 * @param array<string,mixed> $item Queue item.
+	 * @return bool
+	 */
+	private function is_generic_outbox_item( array $item ) {
+		return isset( $item['producer_key'] ) && 'generic_outbox' === (string) $item['producer_key'];
+	}
+
+	/**
+	 * Returns the Drime package folder name for a generic outbox package.
+	 *
+	 * @param array<string,mixed> $item Queue item.
+	 * @return string
+	 */
+	private function generic_package_folder_name( array $item ) {
+		$name = '';
+
+		foreach ( array( 'package_id', 'backup_set_id' ) as $key ) {
+			if ( ! empty( $item[ $key ] ) && is_scalar( $item[ $key ] ) ) {
+				$name = (string) $item[ $key ];
+				break;
+			}
+		}
+
+		if ( '' === $name && ! empty( $item['path'] ) && is_scalar( $item['path'] ) ) {
+			$name = basename( $this->package_archive_stem( (string) $item['path'] ) );
+		}
+
+		if ( '' === $name && ! empty( $item['name'] ) && is_scalar( $item['name'] ) ) {
+			$name = basename( $this->package_archive_stem( (string) $item['name'] ) );
+		}
+
+		$name = trim( preg_replace( '/[^A-Za-z0-9._-]+/', '-', str_replace( array( '\\', '/' ), '-', $name ) ), '-._' );
+
+		if ( '' === $name || false !== strpos( $name, '..' ) ) {
+			return '';
+		}
+
+		return substr( $name, 0, Alynt_Drime_Backups_Uploader_Settings::MAX_RELATIVE_PATH_SEGMENT_CHARS );
+	}
+
+	/**
+	 * Appends a safe folder segment to a Drime relative path.
+	 *
+	 * @param string $relative_path Existing relative path.
+	 * @param string $segment Folder segment.
+	 * @return string
+	 */
+	private function append_upload_relative_segment( $relative_path, $segment ) {
+		$relative_path = '/' . trim( str_replace( '\\', '/', (string) $relative_path ), '/' );
+		$segment       = trim( str_replace( array( '\\', '/' ), '-', (string) $segment ), '/' );
+
+		if ( '' === $segment ) {
+			return '/' === $relative_path ? '' : $relative_path;
+		}
+
+		$path = '/' . trim( trim( $relative_path, '/' ) . '/' . $segment, '/' );
+
+		return '/' === $path ? '' : $path;
 	}
 
 	/**
@@ -599,14 +669,15 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	/**
 	 * Uploads a small queued item.
 	 *
-	 * @param string   $path File path.
-	 * @param string   $remote_name Remote name.
-	 * @param int      $size Size.
-	 * @param int|null $parent_id Concrete upload parent folder ID.
+	 * @param string                   $path File path.
+	 * @param string                   $remote_name Remote name.
+	 * @param int                      $size Size.
+	 * @param int|null                 $parent_id Concrete upload parent folder ID.
+	 * @param array<string,mixed>|null $settings Effective upload settings.
 	 * @return array<string,mixed>|WP_Error
 	 */
-	private function simple_upload_item( $path, $remote_name, $size, $parent_id = null ) {
-		$response = $this->client->simple_upload( $path, $remote_name, $parent_id );
+	private function simple_upload_item( $path, $remote_name, $size, $parent_id = null, ?array $settings = null ) {
+		$response = $this->client->simple_upload( $path, $remote_name, $parent_id, $settings );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}

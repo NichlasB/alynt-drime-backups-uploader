@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Changed generic outbox/server-runner uploads to create or reuse a Drime child folder named after the package ID, then upload the archive and recognized sidecars inside that package folder.
+
 ## [0.3.0] - 2026-06-30
 
 ### Added

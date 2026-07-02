@@ -19,19 +19,20 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 	/**
 	 * Directly uploads a small file through Drime's /uploads endpoint.
 	 *
-	 * @param string   $path File path.
-	 * @param string   $remote_name Remote display name.
-	 * @param int|null $parent_id Concrete upload parent folder ID.
+	 * @param string                   $path File path.
+	 * @param string                   $remote_name Remote display name.
+	 * @param int|null                 $parent_id Concrete upload parent folder ID.
+	 * @param array<string,mixed>|null $settings_override Effective upload settings.
 	 * @return array<string,mixed>|WP_Error
 	 *
 	 * @since 0.1.0
 	 */
-	public function simple_upload( $path, $remote_name, $parent_id = null ) {
+	public function simple_upload( $path, $remote_name, $parent_id = null, ?array $settings_override = null ) {
 		if ( ! function_exists( 'curl_init' ) || ! function_exists( 'curl_file_create' ) ) {
 			return new WP_Error( 'alynt_drime_no_curl', __( 'The PHP cURL extension is required for direct small-file uploads.', 'alynt-drime-backups-uploader' ) );
 		}
 
-		$settings = $this->settings->get();
+		$settings = null === $settings_override ? $this->settings->get() : array_merge( $this->settings->get(), $settings_override );
 		$token    = trim( (string) $settings['api_token'] );
 
 		if ( '' === $token ) {

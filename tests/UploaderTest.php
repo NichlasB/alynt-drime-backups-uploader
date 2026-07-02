@@ -125,6 +125,7 @@ class UploaderTest extends TestCase {
 			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
 			array(
 				'producer_key'       => 'generic_outbox',
+				'package_id'         => 'site-one-20260626',
 				'manifest_path'      => $manifest,
 				'checksum_path'      => $checksum,
 				'remote_index_path'  => $index,
@@ -157,6 +158,77 @@ class UploaderTest extends TestCase {
 		$this->assertSame( basename( $index ), $record['sidecars'][2]['remote_name'] );
 		$this->assertSame( 'remote_catalog', $record['sidecars'][3]['type'] );
 		$this->assertSame( basename( $catalog ), $record['sidecars'][3]['remote_name'] );
+	}
+
+	public function test_generic_outbox_upload_creates_package_folder_and_uploads_sidecars_there() {
+		$manifest            = $this->file . '.manifest.json';
+		$checksum            = $this->file . '.sha256';
+		$this->extra_files[] = $manifest;
+		$this->extra_files[] = $checksum;
+		file_put_contents( $manifest, '{"package_id":"site-one-20260626"}' );
+		file_put_contents( $checksum, 'abc123  ' . basename( $this->file ) );
+
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['parent_folder_id']     = '321';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['parent_folder_hash']   = 'basehash';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['server_relative_path'] = '/site1.com/server';
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key'  => 'generic_outbox',
+				'package_id'    => 'site-one-20260626',
+				'manifest_path' => $manifest,
+				'checksum_path' => $checksum,
+			)
+		);
+
+		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertSame(
+			array(
+				'site1.com'          => 321,
+				'server'             => 654,
+				'site-one-20260626'  => 655,
+			),
+			$client->created_folders
+		);
+		$this->assertSame( 656, $client->validate_parent_id );
+		$this->assertSame( 656, $client->create_multipart_parent_id );
+		$this->assertSame( 656, $client->create_s3_parent_id );
+		$this->assertSame( array( 656, 656 ), $client->simple_upload_parent_ids );
+		$this->assertSame( '/site1.com/server/site-one-20260626', $record['destination_relative_path'] );
+		$this->assertArrayHasKey( $this->location_key( 1, '/site1.com/server/site-one-20260626', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
+	}
+
+	public function test_generic_outbox_upload_passes_package_folder_relative_path_without_selected_base_folder() {
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['relative_path']        = '/site1.com/shared';
+		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['server_relative_path'] = '/site1.com/server';
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key' => 'generic_outbox',
+				'package_id'   => 'site-one-20260626',
+			)
+		);
+
+		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertNull( $client->create_multipart_parent_id );
+		$this->assertNull( $client->create_s3_parent_id );
+		$this->assertSame( '/site1.com/server/site-one-20260626', $client->create_multipart_settings['relative_path'] );
+		$this->assertSame( '/site1.com/server/site-one-20260626', $client->create_s3_settings['relative_path'] );
+		$this->assertSame( '/site1.com/server/site-one-20260626', $record['destination_relative_path'] );
 	}
 
 	public function test_duplicate_generic_outbox_archive_can_upload_missing_sidecars() {
@@ -348,6 +420,7 @@ class UploaderTest extends TestCase {
 		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['server_relative_path']  = '/site1.com/server';
 		$options[ Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME ]['wpvivid_relative_path'] = '/site1.com/wpvivid';
 		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['producer_key'] = 'generic_outbox';
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['package_id']   = 'site-one-20260626';
 
 		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
 		$uploader = $this->uploader_with_options( $options, $client );
@@ -356,9 +429,9 @@ class UploaderTest extends TestCase {
 		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
 
 		$this->assertFalse( is_wp_error( $result ) );
-		$this->assertSame( array( 'site1.com' => 321, 'server' => 654 ), $client->created_folders );
-		$this->assertSame( '/site1.com/server', $record['destination_relative_path'] );
-		$this->assertArrayHasKey( $this->location_key( 1, '/site1.com/server', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
+		$this->assertSame( array( 'site1.com' => 321, 'server' => 654, 'site-one-20260626' => 655 ), $client->created_folders );
+		$this->assertSame( '/site1.com/server/site-one-20260626', $record['destination_relative_path'] );
+		$this->assertArrayHasKey( $this->location_key( 1, '/site1.com/server/site-one-20260626', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
 		$this->assertArrayNotHasKey( $this->location_key( 1, '/site1.com/shared', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
 	}
 
@@ -809,6 +882,8 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	public $validate_parent_id     = null;
 	public $create_multipart_parent_id = null;
 	public $create_s3_parent_id    = null;
+	public $create_multipart_settings = array();
+	public $create_s3_settings     = array();
 	public $entry_parent_id        = 0;
 	public $aborted_key            = '';
 	public $aborted_upload_id      = '';
@@ -820,7 +895,10 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	public $children               = array();
 	public $created_folders        = array();
 	public $simple_upload_names    = array();
+	public $simple_upload_parent_ids = array();
+	public $simple_upload_settings = array();
 	public $duplicate_names        = array();
+	private $next_folder_id        = 654;
 
 	public function test_connection() {
 		return $this->connection_result;
@@ -841,22 +919,26 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 		return array( 'duplicates' => $duplicates );
 	}
 
-	public function simple_upload( $path, $remote_name, $parent_id = null ) {
-		unset( $path, $parent_id );
+	public function simple_upload( $path, $remote_name, $parent_id = null, ?array $settings_override = null ) {
+		unset( $path );
 		$this->simple_upload_names[] = $remote_name;
+		$this->simple_upload_parent_ids[] = $parent_id;
+		$this->simple_upload_settings[] = $settings_override;
 
 		return array(
 			'fileEntry' => array(
 				'id'   => 456,
 				'name' => $remote_name,
+				'parent_id' => null !== $parent_id ? $parent_id : 0,
 			),
 		);
 	}
 
-	public function create_multipart_upload( $filename, $size, $extension, $parent_id = null ) {
+	public function create_multipart_upload( $filename, $size, $extension, $parent_id = null, ?array $settings_override = null ) {
 		unset( $filename, $size, $extension );
 		++$this->create_multipart_calls;
 		$this->create_multipart_parent_id = $parent_id;
+		$this->create_multipart_settings  = null === $settings_override ? array() : $settings_override;
 		return array(
 			'key'      => 'new-key',
 			'uploadId' => 'new-upload',
@@ -910,9 +992,10 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 		);
 	}
 
-	public function create_s3_entry( $key, $client_name, $size, $extension, $parent_id = null ) {
+	public function create_s3_entry( $key, $client_name, $size, $extension, $parent_id = null, ?array $settings_override = null ) {
 		unset( $key, $client_name, $size, $extension );
 		$this->create_s3_parent_id = $parent_id;
+		$this->create_s3_settings  = null === $settings_override ? array() : $settings_override;
 		$file_entry = array( 'id' => 123 );
 
 		if ( $this->entry_parent_id > 0 ) {
@@ -935,11 +1018,12 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	public function create_folder( $workspace_id, $name, $parent_id = 0 ) {
 		unset( $workspace_id );
 		$this->created_folders[ $name ] = $parent_id;
+		$id = $this->next_folder_id++;
 
 		return array(
 			'folder' => array(
-				'id'   => 654,
-				'hash' => 'createdhash',
+				'id'   => $id,
+				'hash' => 'createdhash' . $id,
 				'name' => $name,
 			),
 		);

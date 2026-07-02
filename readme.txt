@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -68,7 +68,7 @@ No. The server runner creates a logical WordPress backup from a WP-CLI database 
 
 = Can I restore if the original WordPress site is unavailable? =
 
-The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies, inspects, prints review guidance, and stages locally. Staging-only database, file, and combined file/database apply are available through gated CLI commands. wp-admin restore, production restore, and a mutable singleton remote catalog are not included.
+The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, package-folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies, inspects, prints review guidance, and stages locally. Staging-only database, file, and combined file/database apply are available through gated CLI commands. wp-admin restore, production restore, and a mutable singleton remote catalog are not included.
 
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
@@ -105,6 +105,9 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= Unreleased =
+* Changed generic server-outbox uploads to create or reuse a Drime child folder named after the package ID, then upload the archive and recognized sidecars inside that package folder.
 
 = 0.3.0 =
 * Added optional source-specific Drime relative paths so server-runner/generic-outbox uploads and WPvivid uploads can be stored in separate folders while sharing the same workspace and base folder.

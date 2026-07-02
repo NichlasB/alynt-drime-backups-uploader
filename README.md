@@ -11,7 +11,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Handles WPvivid-listed split archives such as `.part001.zip` and `.part002.zip` as complete sets.
 - Queues uploads, tracks attempts, enforces retry limits, and prevents duplicate queue entries.
 - Uploads small files through Drime direct upload and larger files through resumable multipart upload.
-- Uploads generic server-runner manifest, checksum, package-level remote-index, and folder catalog snapshot sidecars with the main archive so fetched packages can be discovered and verified before restore staging.
+- Uploads each generic server-runner package set into its own Drime package folder, including the archive, manifest, checksum, package-level remote-index, and folder catalog snapshot sidecars, so fetched packages can be discovered and verified before restore staging.
 - Shows failed uploads with per-file retry actions when the local file is still readable.
 - Lets administrators load allowed Drime workspaces, browse existing Drime folders, and preview the resolved upload destination before backups run.
 - Blocks the personal/default Drime workspace ID `0` for backup destinations and supports an optional `ALYNT_DRIME_ALLOWED_WORKSPACE_IDS` constant to lock a site to approved workspace IDs.
@@ -88,6 +88,8 @@ See [docs/PRODUCER_ADAPTER_BACKLOG.md](docs/PRODUCER_ADAPTER_BACKLOG.md) for the
 ## Server Runner
 
 The `server-runner/` directory contains a standalone PHP CLI runner for GridPane-style servers. It exports the WordPress database with WP-CLI, archives the WordPress files with `tar`, writes manifest/checksum/remote-index/remote-catalog sidecars, and atomically places completed packages in the configured outbox.
+
+When the generic outbox uploader sends a server-runner package to Drime, it creates or reuses a child folder named after the package ID under the effective generic-outbox destination path. The archive and all recognized sidecars are uploaded into that package folder. For example, a package ID of `example-com-20260702-010001` with `server_relative_path` set to `/example.com/server` uploads to `/example.com/server/example-com-20260702-010001/`.
 
 See [server-runner/README.md](server-runner/README.md) for the runner config shape and commands.
 

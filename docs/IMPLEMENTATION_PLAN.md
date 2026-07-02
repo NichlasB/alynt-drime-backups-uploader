@@ -12,7 +12,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 - Current released stable version: `v0.2.1`.
 - Accepted as stable on 2026-06-28.
-- Current guided server setup command scope has been promoted into `v0.2.1`; no active unreleased feature scope is open right now.
+- Current guided server setup command scope has been promoted into `v0.2.1`; the current unreleased feature scope, mandatory per-package Drime folders for server/generic-outbox uploads, is implemented in source/docs and pending feature-stage review plus release validation.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
 - Real WordPress Plugins-screen update rehearsals passed for both `v0.1.1` and `v0.2.0`; the `v0.2.1` updater rehearsal passed through Alynt Plugin Updater's WordPress update response and installed the GitHub release asset on `plugin-tester.local`.
@@ -235,7 +235,7 @@ Current artifact:
 
 ### 3. Broader Server-Side Backup Automation Support
 
-Status: documentation, local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, cleanup preview/execution, light consistency mode, multiple standalone site guidance, and server-cron review UX implemented.
+Status: documentation, local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, mandatory per-package Drime folders, cleanup preview/execution, light consistency mode, multiple standalone site guidance, and server-cron review UX implemented.
 
 Goal:
 
@@ -256,6 +256,7 @@ Implemented first slice:
 - Added `docs/MULTIPLE_STANDALONE_SITE_RUNNER_GUIDANCE.md` to clarify that this backlog item meant several separate WordPress sites on one server, not WordPress Multisite. The guide documents isolated runner configs, outboxes, work paths, restore paths, cron entries, Drime site folders, monitoring, cleanup-preview use, and common mistakes.
 - Added package-level `.remote-index.json` sidecars for server-runner packages. The generic outbox producer reads and uploads those sidecars with the archive, manifest, and checksum so each Drime package set carries non-secret restore discovery metadata.
 - Added `.remote-catalog.json` folder catalog snapshot sidecars for server-runner packages. The generic outbox producer reads and uploads those sidecars with the package set so the latest uploaded package can carry a non-secret catalog of the local outbox package set.
+- Added mandatory per-package Drime folders for generic outbox/server-runner uploads. The uploader appends a sanitized package-ID folder under the effective server destination path and uploads the archive plus recognized sidecars into that package folder. WPvivid uploads remain unchanged.
 
 Remaining possible future work:
 
@@ -263,6 +264,40 @@ Remaining possible future work:
 - Stronger consistency modes for higher-write sites, such as maintenance-window runbooks, temporary maintenance mode, or host-level snapshots.
 - Mutable singleton remote package catalog if future Drime API validation proves safe in-place replacement semantics.
 - Optional stronger restore/operator helpers after more rollout evidence.
+
+Implemented slice: mandatory per-package Drime folders:
+
+- Goal: keep Drime server-backup folders readable by grouping every server-runner/generic-outbox package set inside one Drime child folder named after the package ID.
+- Decision: this is not a backward-compatibility-preserving slice. The server-backup plugin flow is still in test/develop, so old flat server uploads are treated as legacy test artifacts that may be ignored, deleted, or manually handled during cleanup.
+- Do not add an admin setting or compatibility toggle for flat server uploads.
+- WPvivid upload layout remains unchanged for this slice.
+- Target Drime layout:
+
+```text
+/site.example/server/package-id/
+  package-id.tar.gz
+  package-id.tar.gz.manifest.json
+  package-id.tar.gz.sha256
+  package-id.tar.gz.remote-index.json
+  package-id.tar.gz.remote-catalog.json
+```
+
+- Implementation notes:
+  - Derive the package folder name from the normalized package record `package_id`.
+  - Resolve the effective server destination path first, including the generic-outbox/server-runner relative path, then append the package folder segment before uploading the archive and sidecars.
+  - Folder creation should be idempotent so retrying a partially uploaded package reuses the same package folder instead of creating duplicate package folders.
+  - Uploaded registry records store the effective package-folder destination path and cache the concrete Drime parent ID for the package folder when available.
+  - Remote restore discovery should prefer package-folder layout for server packages. Old flat registry/file evidence may be tolerated defensively, but flat server layout is not an ongoing supported target.
+- Validation:
+  - Focused tests cover package-folder destination resolution and sidecar upload parent selection.
+  - Local validation passed: `php -l` on edited PHP files, `npm.cmd test -- --filter UploaderTest`, full `npm.cmd test` with the expected one skipped symlink test, `npm.cmd run lint`, and `git diff --check` with only existing line-ending warnings.
+  - Source/docs implementation is complete; real Drime upload and restore-discovery/fetch verification remain part of the next E2E pass.
+- Feature-stage workflow results:
+  - Feature Light Review: completed with one auto-fix. The uploader now passes effective upload settings into direct and multipart Drime client calls, so package-folder relative paths work even when no selected base folder ID/hash is configured.
+  - Feature Bloat And Structure Review: completed using `feature-bloat-report.ps1` with base ref `origin/master`. `includes/trait-drime-client-multipart.php` was trimmed from 302 to 300 total lines; remaining oversized changed files are existing architecture-sensitive files (`includes/class-uploader.php` and `tests/UploaderTest.php`) and were not split during this feature-stage pass.
+  - Feature UI/UX Implementation Review: not applicable; no admin UI, frontend UI, forms, AJAX interactions, notices, JavaScript, or user-facing copy were added.
+  - Feature Security Review: passed; package folder names are sanitized and length-bounded, saved relative paths remain sanitized, no new endpoint/nonce/capability surface was added, and Drime tokens are not logged or exposed.
+  - Documentation Sync Audit: completed with one auto-fix. `readme.txt` now records the package-folder behavior under `Unreleased` instead of the already released `0.3.0` section.
 
 Light consistency mode validation:
 

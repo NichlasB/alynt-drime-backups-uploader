@@ -93,7 +93,7 @@ php /path/to/alynt-backup-runner.php fetch \
 
 `fetch` requires exact remote matches for the archive, `.manifest.json`, and `.sha256` sidecar. It downloads into temporary files, refuses to overwrite existing files unless `--overwrite=1` is supplied, and verifies the package immediately after download. The Drime token must come from the environment variable named by `--token-env`, defaulting to `ALYNT_DRIME_TOKEN`.
 
-For server-runner packages uploaded through the generic outbox producer, the plugin uploads the manifest, checksum, package-level remote-index, and folder catalog snapshot sidecars to the same Drime folder as the archive. If `fetch` reports a missing required manifest/checksum sidecar, stop and repair the remote package set before treating the backup as restorable.
+For server-runner packages uploaded through the generic outbox producer, the plugin creates or reuses a Drime package folder named after the package ID, then uploads the archive, manifest, checksum, package-level remote-index, and folder catalog snapshot sidecars into that package folder. If `fetch` reports a missing required manifest/checksum sidecar, stop and repair the remote package set before treating the backup as restorable.
 
 Run verification before inspecting or extracting:
 
@@ -338,7 +338,7 @@ For the package integrity, extraction safety, storage-path, and encryption bound
 
 ## Drime Download
 
-If the only copy is in Drime, prefer the CLI `fetch` command above when the package ID, workspace ID, destination folder hash, and token are available. Otherwise, download the package plus required manifest/checksum sidecars manually to the server first, then run the local verification workflow. Download the `.remote-index.json` and `.remote-catalog.json` sidecars too when they are available so discovery notes stay with the package set.
+If the only copy is in Drime, prefer the CLI `fetch` command above when the package ID, workspace ID, package-folder hash, and token are available. Otherwise, open the package folder in Drime, download the package plus required manifest/checksum sidecars manually to the server first, then run the local verification workflow. Download the `.remote-index.json` and `.remote-catalog.json` sidecars too when they are available so discovery notes stay with the package set.
 
 See [REMOTE_RESTORE_DISCOVERY.md](REMOTE_RESTORE_DISCOVERY.md) for the manual disaster discovery path, CLI fetch behavior, package-level remote-index sidecar, and folder catalog snapshot sidecar.
 

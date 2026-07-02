@@ -19,16 +19,17 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Multipart {
 	/**
 	 * Creates a multipart upload.
 	 *
-	 * @param string   $filename Filename.
-	 * @param int      $size Size.
-	 * @param string   $extension Extension.
-	 * @param int|null $parent_id Concrete upload parent folder ID.
+	 * @param string                   $filename Filename.
+	 * @param int                      $size Size.
+	 * @param string                   $extension Extension.
+	 * @param int|null                 $parent_id Concrete upload parent folder ID.
+	 * @param array<string,mixed>|null $settings_override Effective upload settings.
 	 * @return array<string,mixed>|WP_Error
 	 *
 	 * @since 0.1.0
 	 */
-	public function create_multipart_upload( $filename, $size, $extension, $parent_id = null ) {
-		$settings = $this->settings->get();
+	public function create_multipart_upload( $filename, $size, $extension, $parent_id = null, ?array $settings_override = null ) {
+		$settings = null === $settings_override ? $this->settings->get() : array_merge( $this->settings->get(), $settings_override );
 		$body     = array(
 			'filename'    => $filename,
 			'mime'        => 'application/zip',
@@ -48,7 +49,6 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Multipart {
 		}
 
 		$response = $this->request( 'POST', '/s3/multipart/create', $body );
-
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
@@ -195,17 +195,18 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Multipart {
 	/**
 	 * Registers an uploaded S3 object as a Drime entry.
 	 *
-	 * @param string   $key Key.
-	 * @param string   $client_name Display name.
-	 * @param int      $size Size.
-	 * @param string   $extension Extension.
-	 * @param int|null $parent_id Concrete upload parent folder ID.
+	 * @param string                   $key Key.
+	 * @param string                   $client_name Display name.
+	 * @param int                      $size Size.
+	 * @param string                   $extension Extension.
+	 * @param int|null                 $parent_id Concrete upload parent folder ID.
+	 * @param array<string,mixed>|null $settings_override Effective upload settings.
 	 * @return array<string,mixed>|WP_Error
 	 *
 	 * @since 0.1.0
 	 */
-	public function create_s3_entry( $key, $client_name, $size, $extension, $parent_id = null ) {
-		$settings = $this->settings->get();
+	public function create_s3_entry( $key, $client_name, $size, $extension, $parent_id = null, ?array $settings_override = null ) {
+		$settings = null === $settings_override ? $this->settings->get() : array_merge( $this->settings->get(), $settings_override );
 		$body     = array(
 			'filename'        => basename( $key ),
 			'size'            => absint( $size ),
@@ -226,7 +227,6 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Multipart {
 		}
 
 		$response = $this->request( 'POST', '/s3/entries', $body );
-
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
