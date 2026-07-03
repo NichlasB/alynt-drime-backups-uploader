@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Pre-Release Checklist
 
-Updated: 2026-06-30
+Updated: 2026-07-03
 
 Use this checklist to track workflow progress for the `Alynt Drime Backups Uploader` plugin before release or release-candidate promotion. Mark a workflow complete only after its verification gate has passed or after confirming the workflow is not needed because the equivalent work is already complete.
 
@@ -96,6 +96,10 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] Alynt Plugin Updater detected `v0.2.1` from the GitHub release asset, populated WordPress's update transient with `alynt-drime-backups-uploader-v0.2.1.zip`, installed the update on `plugin-tester.local`, and final verification showed version `0.2.1`, active plugin state, no remaining update response, guided setup labels, improved `tee /dev/stderr` command feedback, and compact command CSS.
 - [x] GridPane staging parity passed for `alyntdrime.sitesmain.com`; active plugin version is `0.2.1`, release header is present, the guided setup label and improved first-test backup command are present, and changed PHP files pass syntax checks.
 - [x] Release `v0.2.1` accepted as the current stable baseline on 2026-06-28.
+- [x] GitHub release `v0.3.1` published on 2026-07-03 with release asset `alynt-drime-backups-uploader-v0.3.1.zip`; the release workflow completed successfully.
+- [x] Alynt Plugin Updater detected `v0.3.1` from the GitHub release asset on `alyntdrime.sitesmain.com`, populated WordPress's update transient with the release package URL, installed the update through WP-CLI, and final verification showed active plugin version `0.3.1` with plugin status reporting `plugin_version: 0.3.1`.
+- [x] Real LocalWP Plugins-screen updater rehearsal passed for `v0.3.1`: `plugin-tester.local` started at `0.3.0`, the WordPress Plugins screen showed the Alynt Plugin Updater `0.3.1` update notice, Playwright clicked the rendered `update now` link, the UI reported `Updated!`, and file verification showed plugin header and version constant `0.3.1`.
+- [x] Release `v0.3.1` accepted as the current stable baseline on 2026-07-03.
 
 ## E2E Validation
 

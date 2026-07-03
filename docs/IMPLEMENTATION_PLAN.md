@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-06-28
+Updated: 2026-07-03
 
 ## Purpose
 
@@ -10,13 +10,12 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
-- Current released stable version: `v0.2.1`.
-- Accepted as stable on 2026-06-28.
-- Current guided server setup command scope has been promoted into `v0.2.1`; the current unreleased feature scope, mandatory per-package Drime folders for server/generic-outbox uploads, is implemented in source/docs and pending feature-stage review plus release validation.
+- Current released stable version: `v0.3.1`.
+- Accepted as stable on 2026-07-03.
+- Mandatory per-package Drime folders for server/generic-outbox uploads have been released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
-- Real WordPress Plugins-screen update rehearsals passed for both `v0.1.1` and `v0.2.0`; the `v0.2.1` updater rehearsal passed through Alynt Plugin Updater's WordPress update response and installed the GitHub release asset on `plugin-tester.local`.
-- The working tree was clean before this final pre-release/documentation hygiene pass.
+- Real WordPress Plugins-screen update rehearsals passed for `v0.1.1`, `v0.2.0`, and `v0.3.1`; `v0.2.1` and `v0.3.1` also passed Alynt Plugin Updater release-asset detection/install validation.
 
 ## What Is Complete
 ### Plugin Foundation
