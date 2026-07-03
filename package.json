@@ -1,6 +1,6 @@
 {
   "name": "alynt-drime-backups-uploader",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Upload completed backup packages to Drime.",
   "type": "module",

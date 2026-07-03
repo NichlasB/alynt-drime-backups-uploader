@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -106,7 +106,7 @@ No public custom actions or filters are exposed.
 
 == Changelog ==
 
-= Unreleased =
+= 0.3.1 =
 * Changed generic server-outbox uploads to create or reuse a Drime child folder named after the package ID, then upload the archive and recognized sidecars inside that package folder.
 
 = 0.3.0 =
@@ -155,6 +155,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.3.1 =
+No breaking changes. Server-runner/generic-outbox package files now upload into a dedicated Drime package folder for each backup package.
 
 = 0.3.0 =
 No breaking changes. New installs use more production-oriented upload defaults, and sites can separate server-runner and WPvivid uploads into different Drime relative paths.
