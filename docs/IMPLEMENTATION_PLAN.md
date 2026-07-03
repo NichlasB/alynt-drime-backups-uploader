@@ -291,7 +291,10 @@ Implemented slice: mandatory per-package Drime folders:
 - Validation:
   - Focused tests cover package-folder destination resolution and sidecar upload parent selection.
   - Local validation passed: `php -l` on edited PHP files, `npm.cmd test -- --filter UploaderTest`, full `npm.cmd test` with the expected one skipped symlink test, `npm.cmd run lint`, and `git diff --check` with only existing line-ending warnings.
-  - Source/docs implementation is complete; real Drime upload and restore-discovery/fetch verification remain part of the next E2E pass.
+  - Real staging E2E verification passed on `alyntdrime.sitesmain.com` on 2026-07-02 using package `alyntdrime-sitesmain-com-20260702-193628`.
+  - Staging upload created Drime package folder `/alyntdrime.sitesmain.com/workflow-test/alyntdrime-sitesmain-com-20260702-193628/` in workspace `4886`; archive file entry `770366046` and all four sidecars shared package-folder parent ID `770364812`.
+  - Drime API folder verification found package folder hash `NzcwMzY0ODEyfA` with five files: archive, manifest, checksum, remote-index, and remote-catalog.
+  - Server-runner `fetch` from package-folder hash `NzcwMzY0ODEyfA` downloaded the archive plus required manifest/checksum sidecars, and `verify` passed against the fetched package.
 - Feature-stage workflow results:
   - Feature Light Review: completed with one auto-fix. The uploader now passes effective upload settings into direct and multipart Drime client calls, so package-folder relative paths work even when no selected base folder ID/hash is configured.
   - Feature Bloat And Structure Review: completed using `feature-bloat-report.ps1` with base ref `origin/master`. `includes/trait-drime-client-multipart.php` was trimmed from 302 to 300 total lines; remaining oversized changed files are existing architecture-sensitive files (`includes/class-uploader.php` and `tests/UploaderTest.php`) and were not split during this feature-stage pass.
