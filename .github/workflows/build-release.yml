@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Create plugin zip
         run: |
@@ -62,7 +62,7 @@ jobs:
           echo "ZIP_FILE=${PLUGIN_SLUG}-${VERSION}.zip" >> $GITHUB_ENV
 
       - name: Upload release asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: build/${{ env.ZIP_FILE }}
         env:
