@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-07-12
+
 ### Added
 
 - Added server-specific local retention for uploaded generic-outbox/server-runner packages, with a configurable newest-package keep count and safeguards that leave WPvivid files untouched.
