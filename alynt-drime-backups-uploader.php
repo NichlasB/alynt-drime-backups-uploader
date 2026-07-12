@@ -86,6 +86,7 @@ $alynt_drime_backups_uploader_includes = array(
 	'includes/trait-uploader-retry-state.php',
 	'includes/trait-uploader-sidecars.php',
 	'includes/trait-uploader-wpvivid-set-cleanup.php',
+	'includes/trait-uploader-local-server-retention.php',
 	'includes/trait-option-storage.php',
 	'includes/trait-admin-page-failed-uploads.php',
 	'includes/trait-admin-page-notices.php',

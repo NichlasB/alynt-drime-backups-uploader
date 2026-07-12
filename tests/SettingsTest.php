@@ -132,6 +132,28 @@ class SettingsTest extends TestCase {
 		$this->assertSame( 365, $high['remote_retention_days'] );
 	}
 
+	public function test_server_local_retention_keep_is_clamped_to_supported_range() {
+		$options  = array();
+		$settings = $this->settings_with_options( $options );
+
+		$low = $settings->update(
+			array(
+				'server_local_retention_enabled' => '1',
+				'server_local_retention_keep'    => 0,
+			)
+		);
+
+		$high = $settings->update(
+			array(
+				'server_local_retention_keep' => 999,
+			)
+		);
+
+		$this->assertTrue( $low['server_local_retention_enabled'] );
+		$this->assertSame( 1, $low['server_local_retention_keep'] );
+		$this->assertSame( 30, $high['server_local_retention_keep'] );
+	}
+
 	public function test_failure_email_recipients_are_normalized() {
 		$options  = array();
 		$settings = $this->settings_with_options( $options );

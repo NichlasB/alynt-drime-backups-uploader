@@ -24,6 +24,8 @@ Option name: `alynt_drime_backups_settings`
 | `min_file_age_seconds` | integer | `300` | `absint`, minimum `60` | Behavior | Minimum modified age before a file can be queued. |
 | `multipart_chunk_size_mb` | integer | `128` | `absint`, range `5` to `256` | Behavior | Multipart upload part size in MB. `128` is recommended for large backups when PHP memory and the network path can support one part plus runtime overhead. |
 | `delete_local_after_upload` | boolean | `false` | boolean cast from checkbox presence | Behavior | Deletes local backup files after confirmed upload when enabled. |
+| `server_local_retention_enabled` | boolean | `false` | boolean cast from checkbox presence | Behavior | Enables automatic pruning of older uploaded generic-outbox/server-runner packages from the configured local outbox. WPvivid files are not affected. |
+| `server_local_retention_keep` | integer | `2` | `absint`, range `1` to `30` | Behavior | Number of newest uploaded local server package sets to keep when server local retention is enabled. |
 | `remote_retention_enabled` | boolean | `false` | boolean cast from checkbox presence | Behavior | Allows manual cleanup of old Drime files uploaded by this plugin. |
 | `remote_retention_days` | integer | `60` | `absint`, range `1` to `365` | Behavior | Uploaded registry records older than this many days are eligible for manual remote cleanup. |
 | `failure_email_enabled` | boolean | `false` | boolean cast from checkbox presence | Behavior | Sends plain-text failed upload notifications through WordPress mail. |
@@ -68,6 +70,22 @@ wpvivid_relative_path: /example.com/wpvivid
 If `server_relative_path` is empty, generic outbox/server-runner packages use `relative_path`. Generic outbox packages always append a package-ID folder under that effective path before uploading the archive and sidecars. For example, `server_relative_path: /example.com/server` and `package_id: example-com-20260702-010001` resolve to `/example.com/server/example-com-20260702-010001`.
 
 If `wpvivid_relative_path` is empty, WPvivid packages use `relative_path`. WPvivid uploads do not receive the generic outbox package-folder treatment. Uploaded registry records include `destination_relative_path` for the effective path used by that package.
+
+## Local Server Outbox Retention
+
+There are two local deletion controls, and they intentionally solve different problems:
+
+- `delete_local_after_upload` is broad immediate cleanup. When enabled, it deletes local files after confirmed upload and can affect WPvivid files.
+- `server_local_retention_enabled` is server-package retention. When enabled, it prunes only uploaded generic-outbox/server-runner packages from `server_outbox_path` after they fall outside the newest retained package count.
+
+Server-package retention uses uploaded registry records as the remote-confirmed evidence. It ignores files that are not marked uploaded, files outside the configured server outbox, missing paths, and WPvivid records. Recognized sidecars are deleted only when they belong to the deleted archive path. Uploaded registry records remain in WordPress as remote evidence after local files are pruned.
+
+The setting is disabled by default so existing sites do not lose local backup copies during upgrade. Enable it only after Drime uploads and restore procedures are verified. A typical production value is:
+
+```text
+server_local_retention_enabled: true
+server_local_retention_keep: 2
+```
 
 ## Workspace Destination Guardrails
 

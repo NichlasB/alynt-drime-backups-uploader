@@ -16,18 +16,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 0.1.0
  */
 class Alynt_Drime_Backups_Uploader_Settings {
-	const OPTION_NAME                     = 'alynt_drime_backups_settings';
-	const MIN_MULTIPART_CHUNK_SIZE_MB     = 5;
-	const MAX_MULTIPART_CHUNK_SIZE_MB     = 256;
-	const DEFAULT_MULTIPART_CHUNK_SIZE_MB = 128;
-	const DEFAULT_MIN_FILE_AGE_SECONDS    = 300;
-	const MIN_REMOTE_RETENTION_DAYS       = 1;
-	const MAX_REMOTE_RETENTION_DAYS       = 365;
-	const DEFAULT_REMOTE_RETENTION_DAYS   = 60;
-	const MAX_RELATIVE_PATH_SEGMENTS      = 20;
-	const MAX_RELATIVE_PATH_SEGMENT_CHARS = 120;
-	const PERSONAL_WORKSPACE_ID           = 0;
-	const ALLOWED_WORKSPACE_IDS_CONSTANT  = 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS';
+	const OPTION_NAME                         = 'alynt_drime_backups_settings';
+	const MIN_MULTIPART_CHUNK_SIZE_MB         = 5;
+	const MAX_MULTIPART_CHUNK_SIZE_MB         = 256;
+	const DEFAULT_MULTIPART_CHUNK_SIZE_MB     = 128;
+	const DEFAULT_MIN_FILE_AGE_SECONDS        = 300;
+	const MIN_REMOTE_RETENTION_DAYS           = 1;
+	const MAX_REMOTE_RETENTION_DAYS           = 365;
+	const DEFAULT_REMOTE_RETENTION_DAYS       = 60;
+	const MIN_SERVER_LOCAL_RETENTION_KEEP     = 1;
+	const MAX_SERVER_LOCAL_RETENTION_KEEP     = 30;
+	const DEFAULT_SERVER_LOCAL_RETENTION_KEEP = 2;
+	const MAX_RELATIVE_PATH_SEGMENTS          = 20;
+	const MAX_RELATIVE_PATH_SEGMENT_CHARS     = 120;
+	const PERSONAL_WORKSPACE_ID               = 0;
+	const ALLOWED_WORKSPACE_IDS_CONSTANT      = 'ALYNT_DRIME_ALLOWED_WORKSPACE_IDS';
 
 	/**
 	 * Returns default settings.
@@ -38,32 +41,34 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'api_token'                  => '',
-			'workspace_id'               => 0,
-			'parent_folder_id'           => '',
-			'parent_folder_hash'         => '',
-			'parent_folder_display_path' => '',
-			'relative_path'              => '',
-			'backup_path_override'       => '',
-			'server_outbox_path'         => '',
-			'server_relative_path'       => '',
-			'wpvivid_relative_path'      => '',
-			'site_uuid'                  => '',
-			'duplicate_mode'             => 'skip',
-			'auto_scan_enabled'          => false,
-			'server_cron_expected'       => false,
-			'scan_interval'              => 'fifteen_minutes',
-			'min_file_age_seconds'       => self::DEFAULT_MIN_FILE_AGE_SECONDS,
-			'multipart_chunk_size_mb'    => self::DEFAULT_MULTIPART_CHUNK_SIZE_MB,
-			'delete_local_after_upload'  => false,
-			'remote_retention_enabled'   => false,
-			'remote_retention_days'      => self::DEFAULT_REMOTE_RETENTION_DAYS,
-			'failure_email_enabled'      => false,
-			'failure_email_recipients'   => self::default_failure_email_recipients(),
-			'max_retries'                => 3,
-			'diagnostics_enabled'        => false,
-			'diagnostics_min_level'      => 'warning',
-			'diagnostics_retention'      => 100,
+			'api_token'                      => '',
+			'workspace_id'                   => 0,
+			'parent_folder_id'               => '',
+			'parent_folder_hash'             => '',
+			'parent_folder_display_path'     => '',
+			'relative_path'                  => '',
+			'backup_path_override'           => '',
+			'server_outbox_path'             => '',
+			'server_relative_path'           => '',
+			'wpvivid_relative_path'          => '',
+			'site_uuid'                      => '',
+			'duplicate_mode'                 => 'skip',
+			'auto_scan_enabled'              => false,
+			'server_cron_expected'           => false,
+			'scan_interval'                  => 'fifteen_minutes',
+			'min_file_age_seconds'           => self::DEFAULT_MIN_FILE_AGE_SECONDS,
+			'multipart_chunk_size_mb'        => self::DEFAULT_MULTIPART_CHUNK_SIZE_MB,
+			'delete_local_after_upload'      => false,
+			'server_local_retention_enabled' => false,
+			'server_local_retention_keep'    => self::DEFAULT_SERVER_LOCAL_RETENTION_KEEP,
+			'remote_retention_enabled'       => false,
+			'remote_retention_days'          => self::DEFAULT_REMOTE_RETENTION_DAYS,
+			'failure_email_enabled'          => false,
+			'failure_email_recipients'       => self::default_failure_email_recipients(),
+			'max_retries'                    => 3,
+			'diagnostics_enabled'            => false,
+			'diagnostics_min_level'          => 'warning',
+			'diagnostics_retention'          => 100,
 		);
 	}
 
@@ -244,15 +249,17 @@ class Alynt_Drime_Backups_Uploader_Settings {
 		$duplicate_mode             = isset( $raw['duplicate_mode'] ) ? sanitize_key( wp_unslash( $raw['duplicate_mode'] ) ) : 'skip';
 		$settings['duplicate_mode'] = in_array( $duplicate_mode, array( 'skip', 'rename' ), true ) ? $duplicate_mode : 'skip';
 
-		$settings['auto_scan_enabled']         = ! empty( $raw['auto_scan_enabled'] );
-		$settings['server_cron_expected']      = ! empty( $raw['server_cron_expected'] );
-		$settings['scan_interval']             = 'fifteen_minutes';
-		$settings['min_file_age_seconds']      = isset( $raw['min_file_age_seconds'] ) ? max( 60, absint( $raw['min_file_age_seconds'] ) ) : self::DEFAULT_MIN_FILE_AGE_SECONDS;
-		$settings['multipart_chunk_size_mb']   = isset( $raw['multipart_chunk_size_mb'] ) ? max( self::MIN_MULTIPART_CHUNK_SIZE_MB, min( self::MAX_MULTIPART_CHUNK_SIZE_MB, absint( $raw['multipart_chunk_size_mb'] ) ) ) : self::DEFAULT_MULTIPART_CHUNK_SIZE_MB;
-		$settings['delete_local_after_upload'] = ! empty( $raw['delete_local_after_upload'] );
-		$settings['remote_retention_enabled']  = ! empty( $raw['remote_retention_enabled'] );
-		$settings['remote_retention_days']     = isset( $raw['remote_retention_days'] ) ? $this->clamp_remote_retention_days( $raw['remote_retention_days'] ) : self::DEFAULT_REMOTE_RETENTION_DAYS;
-		$settings['max_retries']               = isset( $raw['max_retries'] ) ? max( 0, min( 10, absint( $raw['max_retries'] ) ) ) : 3;
+		$settings['auto_scan_enabled']              = ! empty( $raw['auto_scan_enabled'] );
+		$settings['server_cron_expected']           = ! empty( $raw['server_cron_expected'] );
+		$settings['scan_interval']                  = 'fifteen_minutes';
+		$settings['min_file_age_seconds']           = isset( $raw['min_file_age_seconds'] ) ? max( 60, absint( $raw['min_file_age_seconds'] ) ) : self::DEFAULT_MIN_FILE_AGE_SECONDS;
+		$settings['multipart_chunk_size_mb']        = isset( $raw['multipart_chunk_size_mb'] ) ? max( self::MIN_MULTIPART_CHUNK_SIZE_MB, min( self::MAX_MULTIPART_CHUNK_SIZE_MB, absint( $raw['multipart_chunk_size_mb'] ) ) ) : self::DEFAULT_MULTIPART_CHUNK_SIZE_MB;
+		$settings['delete_local_after_upload']      = ! empty( $raw['delete_local_after_upload'] );
+		$settings['server_local_retention_enabled'] = ! empty( $raw['server_local_retention_enabled'] );
+		$settings['server_local_retention_keep']    = isset( $raw['server_local_retention_keep'] ) ? max( self::MIN_SERVER_LOCAL_RETENTION_KEEP, min( self::MAX_SERVER_LOCAL_RETENTION_KEEP, absint( $raw['server_local_retention_keep'] ) ) ) : self::DEFAULT_SERVER_LOCAL_RETENTION_KEEP;
+		$settings['remote_retention_enabled']       = ! empty( $raw['remote_retention_enabled'] );
+		$settings['remote_retention_days']          = isset( $raw['remote_retention_days'] ) ? $this->clamp_remote_retention_days( $raw['remote_retention_days'] ) : self::DEFAULT_REMOTE_RETENTION_DAYS;
+		$settings['max_retries']                    = isset( $raw['max_retries'] ) ? max( 0, min( 10, absint( $raw['max_retries'] ) ) ) : 3;
 	}
 
 	/**

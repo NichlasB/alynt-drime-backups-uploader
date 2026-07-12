@@ -24,6 +24,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	use Alynt_Drime_Backups_Uploader_Uploader_Retry_State;
 	use Alynt_Drime_Backups_Uploader_Uploader_Sidecars;
 	use Alynt_Drime_Backups_Uploader_Uploader_WPvivid_Set_Cleanup;
+	use Alynt_Drime_Backups_Uploader_Uploader_Local_Server_Retention;
 
 	const STALE_ACTIVE_UPLOAD_SECONDS = 6 * 60 * 60;
 	const UPLOAD_LOCK_OPTION          = 'alynt_drime_backups_upload_lock';
@@ -107,6 +108,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 		try {
 			$item = $this->queue->next();
 			if ( null === $item ) {
+				$this->maybe_prune_uploaded_server_packages();
 				return new WP_Error( 'alynt_drime_queue_empty', __( 'There are no queued backups to upload.', 'alynt-drime-backups-uploader' ) );
 			}
 
@@ -266,6 +268,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 
 		$this->logger->event( 'upload', 'info', 'upload_completed', 'Upload completed.', array( 'file' => basename( (string) $item['path'] ) ) );
 		$this->maybe_delete_local_file( $item );
+		$this->maybe_prune_uploaded_server_packages();
 
 		return $result;
 	}

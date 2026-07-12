@@ -79,6 +79,20 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Upload_Settings {
 			</td>
 		</tr>
 		<tr>
+			<th scope="row"><label for="alynt-server-local-retention-enabled"><?php esc_html_e( 'Prune Uploaded Server Packages', 'alynt-drime-backups-uploader' ); ?></label></th>
+			<td>
+				<label><input id="alynt-server-local-retention-enabled" name="alynt_drime_backups_settings[server_local_retention_enabled]" type="checkbox" value="1" <?php checked( ! empty( $settings['server_local_retention_enabled'] ) ); ?> aria-describedby="alynt-server-local-retention-description"> <?php esc_html_e( 'Automatically remove older uploaded server-runner packages from the local outbox.', 'alynt-drime-backups-uploader' ); ?></label>
+				<p id="alynt-server-local-retention-description" class="description"><?php esc_html_e( 'Only generic outbox/server-runner packages already confirmed as uploaded are eligible. WPvivid files are not affected by this setting.', 'alynt-drime-backups-uploader' ); ?></p>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><label for="alynt-server-local-retention-keep"><?php esc_html_e( 'Server Packages To Keep Locally', 'alynt-drime-backups-uploader' ); ?></label></th>
+			<td>
+				<input id="alynt-server-local-retention-keep" name="alynt_drime_backups_settings[server_local_retention_keep]" type="number" min="<?php echo esc_attr( (string) Alynt_Drime_Backups_Uploader_Settings::MIN_SERVER_LOCAL_RETENTION_KEEP ); ?>" max="<?php echo esc_attr( (string) Alynt_Drime_Backups_Uploader_Settings::MAX_SERVER_LOCAL_RETENTION_KEEP ); ?>" step="1" value="<?php echo esc_attr( (string) $settings['server_local_retention_keep'] ); ?>" aria-describedby="alynt-server-local-retention-keep-description">
+				<p id="alynt-server-local-retention-keep-description" class="description"><?php esc_html_e( 'Newest uploaded server package sets kept in the local outbox when server-package pruning is enabled.', 'alynt-drime-backups-uploader' ); ?></p>
+			</td>
+		</tr>
+		<tr>
 			<th scope="row"><label for="alynt-remote-retention-enabled"><?php esc_html_e( 'Remote Retention', 'alynt-drime-backups-uploader' ); ?></label></th>
 			<td>
 				<label><input id="alynt-remote-retention-enabled" name="alynt_drime_backups_settings[remote_retention_enabled]" type="checkbox" value="1" <?php checked( ! empty( $settings['remote_retention_enabled'] ) ); ?> aria-describedby="alynt-remote-retention-description"> <?php esc_html_e( 'Allow manual cleanup of old Drime files uploaded by this plugin.', 'alynt-drime-backups-uploader' ); ?></label>

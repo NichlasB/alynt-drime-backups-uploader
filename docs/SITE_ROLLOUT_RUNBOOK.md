@@ -109,7 +109,8 @@ wp --path=/var/www/example.com/htdocs alynt-drime-backups status --format=json
    - Set **Server Outbox Path** when using the server runner or another server-side backup producer.
 11. Enable **Server Cron Expected** when scan/upload will be driven by WP-CLI cron.
 12. Keep **Delete Local Files** disabled until restore rehearsal has passed.
-13. Keep remote retention disabled until upload and restore behavior is proven.
+13. Keep **Prune Uploaded Server Packages** disabled until upload and restore behavior is proven, then enable it for server-runner sites when disk policy allows automatic pruning.
+14. Keep remote retention disabled until upload and restore behavior is proven.
 
 Acceptance:
 
@@ -294,13 +295,14 @@ See `docs/RESTORE_RUNBOOK.md` for the detailed restore procedure.
 After the first create, upload, and restore staging proof:
 
 - Decide whether to keep both WPvivid and server-runner producers enabled.
-- Decide whether local deletion is appropriate. Keep it disabled if local packages are part of the operational retention plan.
+- Decide whether broad local deletion is appropriate. Keep it disabled if WPvivid files or uploaded local packages are part of the operational retention plan.
+- For server-runner sites, decide whether **Prune Uploaded Server Packages** should be enabled and how many newest local packages should be retained.
 - Decide whether manual remote retention should be enabled.
 - Decide whether failed-upload email notifications should be enabled.
 - Record the site in any external operational tracker.
 - Record the Drime destination and restore discovery notes.
 
-Do not enable local deletion or remote retention merely because upload succeeded. Enable them only after restore confidence and retention policy are clear.
+Do not enable broad local deletion, server-package pruning, or remote retention merely because upload succeeded. Enable them only after restore confidence and retention policy are clear.
 
 ## Ongoing Checks
 

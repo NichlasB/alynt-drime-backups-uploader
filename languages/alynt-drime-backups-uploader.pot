@@ -1124,6 +1124,26 @@ msgid "For production, enable this only after Drime uploads and restore procedur
 msgstr ""
 
 #: includes/trait-admin-page-upload-settings.php:84
+msgid "Prune Uploaded Server Packages"
+msgstr ""
+
+#: includes/trait-admin-page-upload-settings.php:86
+msgid "Automatically remove older uploaded server-runner packages from the local outbox."
+msgstr ""
+
+#: includes/trait-admin-page-upload-settings.php:87
+msgid "Only generic outbox/server-runner packages already confirmed as uploaded are eligible. WPvivid files are not affected by this setting."
+msgstr ""
+
+#: includes/trait-admin-page-upload-settings.php:92
+msgid "Server Packages To Keep Locally"
+msgstr ""
+
+#: includes/trait-admin-page-upload-settings.php:95
+msgid "Newest uploaded server package sets kept in the local outbox when server-package pruning is enabled."
+msgstr ""
+
+#: includes/trait-admin-page-upload-settings.php:84
 msgid "Allow manual cleanup of old Drime files uploaded by this plugin."
 msgstr ""
 

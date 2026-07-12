@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Local deletion, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Broad local deletion, server-package local retention, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -29,6 +29,10 @@ The plugin includes Drime destination settings with workspace selection guardrai
 = Does this delete local WPvivid backups? =
 
 No. Local deletion is disabled by default and must be explicitly enabled in settings.
+
+= Does this delete local server-runner packages? =
+
+Not by default. When Prune Uploaded Server Packages is enabled, the plugin prunes only uploaded generic outbox/server-runner packages from the configured server outbox after they fall outside the newest retained package count. WPvivid files are not affected by that setting.
 
 = What happens on uninstall? =
 
@@ -105,6 +109,9 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= Unreleased =
+* Added optional server-specific local retention for uploaded generic outbox/server-runner packages, with a configurable newest-package keep count.
 
 = 0.3.1 =
 * Changed generic server-outbox uploads to create or reuse a Drime child folder named after the package ID, then upload the archive and recognized sidecars inside that package folder.

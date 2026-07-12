@@ -55,7 +55,7 @@ Use the generated **Review And Install Cron** commands during setup instead of p
 
 ## Disk And Retention Policy
 
-The local outbox is intentionally not deleted by uninstall and is not automatically cleaned by the plugin. Those files may be the only local backup copy until the Drime upload and restore rehearsal have been proven.
+The local outbox is intentionally not deleted by uninstall. Those files may be the only local backup copy until the Drime upload and restore rehearsal have been proven.
 
 Recommended lifecycle:
 
@@ -65,12 +65,15 @@ Recommended lifecycle:
 4. Verify the package and sidecars.
 5. Stage the restore into a separate restore directory.
 6. Record the restore rehearsal result.
-7. Run `cleanup-preview` to see old local outbox and restore staging candidates without deleting anything.
-8. If retention policy allows it, run the guarded `cleanup` command with explicit operator confirmation.
+7. Enable server-package local retention if automatic pruning is acceptable for the site.
+8. Run `cleanup-preview` to see old local outbox and restore staging candidates without deleting anything when manual cleanup is needed.
+9. If retention policy allows it, run the guarded `cleanup` command with explicit operator confirmation.
 
 Generic outbox/server-runner uploads create or reuse one Drime child folder per package ID under the effective server destination path. For example, with `server_relative_path` set to `/example.com/server`, package `example-com-20260702-010001` uploads into `/example.com/server/example-com-20260702-010001/`. The archive and recognized sidecars are uploaded inside that package folder, keeping the parent `server` folder readable.
 
-For production sites, keep at least one recently verified local package when disk space allows. If disk space is tight, cleanup should be an operator-approved server process, not an automatic plugin side effect.
+For production sites, keep at least one recently verified local package when disk space allows. The plugin can automatically prune older uploaded generic-outbox/server-runner packages from the configured server outbox when **Prune Uploaded Server Packages** is enabled. This retention path keeps a configurable number of newest uploaded local server packages, ignores WPvivid records, and only deletes records already marked uploaded in the plugin registry. It also removes recognized sidecars that belong to a deleted archive.
+
+This setting is disabled by default so upgrades do not unexpectedly delete local backup copies. After a restore rehearsal is proven, a practical production policy is to enable server-package pruning and keep the newest two local server packages.
 
 Preview candidates with:
 
@@ -151,7 +154,7 @@ Review:
 The current implementation does not yet include:
 
 - Automatic cron installation.
-- Automatic local outbox cleanup. Cleanup execution exists, but it requires the explicit `--confirm=delete-local-artifacts` operator gate and should be run only after upload and restore proof.
+- Automatic local cleanup for WPvivid packages. The server-specific retention setting prunes uploaded generic-outbox/server-runner packages only. Broad immediate local deletion remains controlled by the separate **Delete Local Files** setting.
 - A mutable singleton remote package catalog. Server-runner packages now upload package-level `.remote-index.json` and folder catalog snapshot `.remote-catalog.json` sidecars, but the plugin does not overwrite one rolling file in a Drime destination folder.
 - Alternative archive formats beyond runner-created `.tar.gz` packages.
 - Automatic maintenance mode or write-pausing for high-write sites.

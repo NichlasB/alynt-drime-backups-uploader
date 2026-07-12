@@ -602,6 +602,43 @@ Then run:
 
 Do not run workflow prompts mechanically when their work is already complete and the current change does not touch that area. Record applicable workflow results in the pre-release checklist before release approval.
 
+### 9. Automatic Local Server Outbox Retention After Confirmed Upload
+
+Status: implemented in source/docs; feature-stage review workflows completed.
+
+Goal:
+
+- Prevent server-runner outbox packages from accumulating indefinitely after they have already been uploaded to Drime.
+- Keep the behavior server-package specific so WPvivid local cleanup remains controlled by the separate **Delete Local Files** setting.
+- Avoid deleting unproven, active, incomplete, or out-of-scope files.
+
+Planned behavior:
+
+- Add a server-specific setting to prune uploaded generic-outbox/server-runner packages.
+- Keep a configurable number of the newest uploaded local server packages, with a conservative default of two packages when enabled.
+- Delete only local archive records that are already marked uploaded in the plugin registry with `remote_status: uploaded`.
+- Delete only package paths inside the configured `server_outbox_path`.
+- Delete recognized sidecars only when they belong to the deleted archive path.
+- Preserve the uploaded registry records as remote evidence after local cleanup.
+- Leave the setting disabled by default on upgrade/new install so operators must opt in after restore confidence is established.
+
+Acceptance:
+
+- A confirmed uploaded server package can be pruned automatically once it falls outside the newest retained package count.
+- The newest retained server package set remains local.
+- WPvivid files are not pruned by this server-specific retention feature.
+- Missing files, paths outside the configured outbox, and incomplete/non-uploaded queue records are ignored.
+- Docs explain the difference between immediate broad local deletion, server-specific uploaded-package retention, and the manual server-runner cleanup command.
+
+Feature-stage workflow results:
+
+- Feature Light Review: passed; the slice touches settings, admin UI, upload-cron processing, uploaded registry reads, local file deletion, and docs. No significant non-security issues were found.
+- Feature Bloat And Structure Review: completed with `origin/master` as the measurement base. Existing oversized files remain architecture-sensitive or test-aggregate files (`tests/UploaderTest.php`, `includes/class-uploader.php`, `includes/class-settings.php`, `tests/SettingsTest.php`), while the new retention trait is under threshold. No feature-stage cleanup or split was needed.
+- Feature UI/UX Implementation Review: passed; the new settings use the existing WordPress-native settings table pattern, labels, `aria-describedby` help text, translatable copy, and no custom interaction/state pattern.
+- Feature Security Review: passed; new inputs are sanitized and clamped, output is escaped, and file deletion is restricted to uploaded generic-outbox records inside the configured server outbox with sidecar ownership checks.
+- Documentation Sync Audit: completed; README, readme.txt, CHANGELOG, settings docs, server automation docs, rollout runbook, POT entries, and this plan now describe server-specific local retention and distinguish it from broad local deletion and manual runner cleanup.
+- Validation: `npm.cmd run build`, `npm.cmd run lint`, `npm.cmd test`, and `git diff --check` passed. PHPUnit passed with 167 tests, 1103 assertions, and 1 expected skip. `git diff --check` reported line-ending normalization warnings only.
+
 ## Current Recommendation
 
 The plugin baseline is effectively complete for the validated MVP/new-plugin scope.

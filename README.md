@@ -19,6 +19,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Supports duplicate handling by skipping existing remote files or asking Drime for an available filename.
 - Provides manual admin actions for connection testing, scanning, upload, diagnostics export, diagnostics clearing, and active-upload recovery.
 - Provides manual remote-retention preview and cleanup for plugin-owned Drime uploads, moving eligible remote files to Drime trash only.
+- Provides optional server-specific local retention that prunes older uploaded generic outbox/server-runner packages while keeping the newest configured package sets.
 - Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
 - Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
 - Provides WP-CLI commands for server-driven scan/upload/status workflows.
@@ -66,6 +67,7 @@ The settings screen controls:
 - Minimum file age before queueing.
 - Multipart chunk size for large Drime uploads.
 - Optional local deletion after confirmed upload.
+- Optional server-specific local retention for uploaded generic outbox/server-runner packages.
 - Optional manual remote retention for old plugin-owned Drime uploads.
 - Optional failed upload email notifications and recipient list.
 - Maximum retry count.
@@ -128,6 +130,10 @@ The Scan State panel shows the current UTC time, the next automated scan, the la
 ### Does this delete local WPvivid backups?
 
 No. Local deletion is disabled by default and only runs after confirmed upload when the administrator enables **Delete Local Files**. For WPvivid-listed split backup sets, the plugin waits until every listed part has uploaded successfully before deleting the local parts.
+
+### Does this delete local server-runner packages?
+
+Not by default. When **Prune Uploaded Server Packages** is enabled, the plugin prunes only uploaded generic outbox/server-runner packages from the configured server outbox after they fall outside the newest retained package count. WPvivid files are not affected by that setting.
 
 ### Does this permanently delete Drime files?
 
