@@ -344,6 +344,17 @@ Final post-restore review reporting rehearsal status:
 - Post-apply verification passed: the marker file was removed, WP-CLI returned the expected `home` and `siteurl`, WordPress core version `7.0`, `wp db check` succeeded, Query Monitor remained active, `wp-content/db.php` was absent for operator review/regeneration, and HTTPS returned `200`.
 - Large rehearsal artifacts were cleaned up after the pass: the fresh `20260628-123900` outbox package, staged restore directory, pre-restore file tarball, and temporary `/tmp` evidence copy were removed. Filesystem availability returned to about `13G`. The small dry-run/apply reports, evidence JSON, and pre-restore database export were retained.
 
+Automatic pre-restore backup creation rehearsal status:
+
+- Passed on `alyntdrime.sitesmain.com` on 2026-07-12 with runner source commit `7445594`.
+- Fresh package `alyntdrime-sitesmain-com-20260712-173228.tar.gz` was created, verified, and staged.
+- `restore-apply --scope=files-and-database --create-pre-restore-backup=1 --confirm=restore-staging-site` succeeded.
+- The runner created pre-restore evidence at `/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/pre-restore/PRE_RESTORE_BACKUP_EVIDENCE-alyntdrime-sitesmain-com-20260712-173228-files_and_database-20260712-173718.json`.
+- The runner created a pre-restore database export at `/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/pre-restore/current-database-before-alyntdrime-sitesmain-com-20260712-173228-20260712-173718.sql` and a pre-restore file backup before apply.
+- The apply report recorded `pre_restore_backup_created: true`, `file_restore_succeeded: true`, `database_import_succeeded: true`, `database_imported: true`, `live_files_overwritten: true`, and `dry_run_failure_count: 0`.
+- Post-apply verification passed: WP-CLI returned the expected `home` and `siteurl`, WordPress core version `7.0.1`, `wp db check` succeeded, and HTTPS returned `200`.
+- Large rehearsal artifacts were cleaned up after the pass: the fresh outbox package set, staged restore directory, pre-restore file tarball, and temporary restore-enabled config were removed. Filesystem availability returned to about `12G`. The small apply report, evidence JSON, and pre-restore database export were retained.
+
 Current dry-run report fields:
 
 - `report_write_requested`
