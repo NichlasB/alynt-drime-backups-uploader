@@ -56,7 +56,7 @@ Yes. The runner supports `restore-dry-run --staged-path=/path/to/staged/package 
 
 = Can the server runner apply a staged restore? =
 
-Yes, for staging restores only. `restore-apply --scope=database --confirm=restore-staging-site` first runs the existing dry-run/evidence checks, then imports the staged `database.sql` with WP-CLI and writes a restore apply report. `restore-apply --scope=files --confirm=restore-staging-site` first runs the file-scope dry-run/evidence checks, then replaces the staging target files from staged `htdocs/` and writes a restore apply report. `restore-apply --scope=files-and-database --confirm=restore-staging-site` replaces files first and imports the database second after the same gates pass. Pre-restore backup creation and production restore are not included yet.
+Yes, for staging restores only. `restore-apply --scope=database --confirm=restore-staging-site` first runs the existing dry-run/evidence checks, then imports the staged `database.sql` with WP-CLI and writes a restore apply report. `restore-apply --scope=files --confirm=restore-staging-site` first runs the file-scope dry-run/evidence checks, then replaces the staging target files from staged `htdocs/` and writes a restore apply report. `restore-apply --scope=files-and-database --confirm=restore-staging-site` replaces files first and imports the database second after the same gates pass. Add `--create-pre-restore-backup=1` to a staging apply command to create matching pre-restore database/file backup evidence immediately before apply. Production restore is not included yet.
 
 = Can I list local server-runner packages before choosing one to restore? =
 
@@ -111,6 +111,7 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+* Added optional `restore-apply --create-pre-restore-backup=1` support so staging restores can create matching pre-restore database/file backup evidence immediately before apply.
 
 = 0.3.2 =
 * Added optional server-specific local retention for uploaded generic outbox/server-runner packages, with a configurable newest-package keep count.

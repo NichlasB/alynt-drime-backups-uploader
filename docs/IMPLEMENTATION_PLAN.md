@@ -103,10 +103,11 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
   - write `RESTORE_NOTES.txt` and `RESTORE_REPORT.json`;
   - run `restore-dry-run` with optional evidence reports;
   - validate matching pre-restore backup evidence before any apply;
+  - create staging pre-restore database/file backup evidence during `restore-apply` when `--create-pre-restore-backup=1` is explicitly supplied;
   - run staging-only `restore-apply --scope=database`, `--scope=files`, or `--scope=files-and-database` only with `--confirm=restore-staging-site`.
 - Database, file, and combined staging restore rehearsals passed on `alyntdrime.sitesmain.com`.
 - Restore apply reports include missing symlink/drop-in and post-restore manual-review guidance for known drop-ins such as Query Monitor's `wp-content/db.php`.
-- Automatic pre-restore backup creation and production restore remain future gated projects.
+- Production restore remains a future gated project.
 
 ### Operator-Approved Local Cleanup
 - The server runner supports `cleanup-preview` for read-only review of old local outbox package sets and restore staging directories.
@@ -132,17 +133,17 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Latest Validation Snapshot
 
-Latest release-candidate validation snapshot after the final pre-release and E2E pass: 2026-06-28.
+Latest source validation snapshot after the automatic pre-restore backup creation slice: 2026-07-12.
 
-Passed locally for the latest restore/reporting source state:
+Passed locally for the latest restore/pre-restore source state:
 
-- `npm.cmd test`: 155 tests, 1043 assertions, with the expected Windows symlink skip.
-- `npm.cmd run lint`: PHPCS passed across configured files.
+- `php .\vendor\bin\phpunit --do-not-cache-result`: 169 tests, 1130 assertions, with the expected Windows symlink skip.
+- `npm.cmd run lint`: PHPCS passed across 54 files.
 - `npm.cmd run build`: build completed.
-- PHP syntax sweep passed for 86 PHP files.
-- `npm.cmd audit`: passed with 0 vulnerabilities.
+- Focused automatic pre-restore backup creation tests passed.
+- PHP syntax checks passed for the runner and new test file.
 - `git diff --check` passed with only known line-ending warnings in text/generated files where noted.
-- Composer audit remains blocked in this environment because Composer is unavailable.
+- `npm.cmd audit` and Composer audit were not rerun for this feature slice.
 
 Historical E2E validation recorded in this plan and supporting docs:
 
@@ -644,4 +645,4 @@ Feature-stage workflow results:
 
 The plugin baseline is effectively complete for the validated MVP/new-plugin scope.
 
-The destructive restore automation project is tracked separately in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md). The current implemented slices are `restore-dry-run`, optional `--write-report=1` dry-run evidence reports, pre-restore backup evidence validation, `restore-apply --scope=database`, `restore-apply --scope=files`, file restore symlink/drop-in reporting, post-restore known drop-in review items, and `restore-apply --scope=files-and-database`. The server runner checks staged restore evidence, staging-only gates, matching pre-restore backup evidence, and readable pre-restore backup artifacts before any apply. Database apply requires `--confirm=restore-staging-site`, imports only the staged `database.sql` through WP-CLI, and writes a restore apply report under configured `restore_reports_path`. File apply requires the same confirmation and evidence gates, replaces the configured staging WordPress path from staged `htdocs/`, reports missing pre-restore symlinked drop-ins and known post-restore drop-ins such as `wp-content/db.php` for manual review, and writes a restore apply report. Combined apply runs file replacement first and database import second after the same gates pass. Database, file, and combined apply have all passed real staging rehearsals on `alyntdrime.sitesmain.com`. Automatic pre-restore backup creation and production restore remain future gated slices.
+The destructive restore automation project is tracked separately in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md). The current implemented slices are `restore-dry-run`, optional `--write-report=1` dry-run evidence reports, pre-restore backup evidence validation, `restore-apply --scope=database`, `restore-apply --scope=files`, file restore symlink/drop-in reporting, post-restore known drop-in review items, `restore-apply --scope=files-and-database`, and opt-in staging pre-restore backup creation through `--create-pre-restore-backup=1`. The server runner checks staged restore evidence, staging-only gates, matching pre-restore backup evidence, and readable pre-restore backup artifacts before any apply. Database apply requires `--confirm=restore-staging-site`, imports only the staged `database.sql` through WP-CLI, and writes a restore apply report under configured `restore_reports_path`. File apply requires the same confirmation and evidence gates, replaces the configured staging WordPress path from staged `htdocs/`, reports missing pre-restore symlinked drop-ins and known post-restore drop-ins such as `wp-content/db.php` for manual review, and writes a restore apply report. Combined apply runs file replacement first and database import second after the same gates pass. When `--create-pre-restore-backup=1` is supplied, apply first creates the matching database export and/or file backup evidence under `restore_pre_backup_path`; if evidence creation fails, apply stops before destructive work. Database, file, and combined apply have all passed real staging rehearsals on `alyntdrime.sitesmain.com`. Production restore remains a future gated slice.

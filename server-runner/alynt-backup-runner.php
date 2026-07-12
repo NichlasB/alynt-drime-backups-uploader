@@ -1116,6 +1116,7 @@ class Alynt_Server_Backup_Runner {
 		$scope                    = isset( $options['scope'] ) ? strtolower( trim( (string) $options['scope'] ) ) : 'files-and-database';
 		$confirm                  = isset( $options['confirm'] ) ? (string) $options['confirm'] : '';
 		$pre_backup_evidence_path = isset( $options['pre-restore-evidence'] ) ? $this->normalize_path( (string) $options['pre-restore-evidence'] ) : $this->restore_pre_backup_evidence_path();
+		$create_pre_backup        = isset( $options['create-pre-restore-backup'] ) && $this->truthy_value( $options['create-pre-restore-backup'] );
 
 		if ( '' === $staged_path ) {
 			$this->error( 'Missing --staged-path=/path/to/staged/package.' );
@@ -1132,12 +1133,36 @@ class Alynt_Server_Backup_Runner {
 			return 1;
 		}
 
+		$pre_backup_creation = array(
+			'attempted' => false,
+			'created'   => false,
+		);
+		if ( $create_pre_backup ) {
+			$pre_backup_creation = $this->create_pre_restore_backup_for_apply(
+				$staged_path,
+				$scope,
+				$pre_backup_evidence_path,
+				isset( $options['pre-restore-evidence'] )
+			);
+			if ( empty( $pre_backup_creation['ok'] ) ) {
+				if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
+					$this->line( json_encode( $pre_backup_creation, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+				} else {
+					$this->line( 'Pre-restore backup creation failed.' );
+					$this->line( 'Failures: ' . (string) $pre_backup_creation['failure_count'] );
+				}
+				return 1;
+			}
+
+			$pre_backup_evidence_path = (string) $pre_backup_creation['evidence_path'];
+		}
+
 		if ( 'database' === $scope ) {
-			$result = $this->restore_apply_database_result( $staged_path, $pre_backup_evidence_path );
+			$result = $this->restore_apply_database_result( $staged_path, $pre_backup_evidence_path, ! empty( $pre_backup_creation['created'] ), $pre_backup_creation );
 		} elseif ( 'files' === $scope ) {
-			$result = $this->restore_apply_files_result( $staged_path, $pre_backup_evidence_path );
+			$result = $this->restore_apply_files_result( $staged_path, $pre_backup_evidence_path, ! empty( $pre_backup_creation['created'] ), $pre_backup_creation );
 		} else {
-			$result = $this->restore_apply_combined_result( $staged_path, $pre_backup_evidence_path );
+			$result = $this->restore_apply_combined_result( $staged_path, $pre_backup_evidence_path, ! empty( $pre_backup_creation['created'] ), $pre_backup_creation );
 		}
 
 		if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
@@ -1156,7 +1181,7 @@ class Alynt_Server_Backup_Runner {
 	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
 	 * @return array<string,mixed>
 	 */
-	private function restore_apply_database_result( $staged_path, $pre_backup_evidence_path ) {
+	private function restore_apply_database_result( $staged_path, $pre_backup_evidence_path, $pre_restore_backup_created = false, array $pre_backup_creation = array() ) {
 		$scope       = 'database';
 		$dry_run     = $this->restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path );
 		$result      = array(
@@ -1191,7 +1216,8 @@ class Alynt_Server_Backup_Runner {
 			'post_restore_cleanup_required'    => false,
 			'post_restore_manual_review_items' => array(),
 			'destructive_actions_performed'     => false,
-			'pre_restore_backup_created'        => false,
+			'pre_restore_backup_created'        => (bool) $pre_restore_backup_created,
+			'pre_restore_backup_creation'       => $pre_backup_creation,
 			'restore_apply_report_written'      => false,
 			'restore_apply_report_path'         => '',
 			'restore_apply_report_error'        => '',
@@ -1246,7 +1272,7 @@ class Alynt_Server_Backup_Runner {
 	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
 	 * @return array<string,mixed>
 	 */
-	private function restore_apply_files_result( $staged_path, $pre_backup_evidence_path ) {
+	private function restore_apply_files_result( $staged_path, $pre_backup_evidence_path, $pre_restore_backup_created = false, array $pre_backup_creation = array() ) {
 		$scope   = 'files';
 		$dry_run = $this->restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path );
 		$result  = array(
@@ -1282,7 +1308,8 @@ class Alynt_Server_Backup_Runner {
 			'post_restore_cleanup_required'    => false,
 			'post_restore_manual_review_items' => array(),
 			'destructive_actions_performed'     => false,
-			'pre_restore_backup_created'        => false,
+			'pre_restore_backup_created'        => (bool) $pre_restore_backup_created,
+			'pre_restore_backup_creation'       => $pre_backup_creation,
 			'restore_apply_report_written'      => false,
 			'restore_apply_report_path'         => '',
 			'restore_apply_report_error'        => '',
@@ -1344,7 +1371,7 @@ class Alynt_Server_Backup_Runner {
 	 * @param string $pre_backup_evidence_path Pre-restore evidence path.
 	 * @return array<string,mixed>
 	 */
-	private function restore_apply_combined_result( $staged_path, $pre_backup_evidence_path ) {
+	private function restore_apply_combined_result( $staged_path, $pre_backup_evidence_path, $pre_restore_backup_created = false, array $pre_backup_creation = array() ) {
 		$scope   = 'files-and-database';
 		$dry_run = $this->restore_dry_run_result( $staged_path, $scope, $pre_backup_evidence_path );
 		$result  = array(
@@ -1381,7 +1408,8 @@ class Alynt_Server_Backup_Runner {
 			'post_restore_manual_review_items' => array(),
 			'combined_restore_order'            => array( 'files', 'database' ),
 			'destructive_actions_performed'     => false,
-			'pre_restore_backup_created'        => false,
+			'pre_restore_backup_created'        => (bool) $pre_restore_backup_created,
+			'pre_restore_backup_creation'       => $pre_backup_creation,
 			'restore_apply_report_written'      => false,
 			'restore_apply_report_path'         => '',
 			'restore_apply_report_error'        => '',
@@ -1734,6 +1762,189 @@ class Alynt_Server_Backup_Runner {
 			is_file( $artifact_path ) && is_readable( $artifact_path ),
 			'Pre-restore ' . $label . ' file exists and is readable.'
 		);
+	}
+
+	/**
+	 * Creates pre-restore backup evidence before a destructive staging apply.
+	 *
+	 * @param string $staged_path Staged restore path.
+	 * @param string $scope Restore scope.
+	 * @param string $requested_evidence_path Requested evidence path.
+	 * @param bool   $use_requested_evidence_path Whether the path came from CLI.
+	 * @return array<string,mixed>
+	 */
+	private function create_pre_restore_backup_for_apply( $staged_path, $scope, $requested_evidence_path, $use_requested_evidence_path ) {
+		$checks          = array();
+		$restore_base    = $this->restore_path();
+		$pre_backup_path = $this->normalize_path( $this->config_string( 'restore_pre_backup_path' ) );
+		$target_path     = $this->normalize_path( $this->config_string( 'restore_target_wordpress_path' ) );
+		$wordpress_path  = $this->wordpress_path();
+		$report_path     = $staged_path . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json';
+		$report          = $this->read_restore_report( $report_path );
+		$package_id      = isset( $report['package_id'] ) ? (string) $report['package_id'] : basename( $staged_path );
+		$timestamp       = gmdate( 'Ymd-His' );
+		$evidence_path   = $use_requested_evidence_path ? $requested_evidence_path : '';
+
+		if ( '' === $evidence_path && '' !== $pre_backup_path ) {
+			$evidence_path = $pre_backup_path . DIRECTORY_SEPARATOR . 'PRE_RESTORE_BACKUP_EVIDENCE-' . $this->safe_slug( $package_id ) . '-' . str_replace( '-', '_', $scope ) . '-' . $timestamp . '.json';
+		}
+
+		$result = array(
+			'schema_version'                 => 1,
+			'generated_at'                   => gmdate( 'c' ),
+			'command'                        => 'restore-apply',
+			'status'                         => 'failed',
+			'step'                           => 'create-pre-restore-backup',
+			'scope'                          => $scope,
+			'package_id'                     => $package_id,
+			'staged_path'                    => $staged_path,
+			'target_wordpress_path'          => $target_path,
+			'restore_environment'            => $this->config_string( 'restore_environment' ),
+			'pre_restore_backup_path'        => $pre_backup_path,
+			'evidence_path'                  => $evidence_path,
+			'database_export_path'           => '',
+			'file_backup_path'               => '',
+			'attempted'                      => true,
+			'created'                        => false,
+			'ok'                             => false,
+			'failure_count'                  => 0,
+			'checks'                         => array(),
+			'destructive_actions_performed'  => false,
+			'database_export_created'        => false,
+			'file_backup_created'            => false,
+			'evidence_written'               => false,
+		);
+
+		$this->add_restore_dry_run_check(
+			$checks,
+			'restore_apply_enabled',
+			$this->config_bool( 'restore_apply_enabled' ),
+			'Restore apply is explicitly enabled in runner config.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'restore_environment',
+			'staging' === strtolower( $this->config_string( 'restore_environment' ) ),
+			'Restore environment is staging.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'staged_path_under_restore_path',
+			'' !== $restore_base && $this->path_is_within_directory( $restore_base, $staged_path ) && $this->normalize_path( $restore_base ) !== $staged_path,
+			'Staged path is inside the configured restore path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'restore_report_valid_json',
+			! empty( $report ),
+			'RESTORE_REPORT.json is valid JSON.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'target_wordpress_path_matches_runner',
+			'' !== $target_path && $target_path === $wordpress_path,
+			'Restore target WordPress path matches the runner WordPress path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'target_wordpress_path_safe',
+			'' !== $target_path && ! $this->dangerous_restore_target_path( $target_path ),
+			'Restore target WordPress path is not a broad system path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'target_wordpress_path_readable',
+			is_dir( $target_path ) && is_readable( $target_path ),
+			'Restore target WordPress path exists and is readable.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_backup_path_ready',
+			'' !== $pre_backup_path && ! $this->dangerous_restore_target_path( $pre_backup_path ) && $this->ensure_directory( $pre_backup_path ) && is_writable( $pre_backup_path ),
+			'Pre-restore backup path exists, is safe, and is writable.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'evidence_path_under_pre_backup_path',
+			'' !== $evidence_path && '' !== $pre_backup_path && $this->path_is_within_directory( $pre_backup_path, $evidence_path ),
+			'Pre-restore backup evidence path is inside the configured pre-restore backup path.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'evidence_path_not_existing',
+			'' !== $evidence_path && ! file_exists( $evidence_path ),
+			'Pre-restore backup evidence path does not already exist.'
+		);
+		$this->add_restore_dry_run_check(
+			$checks,
+			'pre_restore_free_space',
+			'' !== $pre_backup_path && is_dir( $pre_backup_path ) && $this->has_minimum_free_space( $pre_backup_path ),
+			'Pre-restore backup path has the configured minimum free space.'
+		);
+
+		$result['checks']        = $checks;
+		$result['failure_count'] = $this->restore_check_failure_count( $checks );
+		if ( 0 !== (int) $result['failure_count'] ) {
+			return $result;
+		}
+
+		if ( $this->restore_scope_includes_database( $scope ) ) {
+			$database_export_path = $pre_backup_path . DIRECTORY_SEPARATOR . 'current-database-before-' . $this->safe_slug( $package_id ) . '-' . $timestamp . '.sql';
+			$result['database_export_path'] = $database_export_path;
+			$result['database_export_created'] = $this->export_database_from_path( $database_export_path, $target_path );
+			$this->add_restore_dry_run_check(
+				$result['checks'],
+				'database_export_created',
+				(bool) $result['database_export_created'],
+				'Pre-restore database export was created.'
+			);
+		}
+
+		if ( $this->restore_scope_includes_files( $scope ) ) {
+			$file_backup_path = $pre_backup_path . DIRECTORY_SEPARATOR . 'current-files-before-' . $this->safe_slug( $package_id ) . '-' . $timestamp . '.tar.gz';
+			$result['file_backup_path'] = $file_backup_path;
+			$result['file_backup_created'] = $this->create_pre_restore_file_backup( $file_backup_path, $target_path );
+			$this->add_restore_dry_run_check(
+				$result['checks'],
+				'file_backup_created',
+				(bool) $result['file_backup_created'],
+				'Pre-restore file backup was created.'
+			);
+		}
+
+		$result['failure_count'] = $this->restore_check_failure_count( $result['checks'] );
+		if ( 0 !== (int) $result['failure_count'] ) {
+			return $result;
+		}
+
+		$evidence = array(
+			'schema_version'        => 1,
+			'evidence_type'         => 'pre_restore_backup',
+			'generated_at'          => gmdate( 'c' ),
+			'package_id'            => $package_id,
+			'scope'                 => $scope,
+			'target_wordpress_path' => $target_path,
+		);
+		if ( '' !== $result['database_export_path'] ) {
+			$evidence['database_export_path'] = $result['database_export_path'];
+		}
+		if ( '' !== $result['file_backup_path'] ) {
+			$evidence['file_backup_path'] = $result['file_backup_path'];
+		}
+
+		$result['evidence_written'] = $this->write_json_atomic( $evidence_path, $evidence );
+		$this->add_restore_dry_run_check(
+			$result['checks'],
+			'evidence_written',
+			(bool) $result['evidence_written'],
+			'Pre-restore backup evidence JSON was written.'
+		);
+		$result['failure_count'] = $this->restore_check_failure_count( $result['checks'] );
+		$result['created']       = 0 === (int) $result['failure_count'];
+		$result['ok']            = $result['created'];
+		$result['status']        = $result['created'] ? 'succeeded' : 'failed';
+
+		return $result;
 	}
 
 	/**
@@ -2353,6 +2564,23 @@ class Alynt_Server_Backup_Runner {
 		$result['restore_apply_allowed'] = 0 === $failure_count;
 
 		return $result;
+	}
+
+	/**
+	 * Counts failed restore checks.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Checks.
+	 * @return int
+	 */
+	private function restore_check_failure_count( array $checks ) {
+		$failure_count = 0;
+		foreach ( $checks as $check ) {
+			if ( empty( $check['passed'] ) ) {
+				++$failure_count;
+			}
+		}
+
+		return $failure_count;
 	}
 
 	/**
@@ -3107,8 +3335,19 @@ class Alynt_Server_Backup_Runner {
 	 * @return bool
 	 */
 	private function export_database( $db_path ) {
+		return $this->export_database_from_path( $db_path, $this->wordpress_path() );
+	}
+
+	/**
+	 * Exports the WordPress database from a specific WordPress path with WP-CLI.
+	 *
+	 * @param string $db_path Database dump path.
+	 * @param string $wordpress_path WordPress path.
+	 * @return bool
+	 */
+	private function export_database_from_path( $db_path, $wordpress_path ) {
 		$command = escapeshellarg( $this->wp_cli_path() )
-			. ' --path=' . escapeshellarg( $this->wordpress_path() )
+			. ' --path=' . escapeshellarg( $wordpress_path )
 			. ' db export ' . escapeshellarg( $db_path )
 			. ' --quiet';
 
@@ -3186,6 +3425,53 @@ class Alynt_Server_Backup_Runner {
 			'live_change_warning_count' => count( $live_warnings ),
 			'warning_samples'           => array_slice( $warning_lines, 0, 5 ),
 		);
+	}
+
+	/**
+	 * Creates a pre-restore tar.gz backup of the current target files.
+	 *
+	 * @param string $final_archive Final archive path.
+	 * @param string $target_path Target WordPress path.
+	 * @return bool
+	 */
+	private function create_pre_restore_file_backup( $final_archive, $target_path ) {
+		$target_path = $this->normalize_path( $target_path );
+		if ( '' === $final_archive || '' === $target_path || $this->dangerous_restore_target_path( $target_path ) || ! is_dir( $target_path ) || ! is_readable( $target_path ) ) {
+			return false;
+		}
+
+		$temp_archive = $final_archive . '.tmp';
+		if ( file_exists( $temp_archive ) && ! unlink( $temp_archive ) ) {
+			return false;
+		}
+
+		$exclude_file = dirname( $final_archive ) . DIRECTORY_SEPARATOR . '.pre-restore-tar-excludes-' . uniqid( '', true ) . '.txt';
+		if ( ! $this->write_file( $exclude_file, implode( "\n", $this->pre_restore_tar_exclude_patterns( basename( $target_path ) ) ) . "\n" ) ) {
+			return false;
+		}
+
+		$command = 'tar ' . $this->tar_ignore_failed_read_option()
+			. '--exclude-from=' . escapeshellarg( $exclude_file )
+			. ' -czf ' . escapeshellarg( $temp_archive )
+			. ' -C ' . escapeshellarg( dirname( $target_path ) )
+			. ' ' . escapeshellarg( basename( $target_path ) );
+
+		$result = $this->run_shell_command( $command );
+		if ( is_file( $exclude_file ) ) {
+			unlink( $exclude_file );
+		}
+
+		if ( 0 !== $result['exit_code'] && ! $this->is_recoverable_tar_archive_warning( $result, $temp_archive ) ) {
+			$this->error( 'Pre-restore file backup creation failed.' );
+			$this->error( implode( "\n", $result['output'] ) );
+			return false;
+		}
+
+		if ( ! is_file( $temp_archive ) || filesize( $temp_archive ) <= 0 ) {
+			return false;
+		}
+
+		return rename( $temp_archive, $final_archive );
 	}
 
 	/**
@@ -3473,6 +3759,31 @@ class Alynt_Server_Backup_Runner {
 
 		foreach ( $this->symlink_exclude_patterns( $wp_base ) as $pattern ) {
 			$patterns[] = $pattern;
+		}
+
+		return array_values( array_unique( $patterns ) );
+	}
+
+	/**
+	 * Returns tar exclude patterns for pre-restore snapshots.
+	 *
+	 * Symlink entries are intentionally not excluded here because restore-apply
+	 * reports known drop-ins from the pre-restore file backup.
+	 *
+	 * @param string $wp_base WordPress base directory name in the archive.
+	 * @return array<int,string>
+	 */
+	private function pre_restore_tar_exclude_patterns( $wp_base ) {
+		$patterns = array();
+		foreach ( $this->exclude_paths() as $path ) {
+			$normalized = trim( $this->normalize_path( $path ), '/' );
+			if ( '' === $normalized ) {
+				continue;
+			}
+
+			$patterns[] = $normalized;
+			$patterns[] = $wp_base . '/' . $normalized;
+			$patterns[] = '*/' . $normalized;
 		}
 
 		return array_values( array_unique( $patterns ) );
@@ -3905,7 +4216,8 @@ function alynt_runner_usage() {
 		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
 		. '[--restore-path=/path/to/restores] [--staged-path=/path/to/staged/package] [--scope=files-and-database] '
-		. '[--pre-restore-evidence=/path/to/evidence.json] [--write-report=1] [--older-than-days=14] [--confirm=delete-local-artifacts|restore-staging-site]';
+		. '[--pre-restore-evidence=/path/to/evidence.json] [--create-pre-restore-backup=1] '
+		. '[--write-report=1] [--older-than-days=14] [--confirm=delete-local-artifacts|restore-staging-site]';
 }
 
 $parsed = alynt_runner_parse_args( $argv );

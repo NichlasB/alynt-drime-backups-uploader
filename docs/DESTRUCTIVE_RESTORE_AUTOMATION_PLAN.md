@@ -59,6 +59,7 @@ php alynt-backup-runner.php restore-apply \
   --config=/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/runner/config.json \
   --staged-path=/var/www/alyntdrime.sitesmain.com/restores/alynt-drime-backups/PACKAGE_ID \
   --scope=files-and-database \
+  --create-pre-restore-backup=1 \
   --confirm=restore-staging-site
 ```
 
@@ -76,6 +77,7 @@ Recommended first implementation path:
 4. Add `restore-apply --scope=database`. Current source status: implemented for staging database imports after confirmation, dry-run checks, and pre-restore evidence validation.
 5. Add `restore-apply --scope=files`. Current source status: implemented for staging file replacement after confirmation, dry-run checks, pre-restore evidence validation, symlink/drop-in warning reporting, and post-restore known drop-in review items.
 6. Combine as `restore-apply --scope=files-and-database`. Current source status: implemented for staging file replacement followed by database import after confirmation, dry-run checks, pre-restore evidence validation, symlink/drop-in warning reporting, and post-restore known drop-in review items.
+7. Add automatic pre-restore backup creation. Current source status: implemented as an explicit `restore-apply --create-pre-restore-backup=1` option for staging database, files, and combined scopes.
 
 ## Required Config Additions
 
@@ -255,7 +257,7 @@ Current `restore-dry-run` behavior:
 - Requires pre-restore backup evidence to match package ID, scope, and target path.
 - Requires scope-specific backup artifact files to be readable and under `restore_pre_backup_path`.
 - Reports `destructive_actions_performed: false`, `database_imported: false`, `live_files_overwritten: false`, and `pre_restore_backup_created: false`. `restore_apply_command_available` is true for `database`, `files`, and `files-and-database` scopes.
-- Does not create pre-restore backups yet.
+- Does not create pre-restore backups because dry run remains read-only by design.
 - Does not check target database connectivity yet.
 - Does not import the database itself.
 
@@ -267,7 +269,7 @@ Current `restore-apply --scope=database` behavior:
 - Imports staged `database.sql` with WP-CLI against the configured target WordPress path.
 - Writes `RESTORE_APPLY_REPORT-*.json` under configured `restore_reports_path`.
 - Reports database import attempt/success, dry-run checks, report path, failure step, and manual recovery notes.
-- Does not create the pre-restore backup evidence automatically yet.
+- Can create matching pre-restore database evidence before apply when `--create-pre-restore-backup=1` is supplied. If evidence creation fails, apply stops before database import.
 
 Current `restore-apply --scope=files` behavior:
 
@@ -277,7 +279,7 @@ Current `restore-apply --scope=files` behavior:
 - Replaces the configured staging WordPress path from staged `htdocs/`.
 - Writes `RESTORE_APPLY_REPORT-*.json` under configured `restore_reports_path`.
 - Reports file restore attempt/success, dry-run checks, report path, failure step, manual recovery notes, missing pre-restore symlink/drop-in samples, and known post-restore drop-in review items.
-- Does not create the pre-restore backup evidence automatically yet.
+- Can create matching pre-restore file backup evidence before apply when `--create-pre-restore-backup=1` is supplied. If evidence creation fails, apply stops before file replacement.
 - Does not import the database in this scope.
 
 Current `restore-apply --scope=files-and-database` behavior:
@@ -290,7 +292,7 @@ Current `restore-apply --scope=files-and-database` behavior:
 - Imports staged `database.sql` with WP-CLI second, only after file replacement succeeds.
 - Writes `RESTORE_APPLY_REPORT-*.json` under configured `restore_reports_path`.
 - Reports `combined_restore_order: ["files", "database"]`, both file/database phase booleans, missing pre-restore symlink/drop-in samples, and known post-restore drop-in review items.
-- Does not create the pre-restore backup evidence automatically yet.
+- Can create matching pre-restore database and file backup evidence before apply when `--create-pre-restore-backup=1` is supplied. If evidence creation fails, apply stops before file replacement or database import.
 - Does not support production restore.
 
 Staging rehearsal status:
