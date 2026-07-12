@@ -105,6 +105,9 @@ Use this checklist to track workflow progress for the `Alynt Drime Backups Uploa
 - [x] GitHub release `v0.3.2` published on 2026-07-12 with release asset `alynt-drime-backups-uploader-v0.3.2.zip`; the release workflow completed successfully and the zip audit found no blocked dev/local paths.
 - [x] Alynt Plugin Updater detected `v0.3.2` from the GitHub release asset on `plugin-tester.local`, populated WordPress's update transient with `alynt-drime-backups-uploader-v0.3.2.zip`, installed the update through WordPress's native `Plugin_Upgrader`, and final file verification showed plugin header and version constant `0.3.2`.
 - [x] Release `v0.3.2` accepted as the current stable baseline on 2026-07-12.
+- [x] GitHub release `v0.4.0` published on 2026-07-12 with release asset `alynt-drime-backups-uploader-v0.4.0.zip`; the release workflow completed successfully and the downloaded release zip verified plugin header, version constant, and stable tag `0.4.0`.
+- [x] Alynt Plugin Updater detected `v0.4.0` from the GitHub release asset on `plugin-tester.local`, populated WordPress's update transient with `alynt-drime-backups-uploader-v0.4.0.zip`, installed the update through WordPress's native `Plugin_Upgrader`, and final file verification showed plugin header, version constant, and stable tag `0.4.0`.
+- [x] Release `v0.4.0` accepted as the current stable baseline on 2026-07-12.
 
 ## E2E Validation
 
