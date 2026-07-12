@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.3.2
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,8 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+
+= 0.4.0 =
 * Added optional `restore-apply --create-pre-restore-backup=1` support so staging restores can create matching pre-restore database/file backup evidence immediately before apply.
 
 = 0.3.2 =
@@ -165,6 +167,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.4.0 =
+No breaking changes. Adds opt-in staging restore apply support for creating pre-restore database/file backup evidence immediately before apply.
 
 = 0.3.2 =
 No breaking changes. Server-runner/generic-outbox packages can now be pruned locally after confirmed upload while preserving the newest configured package sets.
