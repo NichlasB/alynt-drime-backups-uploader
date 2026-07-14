@@ -267,7 +267,7 @@ Remaining possible future work:
 
 - Additional archive formats after real server validation.
 - Stronger consistency modes for higher-write sites, such as maintenance-window runbooks, temporary maintenance mode, or host-level snapshots.
-- Mutable singleton remote package catalog if future Drime API validation proves safe in-place replacement semantics.
+- Mutable singleton remote package catalog is deferred unless Drime publishes stable-entry content replacement support. A 2026-07-14 API/OpenAPI review found that uploads create new entries, duplicate validation only reports collisions, and entry updates change metadata only.
 - Optional stronger restore/operator helpers after more rollout evidence.
 
 Implemented slice: mandatory per-package Drime folders:
@@ -458,7 +458,7 @@ Operator-approved local cleanup execution feature workflow results:
 
 Remaining possible future work:
 
-- Mutable singleton remote package catalog only if future Drime API validation proves safe in-place replacement semantics.
+- Mutable singleton remote package catalog is deferred unless Drime publishes stable-entry content replacement support. Continue using immutable package-specific catalog snapshots.
 - Guided staging-restore wp-admin UI only if operator experience later proves that the browser is the right surface.
 - Destructive restore automation only as the separate gated project documented in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md`, with dry-run, confirmation, pre-restore safety evidence, and staging evidence.
 

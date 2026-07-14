@@ -201,7 +201,21 @@ Remote discovery rules:
 - Keep old index versions readable if the schema evolves.
 - Do not allow dashboard, remote index, or catalog data to trigger production restore without local verification and human approval.
 
-The plugin does not maintain a mutable singleton catalog file in Drime. If operators need one canonical file that is overwritten in place, that remains a future dashboard/automation feature and should wait for verified Drime replacement semantics.
+The plugin does not maintain a mutable singleton catalog file in Drime.
+
+## Drime Replacement Semantics Review
+
+A read-only review of Drime's official API documentation and OpenAPI definition was completed on 2026-07-14:
+
+- [`POST /uploads`](https://docs.drime.cloud/api-reference/uploads/upload-file) uploads a file and creates a file entry.
+- [`POST /s3/entries`](https://docs.drime.cloud/api-reference/uploads/create-s3-entry) registers a new file entry after direct or multipart storage upload. Its request does not accept an existing entry ID.
+- [`POST /uploads/validate`](https://docs.drime.cloud/api-reference/uploads/validate-upload) detects same-name duplicates but does not replace them.
+- [`PUT /file-entries/{entryId}`](https://docs.drime.cloud/api-reference/files/update-file-entry) changes only the entry name or description.
+- [`GET /file-backup`](https://docs.drime.cloud/api-reference/files/get-file-backup) exposes version history, but the documented API does not provide an endpoint for uploading a replacement version.
+
+The documented API therefore does not provide safe in-place file-content replacement with a stable entry ID. Simulating replacement by uploading, deleting, and renaming entries would introduce duplicate-name windows, broken entry references, race conditions, and partial-failure risk.
+
+Decision: retain immutable package-specific `.remote-catalog.json` snapshots. A mutable singleton catalog remains deferred unless Drime publishes and supports a stable-entry content replacement contract. A disposable live mutation rehearsal is not sufficient evidence for production use when the behavior is undocumented.
 
 ## Dashboard Relationship
 
