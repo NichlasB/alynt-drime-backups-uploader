@@ -459,7 +459,7 @@ Operator-approved local cleanup execution feature workflow results:
 Remaining possible future work:
 
 - Mutable singleton remote package catalog is deferred unless Drime publishes stable-entry content replacement support. Continue using immutable package-specific catalog snapshots.
-- Guided staging-restore wp-admin UI only if operator experience later proves that the browser is the right surface.
+- Guided staging-restore wp-admin UI is deferred. Restore operations are rare, server-oriented, and safer through the existing WP-CLI and agent-assisted workflow, which remains available when WordPress administration is inaccessible. Reconsider only if nontechnical operators later need independent browser-based restores.
 - Destructive restore automation only as the separate gated project documented in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md`, with dry-run, confirmation, pre-restore safety evidence, and staging evidence.
 
 ### 5. Central Dashboard Plugin Preparation
