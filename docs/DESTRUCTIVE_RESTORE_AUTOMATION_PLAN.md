@@ -4,6 +4,8 @@ This document tracks the separate gated project for restoring Alynt server-runne
 
 Staging-only version 1 is implemented and rehearsed. The runner can fetch, verify, inspect, and stage a package, then replace staging files and/or import the staging database after strict gates pass. Production-capable restore remains a separate future extension and is not authorized by this plan.
 
+The separate production-capable project is tracked in [PRODUCTION_RESTORE_AUTOMATION_PLAN.md](PRODUCTION_RESTORE_AUTOMATION_PLAN.md).
+
 ## Current Status And Approval
 
 Approved planning assumptions:
@@ -545,4 +547,4 @@ This project needs explicit approval before each phase:
 
 ## Current Recommendation
 
-Treat staging-only version 1 as complete. Keep production restore unsupported unless a new production-specific project defines rollback, maintenance/write control, ownership and permissions, post-restore runtime checks, failure recovery, and explicit approval gates, then proves them on an appropriate non-production target first.
+Treat staging-only version 1 as complete. Keep production restore unsupported while the separate [Production-Capable Restore Automation Plan](PRODUCTION_RESTORE_AUTOMATION_PLAN.md) defines rollback, maintenance/write control, ownership and permissions, post-restore runtime checks, failure recovery, and explicit approval gates, then proves them on an appropriate non-production target first.

@@ -26,7 +26,7 @@ Not supported yet:
 
 - Running an automated production restore command.
 
-Any production restore must remain a manual, explicitly approved operation until a separate destructive restore workflow is designed and tested. The future destructive restore automation plan is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md).
+Any production restore must remain a manual, explicitly approved operation until the separate production-capable workflow is designed and tested. Staging-only apply is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md); future production capability is tracked in [PRODUCTION_RESTORE_AUTOMATION_PLAN.md](PRODUCTION_RESTORE_AUTOMATION_PLAN.md).
 
 ## Package Layout
 
