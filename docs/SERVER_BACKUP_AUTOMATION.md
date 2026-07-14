@@ -158,6 +158,6 @@ The current implementation does not yet include:
 - A mutable singleton remote package catalog. Server-runner packages now upload package-level `.remote-index.json` and folder catalog snapshot `.remote-catalog.json` sidecars, but the plugin does not overwrite one rolling file in a Drime destination folder.
 - Alternative archive formats beyond runner-created `.tar.gz` packages.
 - Automatic maintenance mode or write-pausing for high-write sites.
-- Automatic destructive restore.
+- Automatic production restore. Staging-only confirmation-gated restore apply is implemented separately.
 
-Those are backlog candidates. Add them only when the operational policy is clear and the staging evidence supports the extra automation.
+These are conditional or deferred candidates, not required baseline work. Add one only when a real operational need, clear policy, and staging evidence justify the extra automation.

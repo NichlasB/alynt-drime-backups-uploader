@@ -1,10 +1,10 @@
 # Destructive Restore Automation Plan
 
-This document tracks the separate gated project for restoring Alynt server-runner backups onto a live WordPress target.
+This document tracks the separate gated project for restoring Alynt server-runner backups onto a WordPress target.
 
-It is intentionally separate from the current restore staging flow. The existing runner can fetch, verify, inspect, and stage a package for review. This project would add the ability to overwrite a staging site's files and import its database after strict gates pass.
+Staging-only version 1 is implemented and rehearsed. The runner can fetch, verify, inspect, and stage a package, then replace staging files and/or import the staging database after strict gates pass. Production-capable restore remains a separate future extension and is not authorized by this plan.
 
-## Current Approval
+## Current Status And Approval
 
 Approved planning assumptions:
 
@@ -17,6 +17,7 @@ Approved planning assumptions:
 - Confirmation phrase: `--confirm=restore-staging-site`.
 - Pre-restore backup evidence is required before any destructive action.
 - Read-only GridPane restore/snapshot investigation is allowed before implementation.
+- Version 1 status: implemented, tested, and rehearsed on `alyntdrime.sitesmain.com`; production restore remains unsupported.
 
 ## Core Principle
 
@@ -69,7 +70,7 @@ Supported `--scope` values for version 1:
 - `database`
 - `files-and-database`
 
-Recommended first implementation path:
+Implemented version 1 sequence:
 
 1. Build `restore-dry-run`. Current source status: implemented as a preflight.
 2. Add report generation. Current source status: implemented as optional `--write-report=1` success evidence under configured `restore_reports_path`.
@@ -420,21 +421,17 @@ Apply should:
 
 ## File Restore Strategy
 
-Version 1 should avoid blind broad deletion where possible.
+Version 1 avoids restoring outside the configured staging WordPress path and requires passing pre-restore evidence before file replacement.
 
-Preferred staging-only approach:
+Implemented staging-only approach:
 
-- Move current `htdocs` to a timestamped pre-restore directory only after pre-restore backup evidence exists.
-- Move or copy staged `htdocs` into the target path.
-- Preserve or re-apply ownership/group based on the original target path.
+- Resolve and validate the configured staging WordPress target path.
+- Require readable pre-restore file backup evidence.
+- Remove the existing target contents and recursively copy the staged `htdocs` contents into the existing target directory.
+- Report missing symlinked drop-ins and known post-restore drop-ins for manual review.
 - Refuse if target path resolution is outside the configured site root.
 
-Open implementation choice:
-
-- Use atomic-ish directory swap for staging.
-- Or use `rsync --delete` after pre-restore backup evidence.
-
-This should be decided after read-only GridPane investigation.
+Version 1 does not use `rsync --delete`, an atomic directory swap, maintenance mode, or host-level snapshot orchestration.
 
 ## Database Restore Strategy
 
@@ -488,7 +485,7 @@ The report must not include Drime tokens, database passwords, salts, cookies, si
 
 ## Acceptance Criteria
 
-Version 1 is acceptable only when all of these pass on `alyntdrime.sitesmain.com`:
+Version 1 was accepted after these checks passed through automated coverage and the recorded rehearsals on `alyntdrime.sitesmain.com`:
 
 - `restore-dry-run` passes against a verified staged package.
 - `restore-dry-run` fails for wrong target paths.
@@ -538,14 +535,14 @@ This project needs explicit approval before each phase:
 5. Repeated staging destructive test.
 6. Any future production-capable design.
 
-## Open Questions
+## Resolved Version 1 Decisions
 
-- Should pre-restore backup be a separate command or always created by `restore-apply`?
-- Should file restore use directory swap or `rsync --delete` for GridPane staging?
-- Should maintenance mode be WordPress maintenance file based, plugin based, or GridPane/host based?
-- Should post-restore checks include HTTP checks, WP-CLI checks, or both?
-- Should version 1 support database-only and files-only apply paths, or keep them dry-run-only until the combined flow passes?
+- Pre-restore evidence may already exist or may be created explicitly by `restore-apply --create-pre-restore-backup=1`; automatic creation is not implicit.
+- File restore uses validated target-content removal followed by recursive staged-content copy, not directory swap or `rsync --delete`.
+- Version 1 does not enable maintenance mode or orchestrate GridPane snapshots.
+- Rehearsals use both WP-CLI and HTTP runtime checks after apply; these remain operator/runbook verification steps.
+- Database-only, files-only, and combined apply scopes are all implemented for staging.
 
 ## Current Recommendation
 
-Start with read-only GridPane investigation and a dry-run/reporting implementation. Do not implement the destructive `restore-apply` command until the dry-run report proves the target, package, pre-restore backup location, and staging-only gate are all reliable.
+Treat staging-only version 1 as complete. Keep production restore unsupported unless a new production-specific project defines rollback, maintenance/write control, ownership and permissions, post-restore runtime checks, failure recovery, and explicit approval gates, then proves them on an appropriate non-production target first.

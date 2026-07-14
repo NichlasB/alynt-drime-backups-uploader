@@ -92,7 +92,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 - Restore documentation exists in `docs/RESTORE_RUNBOOK.md`.
 - Restore rehearsal checklist/report template exists in `docs/RESTORE_REHEARSAL_CHECKLIST.md`.
-- Destructive restore automation planning exists in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md` as a separate gated future project.
+- Staging-only destructive restore automation version 1 is implemented and tracked in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md`; production-capable restore remains a separate future gated extension.
 - First read-only GridPane investigation findings for `alyntdrime.sitesmain.com` are recorded in that plan.
 - Remote discovery notes exist in `docs/REMOTE_RESTORE_DISCOVERY.md`.
 - Package security boundaries are documented in `docs/PACKAGE_SECURITY.md`.
@@ -183,7 +183,7 @@ Historical E2E validation recorded in this plan and supporting docs:
 - The new plugin is production-ready for the validated baseline, but broad rollout should still be staged site-by-site.
 - Server-runner packages are logical WordPress backups, not transactional filesystem snapshots.
 - High-write sites may need maintenance windows or stricter future consistency modes.
-- Full backup-engine-generated WPvivid split backup remains untested.
+- Full backup-engine-generated WPvivid split backup E2E passed on 2026-07-14. The remaining WPvivid boundary is runtime enumeration of Pro filtered backup-list names beyond `wpvivid_backup_list`.
 - Live rate-limit induction remains intentionally untested to avoid abusive Drime API traffic.
 - Composer audit has previously been blocked locally when Composer was unavailable; rerun when Composer is available in the relevant environment.
 - Staging restore apply is implemented and rehearsed, but production database import and file replacement remain intentionally gated future work.
@@ -191,7 +191,7 @@ Historical E2E validation recorded in this plan and supporting docs:
 - Third-party producer adapters beyond WPvivid and generic outbox are not implemented yet.
 - Drime workspace destination guardrails are implemented in source/docs and passed feature-stage review workflows.
 
-## Active Roadmap / Backlog
+## Roadmap / Completed Slices And Deferred Backlog
 
 ### 1. Plan And Documentation Hygiene
 
@@ -263,12 +263,12 @@ Implemented first slice:
 - Added `.remote-catalog.json` folder catalog snapshot sidecars for server-runner packages. The generic outbox producer reads and uploads those sidecars with the package set so the latest uploaded package can carry a non-secret catalog of the local outbox package set.
 - Added mandatory per-package Drime folders for generic outbox/server-runner uploads. The uploader appends a sanitized package-ID folder under the effective server destination path and uploads the archive plus recognized sidecars into that package folder. WPvivid uploads remain unchanged.
 
-Remaining possible future work:
+Conditional or deferred future work:
 
 - Additional archive formats after real server validation.
 - Stronger consistency modes for higher-write sites, such as maintenance-window runbooks, temporary maintenance mode, or host-level snapshots.
 - Mutable singleton remote package catalog is deferred unless Drime publishes stable-entry content replacement support. A 2026-07-14 API/OpenAPI review found that uploads create new entries, duplicate validation only reports collisions, and entry updates change metadata only.
-- Optional stronger restore/operator helpers after more rollout evidence.
+- Production-capable restore automation remains a separately gated extension; no additional staging restore helper is currently selected.
 
 Implemented slice: mandatory per-package Drime folders:
 
@@ -460,7 +460,7 @@ Remaining possible future work:
 
 - Mutable singleton remote package catalog is deferred unless Drime publishes stable-entry content replacement support. Continue using immutable package-specific catalog snapshots.
 - Guided staging-restore wp-admin UI is deferred. Restore operations are rare, server-oriented, and safer through the existing WP-CLI and agent-assisted workflow, which remains available when WordPress administration is inaccessible. Reconsider only if nontechnical operators later need independent browser-based restores.
-- Destructive restore automation only as the separate gated project documented in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md`, with dry-run, confirmation, pre-restore safety evidence, and staging evidence.
+- Production-capable restore automation remains a separate future gated extension to `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md`. Staging-only version 1 is implemented and rehearsed.
 
 ### 5. Central Dashboard Plugin Preparation
 
@@ -592,7 +592,7 @@ Feature-stage workflow results:
 
 ### 8. Future Release Workflow
 
-Status: active for this final pre-release/release-candidate pass.
+Status: established as a recurring workflow; inactive until the next feature or release-candidate pass.
 
 After each new feature slice is added, run the applicable feature-stage workflows from `wp-plugin-toolkit` in this order, whichever are necessary for the actual change:
 
@@ -644,6 +644,29 @@ Feature-stage workflow results:
 - Feature Security Review: passed; new inputs are sanitized and clamped, output is escaped, and file deletion is restricted to uploaded generic-outbox records inside the configured server outbox with sidecar ownership checks.
 - Documentation Sync Audit: completed; README, readme.txt, CHANGELOG, settings docs, server automation docs, rollout runbook, POT entries, and this plan now describe server-specific local retention and distinguish it from broad local deletion and manual runner cleanup.
 - Validation: `npm.cmd run build`, `npm.cmd run lint`, `npm.cmd test`, and `git diff --check` passed. PHPUnit passed with 167 tests, 1103 assertions, and 1 expected skip. `git diff --check` reported line-ending normalization warnings only.
+
+## Genuine Remaining Backlog
+
+No required feature slice remains for the validated `v0.4.0` current-plugin baseline.
+
+Conditional current-plugin extensions:
+
+1. Stronger consistency for high-write sites, such as an approved maintenance-window mode, temporary write pausing, or proven host-level snapshots. Start only for a real target whose write activity makes light consistency insufficient.
+2. Additional server archive formats. Start only after a real server or producer requires a format beyond `.tar.gz` and provides validation fixtures.
+3. Production-capable restore automation. Treat this as a new high-risk gated extension with production-specific rollback, maintenance, ownership, runtime verification, and approval design; staging-only version 1 is complete.
+4. A dedicated third-party producer adapter. Start only after a specific producer is selected and the generic outbox cannot represent its completed packages safely.
+
+Separate project:
+
+- The centralized monitoring dashboard remains a separate plugin project. This uploader's redacted status and identity foundations are ready; dashboard implementation is not unfinished uploader work.
+
+Intentionally deferred or blocked:
+
+- Mutable singleton remote catalog: blocked until Drime documents stable-entry content replacement.
+- Guided wp-admin restore UI: deferred in favor of WP-CLI and agent-assisted restore operations.
+- Automatic cron installation: deferred so the generated review/install commands retain an operator approval step.
+
+Continued site-by-site rollout is operational adoption work, not a missing plugin feature.
 
 ## Current Recommendation
 
