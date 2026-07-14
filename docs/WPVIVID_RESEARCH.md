@@ -1,13 +1,14 @@
 # WPvivid Source Verification
 
-Verified: 2026-06-20
+Verified: 2026-07-14
 
-Target: `plugin-tester.local` (`local-only`)
+Targets: `unconditionyou.com` (`live-only` backup/upload source) and `plugin-tester.local` (`local-only` restore target)
 
-Installed source inspected:
+Installed source/runtime inspected:
 
-- WPvivid Backup Plugin Free `0.9.129`
-- WPvivid Plugins Pro `2.2.46`
+- WPvivid Backup Plugin Free `0.9.130`
+- WPvivid Plugins Pro `2.2.47`
+- Alynt Drime Backups Uploader `0.4.0`
 
 ## Backup Directory
 
@@ -104,7 +105,34 @@ Validated behavior:
 - Missing listed split part: the first scan captured the stability snapshot and queued zero files; the second scan still queued zero files because the listed set was incomplete.
 - Cleanup verification after the fixture restored plugin state: queue count `0`, failed count `0`, active upload empty, uploaded registry count `1`, cached Drime parent folder ID still present, split-fixture scan snapshot absent, and the temporary fixture directory removed.
 
-## Boundaries Not Yet Verified
+## Backup-Engine Split Archive E2E Validation
 
-- Split archive completeness has been validated against a WPvivid-list-backed runtime fixture, but not against a split backup generated end-to-end by WPvivid's backup engine.
+A real WPvivid files-and-database backup rehearsal was completed on 2026-07-14. The live source was `unconditionyou.com`; the destructive restore target was the non-production LocalWP site `plugin-tester.local`.
+
+Creation and upload proof:
+
+- WPvivid backup ID: `wpvivid-cf7afa1a987c6`.
+- WPvivid's backup engine produced six valid `.part001.zip` through `.part006.zip` files totaling `96,082,149` bytes.
+- While one final part still used WPvivid's temporary name, Alynt found candidates but queued zero files.
+- After all six final filenames existed, the initial stability scan still queued zero files.
+- After the configured 300-second minimum age, Alynt queued and uploaded exactly six files.
+- Final Alynt status returned queue `0`, failed `0`, and no active upload.
+- The effective Drime destination was `/unconditionyou.com/wpvivid`.
+
+Drime retrieval and restore proof:
+
+- All six files were downloaded through Drime's file-entry download endpoint.
+- Every downloaded file matched the corresponding live source size and SHA-256 hash.
+- WPvivid rescanned the six files on `plugin-tester.local` as one complete backup with no incomplete parts.
+- A full local filesystem and database restore point was created and verified before the destructive restore.
+- WPvivid restored database, themes, plugins, uploads, general `wp-content`, and WordPress core.
+- The migrated target retained `home` and `siteurl` as `http://plugin-tester.local` while restoring the `UnconditionYou` site identity.
+- Post-restore verification found 85 database tables, three users, HTTP `200`, the restored Genesis/fox-diamond theme pair, and no browser console errors.
+- WPvivid Free `0.9.130`, WPvivid Pro `2.2.47`, and Alynt Drime Backups Uploader `0.4.0` were present and active after restoration.
+
+Approved cleanup removed the large source, download, imported, and filesystem-restore archive copies. The remote Drime backup, small evidence files, and the `2.2 MB` pre-restore database export were retained.
+
+## Remaining Boundaries
+
 - Pro filtered backup-list names beyond `wpvivid_backup_list` were not enumerated at runtime.
+- The destructive restore proof used a disposable LocalWP target. It does not authorize or validate unattended production restoration.

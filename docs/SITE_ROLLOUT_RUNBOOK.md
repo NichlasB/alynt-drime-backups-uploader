@@ -188,6 +188,25 @@ Acceptance:
 - Uploaded registry count increases.
 - Drime contains the expected backup artifacts.
 
+### WPvivid Restore Confidence Proof
+
+Before treating a WPvivid-only or dual-producer site as restore-ready:
+
+1. Select a disposable LocalWP or staging WordPress target. Do not use the production source as the first restore target.
+2. Identify one complete WPvivid backup in Drime and record every split filename, size, and file-entry identifier.
+3. Download every part from Drime and verify each file against trusted source hashes or other recorded integrity evidence.
+4. Create and verify a database and filesystem restore point for the target site.
+5. Place the complete split set in the target WPvivid backup directory and run WPvivid's local-folder rescan.
+6. Confirm WPvivid registers one complete backup with the expected part count and no incomplete files.
+7. Obtain explicit approval immediately before the destructive restore.
+8. Restore files and database through WPvivid's restore engine.
+9. Verify the target URL, site identity, database, theme, required plugins, frontend HTTP response, and browser console.
+10. Obtain separate cleanup approval before deleting source, download, imported, or restore-point artifacts.
+
+The 2026-07-14 confidence rehearsal used `unconditionyou.com` as the live backup/upload source and `plugin-tester.local` as the disposable restore target. Six Drime-downloaded parts matched the source hashes, WPvivid registered one complete set, and the files-and-database restore passed. See `docs/WPVIVID_RESEARCH.md` for the recorded evidence.
+
+This proof validates the operator-assisted WPvivid path. It does not enable unattended or production-destructive restoration.
+
 ## Phase 5: Add Server Cron
 
 Add cron only after the manual runner health check and first manual package/upload pass succeed.

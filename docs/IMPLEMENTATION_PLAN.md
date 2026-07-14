@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-07-12
+Updated: 2026-07-14
 
 ## Purpose
 
@@ -45,7 +45,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - WPvivid Free/Pro source and runtime option shapes were reviewed.
 - Real single-file database backup fixture was tested.
 - WPvivid-list-backed split-part fixture validated `.part001.zip` / `.part002.zip` scanner gating.
-- Full backup-engine-generated split backup remains a confidence gap, not a blocker for the new generic-outbox/server-runner focus.
+- A real WPvivid backup-engine-generated six-part files-and-database backup passed incomplete-set gating, 300-second stability gating, Drime upload, Drime download/hash verification, WPvivid rescan, and destructive LocalWP restore validation on 2026-07-14.
 
 ### Generic Server Outbox Producer
 
@@ -135,7 +135,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Latest Validation Snapshot
 
-Latest source validation snapshot after the automatic pre-restore backup creation slice: 2026-07-12.
+Latest source/runtime validation snapshot after the WPvivid split-backup confidence rehearsal: 2026-07-14.
 
 Passed locally for the latest restore/pre-restore source state:
 
@@ -151,6 +151,7 @@ Historical E2E validation recorded in this plan and supporting docs:
 
 - LocalWP `plugin-tester.local` admin/settings/package/update validation.
 - GridPane staging site `alyntdrime.sitesmain.com` server-runner package creation, manifest/checksum sidecars, package inspection, plugin scan/queue, retry upload to Drime, uploaded registry recording, and clean queue/failed state afterward.
+- Real WPvivid split-backup E2E passed on 2026-07-14 using live source `unconditionyou.com` and non-production restore target `plugin-tester.local`: WPvivid Free `0.9.130` and Pro `2.2.47` created backup `wpvivid-cf7afa1a987c6` as six `.partNNN.zip` files; Alynt incomplete/stability gates held the set until complete and 300 seconds old; all six parts uploaded to `/unconditionyou.com/wpvivid`; Drime downloads matched the live source SHA-256 hashes; WPvivid rescanned the set as one complete backup; files and database restored successfully; the target retained `http://plugin-tester.local`, rendered the restored `UnconditionYou` site with HTTP `200`, and showed no browser console errors. Large live/local rehearsal copies were removed after approval, while the Drime package, small evidence, and pre-restore database export were retained.
 - Final 2026-06-28 LocalWP E2E passed after refreshing the runtime copy from source: admin UI rendered with rebuilt assets and clean `alyntDrimeBackups` namespace, status tables measured consistently, generic outbox scanning queued one package, the empty-token/workspace upload guardrail failed safely, and temporary state/artifacts were restored.
 - Final 2026-06-28 GridPane staging E2E passed after refreshing plugin and runner runtime files from source: runner health passed, package `alyntdrime-sitesmain-com-20260628-145312.tar.gz` was created and verified, scan queued it, retry upload completed, uploaded registry recorded Drime file entry `766821258` plus four sidecars, diagnostics settings were restored, and final status was queue `0`, failed `0`, uploaded `7`, active upload `false`.
 - Staging package verified after GridPane tar-warning hardening: `alyntdrime-sitesmain-com-20260626-165727.tar.gz`.
