@@ -168,6 +168,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings {
 		$site_host      = $this->site_host_for_runner( $site_url );
 		$config         = array(
 			'site_id'                  => $site_host,
+			'site_uuid'                => isset( $settings['site_uuid'] ) ? (string) $settings['site_uuid'] : '',
 			'site_url'                 => $site_url,
 			'wordpress_path'           => $wordpress_path,
 			'outbox_path'              => $runner_base . '/outbox',

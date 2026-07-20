@@ -67,6 +67,7 @@ class AdminPageSettingsTest extends TestCase {
 		$data = json_decode( $json, true );
 
 		$this->assertSame( 'example.test', $data['site_id'] );
+		$this->assertSame( '', $data['site_uuid'] );
 		$this->assertSame( 'https://example.test', $data['site_url'] );
 		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups/outbox', $data['outbox_path'] );
 		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups/work', $data['work_path'] );

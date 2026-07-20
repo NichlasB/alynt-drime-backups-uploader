@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, read-only restore dry runs, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Broad local deletion, server-package local retention, remote retention, and failure emails are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, staging and production-simulation read-only restore preflights, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, and optional redacted diagnostics for support. Broad local deletion, server-package local retention, remote retention, and failure emails are disabled by default.
 
 == Installation ==
 
@@ -57,6 +57,10 @@ Yes. The runner supports `restore-dry-run --staged-path=/path/to/staged/package 
 = Can the server runner apply a staged restore? =
 
 Yes, for staging restores only. `restore-apply --scope=database --confirm=restore-staging-site` first runs the existing dry-run/evidence checks, then imports the staged `database.sql` with WP-CLI and writes a restore apply report. `restore-apply --scope=files --confirm=restore-staging-site` first runs the file-scope dry-run/evidence checks, then replaces the staging target files from staged `htdocs/` and writes a restore apply report. `restore-apply --scope=files-and-database --confirm=restore-staging-site` replaces files first and imports the database second after the same gates pass. Add `--create-pre-restore-backup=1` to a staging apply command to create matching pre-restore database/file backup evidence immediately before apply. Production restore is not included yet.
+
+= Can I preflight a production-simulation restore without applying it? =
+
+Yes. `restore-production-preflight` checks an explicitly enrolled target, staged package identity, disk budget, active plugin/theme and filesystem markers, maintenance/write-control readiness, and fresh host-native backup evidence. It can print JSON or write a redacted report with `--write-report=1`, but production apply and rollback commands remain unavailable.
 
 = Can I list local server-runner packages before choosing one to restore? =
 
@@ -111,6 +115,8 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+* Added read-only `restore-production-preflight` target, package, disk, write-control, filesystem identity, native-backup evidence, refusal, and redacted reporting checks while keeping production apply and rollback unavailable.
+* Advanced the standalone runner identity to `0.2.0` so preflight-capable server copies can be identified reliably.
 
 = 0.4.0 =
 * Added optional `restore-apply --create-pre-restore-backup=1` support so staging restores can create matching pre-restore database/file backup evidence immediately before apply.

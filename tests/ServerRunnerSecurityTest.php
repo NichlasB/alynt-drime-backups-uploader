@@ -79,6 +79,24 @@ class ServerRunnerSecurityTest extends TestCase {
 	}
 
 	/**
+	 * Production preflight must expose no production apply or rollback command.
+	 *
+	 * @return void
+	 */
+	public function test_production_preflight_keeps_destructive_commands_unavailable() {
+		$source = $this->runner_source();
+
+		$this->assertStringContainsString( "case 'restore-production-preflight'", $source );
+		$this->assertStringNotContainsString( "case 'restore-production-apply'", $source );
+		$this->assertStringNotContainsString( "case 'restore-production-rollback'", $source );
+		$this->assertStringContainsString( "'production_apply_allowed'      => false", $source );
+		$this->assertStringContainsString( "'production_apply_available'    => false", $source );
+		$this->assertStringContainsString( "'production_rollback_available' => false", $source );
+		$this->assertStringContainsString( "'destructive_actions_performed' => false", $source );
+		$this->assertStringContainsString( 'redact_restore_report_data', $source );
+	}
+
+	/**
 	 * Restore apply must stay scope-limited and confirmation-gated.
 	 *
 	 * @return void

@@ -1,21 +1,22 @@
 # Production-Capable Restore Automation Plan
 
-Updated: 2026-07-14
+Updated: 2026-07-20
 
 ## At A Glance
 
 | Item | Decision |
 |---|---|
-| Status | Phase 0 approved and Phase 1 read-only investigation completed; no production restore code or write phase is authorized |
+| Status | Phase 0 through Phase 2 implemented; the first read-only rehearsal safely refused on `alyntdrime.sitesmain.com` disk capacity; `hbf-staging` is approved as the replacement production-simulation candidate |
 | Goal | Operator-supervised files-and-database restoration from a verified Alynt server-runner package |
 | Existing baseline | Staging-only `restore-apply` version 1 is implemented and rehearsed |
-| First test target | Approved: `alyntdrime.sitesmain.com` as a production-simulation target |
+| Current test target | Approved: `staging.handcraftedbotanicalformulas.com` as a production-simulation target |
+| Historical test target | `alyntdrime.sitesmain.com`; retained as Phase 1/2 evidence, but no longer the preferred target because of disk capacity |
 | Actual production target | None selected or approved |
 | First implementation surface | Read-only production preflight and reporting |
 | Required recovery protection | Verified Alynt pre-restore files/database evidence plus an independently verified host-native restore point when available |
 | Confirmation model | Separate production command plus exact action and target-domain confirmations |
 | Automation level | Supervised only; no cron, wp-admin button, or unattended restore |
-| Next implementation step | Phase 2 read-only production preflight and reporting |
+| Next implementation step | Enroll `hbf-staging`, create fresh native backup evidence, and rerun the Phase 2 preflight before Phase 3 |
 
 ## Phase 0 Approval Record
 
@@ -28,6 +29,15 @@ Approved by the user on 2026-07-14:
 - Require verified GridPane/host rollback evidence in addition to Alynt pre-restore evidence when supported.
 
 This approval authorized the plan and Phase 1 read-only investigation only. It did not authorize backup creation, runtime updates, maintenance activation, configuration changes, restore apply, rollback, or cleanup.
+
+Target change approved by the user on 2026-07-20:
+
+- Replace `alyntdrime.sitesmain.com` with `staging.handcraftedbotanicalformulas.com` as the current production-simulation candidate.
+- Keep the completed `alyntdrime.sitesmain.com` investigation and safe disk-refusal rehearsal as historical evidence.
+- Refresh `hbf-staging` read-only before enrollment because several days had passed.
+- Prepare the exact enrollment checklist before making server configuration, runner, package, cron, or cleanup changes.
+
+This target-change approval covers the read-only refresh and plan/checklist update. It does not by itself authorize server runner installation, plugin setting changes, package creation, restore staging, cron changes, restore apply, rollback, or cleanup.
 
 ## Purpose
 
@@ -66,21 +76,188 @@ Production capability must be additive. The staging command must continue refusi
 
 ## Approved Target Classification
 
-`alyntdrime.sitesmain.com` remains a staging site in the site registry and in all operator-facing reports. It may be used as a **production-simulation target** because it has a GridPane layout, isolated private backup paths, existing restore evidence, and prior destructive rehearsal history.
+`staging.handcraftedbotanicalformulas.com` remains a staging site in the site registry and in all operator-facing reports. It is the current **production-simulation target** because it has a GridPane layout, isolated site paths, a much larger storage margin, and successful host-native backup capability. `alyntdrime.sitesmain.com` remains the historical Phase 1/2 target and must not be silently substituted into new commands.
 
 Production simulation should run the same core backup, apply, verification, and rollback implementation intended for production, but under an explicit `production-simulation` environment. It must not be relabeled as actual production and cannot prove behavior under customer traffic, commerce activity, external webhooks, or other real writes.
 
 Before the first simulation write, confirm:
 
-- site key: `alyntdrime`;
+- site key: `hbf-staging`;
 - environment: production simulation on a registered staging site;
-- SSH alias: `sites-main`;
-- site root: `/var/www/alyntdrime.sitesmain.com`;
-- WordPress path: `/var/www/alyntdrime.sitesmain.com/htdocs`;
+- SSH alias: `drm-1`;
+- site user: `handcraftedbotanicalformulas-com`;
+- site root: `/var/www/staging.handcraftedbotanicalformulas.com`;
+- WordPress path: `/var/www/staging.handcraftedbotanicalformulas.com/htdocs`;
 - deployment/access method: SSH and `scp`;
 - files plus database scope;
 - temporary downtime is acceptable;
-- no production customer data is present.
+- data sensitivity and staging-refresh lineage have been reviewed; treat copied customer, order, form, and account data as production-sensitive when present.
+
+## HBF Staging Read-Only Readiness Snapshot
+
+Refreshed on 2026-07-20 through SSH alias `drm-1`; no site or server state was changed.
+
+- Host: `cluster-drmorse-us-east1-v1`.
+- Root filesystem: `362,633,863,168` bytes total and `170,878,173,184` bytes available (`51%` used).
+- WordPress files: `1,686,371,782` bytes.
+- WordPress database: `1,599,438,848` bytes.
+- Conservative files-and-database preflight budget with the default `3 GB` margin: approximately `13.08 GB`.
+- Current storage headroom above that calculated budget: approximately `157.8 GB`.
+- Alynt Drime Backups Uploader `0.4.0` is active.
+- Legacy Alynt Drime WPvivid Uploader `0.6.0` is also active.
+- The new plugin settings option exists, but `site_uuid`, `server_outbox_path`, and automatic scanning are not initialized/configured.
+- No standalone runner, private runner config, outbox, or production restore directory exists yet.
+- WordPress `home` and `siteurl` both equal `https://staging.handcraftedbotanicalformulas.com`.
+- Active theme: `blocksy-child`.
+- Drop-in inventory: `wp-content/object-cache.php`.
+- Symlink inventory: `wp-content/mu-plugins/wp-fail2ban.php` points to the site-local `wp-fail2ban` plugin file.
+- GridPane local and remote scheduled backups are off.
+- Manual GridPane revision `30` completed successfully on 2026-07-15, but it is outside the 24-hour production-preflight evidence window and must be refreshed before the rehearsal.
+- This VPS also hosts production workloads. Package creation, extraction, and later simulation writes must use a quiet period and retain site-specific path, ownership, and confirmation gates.
+
+## HBF Staging Enrollment Checklist
+
+Each write group requires explicit approval. Cron installation and cleanup remain separate from the one-time rehearsal.
+
+### Gate A: Initialize And Record Plugin Identity
+
+Status: completed on 2026-07-20.
+
+1. Reconfirm site key `hbf-staging`, SSH alias `drm-1`, and the exact site paths.
+2. Run the plugin status command once to generate and persist the non-secret `site_uuid`.
+3. Record the UUID and immediately reread it from the WordPress option.
+4. Confirm plugin `0.4.0` remains active and no upload or queue operation was triggered.
+
+Result:
+
+- Generated and reread site UUID `5f0c5974-edba-46c6-b0d3-8396feddb07a`.
+- Plugin `0.4.0` remained active.
+- Queue, uploaded, failed, and active-upload counts remained zero.
+- Automatic scanning and server-cron expectation remained disabled.
+
+### Gate B: Resolve Legacy Uploader And Source Scope
+
+Status: completed for the server-runner rehearsal boundary on 2026-07-20.
+
+1. Keep the new plugin's WPvivid source unconfigured during the production-simulation server-runner rehearsal.
+2. The legacy uploader may remain active temporarily only while the new plugin is not scanning the same WPvivid backup directory.
+3. Before enabling WPvivid in the new plugin, migrate/reconfigure its Drime destination, deactivate the legacy uploader, and verify that only one uploader owns the WPvivid source.
+4. Configure the server outbox path and server-specific Drime relative path only when the server-runner upload proof is in scope.
+
+Result:
+
+- Legacy uploader `0.6.0` remains active.
+- The new plugin has no WPvivid override, server outbox setting, automatic scanning, or server-cron expectation configured.
+- No duplicate WPvivid source ownership was enabled.
+- Migration/deactivation remains required before the new plugin is allowed to upload WPvivid backups.
+
+### Gate C: Install The Private Runner
+
+Status: completed on 2026-07-20.
+
+1. Install runner `0.2.0` under `/var/www/staging.handcraftedbotanicalformulas.com/private/alynt-drime-backups/runner`.
+2. Create site-private outbox, work, reports, evidence, and restore staging directories with the site user as owner.
+3. Generate a non-secret runner config containing the recorded site UUID and exact `hbf-staging` paths.
+4. Keep `production_restore_enabled` set to `false`.
+5. Set `production_restore_environment` only to `production-simulation`.
+6. Enroll the exact active plugin list, `blocksy-child`, `wp-content/object-cache.php`, and the reviewed `wp-fail2ban.php` symlink.
+7. Run runner health and stop on any failed path, permission, WP-CLI, archive, or free-space check.
+8. Do not install cron during this gate.
+
+Result:
+
+- Installed standalone runner `0.2.0` and its private `config.json`.
+- Runner and private paths are owned by `handcraftedbotanicalformulas-com`; runner mode is `750` and config mode is `640`.
+- Runner health passed PHP CLI, archive format, WordPress, outbox, work, restore, free-space, same-device, `tar`, and WP-CLI checks.
+- Enrolled 61 active plugins, `blocksy-child`, `wp-content/object-cache.php`, and `wp-content/mu-plugins/wp-fail2ban.php`.
+- Production restore remains disabled and the environment remains `production-simulation`.
+- Cron, external-writer, and cache-purge review flags remain false for their later gate.
+- Outbox, work, and restore directories are empty; no package, restore staging directory, or native-backup evidence file was created.
+- Site-user crontab SHA-256 remained `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` before and after installation, confirming that no cron entry was installed.
+
+### Gate D: Create Fresh Independent Recovery Evidence
+
+Status: completed on 2026-07-20.
+
+1. Create a fresh manual GridPane local backup for `staging.handcraftedbotanicalformulas.com`.
+2. Verify the GridPane log records a completed revision and `Manual Local Backup Success`.
+3. Record the revision, completion time, target hostname, and target UUID in the private native-backup evidence JSON.
+4. Expose only the revision SHA-256 fingerprint in preflight/report output.
+5. Stop if the evidence is missing, unsuccessful, mismatched, or older than 24 hours.
+
+Result:
+
+- GridPane manual local backup `pre-restore-preflight` completed successfully as revision `31` at `2026-07-20T20:26:33Z`.
+- The private evidence file records the matching hostname and site UUID `5f0c5974-edba-46c6-b0d3-8396feddb07a` with mode `640` and the site user as owner.
+- The revision identifier is represented in operator output by SHA-256 `eb1e33e8a81b697b75855af6bfcdbcbf7cbbde9f94962ceaec1ed8af21f5a50f`.
+- Evidence must still be rechecked for the 24-hour freshness limit immediately before preflight.
+
+### Gate E: Create, Verify, And Stage One Package
+
+Status: completed on 2026-07-20.
+
+1. Schedule package creation during a quiet server period.
+2. Create one files-and-database package with runner `0.2.0`.
+3. Verify its checksum, site URL, site UUID, producer version, archive members, and sidecars.
+4. Stage it only under `/var/www/staging.handcraftedbotanicalformulas.com/restores/alynt-drime-backups/<package-id>`.
+5. Verify staging reports `database_imported: false` and `live_files_overwritten: false`.
+6. Do not upload, install cron, apply a restore, or delete artifacts as part of this gate.
+
+Result:
+
+- Created package `staging-handcraftedbotanicalformulas-com-20260720-203243.tar.gz` with runner `0.2.0`.
+- Archive size is `1,021,656,232` bytes and SHA-256 is `ecf4d404deea15dcf6a3fe2495bbf0090982e324b0315712e57221473fd25fde`.
+- Manifest identity matches the enrolled hostname, site UUID, site URL, files-and-database backup type, `htdocs` file root, and `database.sql` dump.
+- Archive creation exited `0` with no archive warnings or live-change warnings.
+- Staged successfully under `/var/www/staging.handcraftedbotanicalformulas.com/restores/alynt-drime-backups/staging-handcraftedbotanicalformulas-com-20260720-203243`.
+- Staged content is `2,311,564,190` bytes, including a `626,021,509` byte database export.
+- `RESTORE_REPORT.json` records verified safe members, inspection-only extraction, no database import, no live-file overwrite, and manual restore required.
+- WordPress remained out of maintenance mode, its URL and plugin state were unchanged, and the site-user crontab hash remained unchanged.
+- Available filesystem space after staging is `166,352,764,928` bytes.
+- Configuration hygiene observation: the package contains approximately `36 MB` of logs under `wp-content/wpvividbackups` because the current exclusion covers `wp-content/uploads/wpvividbackups`. Add the direct path before routine package automation; this does not invalidate the verified rehearsal package.
+
+### Gate F: Run The Read-Only Production Preflight
+
+Status: completed on 2026-07-20.
+
+1. Refresh the active plugin/theme/drop-in/symlink inventory immediately before preflight.
+2. Run `restore-production-preflight` for `files-and-database` with the exact `--target-site=staging.handcraftedbotanicalformulas.com`.
+3. Require every identity, containment, package, disk, maintenance/write-control, report-path, and native-backup check to pass.
+4. Write the redacted audit report only after the command output has been reviewed.
+5. Confirm production apply, rollback, database import, file overwrite, maintenance changes, and destructive-action flags all remain `false`.
+6. Stop before Phase 3 even when preflight passes.
+
+Reviewed no-report result:
+
+- Refreshed and enrolled the exact 61-plugin inventory, `blocksy-child`, `wp-content/object-cache.php`, and the reviewed `wp-fail2ban.php` symlink.
+- Reviewed the absence of a staging site-user crontab and the lack of a dedicated GridPane cron line for the staging path. The similarly named GridPane cron targets the production HBF path and was not changed.
+- Reviewed due staging jobs and external-writer candidates including Fluent Forms, Action Scheduler, marketing automation, WooCommerce, payment gateways, analytics, MainWP, WPvivid, and related queues.
+- Reviewed Redis, Nginx Helper, `object-cache.php`, and the WordPress maintenance-mode strategy.
+- Updated only the private enrollment config review/inventory fields and added `wp-content/wpvividbackups` to future package exclusions; production restore remained disabled and cron remained unchanged.
+- `restore-production-preflight` passed all `64` checks with zero failures at `2026-07-20T20:42:06Z`.
+- Disk calculation measured `166,351,970,304` available bytes against `13,078,657,053` required additional bytes, including the configured `3 GB` safety margin.
+- GridPane revision `31` evidence was fresh and matched the enrolled hostname and site UUID.
+- Production apply allowed/available, rollback available, destructive actions, database import, live-file overwrite, maintenance-state change, report requested, and report written all remained `false`.
+- No audit report was written during this reviewed run.
+
+Approved audit-report result:
+
+- Reran the identical preflight with `--write-report=1` at `2026-07-20T20:43:54Z`.
+- The rerun again passed all `64` checks with zero failures.
+- Wrote the private report `/var/www/staging.handcraftedbotanicalformulas.com/private/alynt-drime-backups/production-restore-reports/RESTORE_PRODUCTION_PREFLIGHT-staging-handcraftedbotanicalformulas-com-20260720-203243-20260720-204354.json`.
+- The report is owned by `handcraftedbotanicalformulas-com`, is contained by the mode-`750` private reports directory, and records no write error.
+- Sensitive-key scan found zero token, secret, password, authorization, cookie, nonce, salt, private-key, or signed-URL fields.
+- The report contains neither a raw `revision_id` key nor a raw `database_name` key; it records only their SHA-256 fingerprints.
+- Production apply allowed/available, rollback available, destructive actions, database import, live-file overwrite, and maintenance-state change all remain `false`.
+- WordPress URL, maintenance status, and site-user crontab remained unchanged after report writing.
+
+### Separate Future Gates
+
+- Drime upload/fetch proof, if required for this target.
+- Cron review and installation.
+- Local retention or artifact cleanup.
+- Phase 3 rollback foundation code or deployment.
+- Any production-simulation apply.
 
 ## Version 1 Goals
 
@@ -107,29 +284,35 @@ Before the first simulation write, confirm:
 - No automatic rollback cascade until the explicit rollback command is independently proven.
 - No production restore when package, target, disk, backup, maintenance, or health-check evidence is incomplete.
 
-## Proposed Command Surface
+## Command Surface
 
 The production surface should use distinct commands so a staging confirmation cannot unlock production behavior.
 
-Read-only preflight:
+Implemented read-only preflight:
 
 ```bash
 php alynt-backup-runner.php restore-production-preflight --config=/path/to/config.json --staged-path=/path/to/staged/package --scope=files-and-database --target-site=example.com --format=json
 ```
 
-Production-simulation or production apply:
+Optional redacted report writing:
+
+```bash
+php alynt-backup-runner.php restore-production-preflight --config=/path/to/config.json --staged-path=/path/to/staged/package --scope=files-and-database --target-site=example.com --write-report=1 --format=json
+```
+
+Future production-simulation or production apply proposal:
 
 ```bash
 php alynt-backup-runner.php restore-production-apply --config=/path/to/config.json --staged-path=/path/to/staged/package --scope=files-and-database --create-pre-restore-backup=1 --target-site=example.com --confirm=restore-production-site --confirm-site=example.com --format=json
 ```
 
-Explicit rollback:
+Future explicit rollback proposal:
 
 ```bash
 php alynt-backup-runner.php restore-production-rollback --config=/path/to/config.json --apply-report=/path/to/RESTORE_PRODUCTION_APPLY_REPORT.json --target-site=example.com --confirm=rollback-production-site --confirm-site=example.com --format=json
 ```
 
-These names and arguments are proposals, not implemented interfaces. Final command design should be locked during the preflight slice before destructive code is added.
+Only `restore-production-preflight` is implemented. It always keeps production apply and rollback unavailable. The apply and rollback names and arguments remain proposals for later separately approved phases.
 
 ## Proposed Configuration
 
@@ -139,15 +322,35 @@ Production keys must be absent or disabled by default and stored only in the pri
 {
   "production_restore_enabled": false,
   "production_restore_environment": "production-simulation",
-  "production_target_site_url": "https://alyntdrime.sitesmain.com",
-  "production_target_wordpress_path": "/var/www/alyntdrime.sitesmain.com/htdocs",
+  "production_target_site_url": "https://staging.handcraftedbotanicalformulas.com",
   "production_target_site_uuid": "SITE_UUID_HERE",
-  "production_restore_path": "/var/www/alyntdrime.sitesmain.com/restores/alynt-drime-backups",
-  "production_pre_backup_path": "/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/production-pre-restore",
-  "production_reports_path": "/var/www/alyntdrime.sitesmain.com/private/alynt-drime-backups/production-restore-reports",
+  "production_target_site_root": "/var/www/staging.handcraftedbotanicalformulas.com",
+  "production_target_wordpress_path": "/var/www/staging.handcraftedbotanicalformulas.com/htdocs",
+  "production_target_wp_config_path": "/var/www/staging.handcraftedbotanicalformulas.com/wp-config.php",
+  "production_restore_path": "/var/www/staging.handcraftedbotanicalformulas.com/restores/alynt-drime-backups",
+  "production_pre_backup_path": "/var/www/staging.handcraftedbotanicalformulas.com/private/alynt-drime-backups/production-pre-restore",
+  "production_reports_path": "/var/www/staging.handcraftedbotanicalformulas.com/private/alynt-drime-backups/production-restore-reports",
   "production_native_backup_required": true,
+  "production_native_backup_evidence_path": "/var/www/staging.handcraftedbotanicalformulas.com/private/alynt-drime-backups/native-backup-evidence.json",
+  "production_native_backup_max_age_seconds": 86400,
+  "production_disk_safety_margin_bytes": 3221225472,
+  "production_maintenance_strategy": "wp-maintenance-mode",
+  "production_cron_control_reviewed": false,
+  "production_external_writers_reviewed": false,
+  "production_cache_purge_reviewed": false,
+  "production_expected_active_plugins": [
+    "REFRESH_EXACT_ACTIVE_PLUGIN_INVENTORY_BEFORE_ENROLLMENT"
+  ],
+  "production_expected_active_theme": "blocksy-child",
+  "production_expected_drop_ins": [
+    "wp-content/object-cache.php"
+  ],
+  "production_symlink_inventory_reviewed": false,
+  "production_expected_symlink_paths": [
+    "wp-content/mu-plugins/wp-fail2ban.php"
+  ],
   "production_healthcheck_urls": [
-    "https://alyntdrime.sitesmain.com/"
+    "https://staging.handcraftedbotanicalformulas.com/"
   ]
 }
 ```
@@ -155,6 +358,7 @@ Production keys must be absent or disabled by default and stored only in the pri
 Required config behavior:
 
 - `production_restore_enabled` defaults to `false` and is never enabled by plugin activation or upgrade.
+- `REFRESH_EXACT_ACTIVE_PLUGIN_INVENTORY_BEFORE_ENROLLMENT` is an explicit placeholder, not a valid enrolled inventory. Replace it with the complete current active-plugin list immediately before installing the private config.
 - `production_restore_environment` accepts only explicitly supported values; version 1 implementation begins with `production-simulation` only.
 - Production simulation and real production must have distinct enrollment records and reports.
 - Target URL, path, site UUID, package site identity, and command `--target-site` must agree.
@@ -430,9 +634,24 @@ Every failure before apply must prove that files and database were untouched. Fa
 
 ### Phase 2: Read-Only Production Preflight
 
-- Implement target fingerprinting, package identity checks, disk calculation, maintenance readiness, native backup readiness, and JSON reporting.
-- Keep all production apply and rollback commands unavailable.
-- Add refusal and redaction tests.
+- Status: implemented in source and rehearsed read-only on `alyntdrime.sitesmain.com` on 2026-07-15; no production-simulation apply was performed.
+- Implemented target fingerprinting, package identity checks, conservative disk calculation, maintenance readiness, native backup readiness, and JSON output with optional redacted report writing.
+- Production apply and rollback commands remain unavailable, and preflight always reports that neither is allowed or available.
+- Refusal coverage includes wrong target/package identity, missing native backup and write-control evidence, and an unsafe report path under `htdocs`.
+- Redaction coverage proves raw database names, config secrets, and bearer-like values do not appear in output or written reports.
+- Advanced the standalone runner source identity to `0.2.0` and added producer-version evidence so older deployed runner copies can be distinguished during runtime parity checks.
+- Verified the fixed UUID, database-size, maintenance-status, WP-CLI-version, active-plugin, and active-theme read commands against `alyntdrime.sitesmain.com` without deploying code or changing server state.
+- Feature Light Review: passed after consolidating target-size and symlink collection into one filesystem walk.
+- Feature Bloat And Structure Review: completed against explicit base `origin/master`. The standalone runner remains oversized at 5,070 total lines, the existing admin source-settings trait is 364 lines after a one-line identity addition, and the focused preflight test is 330 lines. No feature-stage split was made because runner splitting changes standalone deployment/install behavior, the trait's size predates this slice, and splitting a 30-line-over test would add fixture indirection without reducing production risk. Revisit the runner boundary during the full pre-release structure review.
+- Feature UI/UX Implementation Review: not applicable; no WordPress or frontend UI changed.
+- Feature Security Review: passed after canonical-path checks were added for target, staging, external config, native evidence, and report paths, and native backup revision identifiers were changed to report only a SHA-256 fingerprint.
+- Documentation Sync Audit: completed across `README.md`, `readme.txt`, `CHANGELOG.md`, runner documentation, restore runbook, implementation plan, example config, and this plan.
+- Validation: full PHPUnit passed with 174 tests, 1,245 assertions, and 1 existing expected skip; full PHPCS passed across 54 files; JSON parsing and `git diff --check` passed with line-ending warnings only.
+- Runtime parity deployment: plugin `0.4.0` and standalone runner `0.2.0` were installed on the staging target. Production restore remains disabled and the environment is enrolled only as `production-simulation`.
+- Native backup evidence: GridPane manual local backup revision `1`, completed at `2026-07-14T20:23:01Z`, was recorded in a site-private evidence file. Preflight output exposes only the revision identifier SHA-256 fingerprint.
+- Real package rehearsal: runner `0.2.0` created and verified package `alyntdrime-sitesmain-com-20260715-103906`, including the target site UUID and producer version. The package was staged for inspection without importing the database or overwriting WordPress files.
+- Real preflight result: 63 of 64 checks passed. Target identity, package identity, active plugin/theme/drop-in and symlink inventories, staged files/database, maintenance/write-control review, report-path safety, and native-backup freshness all passed.
+- Safe refusal proof: `disk_budget_sufficient` was the only failed check. The report measured `4,978,192,384` available bytes against `10,881,712,593` required additional bytes for the conservative files-and-database budget. Production apply remained unavailable, no destructive action occurred, and the refused audit report was written under the site-private production reports directory.
 
 ### Phase 3: Pre-Restore And Rollback Foundation
 
@@ -520,7 +739,7 @@ Production-simulation release readiness requires:
 
 The user explicitly confirmed:
 
-1. Use `alyntdrime.sitesmain.com` as the production-simulation target.
+1. Use `staging.handcraftedbotanicalformulas.com` as the current production-simulation target; retain `alyntdrime.sitesmain.com` as historical Phase 1/2 evidence.
 2. Keep version 1 scope as files plus database.
 3. Allow temporary downtime during simulation rehearsals.
 4. Keep every production restore operator-supervised.
@@ -528,4 +747,4 @@ The user explicitly confirmed:
 
 ## Current Recommendation
 
-Phase 0 and Phase 1 are complete. The next candidate is Phase 2: implement the read-only production preflight and report in source with all production apply and rollback commands unavailable. Do not deploy source, update the staging runtime, create a host backup, enter maintenance mode, enable production config, or run a destructive rehearsal until the relevant later gate is explicitly approved.
+Phase 0 through Phase 2 and `hbf-staging` enrollment Gates A through F are complete. The read-only preflight and private redacted report both passed all `64` checks. The next feature phase is Phase 3: design and implement the production-simulation pre-restore/rollback foundation, with rollback proven before any production-simulation apply command is added. Phase 3 code, deployment, cron, cleanup, production apply, and rollback execution remain unapproved pending the next explicit decision.
