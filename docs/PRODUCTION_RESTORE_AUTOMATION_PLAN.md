@@ -6,13 +6,13 @@ Updated: 2026-07-20
 
 | Item | Decision |
 |---|---|
-| Status | Phase 0 through Phase 2 implemented; the first read-only rehearsal safely refused on `alyntdrime.sitesmain.com` disk capacity; `hbf-staging` is approved as the replacement production-simulation candidate |
+| Status | Phase 0 through Phase 3 source implementation complete; `hbf-staging` enrollment and Phase 2 read-only preflight passed, while Phase 3 runtime deployment/rehearsal remains separately gated |
 | Goal | Operator-supervised files-and-database restoration from a verified Alynt server-runner package |
 | Existing baseline | Staging-only `restore-apply` version 1 is implemented and rehearsed |
 | Current test target | Approved: `staging.handcraftedbotanicalformulas.com` as a production-simulation target |
 | Historical test target | `alyntdrime.sitesmain.com`; retained as Phase 1/2 evidence, but no longer the preferred target because of disk capacity |
 | Actual production target | None selected or approved |
-| First implementation surface | Read-only production preflight and reporting |
+| First implementation surface | Read-only preflight, private recovery evidence, and rollback foundation |
 | Required recovery protection | Verified Alynt pre-restore files/database evidence plus an independently verified host-native restore point when available |
 | Confirmation model | Separate production command plus exact action and target-domain confirmations |
 | Automation level | Supervised only; no cron, wp-admin button, or unattended restore |
@@ -306,13 +306,21 @@ Future production-simulation or production apply proposal:
 php alynt-backup-runner.php restore-production-apply --config=/path/to/config.json --staged-path=/path/to/staged/package --scope=files-and-database --create-pre-restore-backup=1 --target-site=example.com --confirm=restore-production-site --confirm-site=example.com --format=json
 ```
 
-Future explicit rollback proposal:
+Implemented production-simulation recovery evidence command:
+
+```bash
+php alynt-backup-runner.php restore-production-create-pre-backup --config=/path/to/config.json --staged-path=/path/to/staged/package --scope=files-and-database --target-site=example.com --confirm=create-production-pre-restore-backup --format=json
+```
+
+Implemented, disabled-by-default production-simulation rollback command:
 
 ```bash
 php alynt-backup-runner.php restore-production-rollback --config=/path/to/config.json --apply-report=/path/to/RESTORE_PRODUCTION_APPLY_REPORT.json --target-site=example.com --confirm=rollback-production-site --confirm-site=example.com --format=json
 ```
 
-Only `restore-production-preflight` is implemented. It always keeps production apply and rollback unavailable. The apply and rollback names and arguments remain proposals for later separately approved phases.
+`restore-production-create-pre-backup` runs the complete read-only preflight before writing recovery artifacts. It writes a private evidence JSON file with package, target hostname, target UUID, scope, target fingerprint, and SHA-256 values for each selected artifact. It never imports a database, replaces target files, or changes maintenance state.
+
+`restore-production-rollback` is source-implemented for `production-simulation` only. It remains unavailable unless private runner config explicitly sets `production_rollback_enabled` to `true`; it then requires a particular `restore-production-apply` report, matching package/target/evidence identity, verified artifact hashes, and both exact confirmations. The production-apply command remains a later Phase 4 implementation, so no runtime rollback rehearsal is authorized merely because this command exists.
 
 ## Proposed Configuration
 
@@ -330,6 +338,7 @@ Production keys must be absent or disabled by default and stored only in the pri
   "production_restore_path": "/var/www/staging.handcraftedbotanicalformulas.com/restores/alynt-drime-backups",
   "production_pre_backup_path": "/var/www/staging.handcraftedbotanicalformulas.com/private/alynt-drime-backups/production-pre-restore",
   "production_reports_path": "/var/www/staging.handcraftedbotanicalformulas.com/private/alynt-drime-backups/production-restore-reports",
+  "production_rollback_enabled": false,
   "production_native_backup_required": true,
   "production_native_backup_evidence_path": "/var/www/staging.handcraftedbotanicalformulas.com/private/alynt-drime-backups/native-backup-evidence.json",
   "production_native_backup_max_age_seconds": 86400,
@@ -358,6 +367,7 @@ Production keys must be absent or disabled by default and stored only in the pri
 Required config behavior:
 
 - `production_restore_enabled` defaults to `false` and is never enabled by plugin activation or upgrade.
+- `production_rollback_enabled` defaults to `false`, is not implied by `production_restore_enabled`, and may be enabled only for an approved production-simulation rehearsal with a verified rollback plan.
 - `REFRESH_EXACT_ACTIVE_PLUGIN_INVENTORY_BEFORE_ENROLLMENT` is an explicit placeholder, not a valid enrolled inventory. Replace it with the complete current active-plugin list immediately before installing the private config.
 - `production_restore_environment` accepts only explicitly supported values; version 1 implementation begins with `production-simulation` only.
 - Production simulation and real production must have distinct enrollment records and reports.
@@ -655,9 +665,20 @@ Every failure before apply must prove that files and database were untouched. Fa
 
 ### Phase 3: Pre-Restore And Rollback Foundation
 
-- Extend pre-restore evidence for production attempts.
-- Implement explicit production-simulation rollback.
-- Test rollback from controlled known states before implementing production apply.
+- Status: source implementation complete; deployment and runtime rehearsal remain separately gated.
+- Added `restore-production-create-pre-backup`, which reruns complete production preflight and then atomically writes private recovery evidence for the selected files/database scope. Evidence includes target hostname/UUID, package ID, paths contained under `production_pre_backup_path`, SHA-256 values for each artifact, and mode `640` on the database export, file archive, and evidence JSON.
+- Added `restore-production-rollback`, restricted to `production-simulation`, disabled by default through `production_rollback_enabled`, and guarded by a particular future production-apply report, exact action confirmation, exact target-domain confirmation, path containment, repeated preflight, evidence identity, and artifact hash checks.
+- Advanced the standalone runner source identity to `0.3.0` so Phase 3 deployment parity can be observed independently of historical `0.2.0` package evidence.
+- Focused tests prove fresh files/database evidence creation, successful file-and-database rollback from a controlled changed state, and safe refusal before target writes when the file recovery artifact is tampered.
+- Production apply remains unimplemented, and no Phase 3 code has been deployed or rehearsed on `hbf-staging` yet.
+- Runtime parity deployment: runner `0.3.0` was installed at the private `hbf-staging` runner path with site-user ownership and mode `750`. Private config remains mode `640` and now records `production_rollback_enabled: false`; no apply or rollback capability was enabled.
+- Runtime verification: runner health passed all checks. The final site-user `restore-production-preflight` against the existing staged package passed all `64` checks at `2026-07-20T21:33:47Z`, reported runner version `0.3.0`, measured `166,198,484,992` bytes free against `13,068,226,563` required bytes, and retained false values for production apply availability, rollback availability, destructive actions, database import, file overwrite, and maintenance-state changes.
+- Approved recovery-evidence rehearsal: `restore-production-create-pre-backup` completed successfully at `2026-07-20T21:43:36Z` after a zero-failure preflight. It created a `598 MB` database export, an `880 MB` file archive, and a `4.7 KB` evidence JSON under the private production pre-backup path. Independent SHA-256 verification matched evidence values `83c3d4110f8c738fae381192e0915fa5f1f5b4c447d9fb1b26512f37172ae74a` for the database and `69762a94fe185debac6b693bf32ef5f9bec53ca31a87f1a2d39026fde795728f` for the files. All three artifacts are site-user owned with mode `640`; disk remained healthy at 53% used with approximately `154 GB` available. No database import, target-file overwrite, maintenance change, rollback enablement, cron change, or service restart occurred.
+- Feature Light Review: passed. The slice is limited to standalone CLI restore/recovery operations, private-file writes, file replacement/database import only behind the rollback gate, focused tests, and operational documentation. No WordPress admin UI, REST, AJAX, cron, or third-party API behavior changed.
+- Feature Bloat And Structure Review: completed against explicit base `39a0f1c`. The existing standalone runner is 5,495 total lines and remains architecture-sensitive because splitting it changes the private single-file deployment model. The focused rollback test is 384 total lines (84 over the feature threshold) but only 300 code lines; its fixture boundary is clear but single-use, so introducing a test-support abstraction now would add indirection without reducing runtime risk. Both files are intentionally deferred to pre-release `02-FILE_STRUCTURE_REVIEW_PROMPT.md`.
+- Feature UI/UX Implementation Review: not applicable; no admin or frontend UI changed.
+- Feature Security Review: passed. The new commands validate fixed scopes and exact host confirmations, require private contained paths, require a disabled-by-default rollback flag, rerun preflight before rollback, validate apply-report/evidence identity, and hash-verify every selected recovery artifact. Focused tests cover successful controlled rollback, hash-tamper refusal, and disabled-flag refusal before target writes.
+- Documentation Sync Audit: completed. Plugin metadata remains `0.4.0` with WordPress `6.0` and PHP `7.4` minimums; `README.md`, `readme.txt`, `CHANGELOG.md`, runner documentation, restore runbook, config example, and this plan accurately describe the source-implemented but runtime-gated Phase 3 boundary.
 
 ### Phase 4: Production-Simulation Apply
 

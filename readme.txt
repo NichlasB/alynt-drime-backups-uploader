@@ -60,7 +60,7 @@ Yes, for staging restores only. `restore-apply --scope=database --confirm=restor
 
 = Can I preflight a production-simulation restore without applying it? =
 
-Yes. `restore-production-preflight` checks an explicitly enrolled target, staged package identity, disk budget, active plugin/theme and filesystem markers, maintenance/write-control readiness, and fresh host-native backup evidence. It can print JSON or write a redacted report with `--write-report=1`, but production apply and rollback commands remain unavailable.
+Yes. `restore-production-preflight` checks an explicitly enrolled target, staged package identity, disk budget, active plugin/theme and filesystem markers, maintenance/write-control readiness, and fresh host-native backup evidence. It can print JSON or write a redacted report with `--write-report=1`. A separate production-simulation pre-backup command can create private, hash-recorded recovery evidence only after its own exact confirmation. Production apply remains unavailable; rollback is disabled by default and requires a future matching production-apply report.
 
 = Can I list local server-runner packages before choosing one to restore? =
 
@@ -115,8 +115,9 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
-* Added read-only `restore-production-preflight` target, package, disk, write-control, filesystem identity, native-backup evidence, refusal, and redacted reporting checks while keeping production apply and rollback unavailable.
-* Advanced the standalone runner identity to `0.2.0` so preflight-capable server copies can be identified reliably.
+* Added read-only `restore-production-preflight` target, package, disk, write-control, filesystem identity, native-backup evidence, refusal, and redacted reporting checks.
+* Added production-simulation pre-restore recovery evidence and a disabled-by-default rollback foundation with hash verification and exact target confirmations. Production apply remains unavailable.
+* Advanced the standalone runner identity to `0.3.0` so Phase 3 recovery-capable server copies can be identified reliably.
 
 = 0.4.0 =
 * Added optional `restore-apply --create-pre-restore-backup=1` support so staging restores can create matching pre-restore database/file backup evidence immediately before apply.

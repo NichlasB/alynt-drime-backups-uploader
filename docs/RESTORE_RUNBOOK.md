@@ -18,14 +18,16 @@ Supported now:
 - Extract a verified package into a separate restore staging directory.
 - Write a local `RESTORE_REPORT.json` evidence file after successful restore staging.
 - Run a read-only `restore-dry-run` preflight against staged evidence.
-- Run a stricter read-only `restore-production-preflight` against an explicitly enrolled production-simulation target; this reports target/package identity, disk budget, write-control readiness, and native-backup evidence while keeping production apply and rollback unavailable.
+- Run a stricter read-only `restore-production-preflight` against an explicitly enrolled production-simulation target; this reports target/package identity, disk budget, write-control readiness, and native-backup evidence.
+- Create fresh production-simulation recovery evidence only through `restore-production-create-pre-backup` after preflight passes and after its separate exact confirmation; evidence records private database/file artifact SHA-256 values.
+- Use `restore-production-rollback` only after a future matching production-apply report exists, the dedicated rollback flag is enabled in private configuration, and the exact target confirmation is supplied.
 - Apply database-only, files-only, or combined files-and-database restores to a staging target after explicit gates pass.
 - Create staging pre-restore database/file backup evidence immediately before `restore-apply` when `--create-pre-restore-backup=1` is explicitly supplied.
 - Review restored files and `database.sql` without touching production.
 
 Not supported yet:
 
-- Running an automated production apply or rollback command.
+- Running a production apply command. The rollback foundation is production-simulation-only, disabled by default, and cannot run until a matching production-apply report exists.
 
 Any production restore must remain a manual, explicitly approved operation until the separate production-capable workflow is designed and tested. Staging-only apply is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md); future production capability is tracked in [PRODUCTION_RESTORE_AUTOMATION_PLAN.md](PRODUCTION_RESTORE_AUTOMATION_PLAN.md).
 

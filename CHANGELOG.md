@@ -7,8 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added read-only `restore-production-preflight` checks for enrolled target identity, staged package identity, conservative disk headroom, active plugin/theme and filesystem markers, maintenance/write-control readiness, and fresh host-native backup evidence.
-- Added optional redacted production preflight reports plus refusal coverage for target/package mismatch, missing recovery evidence, incomplete write-control review, and unsafe report paths. Production apply and rollback remain unavailable.
-- Advanced the standalone runner identity to `0.2.0` so production-preflight-capable copies can be distinguished from earlier deployed runner scripts.
+- Added optional redacted production preflight reports plus refusal coverage for target/package mismatch, missing recovery evidence, incomplete write-control review, and unsafe report paths.
+- Added production-simulation pre-restore recovery evidence with private database/file SHA-256 records and a separately enabled explicit rollback foundation that accepts only a matching future production-apply report and exact target confirmations. Production apply remains unavailable.
+- Advanced the standalone runner identity to `0.3.0` so Phase 3 recovery-capable copies can be distinguished from earlier deployed runner scripts.
 
 ## [0.4.0] - 2026-07-12
 

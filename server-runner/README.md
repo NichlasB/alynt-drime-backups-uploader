@@ -12,7 +12,7 @@ This first runner is intentionally conservative:
 - It can record light consistency metadata for high-write-site review.
 - It writes temporary files first, then atomically renames completed artifacts into the outbox.
 
-The current standalone runner identity is `0.2.0`. Production-preflight-capable packages and target reports carry that runner/producer version so older deployed `0.1.0` copies can be identified before enrollment.
+The current standalone runner identity is `0.3.0`. Production-preflight-capable packages and target reports carry that runner/producer version so older deployed copies can be identified before enrollment.
 
 ## Commands
 
@@ -30,6 +30,8 @@ php alynt-backup-runner.php fetch --config=/path/to/config.json --package-id=pac
 php alynt-backup-runner.php stage-restore --config=/path/to/config.json --package=/path/to/package.tar.gz
 php alynt-backup-runner.php restore-production-preflight --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --target-site=example.com --format=json
 php alynt-backup-runner.php restore-production-preflight --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --target-site=example.com --write-report=1 --format=json
+php alynt-backup-runner.php restore-production-create-pre-backup --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --target-site=example.com --confirm=create-production-pre-restore-backup --format=json
+php alynt-backup-runner.php restore-production-rollback --config=/path/to/config.json --apply-report=/path/to/RESTORE_PRODUCTION_APPLY_REPORT.json --target-site=example.com --confirm=rollback-production-site --confirm-site=example.com --format=json
 php alynt-backup-runner.php restore-dry-run --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --format=json
 php alynt-backup-runner.php restore-dry-run --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --pre-restore-evidence=/path/to/pre-restore/evidence.json --format=json
 php alynt-backup-runner.php restore-dry-run --config=/path/to/config.json --staged-path=/path/to/restores/package-id --scope=files-and-database --write-report=1 --format=json
@@ -142,7 +144,9 @@ The first restore flow is intentionally non-destructive. `fetch` can download a 
 
 `restore-dry-run` reads a staged restore directory and reports whether a future gated restore command would have enough evidence to proceed. It checks the staging-only restore config flags, confirms `--staged-path` is inside `restore_path`, validates `RESTORE_REPORT.json`, verifies required staged `htdocs/` and/or `database.sql` content for the selected scope, checks the configured target WordPress path, checks pre-restore backup path readiness, validates pre-restore backup evidence, and confirms the target filesystem has the configured minimum free space.
 
-`restore-production-preflight` is a separate production-simulation planning command. It reads target identity through fixed WP-CLI queries, checks the enrolled URL and site UUID, validates staged package identity and scope, calculates a conservative disk budget, checks operator-reviewed maintenance/write-control settings, and requires fresh GridPane native-backup evidence. It always reports `production_apply_allowed`, `production_apply_available`, and `production_rollback_available` as `false`. It cannot import a database, replace files, create a backup, change maintenance state, or dispatch production apply/rollback. By default it prints JSON only; add `--write-report=1` to write a redacted audit report under `production_reports_path`, which must remain outside the WordPress target.
+`restore-production-preflight` is a separate production-simulation planning command. It reads target identity through fixed WP-CLI queries, checks the enrolled URL and site UUID, validates staged package identity and scope, calculates a conservative disk budget, checks operator-reviewed maintenance/write-control settings, and requires fresh GridPane native-backup evidence. It cannot import a database, replace files, or change maintenance state. By default it prints JSON only; add `--write-report=1` to write a redacted audit report under `production_reports_path`, which must remain outside the WordPress target.
+
+`restore-production-create-pre-backup` runs the same full preflight and then writes fresh private database/file recovery artifacts plus immutable evidence with SHA-256 values. It requires `--confirm=create-production-pre-restore-backup`, stays outside `htdocs`, and does not restore anything. `restore-production-rollback` remains disabled unless private config explicitly sets `production_rollback_enabled` to `true`. It requires a specific future `restore-production-apply` report, matching target hostname and UUID, matching evidence hashes, `--confirm=rollback-production-site`, and `--confirm-site=example.com`. It is available only for the enrolled `production-simulation` environment; the production apply command is still not implemented.
 
 The preflight reads only the plugin `site_uuid` field instead of loading the full WordPress settings option. Database names are emitted only as SHA-256 fingerprints, raw WP-CLI output is not included, and report data redacts secret-like keys, bearer values, and signed query parameters. A passing preflight is evidence that Phase 2 checks passed at that moment; it is not authorization or a command path for production restore.
 

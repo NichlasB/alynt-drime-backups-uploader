@@ -79,19 +79,25 @@ class ServerRunnerSecurityTest extends TestCase {
 	}
 
 	/**
-	 * Production preflight must expose no production apply or rollback command.
+	 * Production apply must remain unavailable while rollback stays explicitly locked.
 	 *
 	 * @return void
 	 */
-	public function test_production_preflight_keeps_destructive_commands_unavailable() {
+	public function test_production_apply_stays_unavailable_and_rollback_is_gated() {
 		$source = $this->runner_source();
 
 		$this->assertStringContainsString( "case 'restore-production-preflight'", $source );
 		$this->assertStringNotContainsString( "case 'restore-production-apply'", $source );
-		$this->assertStringNotContainsString( "case 'restore-production-rollback'", $source );
+		$this->assertStringContainsString( "case 'restore-production-create-pre-backup'", $source );
+		$this->assertStringContainsString( "case 'restore-production-rollback'", $source );
 		$this->assertStringContainsString( "'production_apply_allowed'      => false", $source );
 		$this->assertStringContainsString( "'production_apply_available'    => false", $source );
-		$this->assertStringContainsString( "'production_rollback_available' => false", $source );
+		$this->assertStringContainsString( "'production_rollback_available' => \$this->config_bool( 'production_rollback_enabled' )", $source );
+		$this->assertStringContainsString( "'production_rollback_enabled'", $source );
+		$this->assertStringContainsString( "'rollback-production-site' !== \$confirm", $source );
+		$this->assertStringContainsString( "'production-simulation' === strtolower( \$this->config_string( 'production_restore_environment' ) )", $source );
+		$this->assertStringContainsString( "'apply_report_command'", $source );
+		$this->assertStringContainsString( 'add_production_pre_restore_artifact_check', $source );
 		$this->assertStringContainsString( "'destructive_actions_performed' => false", $source );
 		$this->assertStringContainsString( 'redact_restore_report_data', $source );
 	}

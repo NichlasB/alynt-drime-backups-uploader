@@ -15,7 +15,7 @@ if ( PHP_SAPI !== 'cli' ) {
  * Creates backup packages for the Alynt Drime Backups Uploader plugin.
  */
 class Alynt_Server_Backup_Runner {
-	const VERSION = '0.2.0';
+	const VERSION = '0.3.0';
 	const DAY_IN_SECONDS = 86400;
 
 	/**
@@ -63,6 +63,10 @@ class Alynt_Server_Backup_Runner {
 				return $this->stage_restore_command( $options );
 			case 'restore-production-preflight':
 				return $this->restore_production_preflight_command( $options );
+			case 'restore-production-create-pre-backup':
+				return $this->restore_production_create_pre_backup_command( $options );
+			case 'restore-production-rollback':
+				return $this->restore_production_rollback_command( $options );
 			case 'restore-dry-run':
 				return $this->restore_dry_run_command( $options );
 			case 'restore-apply':
@@ -1102,6 +1106,424 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Creates fresh private recovery evidence for a production-simulation attempt.
+	 *
+	 * This command never imports a database, replaces target files, changes
+	 * maintenance mode, or enables production apply. It records the recovery
+	 * artifacts that a later, separately gated rollback command must consume.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function restore_production_create_pre_backup_command( array $options ) {
+		$staged_path = isset( $options['staged-path'] ) ? $this->normalize_path( (string) $options['staged-path'] ) : '';
+		$scope       = isset( $options['scope'] ) ? strtolower( trim( (string) $options['scope'] ) ) : 'files-and-database';
+		$target_site = isset( $options['target-site'] ) ? strtolower( trim( (string) $options['target-site'] ) ) : '';
+		$confirm     = isset( $options['confirm'] ) ? (string) $options['confirm'] : '';
+
+		if ( 'create-production-pre-restore-backup' !== $confirm ) {
+			$this->error( 'Production pre-restore backup creation requires --confirm=create-production-pre-restore-backup.' );
+			return 1;
+		}
+
+		$result = $this->create_production_pre_restore_backup_result( $staged_path, $scope, $target_site );
+		$result = $this->redact_restore_report_data( $result );
+		if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
+			$this->line( json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+		} else {
+			$this->print_restore_production_preflight_result( $result );
+		}
+
+		return 'succeeded' === $result['status'] ? 0 : 1;
+	}
+
+	/**
+	 * Builds pre-restore evidence after a complete production-simulation preflight.
+	 *
+	 * @param string $staged_path Staged package path.
+	 * @param string $scope Restore scope.
+	 * @param string $target_site Operator-supplied hostname.
+	 * @return array<string,mixed>
+	 */
+	private function create_production_pre_restore_backup_result( $staged_path, $scope, $target_site ) {
+		$preflight       = $this->restore_production_preflight_result( $staged_path, $scope, $target_site );
+		$target_path     = $this->normalize_path( $this->config_string( 'production_target_wordpress_path' ) );
+		$pre_backup_path = $this->production_pre_backup_path();
+		$package_id      = isset( $preflight['package_id'] ) ? (string) $preflight['package_id'] : basename( $staged_path );
+		$timestamp       = gmdate( 'Ymd-His' );
+		$evidence_path   = '' !== $pre_backup_path
+			? $pre_backup_path . DIRECTORY_SEPARATOR . 'PRODUCTION_PRE_RESTORE_EVIDENCE-' . $this->safe_slug( $package_id ) . '-' . str_replace( '-', '_', $scope ) . '-' . $timestamp . '.json'
+			: '';
+		$checks          = isset( $preflight['checks'] ) && is_array( $preflight['checks'] ) ? $preflight['checks'] : array();
+
+		$result = array(
+			'schema_version'                => 1,
+			'generated_at'                  => gmdate( 'c' ),
+			'command'                       => 'restore-production-create-pre-backup',
+			'safety_classification'         => 'recovery-evidence-creation',
+			'status'                        => 'failed',
+			'scope'                         => $scope,
+			'target_site'                   => $target_site,
+			'package_id'                    => $package_id,
+			'staged_path'                   => $staged_path,
+			'target_wordpress_path'         => $target_path,
+			'pre_restore_backup_path'       => $pre_backup_path,
+			'pre_restore_evidence_path'     => $evidence_path,
+			'database_export_path'          => '',
+			'database_export_sha256'        => '',
+			'file_backup_path'              => '',
+			'file_backup_sha256'            => '',
+			'preflight_failure_count'       => (int) $preflight['failure_count'],
+			'preflight_checks'              => $checks,
+			'checks'                        => array(),
+			'failure_count'                 => 0,
+			'pre_restore_backup_created'    => false,
+			'database_export_created'       => false,
+			'file_backup_created'           => false,
+			'evidence_written'              => false,
+			'destructive_actions_performed' => false,
+			'database_imported'             => false,
+			'live_files_overwritten'        => false,
+			'maintenance_state_changed'     => false,
+		);
+
+		$this->add_restore_dry_run_check( $result['checks'], 'production_preflight_passed', 0 === (int) $preflight['failure_count'], 'The complete read-only production preflight passed before recovery evidence creation.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_pre_backup_path_ready', '' !== $pre_backup_path && ! $this->dangerous_restore_target_path( $pre_backup_path ) && $this->path_is_outside_directory_canonical( $target_path, $pre_backup_path ) && $this->ensure_directory( $pre_backup_path ) && is_writable( $pre_backup_path ), 'Production pre-restore backup path is private, outside WordPress, and writable.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_pre_backup_evidence_path_safe', '' !== $evidence_path && $this->path_is_within_directory( $pre_backup_path, $evidence_path ) && ! file_exists( $evidence_path ), 'Production pre-restore evidence path is safe and does not already exist.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_pre_backup_free_space', '' !== $pre_backup_path && is_dir( $pre_backup_path ) && $this->has_minimum_free_space( $pre_backup_path ), 'Production pre-restore backup path has the configured minimum free space.' );
+
+		$result['failure_count'] = $this->restore_check_failure_count( $result['checks'] );
+		if ( 0 !== (int) $result['failure_count'] ) {
+			return $result;
+		}
+
+		if ( $this->restore_scope_includes_database( $scope ) ) {
+			$result['database_export_path']    = $pre_backup_path . DIRECTORY_SEPARATOR . 'production-database-before-' . $this->safe_slug( $package_id ) . '-' . $timestamp . '.sql';
+			$result['database_export_created'] = $this->export_database_from_path( $result['database_export_path'], $target_path );
+			if ( $result['database_export_created'] ) {
+				$result['database_export_created'] = chmod( $result['database_export_path'], 0640 );
+			}
+			$this->add_restore_dry_run_check( $result['checks'], 'production_database_export_created', (bool) $result['database_export_created'], 'Production-simulation database export was created.' );
+			if ( $result['database_export_created'] ) {
+				$result['database_export_sha256'] = hash_file( 'sha256', $result['database_export_path'] );
+			}
+		}
+
+		if ( $this->restore_scope_includes_files( $scope ) ) {
+			$result['file_backup_path']    = $pre_backup_path . DIRECTORY_SEPARATOR . 'production-files-before-' . $this->safe_slug( $package_id ) . '-' . $timestamp . '.tar.gz';
+			$result['file_backup_created'] = $this->create_pre_restore_file_backup( $result['file_backup_path'], $target_path );
+			if ( $result['file_backup_created'] ) {
+				$result['file_backup_created'] = chmod( $result['file_backup_path'], 0640 );
+			}
+			$this->add_restore_dry_run_check( $result['checks'], 'production_file_backup_created', (bool) $result['file_backup_created'], 'Production-simulation file archive was created.' );
+			if ( $result['file_backup_created'] ) {
+				$result['file_backup_sha256'] = hash_file( 'sha256', $result['file_backup_path'] );
+			}
+		}
+
+		$result['failure_count'] = $this->restore_check_failure_count( $result['checks'] );
+		if ( 0 !== (int) $result['failure_count'] ) {
+			return $result;
+		}
+
+		$evidence = array(
+			'schema_version'              => 1,
+			'evidence_type'               => 'production_pre_restore_backup',
+			'generated_at'                => $result['generated_at'],
+			'package_id'                  => $package_id,
+			'scope'                       => $scope,
+			'target_site'                 => $target_site,
+			'target_site_url'             => $this->normalize_site_url( $this->config_string( 'production_target_site_url' ) ),
+			'target_site_uuid'            => strtolower( $this->config_string( 'production_target_site_uuid' ) ),
+			'target_wordpress_path'       => $target_path,
+			'preflight_generated_at'      => isset( $preflight['generated_at'] ) ? $preflight['generated_at'] : '',
+			'preflight_target_fingerprint' => isset( $preflight['target_fingerprint'] ) ? $preflight['target_fingerprint'] : array(),
+		);
+		if ( '' !== $result['database_export_path'] ) {
+			$evidence['database_export_path']   = $result['database_export_path'];
+			$evidence['database_export_sha256'] = $result['database_export_sha256'];
+		}
+		if ( '' !== $result['file_backup_path'] ) {
+			$evidence['file_backup_path']   = $result['file_backup_path'];
+			$evidence['file_backup_sha256'] = $result['file_backup_sha256'];
+		}
+
+		$result['evidence_written'] = $this->write_json_atomic( $evidence_path, $evidence );
+		if ( $result['evidence_written'] ) {
+			$result['evidence_written'] = chmod( $evidence_path, 0640 );
+		}
+		$this->add_restore_dry_run_check( $result['checks'], 'production_pre_restore_evidence_written', (bool) $result['evidence_written'], 'Production pre-restore evidence JSON was written.' );
+		$result['failure_count']              = $this->restore_check_failure_count( $result['checks'] );
+		$result['pre_restore_backup_created'] = 0 === (int) $result['failure_count'];
+		$result['status']                     = $result['pre_restore_backup_created'] ? 'succeeded' : 'failed';
+
+		return $result;
+	}
+
+	/**
+	 * Restores one verified production-simulation recovery snapshot.
+	 *
+	 * The command is intentionally separate from future production apply. It can
+	 * only be enabled for an enrolled production-simulation target and requires a
+	 * particular apply report and both confirmation values.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function restore_production_rollback_command( array $options ) {
+		$apply_report_path = isset( $options['apply-report'] ) ? $this->normalize_path( (string) $options['apply-report'] ) : '';
+		$target_site       = isset( $options['target-site'] ) ? strtolower( trim( (string) $options['target-site'] ) ) : '';
+		$confirm           = isset( $options['confirm'] ) ? (string) $options['confirm'] : '';
+		$confirm_site      = isset( $options['confirm-site'] ) ? strtolower( trim( (string) $options['confirm-site'] ) ) : '';
+
+		if ( 'rollback-production-site' !== $confirm ) {
+			$this->error( 'Production rollback requires --confirm=rollback-production-site.' );
+			return 1;
+		}
+
+		$result = $this->restore_production_rollback_result( $apply_report_path, $target_site, $confirm_site );
+		$result = $this->redact_restore_report_data( $result );
+		if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
+			$this->line( json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+		} else {
+			$this->print_restore_production_preflight_result( $result );
+		}
+
+		return 'succeeded' === $result['status'] ? 0 : 1;
+	}
+
+	/**
+	 * Validates and performs an explicit production-simulation rollback.
+	 *
+	 * @param string $apply_report_path Apply report path.
+	 * @param string $target_site Operator-supplied hostname.
+	 * @param string $confirm_site Exact confirmation hostname.
+	 * @return array<string,mixed>
+	 */
+	private function restore_production_rollback_result( $apply_report_path, $target_site, $confirm_site ) {
+		$reports_path      = $this->normalize_path( $this->config_string( 'production_reports_path' ) );
+		$apply_report      = $this->read_restore_report( $apply_report_path );
+		$staged_path       = isset( $apply_report['staged_path'] ) ? $this->normalize_path( (string) $apply_report['staged_path'] ) : '';
+		$scope             = isset( $apply_report['scope'] ) ? strtolower( (string) $apply_report['scope'] ) : '';
+		$preflight         = $this->restore_production_preflight_result( $staged_path, $scope, $target_site );
+		$target_path       = $this->normalize_path( $this->config_string( 'production_target_wordpress_path' ) );
+		$configured_host   = $this->site_host( $this->normalize_site_url( $this->config_string( 'production_target_site_url' ) ) );
+		$configured_uuid   = strtolower( $this->config_string( 'production_target_site_uuid' ) );
+		$package_id        = isset( $apply_report['package_id'] ) ? (string) $apply_report['package_id'] : '';
+		$evidence_path     = isset( $apply_report['pre_restore_evidence_path'] ) ? $this->normalize_path( (string) $apply_report['pre_restore_evidence_path'] ) : '';
+		$evidence          = $this->read_restore_report( $evidence_path );
+		$checks            = array();
+		$report_path       = $this->production_rollback_report_path( $package_id );
+
+		$result = array(
+			'schema_version'                    => 1,
+			'generated_at'                      => gmdate( 'c' ),
+			'command'                           => 'restore-production-rollback',
+			'safety_classification'             => 'explicit-production-simulation-rollback',
+			'status'                            => 'failed',
+			'scope'                             => $scope,
+			'target_site'                       => $target_site,
+			'apply_report_path'                 => $apply_report_path,
+			'package_id'                        => $package_id,
+			'pre_restore_evidence_path'         => $evidence_path,
+			'preflight_failure_count'           => (int) $preflight['failure_count'],
+			'preflight_checks'                  => isset( $preflight['checks'] ) ? $preflight['checks'] : array(),
+			'checks'                            => $checks,
+			'failure_count'                     => 0,
+			'confirmation_phrase_accepted'      => true,
+			'confirmation_site_accepted'        => false,
+			'file_rollback_attempted'           => false,
+			'file_rollback_succeeded'           => false,
+			'database_rollback_attempted'       => false,
+			'database_rollback_succeeded'       => false,
+			'database_imported'                 => false,
+			'live_files_overwritten'            => false,
+			'destructive_actions_performed'     => false,
+			'maintenance_state_changed'         => false,
+			'rollback_report_written'           => false,
+			'rollback_report_path'              => $report_path,
+			'rollback_report_error'             => '',
+			'failure_step'                      => '',
+			'manual_recovery_notes'             => array(),
+		);
+
+		$this->add_restore_dry_run_check( $result['checks'], 'production_rollback_enabled', $this->config_bool( 'production_rollback_enabled' ), 'Production rollback is explicitly enabled in private runner configuration.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_environment', 'production-simulation' === strtolower( $this->config_string( 'production_restore_environment' ) ), 'Production rollback environment is production-simulation.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'target_site_matches_config', '' !== $target_site && $target_site === $configured_host, 'The operator target hostname matches the enrolled target.' );
+		$result['confirmation_site_accepted'] = '' !== $confirm_site && $confirm_site === $configured_host && $confirm_site === $target_site;
+		$this->add_restore_dry_run_check( $result['checks'], 'confirmation_site_matches_target', $result['confirmation_site_accepted'], 'The exact --confirm-site hostname matches the enrolled and requested target.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_path_safe', '' !== $apply_report_path && $this->path_is_within_directory_canonical( $reports_path, $apply_report_path ) && $reports_path !== $apply_report_path && is_file( $apply_report_path ) && is_readable( $apply_report_path ), 'Apply report is a readable file inside the private production reports path.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_valid', ! empty( $apply_report ), 'Apply report is valid JSON.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_command', isset( $apply_report['command'] ) && 'restore-production-apply' === (string) $apply_report['command'], 'Apply report was created by the production apply command.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_environment', isset( $apply_report['restore_environment'] ) && 'production-simulation' === strtolower( (string) $apply_report['restore_environment'] ), 'Apply report records the production-simulation environment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_target_site', isset( $apply_report['target_site'] ) && $configured_host === strtolower( (string) $apply_report['target_site'] ), 'Apply report target hostname matches the enrolled target.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_target_uuid', isset( $apply_report['target_site_uuid'] ) && $configured_uuid === strtolower( (string) $apply_report['target_site_uuid'] ), 'Apply report target UUID matches the enrolled target.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_scope', in_array( $scope, array( 'files', 'database', 'files-and-database' ), true ), 'Apply report records a supported rollback scope.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_destructive_action', ! empty( $apply_report['destructive_actions_performed'] ), 'Apply report records that a target-changing apply action occurred.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_evidence_path', '' !== $evidence_path && $this->path_is_within_directory_canonical( $this->production_pre_backup_path(), $evidence_path ), 'Apply report references evidence inside the private production pre-backup path.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_preflight_passed', 0 === (int) $preflight['failure_count'], 'The complete production preflight passed again immediately before rollback.' );
+		$this->add_production_pre_restore_evidence_checks( $result['checks'], $evidence, $evidence_path, $package_id, $scope, $target_path, $configured_host, $configured_uuid );
+		$this->add_restore_dry_run_check( $result['checks'], 'rollback_report_path_ready', '' !== $report_path, 'Private production rollback report path is ready before target changes.' );
+
+		$result['failure_count'] = $this->restore_check_failure_count( $result['checks'] );
+		if ( 0 !== (int) $result['failure_count'] ) {
+			$result['failure_step']          = 'rollback-preflight';
+			$result['manual_recovery_notes'] = array( 'No rollback action was attempted because the production-simulation rollback checks failed.' );
+			return $this->write_production_rollback_report( $result );
+		}
+
+		if ( $this->restore_scope_includes_files( $scope ) ) {
+			$result['file_rollback_attempted']       = true;
+			$result['destructive_actions_performed'] = true;
+			$result['file_rollback_succeeded']       = $this->restore_production_files_from_pre_backup( (string) $evidence['file_backup_path'], $target_path, $package_id );
+			$result['live_files_overwritten']        = $result['file_rollback_succeeded'];
+			if ( ! $result['file_rollback_succeeded'] ) {
+				$result['failure_step']          = 'file-rollback';
+				$result['manual_recovery_notes'] = array( 'File rollback failed. Keep the target controlled and inspect the verified pre-restore evidence.' );
+				return $this->write_production_rollback_report( $result );
+			}
+		}
+
+		if ( $this->restore_scope_includes_database( $scope ) ) {
+			$result['database_rollback_attempted']   = true;
+			$result['destructive_actions_performed'] = true;
+			$import                                = $this->import_database( (string) $evidence['database_export_path'], $target_path );
+			$result['database_rollback_succeeded']   = 0 === (int) $import['exit_code'];
+			$result['database_imported']             = $result['database_rollback_succeeded'];
+			if ( ! $result['database_rollback_succeeded'] ) {
+				$result['failure_step']          = 'database-rollback';
+				$result['manual_recovery_notes'] = array( 'Database rollback failed. Keep the target controlled and inspect the verified pre-restore evidence.' );
+				return $this->write_production_rollback_report( $result );
+			}
+		}
+
+		$result['status'] = 'succeeded';
+
+		return $this->write_production_rollback_report( $result );
+	}
+
+	/**
+	 * Adds checks for production-specific pre-restore evidence and its artifacts.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Checks.
+	 * @param array<string,mixed>            $evidence Evidence.
+	 * @param string                         $evidence_path Evidence path.
+	 * @param string                         $package_id Package ID.
+	 * @param string                         $scope Restore scope.
+	 * @param string                         $target_path Target WordPress path.
+	 * @param string                         $target_host Target hostname.
+	 * @param string                         $target_uuid Target UUID.
+	 * @return void
+	 */
+	private function add_production_pre_restore_evidence_checks( array &$checks, array $evidence, $evidence_path, $package_id, $scope, $target_path, $target_host, $target_uuid ) {
+		$pre_backup_path = $this->production_pre_backup_path();
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_readable', '' !== $evidence_path && is_file( $evidence_path ) && is_readable( $evidence_path ), 'Production pre-restore evidence is readable.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_valid', ! empty( $evidence ), 'Production pre-restore evidence is valid JSON.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_type', isset( $evidence['evidence_type'] ) && 'production_pre_restore_backup' === (string) $evidence['evidence_type'], 'Evidence type is production_pre_restore_backup.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_package_id', '' !== $package_id && isset( $evidence['package_id'] ) && $package_id === (string) $evidence['package_id'], 'Evidence package ID matches the apply report.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_scope', isset( $evidence['scope'] ) && $scope === (string) $evidence['scope'], 'Evidence scope matches the apply report.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_target_path', isset( $evidence['target_wordpress_path'] ) && $target_path === $this->normalize_path( (string) $evidence['target_wordpress_path'] ), 'Evidence target path matches the enrolled target.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_target_site', isset( $evidence['target_site'] ) && $target_host === strtolower( (string) $evidence['target_site'] ), 'Evidence target hostname matches the enrolled target.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_target_uuid', isset( $evidence['target_site_uuid'] ) && $target_uuid === strtolower( (string) $evidence['target_site_uuid'] ), 'Evidence target UUID matches the enrolled target.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_timestamp', $this->valid_iso_timestamp( isset( $evidence['generated_at'] ) ? (string) $evidence['generated_at'] : '' ), 'Evidence records a valid generation timestamp.' );
+
+		if ( $this->restore_scope_includes_database( $scope ) ) {
+			$this->add_production_pre_restore_artifact_check( $checks, $evidence, 'database_export_path', 'database_export_sha256', $pre_backup_path, 'database export' );
+		}
+		if ( $this->restore_scope_includes_files( $scope ) ) {
+			$this->add_production_pre_restore_artifact_check( $checks, $evidence, 'file_backup_path', 'file_backup_sha256', $pre_backup_path, 'file backup' );
+		}
+	}
+
+	/**
+	 * Adds a contained and hash-verified production recovery artifact check.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Checks.
+	 * @param array<string,mixed>            $evidence Evidence.
+	 * @param string                         $path_key Artifact path key.
+	 * @param string                         $hash_key Artifact hash key.
+	 * @param string                         $pre_backup_path Private evidence root.
+	 * @param string                         $label Artifact label.
+	 * @return void
+	 */
+	private function add_production_pre_restore_artifact_check( array &$checks, array $evidence, $path_key, $hash_key, $pre_backup_path, $label ) {
+		$artifact_path = isset( $evidence[ $path_key ] ) ? $this->normalize_path( (string) $evidence[ $path_key ] ) : '';
+		$expected_hash = isset( $evidence[ $hash_key ] ) ? strtolower( (string) $evidence[ $hash_key ] ) : '';
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_' . $path_key . '_contained', '' !== $artifact_path && $this->path_is_within_directory_canonical( $pre_backup_path, $artifact_path ), 'Production pre-restore ' . $label . ' is inside the private pre-backup path.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_' . $path_key . '_readable', '' !== $artifact_path && is_file( $artifact_path ) && is_readable( $artifact_path ), 'Production pre-restore ' . $label . ' is readable.' );
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_' . $hash_key . '_valid', 1 === preg_match( '/^[a-f0-9]{64}$/', $expected_hash ) && '' !== $artifact_path && is_file( $artifact_path ) && hash_equals( $expected_hash, hash_file( 'sha256', $artifact_path ) ), 'Production pre-restore ' . $label . ' SHA-256 matches the evidence record.' );
+	}
+
+	/**
+	 * Extracts a verified pre-restore archive into private staging then restores it.
+	 *
+	 * @param string $archive_path Pre-restore archive path.
+	 * @param string $target_path Target WordPress path.
+	 * @param string $package_id Package identifier.
+	 * @return bool
+	 */
+	private function restore_production_files_from_pre_backup( $archive_path, $target_path, $package_id ) {
+		$restore_path = $this->normalize_path( $this->config_string( 'production_restore_path' ) );
+		$target_path  = $this->normalize_path( $target_path );
+		if ( '' === $archive_path || '' === $restore_path || ! is_file( $archive_path ) || ! is_readable( $archive_path ) || ! $this->ensure_directory( $restore_path ) || ! is_writable( $restore_path ) || $this->dangerous_restore_target_path( $target_path ) ) {
+			return false;
+		}
+
+		$staging_path = $restore_path . DIRECTORY_SEPARATOR . '.rollback-' . $this->safe_slug( $package_id ) . '-' . gmdate( 'Ymd-His' );
+		if ( file_exists( $staging_path ) || ! mkdir( $staging_path, 0750, true ) ) {
+			return false;
+		}
+
+		$extract = $this->run_shell_command( 'tar -xzf ' . escapeshellarg( $archive_path ) . ' -C ' . escapeshellarg( $staging_path ) );
+		$file_root = $staging_path . DIRECTORY_SEPARATOR . basename( $target_path );
+		if ( 0 !== (int) $extract['exit_code'] || ! is_dir( $file_root ) || ! is_readable( $file_root ) || ! $this->directory_has_entries( $file_root ) ) {
+			return false;
+		}
+
+		return $this->replace_target_files_from_staging( $file_root, $target_path );
+	}
+
+	/**
+	 * Returns a private production rollback report destination.
+	 *
+	 * @param string $package_id Package identifier.
+	 * @return string
+	 */
+	private function production_rollback_report_path( $package_id ) {
+		$reports_path = $this->normalize_path( $this->config_string( 'production_reports_path' ) );
+		$target_path  = $this->normalize_path( $this->config_string( 'production_target_wordpress_path' ) );
+		if ( '' === $reports_path || $this->dangerous_restore_target_path( $reports_path ) || ! $this->path_is_outside_directory_canonical( $target_path, $reports_path ) || ! $this->ensure_directory( $reports_path ) || ! is_writable( $reports_path ) ) {
+			return '';
+		}
+
+		return $reports_path . DIRECTORY_SEPARATOR . 'RESTORE_PRODUCTION_ROLLBACK_REPORT-' . $this->safe_slug( $package_id ) . '-' . gmdate( 'Ymd-His' ) . '.json';
+	}
+
+	/**
+	 * Writes an immutable rollback report after the report destination is prepared.
+	 *
+	 * @param array<string,mixed> $result Rollback result.
+	 * @return array<string,mixed>
+	 */
+	private function write_production_rollback_report( array $result ) {
+		if ( empty( $result['rollback_report_path'] ) ) {
+			$result['rollback_report_error'] = 'Production rollback reports path is missing, unsafe, or not writable.';
+			return $result;
+		}
+
+		$result['rollback_report_written'] = $this->write_json_atomic( $result['rollback_report_path'], $result );
+		if ( ! $result['rollback_report_written'] ) {
+			$result['rollback_report_error'] = 'Could not write the production rollback report.';
+			$result['status']                = 'failed';
+			if ( '' === $result['failure_step'] ) {
+				$result['failure_step'] = 'rollback-report-write';
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Builds the read-only production restore preflight result.
 	 *
 	 * @param string $staged_path Staged package path.
@@ -1212,7 +1634,7 @@ class Alynt_Server_Backup_Runner {
 			'checks'                        => $checks,
 			'production_apply_allowed'      => false,
 			'production_apply_available'    => false,
-			'production_rollback_available' => false,
+			'production_rollback_available' => $this->config_bool( 'production_rollback_enabled' ) && 'production-simulation' === strtolower( $this->config_string( 'production_restore_environment' ) ),
 			'destructive_actions_performed' => false,
 			'database_imported'             => false,
 			'live_files_overwritten'        => false,
@@ -4327,6 +4749,15 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Returns the private production-simulation pre-restore evidence path.
+	 *
+	 * @return string
+	 */
+	private function production_pre_backup_path() {
+		return $this->normalize_path( $this->config_string( 'production_pre_backup_path' ) );
+	}
+
+	/**
 	 * Returns pre-restore backup evidence path.
 	 *
 	 * @return string
@@ -5047,12 +5478,13 @@ function alynt_runner_load_config( $path ) {
  * @return string
  */
 function alynt_runner_usage() {
-	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore|restore-production-preflight|restore-dry-run|restore-apply> '
+	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore|restore-production-preflight|restore-production-create-pre-backup|restore-production-rollback|restore-dry-run|restore-apply> '
 		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
 		. '[--restore-path=/path/to/restores] [--staged-path=/path/to/staged/package] [--scope=files-and-database] [--target-site=example.com] '
 		. '[--pre-restore-evidence=/path/to/evidence.json] [--create-pre-restore-backup=1] '
-		. '[--write-report=1] [--older-than-days=14] [--confirm=delete-local-artifacts|restore-staging-site]';
+		. '[--apply-report=/path/to/report.json] [--confirm-site=example.com] [--write-report=1] [--older-than-days=14] '
+		. '[--confirm=delete-local-artifacts|restore-staging-site|create-production-pre-restore-backup|rollback-production-site]';
 }
 
 $parsed = alynt_runner_parse_args( $argv );
