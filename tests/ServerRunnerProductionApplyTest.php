@@ -62,6 +62,10 @@ class ServerRunnerProductionApplyTest extends Alynt_Drime_Backups_Uploader_Serve
 		$config['production_expected_symlink_paths'] = array( $relative_link );
 		$config['production_expected_symlink_targets'] = array( $relative_link => $link_target );
 		file_put_contents( $fixture['config'], json_encode( $config ) );
+		$report_path = $fixture['staged_path'] . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json';
+		$report      = json_decode( file_get_contents( $report_path ), true );
+		$report['staged_integrity'] = $this->staged_integrity_fixture( $fixture['staged_path'] . DIRECTORY_SEPARATOR . 'htdocs', $fixture['staged_path'] . DIRECTORY_SEPARATOR . 'database.sql' );
+		file_put_contents( $report_path, json_encode( $report ) );
 		$evidence = $this->create_production_restore_evidence( $fixture, 'files' );
 
 		$result = $this->run_apply( $fixture, $evidence, 'files' );
