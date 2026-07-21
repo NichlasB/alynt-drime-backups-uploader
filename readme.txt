@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,10 @@ No public custom actions or filters are exposed.
 
 == Changelog ==
 
+= 0.5.1 =
+* Fixed a production-simulation rollback retry that could collide with a retained rollback staging directory when both attempts occurred in the same second.
+* Changed the locked development dependencies to a PHP 7.4-compatible set so the declared GitHub Actions PHP support matrix can install and run.
+
 = 0.5.0 =
 * Added a mandatory GitHub Actions quality gate for PHP tests/lint, the Node build, generated assets, and dependency auditing before release packaging.
 * Added administrator-only failed-upload retry actions when the original local backup remains readable.
@@ -188,6 +192,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.5.1 =
+No breaking changes. Fixes production-simulation rollback retries and PHP 7.4 CI dependency compatibility.
 
 = 0.5.0 =
 Adds disabled-by-default production-simulation restore/rollback automation, stronger upload concurrency protection, failed-upload recovery, and mandatory release quality checks. Actual-production enrollment remains unavailable.

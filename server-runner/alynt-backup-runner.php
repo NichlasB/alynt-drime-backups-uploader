@@ -2009,7 +2009,8 @@ class Alynt_Server_Backup_Runner {
 			return false;
 		}
 
-		$staging_path = $restore_path . DIRECTORY_SEPARATOR . '.rollback-' . $this->safe_slug( $package_id ) . '-' . gmdate( 'Ymd-His' );
+		// A rollback retry can occur within the same second as a retained failed attempt.
+		$staging_path = $restore_path . DIRECTORY_SEPARATOR . '.rollback-' . $this->safe_slug( $package_id ) . '-' . gmdate( 'Ymd-His' ) . '-' . substr( hash( 'sha256', uniqid( '', true ) ), 0, 12 );
 		if ( file_exists( $staging_path ) || ! mkdir( $staging_path, 0750, true ) ) {
 			return false;
 		}
