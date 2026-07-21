@@ -68,6 +68,7 @@ class UploaderFailureTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['mtime'] = filemtime( $this->file );
 		file_put_contents( $this->file, 'changed backup bytes' );
 		touch( $this->file, time() + 5 );
+		clearstatcache( true, $this->file );
 
 		$client   = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
 		$uploader = $this->uploader_with_options( $options, $client );
@@ -143,6 +144,11 @@ class UploaderFailureTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$acquire  = new ReflectionMethod( $uploader, 'acquire_upload_lock' );
 		$renew    = new ReflectionMethod( $uploader, 'renew_upload_lock' );
 		$release  = new ReflectionMethod( $uploader, 'release_upload_lock' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$acquire->setAccessible( true );
+			$renew->setAccessible( true );
+			$release->setAccessible( true );
+		}
 
 		$this->assertTrue( $acquire->invoke( $uploader ) );
 		$owner = $options[ Alynt_Drime_Backups_Uploader_Uploader::UPLOAD_LOCK_OPTION ]['owner'];

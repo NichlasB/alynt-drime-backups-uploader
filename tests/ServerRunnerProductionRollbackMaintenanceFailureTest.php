@@ -46,6 +46,9 @@ class ServerRunnerProductionRollbackMaintenanceFailureTest extends Alynt_Drime_B
 		$config = json_decode( file_get_contents( $fixture['config'] ), true );
 		$runner = new Alynt_Drime_Backups_Uploader_Maintenance_Fallback_Failure_Runner( $config );
 		$method = new ReflectionMethod( Alynt_Server_Backup_Runner::class, 'restore_production_rollback_result' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$method->setAccessible( true );
+		}
 
 		$rollback = $method->invoke( $runner, $apply['production_apply_report_path'], 'example.com', 'example.com' );
 

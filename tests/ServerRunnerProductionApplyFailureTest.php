@@ -113,6 +113,9 @@ class ServerRunnerProductionApplyFailureTest extends Alynt_Drime_Backups_Uploade
 		$runner = new Alynt_Drime_Backups_Uploader_Interrupting_Copy_Runner( $config );
 
 		$method = new ReflectionMethod( Alynt_Server_Backup_Runner::class, 'restore_production_apply_result' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$method->setAccessible( true );
+		}
 		$apply = $method->invoke(
 			$runner,
 			$fixture['staged_path'],
@@ -143,6 +146,9 @@ class ServerRunnerProductionApplyFailureTest extends Alynt_Drime_Backups_Uploade
 
 		$rollback_runner = new Alynt_Server_Backup_Runner( $config );
 		$rollback_method = new ReflectionMethod( Alynt_Server_Backup_Runner::class, 'restore_production_rollback_result' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$rollback_method->setAccessible( true );
+		}
 		$rollback = $rollback_method->invoke(
 			$rollback_runner,
 			$apply['production_apply_report_path'],

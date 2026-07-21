@@ -51,6 +51,9 @@ class ServerRunnerProductionFilesystemFailureTest extends Alynt_Drime_Backups_Up
 		$config = json_decode( file_get_contents( $fixture['config'] ), true );
 		$runner = new Alynt_Drime_Backups_Uploader_Ownership_Mismatch_Runner( $config );
 		$method = new ReflectionMethod( Alynt_Server_Backup_Runner::class, 'restore_production_apply_result' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$method->setAccessible( true );
+		}
 
 		$apply = $method->invoke( $runner, $fixture['staged_path'], 'files', 'example.com', 'example.com', $evidence );
 

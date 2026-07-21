@@ -205,6 +205,9 @@ class AdminPageSettingsTest extends TestCase {
 	 */
 	private function call_private( $object, $method, array $args ) {
 		$reflection = new ReflectionMethod( $object, $method );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$reflection->setAccessible( true );
+		}
 
 		return $reflection->invokeArgs( $object, $args );
 	}
