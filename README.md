@@ -49,7 +49,7 @@ For development and release validation, use the packaged zip and the documented 
 
 Run `npm run build` after editing files in `assets/src/admin/`; the build script regenerates the enqueued `assets/admin.js`, `assets/admin-workspaces.js`, and `assets/admin.css` files directly. Run `npm run test` and `npm run lint` before packaging. The `pot` script requires WP-CLI on the command path.
 
-GitHub Actions runs the reusable quality workflow on PHP 7.4 and 8.5, then verifies the Node build, generated assets, and dependency audit. Release packaging depends on that quality workflow passing.
+GitHub Actions runs the reusable quality workflow on PHP 7.4 and 8.3, then verifies the Node build, generated assets, and dependency audit. Release packaging depends on that quality workflow passing.
 
 ## Updates
 

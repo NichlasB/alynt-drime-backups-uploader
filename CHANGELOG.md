@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added a reusable GitHub Actions quality workflow covering PHPUnit and PHPCS on PHP 7.4 and 8.5 plus the Node build, generated-asset verification, and dependency audit. Release packaging now depends on that gate.
+- Added a reusable GitHub Actions quality workflow covering PHPUnit and PHPCS on PHP 7.4 and 8.3 plus the Node build, generated-asset verification, and dependency audit. Release packaging now depends on that gate.
 - Added an administrator-only failed-upload table with per-file retry actions when the original local backup remains readable.
 - Added read-only `restore-production-preflight` checks for enrolled target identity, staged package identity, conservative disk headroom, active plugin/theme and filesystem markers, maintenance/write-control readiness, and fresh host-native backup evidence.
 - Added optional redacted production preflight reports plus refusal coverage for target/package mismatch, missing recovery evidence, incomplete write-control review, and unsafe report paths.
