@@ -117,6 +117,7 @@ No public custom actions or filters are exposed.
 = 0.5.1 =
 * Fixed a production-simulation rollback retry that could collide with a retained rollback staging directory when both attempts occurred in the same second.
 * Changed the locked development dependencies to a PHP 7.4-compatible set so the declared GitHub Actions PHP support matrix can install and run.
+* Fixed Linux fake WP-CLI test fixtures so shell arguments are preserved before the fixture runs.
 
 = 0.5.0 =
 * Added a mandatory GitHub Actions quality gate for PHP tests/lint, the Node build, generated assets, and dependency auditing before release packaging.

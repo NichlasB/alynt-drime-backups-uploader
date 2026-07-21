@@ -463,9 +463,9 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 		}
 
 		$script = "#!/bin/sh\n"
-			. "printf '%s\\n' \"$*\" >> " . escapeshellarg( $log_path ) . "\n"
-			. "args=\"$*\"\n"
-			. "case \"$args\" in\n"
+			. "printf '%s\\n' \"\$*\" >> " . escapeshellarg( $log_path ) . "\n"
+			. "args=\"\$*\"\n"
+			. "case \"\$args\" in\n"
 			. "*\"maintenance-mode activate\"*) echo active > " . escapeshellarg( $state_path ) . ";;\n"
 			. "*\"maintenance-mode deactivate\"*) rm -f " . escapeshellarg( $state_path ) . ";;\n"
 			. "*\"option get home\"*) echo https://example.com;;\n"
@@ -479,7 +479,7 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 			. "*\"plugin list --status=active --field=name\"*) echo alynt-drime-backups-uploader;;\n"
 			. "*\"theme list --status=active --field=name\"*) echo example-theme;;\n"
 			. "*\"maintenance-mode status\"*) if [ -f " . escapeshellarg( $state_path ) . " ]; then echo 'Maintenance mode is active.'; else echo 'Maintenance mode is not active.'; exit 1; fi;;\n"
-			. "*\"db export\"*) for arg in \"$@\"; do case \"$arg\" in *.sql) echo '-- before db' > \"$arg\";; esac; done;;\n"
+			. "*\"db export\"*) for arg in \"\$@\"; do case \"\$arg\" in *.sql) echo '-- before db' > \"\$arg\";; esac; done;;\n"
 			. "*\"db import\"*) :;;\n"
 			. "*) exit 1;;\n"
 			. "esac\nexit 0\n";

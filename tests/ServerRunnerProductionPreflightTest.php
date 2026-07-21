@@ -295,7 +295,7 @@ class ServerRunnerProductionPreflightTest extends Alynt_Drime_Backups_Uploader_S
 			return $path;
 		}
 
-		$script = "#!/bin/sh\nargs=\"$*\"\ncase \"$args\" in\n"
+		$script = "#!/bin/sh\nargs=\"\$*\"\ncase \"\$args\" in\n"
 			. "*\"option get home\"*) echo https://example.com;;\n"
 			. "*\"option get siteurl\"*) echo https://example.com;;\n"
 			. "*\"option pluck alynt_drime_backups_settings site_uuid\"*) echo '" . $uuid . "';;\n"

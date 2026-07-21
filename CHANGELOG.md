@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 - Fixed a production-simulation rollback retry that could collide with a retained rollback staging directory when both attempts occurred in the same second.
 - Locked development dependencies to PHP 7.4-compatible versions so the declared GitHub Actions PHP support matrix can install and run.
+- Fixed Linux fake WP-CLI test fixtures so shell arguments are preserved instead of being interpolated by PHP before the fixture runs.
 
 ## [0.5.0] - 2026-07-21
 

@@ -188,8 +188,8 @@ class ServerRunnerPreRestoreBackupCreationTest extends Alynt_Drime_Backups_Uploa
 		file_put_contents(
 			$path,
 			"#!/bin/sh\n"
-			. "printf '%s\n' \"$*\" >> " . escapeshellarg( $log_path ) . "\n"
-			. "for arg in \"$@\"; do case \"$arg\" in *.sql) printf '%s\n' '-- current db' > \"$arg\";; esac; done\n"
+			. "printf '%s\n' \"\$*\" >> " . escapeshellarg( $log_path ) . "\n"
+			. "for arg in \"\$@\"; do case \"\$arg\" in *.sql) printf '%s\n' '-- current db' > \"\$arg\";; esac; done\n"
 			. "exit 0\n"
 		);
 		chmod( $path, 0755 );
