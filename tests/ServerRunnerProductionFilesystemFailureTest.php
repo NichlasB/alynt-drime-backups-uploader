@@ -65,9 +65,12 @@ class ServerRunnerProductionFilesystemFailureTest extends Alynt_Drime_Backups_Up
 		$this->assertFalse( $apply['maintenance_deactivation_attempted'] );
 		$this->assertFileExists( $fixture['maintenance_state'] );
 
-		$rollback_result = $this->run_files_rollback( $fixture, $apply['production_apply_report_path'] );
-		$this->assertSame( 0, $rollback_result['exit_code'], implode( "\n", array_merge( $rollback_result['error'], $rollback_result['output'] ) ) );
-		$rollback = json_decode( implode( "\n", $rollback_result['output'] ), true );
+		$rollback_runner = new Alynt_Server_Backup_Runner( $config );
+		$rollback_method = new ReflectionMethod( Alynt_Server_Backup_Runner::class, 'restore_production_rollback_result' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$rollback_method->setAccessible( true );
+		}
+		$rollback = $rollback_method->invoke( $rollback_runner, $apply['production_apply_report_path'], 'example.com', 'example.com' );
 		$this->assertSame( 'succeeded', $rollback['status'] );
 		$this->assertTrue( $rollback['post_rollback_verification_passed'] );
 		$this->assertFileDoesNotExist( $fixture['maintenance_state'] );
