@@ -4,11 +4,14 @@
     "use strict";
     const config = window.alyntDrimeBackups || {};
     const i18n = config.i18n || {};
+    const requestTimeoutMs = 3e4;
     function text(key) {
       return i18n[key] || "";
     }
     function request(action, data) {
       const formData = new window.FormData();
+      const controller = new window.AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), requestTimeoutMs);
       formData.append("action", action);
       formData.append("nonce", config.nonce || "");
       Object.keys(data || {}).forEach((key) => {
@@ -17,13 +20,19 @@
       return window.fetch(config.ajaxUrl, {
         method: "POST",
         credentials: "same-origin",
-        body: formData
+        body: formData,
+        signal: controller.signal
       }).then((response) => response.json()).then((payload) => {
         if (!payload || !payload.success) {
           throw new Error(payload && payload.data && payload.data.message ? payload.data.message : text("requestFailed"));
         }
         return payload.data;
-      });
+      }).catch((error) => {
+        if (error && error.name === "AbortError") {
+          throw new Error(text("requestTimedOut"));
+        }
+        throw error;
+      }).finally(() => window.clearTimeout(timeoutId));
     }
     function setBusy(container, busy) {
       const buttons = container.querySelectorAll("button");

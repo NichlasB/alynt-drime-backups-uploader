@@ -172,6 +172,7 @@ class ServerRunnerProductionPreflightTest extends Alynt_Drime_Backups_Uploader_S
 					'checksum_value'           => str_repeat( 'a', 64 ),
 					'file_root'                => 'htdocs',
 					'database_dump'            => 'database.sql',
+					'staged_integrity'         => $this->staged_integrity_fixture( $staged_path . DIRECTORY_SEPARATOR . 'htdocs', $staged_path . DIRECTORY_SEPARATOR . 'database.sql' ),
 					'consistency_mode'         => 'light',
 					'consistency_status'       => 'clean',
 					'package_verified'         => true,
@@ -226,6 +227,7 @@ class ServerRunnerProductionPreflightTest extends Alynt_Drime_Backups_Uploader_S
 					'production_expected_drop_ins'             => array( 'wp-content/object-cache.php' ),
 					'production_symlink_inventory_reviewed'    => true,
 					'production_expected_symlink_paths'        => array(),
+					'production_expected_symlink_targets'      => array(),
 				),
 				$overrides
 			)

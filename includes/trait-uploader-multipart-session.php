@@ -30,6 +30,10 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart_Session {
 	 * @return array<string,mixed>|WP_Error
 	 */
 	private function complete_multipart_session( $path, $remote_name, $size, $extension, array $session, array $parts, $parent_id = null, ?array $settings = null ) {
+		if ( ! $this->renew_upload_lock() ) {
+			return $this->upload_lock_lost_error();
+		}
+
 		$completed = $this->client->complete_multipart_upload( $session['key'], $session['upload_id'], array_values( $parts ) );
 		if ( is_wp_error( $completed ) ) {
 			return $completed;
@@ -45,6 +49,9 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart_Session {
 				'parts' => count( $parts ),
 			)
 		);
+		if ( ! $this->renew_upload_lock() ) {
+			return $this->upload_lock_lost_error();
+		}
 
 		$entry = $this->client->create_s3_entry( $session['key'], $remote_name, $size, $extension, $parent_id, $settings );
 		if ( is_wp_error( $entry ) ) {

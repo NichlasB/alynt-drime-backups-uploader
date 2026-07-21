@@ -22,6 +22,13 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	const ACTIVE_OPTION = 'alynt_drime_backups_active_upload';
 
 	/**
+	 * Whether the most recent batch queue write failed.
+	 *
+	 * @var bool
+	 */
+	private $last_persistence_failed = false;
+
+	/**
 	 * Adds an item if it is not already queued.
 	 *
 	 * @param array<string,mixed> $item Item.
@@ -40,7 +47,7 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	 * @param array<string,array<string,mixed>> $uploaded Uploaded records keyed by signature.
 	 * @return bool
 	 *
-	 * @since 0.5.1
+	 * @since 0.5.0
 	 */
 	public function prepend( array $item, array $uploaded = array() ) {
 		$queue = $this->all();
@@ -72,9 +79,10 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	 * @since 0.1.0
 	 */
 	public function add_many( array $items, array $uploaded = array() ) {
-		$queue = $this->all();
-		$index = $this->duplicate_index( $queue );
-		$added = 0;
+		$this->last_persistence_failed = false;
+		$queue                         = $this->all();
+		$index                         = $this->duplicate_index( $queue );
+		$added                         = 0;
 
 		foreach ( $items as $item ) {
 			if ( ! $this->queue_item( $queue, $index, $uploaded, $item ) ) {
@@ -88,7 +96,23 @@ class Alynt_Drime_Backups_Uploader_Queue {
 			return 0;
 		}
 
-		return $this->persist_array_option( self::QUEUE_OPTION, $queue ) ? $added : 0;
+		if ( ! $this->persist_array_option( self::QUEUE_OPTION, $queue ) ) {
+			$this->last_persistence_failed = true;
+			return 0;
+		}
+
+		return $added;
+	}
+
+	/**
+	 * Returns whether the most recent batch queue write failed.
+	 *
+	 * @since 0.5.0
+	 *
+	 * @return bool
+	 */
+	public function last_persistence_failed() {
+		return $this->last_persistence_failed;
 	}
 
 	/**

@@ -15,7 +15,7 @@ if ( PHP_SAPI !== 'cli' ) {
  * Creates backup packages for the Alynt Drime Backups Uploader plugin.
  */
 class Alynt_Server_Backup_Runner {
-	const VERSION = '0.3.0';
+	const VERSION = '0.4.7';
 	const DAY_IN_SECONDS = 86400;
 
 	/**
@@ -65,6 +65,8 @@ class Alynt_Server_Backup_Runner {
 				return $this->restore_production_preflight_command( $options );
 			case 'restore-production-create-pre-backup':
 				return $this->restore_production_create_pre_backup_command( $options );
+			case 'restore-production-apply':
+				return $this->restore_production_apply_command( $options );
 			case 'restore-production-rollback':
 				return $this->restore_production_rollback_command( $options );
 			case 'restore-dry-run':
@@ -711,30 +713,35 @@ class Alynt_Server_Backup_Runner {
 	 * @param string $directory Directory path.
 	 * @return bool
 	 */
-	private function remove_restore_staging_directory( $directory ) {
-		$restore_path = $this->restore_path();
+	private function remove_restore_staging_directory( $directory, $restore_path = '' ) {
+		$restore_path = '' !== $restore_path ? $restore_path : $this->restore_path();
 		$normalized   = $this->normalize_path( $directory );
 		$base         = $this->normalize_path( $restore_path );
-		if ( '' === $normalized || '' === $base || 0 !== strpos( $normalized, $base . '/' ) || ! is_dir( $directory ) ) {
+		if ( '' === $normalized || '' === $base || 0 !== strpos( $normalized, $base . '/' ) || ! is_dir( $directory ) || is_link( $directory ) || ! $this->path_is_within_directory_canonical( $base, $normalized ) ) {
 			return false;
 		}
 
-		$iterator = new RecursiveIteratorIterator(
-			new RecursiveDirectoryIterator( $directory, FilesystemIterator::SKIP_DOTS ),
-			RecursiveIteratorIterator::CHILD_FIRST
-		);
+		try {
+			$iterator = new RecursiveIteratorIterator(
+				new RecursiveDirectoryIterator( $directory, FilesystemIterator::SKIP_DOTS ),
+				RecursiveIteratorIterator::CHILD_FIRST
+			);
 
-		foreach ( $iterator as $item ) {
-			if ( $item->isDir() ) {
-				if ( ! rmdir( $item->getPathname() ) ) {
+			foreach ( $iterator as $item ) {
+				if ( $item->isLink() || $item->isFile() ) {
+					if ( ! unlink( $item->getPathname() ) ) {
+						return false;
+					}
+					continue;
+				}
+
+				if ( $item->isDir() && ! rmdir( $item->getPathname() ) ) {
 					return false;
 				}
-				continue;
 			}
-
-			if ( ! unlink( $item->getPathname() ) ) {
-				return false;
-			}
+		} catch ( Throwable $exception ) {
+			unset( $exception );
+			return false;
 		}
 
 		return rmdir( $directory );
@@ -1037,7 +1044,15 @@ class Alynt_Server_Backup_Runner {
 	 * @return array<string,mixed>
 	 */
 	private function restore_report( $package, $restore_dir, array $manifest ) {
-		$checksum = $this->read_checksum_sidecar( $package );
+		$checksum      = $this->read_checksum_sidecar( $package );
+		$file_root     = $this->manifest_value( $manifest, 'file_root' );
+		$database_dump = $this->manifest_value( $manifest, 'database_dump' );
+		$staged_integrity = array(
+			'schema_version' => 1,
+			'algorithm'      => 'sha256',
+			'file_tree'     => $this->staged_file_tree_integrity( $restore_dir . DIRECTORY_SEPARATOR . $file_root ),
+			'database_dump' => $this->staged_file_integrity( $restore_dir . DIRECTORY_SEPARATOR . $database_dump ),
+		);
 
 		return array(
 			'schema_version'             => 1,
@@ -1058,8 +1073,9 @@ class Alynt_Server_Backup_Runner {
 			'producer_version'           => $this->manifest_value( $manifest, 'producer_version' ),
 			'backup_type'                => $this->manifest_value( $manifest, 'backup_type' ),
 			'archive_format'             => $this->manifest_value( $manifest, 'archive_format' ),
-			'file_root'                  => $this->manifest_value( $manifest, 'file_root' ),
-			'database_dump'              => $this->manifest_value( $manifest, 'database_dump' ),
+			'file_root'                  => $file_root,
+			'database_dump'              => $database_dump,
+			'staged_integrity'           => $staged_integrity,
 			'consistency_mode'           => $this->manifest_value( $manifest, 'consistency_mode' ),
 			'consistency_status'         => $this->manifest_value( $manifest, 'consistency_status' ),
 			'restore_directory_name'     => basename( $restore_dir ),
@@ -1076,6 +1092,109 @@ class Alynt_Server_Backup_Runner {
 				'Keep production restore steps manual until separately approved.',
 			),
 		);
+	}
+
+	/**
+	 * Returns a deterministic integrity record for an extracted directory tree.
+	 *
+	 * @param string $root Directory root.
+	 * @return array<string,mixed>
+	 */
+	private function staged_file_tree_integrity( $root ) {
+		$result = array(
+			'valid'           => false,
+			'sha256'          => '',
+			'file_count'      => 0,
+			'directory_count' => 0,
+			'symlink_count'   => 0,
+			'total_bytes'     => 0,
+		);
+		if ( '' === $root || ! is_dir( $root ) || ! is_readable( $root ) ) {
+			return $result;
+		}
+
+		$records = array();
+		try {
+			$iterator = new RecursiveIteratorIterator(
+				new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS ),
+				RecursiveIteratorIterator::SELF_FIRST
+			);
+			foreach ( $iterator as $item ) {
+				$path     = $item->getPathname();
+				$relative = ltrim( substr( $this->normalize_path( $path ), strlen( $this->normalize_path( $root ) ) ), '/' );
+				if ( '' === $relative ) {
+					return $result;
+				}
+
+				if ( $item->isLink() ) {
+					$target = readlink( $path );
+					if ( false === $target || false !== strpos( (string) $target, "\0" ) ) {
+						return $result;
+					}
+					$records[] = "link\0" . $relative . "\0" . (string) $target;
+					++$result['symlink_count'];
+					continue;
+				}
+
+				if ( $item->isDir() ) {
+					$records[] = "directory\0" . $relative;
+					++$result['directory_count'];
+					continue;
+				}
+
+				if ( ! $item->isFile() || ! is_readable( $path ) ) {
+					return $result;
+				}
+				$file_hash = hash_file( 'sha256', $path );
+				if ( false === $file_hash ) {
+					return $result;
+				}
+				$size      = (int) $item->getSize();
+				$records[] = "file\0" . $relative . "\0" . $size . "\0" . $file_hash;
+				++$result['file_count'];
+				$result['total_bytes'] += $size;
+			}
+		} catch ( RuntimeException $exception ) {
+			return $result;
+		}
+
+		sort( $records, SORT_STRING );
+		$context = hash_init( 'sha256' );
+		foreach ( $records as $record ) {
+			hash_update( $context, strlen( $record ) . ':' . $record );
+		}
+		$result['sha256'] = hash_final( $context );
+		$result['valid']  = true;
+
+		return $result;
+	}
+
+	/**
+	 * Returns an integrity record for one extracted regular file.
+	 *
+	 * @param string $path File path.
+	 * @return array<string,mixed>
+	 */
+	private function staged_file_integrity( $path ) {
+		$result = array(
+			'valid'       => false,
+			'sha256'      => '',
+			'total_bytes' => 0,
+		);
+		if ( '' === $path || ! is_file( $path ) || is_link( $path ) || ! is_readable( $path ) ) {
+			return $result;
+		}
+
+		$hash = hash_file( 'sha256', $path );
+		if ( false === $hash ) {
+			return $result;
+		}
+
+		$result['valid']       = true;
+		$result['sha256']      = $hash;
+		$result['total_bytes'] = (int) filesize( $path );
+
+		return $result;
 	}
 
 	/**
@@ -1238,6 +1357,7 @@ class Alynt_Server_Backup_Runner {
 			'target_wordpress_path'       => $target_path,
 			'preflight_generated_at'      => isset( $preflight['generated_at'] ) ? $preflight['generated_at'] : '',
 			'preflight_target_fingerprint' => isset( $preflight['target_fingerprint'] ) ? $preflight['target_fingerprint'] : array(),
+			'preflight_package_identity'  => isset( $preflight['package_identity'] ) ? $preflight['package_identity'] : array(),
 		);
 		if ( '' !== $result['database_export_path'] ) {
 			$evidence['database_export_path']   = $result['database_export_path'];
@@ -1256,6 +1376,302 @@ class Alynt_Server_Backup_Runner {
 		$result['failure_count']              = $this->restore_check_failure_count( $result['checks'] );
 		$result['pre_restore_backup_created'] = 0 === (int) $result['failure_count'];
 		$result['status']                     = $result['pre_restore_backup_created'] ? 'succeeded' : 'failed';
+
+		return $result;
+	}
+
+	/**
+	 * Runs an explicitly gated production-simulation apply.
+	 *
+	 * Supports files-only, database-only, and combined files-and-database
+	 * scopes under one maintenance-protected transaction.
+	 *
+	 * @param array<string,mixed> $options Options.
+	 * @return int Exit code.
+	 */
+	private function restore_production_apply_command( array $options ) {
+		$staged_path  = isset( $options['staged-path'] ) ? $this->normalize_path( (string) $options['staged-path'] ) : '';
+		$scope        = isset( $options['scope'] ) ? strtolower( trim( (string) $options['scope'] ) ) : '';
+		$target_site  = isset( $options['target-site'] ) ? strtolower( trim( (string) $options['target-site'] ) ) : '';
+		$evidence     = isset( $options['pre-restore-evidence'] ) ? $this->normalize_path( (string) $options['pre-restore-evidence'] ) : '';
+		$confirm      = isset( $options['confirm'] ) ? (string) $options['confirm'] : '';
+		$confirm_site = isset( $options['confirm-site'] ) ? strtolower( trim( (string) $options['confirm-site'] ) ) : '';
+
+		if ( 'restore-production-site' !== $confirm ) {
+			$this->error( 'Production apply requires --confirm=restore-production-site.' );
+			return 1;
+		}
+
+		$result = $this->restore_production_apply_result( $staged_path, $scope, $target_site, $confirm_site, $evidence );
+		$result = $this->redact_restore_report_data( $result );
+		if ( isset( $options['format'] ) && 'json' === strtolower( (string) $options['format'] ) ) {
+			$this->line( json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+		} else {
+			$this->print_restore_production_preflight_result( $result );
+		}
+
+		return 'succeeded' === $result['status'] ? 0 : 1;
+	}
+
+	/**
+	 * Validates and applies one production-simulation restore scope.
+	 *
+	 * @param string $staged_path Staged package path.
+	 * @param string $scope Restore scope.
+	 * @param string $target_site Requested target hostname.
+	 * @param string $confirm_site Exact confirmation hostname.
+	 * @param string $evidence_path Pre-restore evidence path.
+	 * @return array<string,mixed>
+	 */
+	private function restore_production_apply_result( $staged_path, $scope, $target_site, $confirm_site, $evidence_path ) {
+		$preflight       = $this->restore_production_preflight_result( $staged_path, $scope, $target_site, 'enabled' );
+		$target_path     = $this->normalize_path( $this->config_string( 'production_target_wordpress_path' ) );
+		$configured_url  = $this->normalize_site_url( $this->config_string( 'production_target_site_url' ) );
+		$configured_host = $this->site_host( $configured_url );
+		$configured_uuid = strtolower( $this->config_string( 'production_target_site_uuid' ) );
+		$package_id      = isset( $preflight['package_id'] ) ? (string) $preflight['package_id'] : basename( $staged_path );
+		$evidence        = $this->read_restore_report( $evidence_path );
+		$report_path     = $this->production_apply_report_path( $package_id, $scope );
+
+		$result = array(
+			'schema_version'                    => 1,
+			'generated_at'                      => gmdate( 'c' ),
+			'command'                           => 'restore-production-apply',
+			'safety_classification'             => 'explicit-production-simulation-apply',
+			'status'                            => 'failed',
+			'restore_environment'               => strtolower( $this->config_string( 'production_restore_environment' ) ),
+			'scope'                             => $scope,
+			'target_site'                       => $target_site,
+			'target_site_uuid'                  => $configured_uuid,
+			'package_id'                        => $package_id,
+			'staged_path'                       => $staged_path,
+			'target_wordpress_path'             => $target_path,
+			'pre_restore_evidence_path'         => $evidence_path,
+			'preflight_failure_count'           => (int) $preflight['failure_count'],
+			'preflight_checks'                  => isset( $preflight['checks'] ) ? $preflight['checks'] : array(),
+			'checks'                            => array(),
+			'failure_count'                     => 0,
+			'confirmation_phrase_accepted'      => true,
+			'confirmation_site_accepted'        => false,
+			'maintenance_activation_attempted'  => false,
+			'maintenance_activation_succeeded'  => false,
+			'maintenance_reactivation_attempted' => false,
+			'maintenance_reactivation_succeeded' => false,
+			'maintenance_emergency_fallback_used' => false,
+			'maintenance_deactivation_attempted' => false,
+			'maintenance_deactivation_succeeded' => false,
+			'maintenance_state_changed'         => false,
+			'enrolled_symlink_restore_attempted' => false,
+			'enrolled_symlink_restore_succeeded' => false,
+			'enrolled_symlink_restore_count'     => 0,
+			'file_restore_attempted'            => false,
+			'file_restore_succeeded'            => false,
+			'database_import_attempted'         => false,
+			'database_import_succeeded'         => false,
+			'database_imported'                 => false,
+			'database_may_be_modified'           => false,
+			'live_files_overwritten'            => false,
+			'combined_restore_order'             => 'files-and-database' === $scope ? array( 'files', 'database' ) : array(),
+			'destructive_actions_performed'     => false,
+			'post_apply_verification_passed'    => false,
+			'production_rollback_available'     => false,
+			'production_apply_report_written'   => false,
+			'production_apply_report_path'      => $report_path,
+			'production_apply_report_error'     => '',
+			'failure_step'                      => '',
+			'manual_recovery_notes'             => array(),
+		);
+
+		$result['confirmation_site_accepted'] = '' !== $confirm_site && $confirm_site === $configured_host && $confirm_site === $target_site;
+		$this->add_restore_dry_run_check( $result['checks'], 'phase_five_scope_supported', in_array( $scope, array( 'files', 'database', 'files-and-database' ), true ), 'Production apply supports files-only, database-only, or combined files-and-database scope.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_restore_enabled', $this->config_bool( 'production_restore_enabled' ), 'Production restore is explicitly enabled in private runner configuration.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_rollback_enabled', $this->config_bool( 'production_rollback_enabled' ), 'Production rollback is explicitly enabled before production apply.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_environment', 'production-simulation' === $result['restore_environment'], 'Production apply environment is production-simulation.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'target_site_matches_config', '' !== $target_site && $target_site === $configured_host, 'The operator target hostname matches the enrolled target.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'confirmation_site_matches_target', $result['confirmation_site_accepted'], 'The exact --confirm-site hostname matches the enrolled and requested target.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_preflight_passed', 0 === (int) $preflight['failure_count'], 'The complete production preflight passed immediately before apply.' );
+		$this->add_production_pre_restore_evidence_checks( $result['checks'], $evidence, $evidence_path, $package_id, $scope, $target_path, $configured_host, $configured_uuid );
+		$this->add_restore_dry_run_check( $result['checks'], 'target_fingerprint_unchanged_since_pre_backup', isset( $evidence['preflight_target_fingerprint'] ) && $evidence['preflight_target_fingerprint'] === $preflight['target_fingerprint'], 'The enrolled target fingerprint has not changed since pre-restore evidence creation.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'staged_package_identity_unchanged_since_pre_backup', isset( $evidence['preflight_package_identity'] ) && $evidence['preflight_package_identity'] === $preflight['package_identity'], 'The staged package identity and integrity record have not changed since pre-restore evidence creation.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_apply_report_path_ready', '' !== $report_path, 'Private production apply report path is ready before target changes.' );
+
+		$result['failure_count'] = $this->restore_check_failure_count( $result['checks'] );
+		if ( 0 !== (int) $result['failure_count'] ) {
+			$result['failure_step']          = 'production-apply-preflight';
+			$result['manual_recovery_notes'] = array( 'No target-changing action was attempted because production apply checks failed.' );
+			return $this->write_production_apply_report( $result );
+		}
+
+		$result['production_apply_report_written'] = $this->write_json_atomic( $report_path, $result ) && chmod( $report_path, 0640 );
+		if ( ! $result['production_apply_report_written'] ) {
+			$result['failure_step']                  = 'production-apply-report-prepare';
+			$result['production_apply_report_error'] = 'Could not prepare the private production apply report before maintenance.';
+			return $result;
+		}
+
+		$result['maintenance_activation_attempted'] = true;
+		$maintenance = $this->run_wp_cli_action( $target_path, 'maintenance-mode activate' );
+		$result['maintenance_activation_succeeded'] = 0 === (int) $maintenance['exit_code'];
+		$result['maintenance_state_changed']        = $result['maintenance_activation_succeeded'];
+		if ( ! $result['maintenance_activation_succeeded'] ) {
+			$result['failure_step']          = 'maintenance-activation';
+			$result['manual_recovery_notes'] = array( 'Production apply stopped before target writes because maintenance mode could not be activated.' );
+			return $this->write_production_apply_report( $result );
+		}
+
+		$current_package = $this->read_restore_report( $staged_path . DIRECTORY_SEPARATOR . 'RESTORE_REPORT.json' );
+		$current_identity = $this->production_package_identity( $current_package, $package_id );
+		$this->add_restore_dry_run_check( $result['checks'], 'immediate_staged_package_identity_matches_evidence', isset( $evidence['preflight_package_identity'] ) && $evidence['preflight_package_identity'] === $current_identity, 'Immediately before target writes, the staged package identity matches private pre-restore evidence.' );
+		$this->add_production_staged_integrity_checks( $result['checks'], $current_package, $staged_path, $scope, 'immediate_' );
+		$result['failure_count'] = $this->restore_check_failure_count( $result['checks'] );
+		if ( 0 !== (int) $result['failure_count'] ) {
+			$result['failure_step']          = 'staged-input-integrity';
+			$result['manual_recovery_notes'] = array( 'Production apply stopped before target writes because staged input integrity changed. Keep maintenance active while the staged package and private evidence are inspected.' );
+			return $this->write_production_apply_report( $result );
+		}
+
+		if ( in_array( $scope, array( 'files', 'files-and-database' ), true ) ) {
+			$file_root = $this->restore_apply_file_root_path( $staged_path );
+			$symlinks  = $this->production_expected_symlink_snapshot( $target_path );
+			$this->add_restore_dry_run_check( $result['checks'], 'enrolled_symlink_snapshot_complete', count( $symlinks ) === count( $this->config_array( 'production_expected_symlink_paths' ) ), 'Every enrolled target symlink was captured before file replacement.' );
+			$result['failure_count'] = $this->restore_check_failure_count( $result['checks'] );
+			if ( 0 !== (int) $result['failure_count'] ) {
+				$result['failure_step']          = 'enrolled-symlink-snapshot';
+				$result['manual_recovery_notes'] = array( 'No file replacement was attempted because the enrolled symlink snapshot was incomplete.' );
+				return $this->write_production_apply_report( $result );
+			}
+			$result['file_restore_attempted']        = true;
+			$result['destructive_actions_performed'] = true;
+			$result['live_files_overwritten']        = true;
+			$result['production_rollback_available'] = true;
+			$result['file_restore_succeeded']        = $this->replace_target_files_from_staging( $file_root, $target_path );
+			if ( ! $result['file_restore_succeeded'] ) {
+				$result['maintenance_reactivation_attempted'] = true;
+				$maintenance = $this->run_wp_cli_action( $target_path, 'maintenance-mode activate' );
+				$result['maintenance_reactivation_succeeded'] = 0 === (int) $maintenance['exit_code'];
+				if ( ! $result['maintenance_reactivation_succeeded'] ) {
+					$result['maintenance_emergency_fallback_used'] = $this->ensure_production_maintenance_marker( $target_path );
+				}
+				$result['failure_step']          = 'file-restore';
+				$result['manual_recovery_notes'] = array( $result['maintenance_reactivation_succeeded'] || $result['maintenance_emergency_fallback_used'] ? 'Maintenance protection was re-established. Use restore-production-rollback with this apply report.' : 'Maintenance protection could not be re-established. Restrict access immediately and use restore-production-rollback with this apply report.' );
+				return $this->write_production_apply_report( $result );
+			}
+			$result['maintenance_reactivation_attempted'] = true;
+			$maintenance = $this->run_wp_cli_action( $target_path, 'maintenance-mode activate' );
+			$result['maintenance_reactivation_succeeded'] = 0 === (int) $maintenance['exit_code'];
+			if ( ! $result['maintenance_reactivation_succeeded'] ) {
+				$result['maintenance_emergency_fallback_used'] = $this->ensure_production_maintenance_marker( $target_path );
+				$result['failure_step']          = 'maintenance-reactivation';
+				$result['manual_recovery_notes'] = array( 'Files were replaced, but maintenance mode could not be reactivated. Restrict access and use restore-production-rollback with this apply report.' );
+				return $this->write_production_apply_report( $result );
+			}
+			$result['enrolled_symlink_restore_attempted'] = true;
+			$result['enrolled_symlink_restore_count']     = count( $symlinks );
+			$result['enrolled_symlink_restore_succeeded'] = $this->restore_production_expected_symlinks( $target_path, $symlinks );
+			if ( ! $result['enrolled_symlink_restore_succeeded'] ) {
+				$result['failure_step']          = 'enrolled-symlink-restore';
+				$result['manual_recovery_notes'] = array( 'Files were replaced, but enrolled symlinks could not be restored. Keep maintenance active and use restore-production-rollback with this apply report.' );
+				return $this->write_production_apply_report( $result );
+			}
+		}
+
+		if ( in_array( $scope, array( 'database', 'files-and-database' ), true ) ) {
+			$database_dump = $this->restore_apply_database_dump_path( $staged_path );
+			$result['database_import_attempted']     = true;
+			$result['destructive_actions_performed'] = true;
+			$result['database_may_be_modified']      = true;
+			$result['production_rollback_available'] = true;
+			$import                                  = $this->import_database( $database_dump, $target_path );
+			$result['database_import_succeeded']     = 0 === (int) $import['exit_code'];
+			$result['database_imported']             = $result['database_import_succeeded'];
+			if ( ! $result['database_import_succeeded'] ) {
+				$result['failure_step']          = 'database-import';
+				$result['manual_recovery_notes'] = array( 'Keep maintenance active and use restore-production-rollback with this apply report.' );
+				return $this->write_production_apply_report( $result );
+			}
+		}
+
+		$post_runtime            = $this->production_runtime_fingerprint( $target_path );
+		$post_filesystem_markers = $this->production_filesystem_markers( $target_path );
+		$post_ownership          = $this->production_target_owner_group( $target_path );
+		$expected_fingerprint    = isset( $evidence['preflight_target_fingerprint'] ) && is_array( $evidence['preflight_target_fingerprint'] ) ? $evidence['preflight_target_fingerprint'] : array();
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_runtime_reads_passed', 0 === (int) $post_runtime['failure_count'], 'Required post-apply WP-CLI identity queries succeeded.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_maintenance_active', ! empty( $post_runtime['maintenance_active'] ), 'WordPress maintenance mode remains active during post-apply verification.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_home_matches_target', $configured_url === $post_runtime['home'], 'Post-apply home matches the enrolled target URL.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_siteurl_matches_target', $configured_url === $post_runtime['siteurl'], 'Post-apply siteurl matches the enrolled target URL.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_uuid_matches_target', $configured_uuid === $post_runtime['site_uuid'], 'Post-apply plugin site UUID matches the enrolled target.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_active_plugins_match', $this->config_list_matches_actual( 'production_expected_active_plugins', $post_runtime['active_plugins'] ), 'Post-apply active plugin inventory exactly matches enrollment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_active_theme_matches', in_array( $this->config_string( 'production_expected_active_theme' ), $post_runtime['active_themes'], true ), 'Post-apply active theme matches enrollment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_drop_ins_match', $this->config_list_matches_actual( 'production_expected_drop_ins', $post_filesystem_markers['drop_ins'] ), 'Post-apply WordPress drop-in inventory exactly matches enrollment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_owner_matches', isset( $expected_fingerprint['filesystem_owner_id'] ) && null !== $expected_fingerprint['filesystem_owner_id'] && (int) $expected_fingerprint['filesystem_owner_id'] === $post_ownership['owner_id'], 'Post-apply WordPress root owner matches private pre-restore evidence.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_group_matches', isset( $expected_fingerprint['filesystem_group_id'] ) && null !== $expected_fingerprint['filesystem_group_id'] && (int) $expected_fingerprint['filesystem_group_id'] === $post_ownership['group_id'], 'Post-apply WordPress root group matches private pre-restore evidence.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_filesystem_inventory_complete', ! empty( $post_filesystem_markers['scan_complete'] ) && empty( $post_filesystem_markers['symlink_samples_truncated'] ), 'Post-apply filesystem identity scan completed without truncation.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_symlinks_match', $this->config_list_matches_actual( 'production_expected_symlink_paths', $post_filesystem_markers['symlink_samples'] ), 'Post-apply symlink inventory exactly matches enrollment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_apply_symlink_targets_match', $this->config_string_map_matches_actual( 'production_expected_symlink_targets', $post_filesystem_markers['symlink_targets'] ), 'Post-apply symlink targets exactly match enrollment.' );
+		$result['failure_count']                  = $this->restore_check_failure_count( $result['checks'] );
+		$result['post_apply_verification_passed'] = 0 === (int) $result['failure_count'];
+		if ( ! $result['post_apply_verification_passed'] ) {
+			$result['failure_step']          = 'post-apply-verification';
+			$result['manual_recovery_notes'] = array( 'Post-apply verification failed. Keep maintenance active and use restore-production-rollback with this apply report.' );
+			return $this->write_production_apply_report( $result );
+		}
+
+		$result['maintenance_deactivation_attempted'] = true;
+		$maintenance = $this->run_wp_cli_action( $target_path, 'maintenance-mode deactivate' );
+		$result['maintenance_deactivation_succeeded'] = 0 === (int) $maintenance['exit_code'];
+		if ( ! $result['maintenance_deactivation_succeeded'] ) {
+			$result['failure_step']          = 'maintenance-deactivation';
+			$result['manual_recovery_notes'] = array( 'Restore verification passed, but maintenance mode could not be deactivated. Inspect the target before manual deactivation.' );
+			return $this->write_production_apply_report( $result );
+		}
+
+		$result['status']                        = 'succeeded';
+		$result['production_rollback_available'] = true;
+
+		return $this->write_production_apply_report( $result );
+	}
+
+	/**
+	 * Returns a private production apply report destination.
+	 *
+	 * @param string $package_id Package identifier.
+	 * @param string $scope Restore scope.
+	 * @return string
+	 */
+	private function production_apply_report_path( $package_id, $scope ) {
+		$reports_path = $this->normalize_path( $this->config_string( 'production_reports_path' ) );
+		$target_path  = $this->normalize_path( $this->config_string( 'production_target_wordpress_path' ) );
+		if ( '' === $reports_path || $this->dangerous_restore_target_path( $reports_path ) || ! $this->path_is_outside_directory_canonical( $target_path, $reports_path ) || ! $this->ensure_directory( $reports_path ) || ! is_writable( $reports_path ) ) {
+			return '';
+		}
+
+		$suffix = gmdate( 'Ymd-His' ) . '-' . substr( hash( 'sha256', uniqid( '', true ) ), 0, 8 );
+
+		return $reports_path . DIRECTORY_SEPARATOR . 'RESTORE_PRODUCTION_APPLY_REPORT-' . $this->safe_slug( $package_id ) . '-' . $this->safe_slug( $scope ) . '-' . $suffix . '.json';
+	}
+
+	/**
+	 * Writes or updates the private production apply report.
+	 *
+	 * @param array<string,mixed> $result Apply result.
+	 * @return array<string,mixed>
+	 */
+	private function write_production_apply_report( array $result ) {
+		if ( empty( $result['production_apply_report_path'] ) ) {
+			$result['production_apply_report_error'] = 'Production apply reports path is missing, unsafe, or not writable.';
+			return $result;
+		}
+
+		$result['production_apply_report_written'] = true;
+		$written = $this->write_json_atomic( $result['production_apply_report_path'], $result ) && chmod( $result['production_apply_report_path'], 0640 );
+		if ( ! $written ) {
+			$result['production_apply_report_written'] = false;
+			$result['production_apply_report_error'] = 'Could not write the production apply report.';
+			$result['status']                        = 'failed';
+			if ( '' === $result['failure_step'] ) {
+				$result['failure_step'] = 'production-apply-report-write';
+			}
+		}
 
 		return $result;
 	}
@@ -1305,7 +1721,8 @@ class Alynt_Server_Backup_Runner {
 		$apply_report      = $this->read_restore_report( $apply_report_path );
 		$staged_path       = isset( $apply_report['staged_path'] ) ? $this->normalize_path( (string) $apply_report['staged_path'] ) : '';
 		$scope             = isset( $apply_report['scope'] ) ? strtolower( (string) $apply_report['scope'] ) : '';
-		$preflight         = $this->restore_production_preflight_result( $staged_path, $scope, $target_site );
+		$preflight         = $this->restore_production_preflight_result( $staged_path, $scope, $target_site, 'either' );
+		$blocking_preflight_failures = $this->production_rollback_blocking_preflight_failures( isset( $preflight['checks'] ) ? $preflight['checks'] : array() );
 		$target_path       = $this->normalize_path( $this->config_string( 'production_target_wordpress_path' ) );
 		$configured_host   = $this->site_host( $this->normalize_site_url( $this->config_string( 'production_target_site_url' ) ) );
 		$configured_uuid   = strtolower( $this->config_string( 'production_target_site_uuid' ) );
@@ -1327,6 +1744,8 @@ class Alynt_Server_Backup_Runner {
 			'package_id'                        => $package_id,
 			'pre_restore_evidence_path'         => $evidence_path,
 			'preflight_failure_count'           => (int) $preflight['failure_count'],
+			'preflight_blocking_failure_count'  => count( $blocking_preflight_failures ),
+			'preflight_blocking_failures'       => $blocking_preflight_failures,
 			'preflight_checks'                  => isset( $preflight['checks'] ) ? $preflight['checks'] : array(),
 			'checks'                            => $checks,
 			'failure_count'                     => 0,
@@ -1337,9 +1756,22 @@ class Alynt_Server_Backup_Runner {
 			'database_rollback_attempted'       => false,
 			'database_rollback_succeeded'       => false,
 			'database_imported'                 => false,
+			'database_may_be_modified'           => false,
 			'live_files_overwritten'            => false,
 			'destructive_actions_performed'     => false,
+			'maintenance_activation_attempted'  => false,
+			'maintenance_activation_succeeded'  => false,
+			'maintenance_reactivation_attempted' => false,
+			'maintenance_reactivation_succeeded' => false,
+			'maintenance_emergency_fallback_used' => false,
+			'maintenance_deactivation_attempted' => false,
+			'maintenance_deactivation_succeeded' => false,
 			'maintenance_state_changed'         => false,
+			'post_rollback_verification_passed' => false,
+			'rollback_extraction_path'           => '',
+			'rollback_extraction_retained'       => false,
+			'rollback_extraction_cleanup_attempted' => false,
+			'rollback_extraction_cleanup_succeeded' => false,
 			'rollback_report_written'           => false,
 			'rollback_report_path'              => $report_path,
 			'rollback_report_error'             => '',
@@ -1361,7 +1793,7 @@ class Alynt_Server_Backup_Runner {
 		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_scope', in_array( $scope, array( 'files', 'database', 'files-and-database' ), true ), 'Apply report records a supported rollback scope.' );
 		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_destructive_action', ! empty( $apply_report['destructive_actions_performed'] ), 'Apply report records that a target-changing apply action occurred.' );
 		$this->add_restore_dry_run_check( $result['checks'], 'apply_report_evidence_path', '' !== $evidence_path && $this->path_is_within_directory_canonical( $this->production_pre_backup_path(), $evidence_path ), 'Apply report references evidence inside the private production pre-backup path.' );
-		$this->add_restore_dry_run_check( $result['checks'], 'production_preflight_passed', 0 === (int) $preflight['failure_count'], 'The complete production preflight passed again immediately before rollback.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'production_rollback_preflight_passed', empty( $blocking_preflight_failures ), 'Rollback safety checks passed; target runtime and inventory drift caused by a failed apply may be recovered.' );
 		$this->add_production_pre_restore_evidence_checks( $result['checks'], $evidence, $evidence_path, $package_id, $scope, $target_path, $configured_host, $configured_uuid );
 		$this->add_restore_dry_run_check( $result['checks'], 'rollback_report_path_ready', '' !== $report_path, 'Private production rollback report path is ready before target changes.' );
 
@@ -1372,14 +1804,40 @@ class Alynt_Server_Backup_Runner {
 			return $this->write_production_rollback_report( $result );
 		}
 
+		$result['maintenance_activation_attempted'] = true;
+		$maintenance = $this->run_wp_cli_action( $target_path, 'maintenance-mode activate' );
+		$result['maintenance_activation_succeeded'] = 0 === (int) $maintenance['exit_code'];
+		if ( ! $result['maintenance_activation_succeeded'] ) {
+			$result['maintenance_emergency_fallback_used'] = $this->ensure_production_maintenance_marker( $target_path );
+			$result['maintenance_activation_succeeded']    = $result['maintenance_emergency_fallback_used'];
+		}
+		$result['maintenance_state_changed']        = $result['maintenance_activation_succeeded'];
+		if ( ! $result['maintenance_activation_succeeded'] ) {
+			$result['failure_step']          = 'rollback-maintenance-activation';
+			$result['manual_recovery_notes'] = array( 'Rollback stopped before target writes because maintenance mode could not be activated.' );
+			return $this->write_production_rollback_report( $result );
+		}
+
 		if ( $this->restore_scope_includes_files( $scope ) ) {
+			$rollback_extraction_path                 = '';
 			$result['file_rollback_attempted']       = true;
 			$result['destructive_actions_performed'] = true;
-			$result['file_rollback_succeeded']       = $this->restore_production_files_from_pre_backup( (string) $evidence['file_backup_path'], $target_path, $package_id );
+			$result['file_rollback_succeeded']       = $this->restore_production_files_from_pre_backup( (string) $evidence['file_backup_path'], $target_path, $package_id, $rollback_extraction_path );
+			$result['rollback_extraction_path']      = $rollback_extraction_path;
+			$result['rollback_extraction_retained']  = '' !== $rollback_extraction_path && is_dir( $rollback_extraction_path );
 			$result['live_files_overwritten']        = $result['file_rollback_succeeded'];
 			if ( ! $result['file_rollback_succeeded'] ) {
 				$result['failure_step']          = 'file-rollback';
 				$result['manual_recovery_notes'] = array( 'File rollback failed. Keep the target controlled and inspect the verified pre-restore evidence.' );
+				return $this->write_production_rollback_report( $result );
+			}
+			$result['maintenance_reactivation_attempted'] = true;
+			$maintenance = $this->run_wp_cli_action( $target_path, 'maintenance-mode activate' );
+			$result['maintenance_reactivation_succeeded'] = 0 === (int) $maintenance['exit_code'];
+			if ( ! $result['maintenance_reactivation_succeeded'] ) {
+				$result['maintenance_emergency_fallback_used'] = $this->ensure_production_maintenance_marker( $target_path );
+				$result['failure_step']          = 'rollback-maintenance-reactivation';
+				$result['manual_recovery_notes'] = array( 'Files were rolled back, but maintenance mode could not be reactivated. Restrict access and inspect the verified recovery evidence.' );
 				return $this->write_production_rollback_report( $result );
 			}
 		}
@@ -1387,6 +1845,7 @@ class Alynt_Server_Backup_Runner {
 		if ( $this->restore_scope_includes_database( $scope ) ) {
 			$result['database_rollback_attempted']   = true;
 			$result['destructive_actions_performed'] = true;
+			$result['database_may_be_modified']      = true;
 			$import                                = $this->import_database( (string) $evidence['database_export_path'], $target_path );
 			$result['database_rollback_succeeded']   = 0 === (int) $import['exit_code'];
 			$result['database_imported']             = $result['database_rollback_succeeded'];
@@ -1397,9 +1856,86 @@ class Alynt_Server_Backup_Runner {
 			}
 		}
 
-		$result['status'] = 'succeeded';
+		$post_runtime            = $this->production_runtime_fingerprint( $target_path );
+		$post_filesystem_markers = $this->production_filesystem_markers( $target_path );
+		$post_ownership          = $this->production_target_owner_group( $target_path );
+		$expected_fingerprint    = isset( $evidence['preflight_target_fingerprint'] ) && is_array( $evidence['preflight_target_fingerprint'] ) ? $evidence['preflight_target_fingerprint'] : array();
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_runtime_reads_passed', 0 === (int) $post_runtime['failure_count'], 'Required post-rollback WP-CLI identity queries succeeded.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_maintenance_active', ! empty( $post_runtime['maintenance_active'] ), 'WordPress maintenance mode remains active during post-rollback verification.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_home_matches_target', $this->normalize_site_url( $this->config_string( 'production_target_site_url' ) ) === $post_runtime['home'], 'Post-rollback home matches the enrolled target URL.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_siteurl_matches_target', $this->normalize_site_url( $this->config_string( 'production_target_site_url' ) ) === $post_runtime['siteurl'], 'Post-rollback siteurl matches the enrolled target URL.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_uuid_matches_target', $configured_uuid === $post_runtime['site_uuid'], 'Post-rollback plugin site UUID matches the enrolled target.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_active_plugins_match', $this->config_list_matches_actual( 'production_expected_active_plugins', $post_runtime['active_plugins'] ), 'Post-rollback active plugin inventory exactly matches enrollment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_active_theme_matches', in_array( $this->config_string( 'production_expected_active_theme' ), $post_runtime['active_themes'], true ), 'Post-rollback active theme matches enrollment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_drop_ins_match', $this->config_list_matches_actual( 'production_expected_drop_ins', $post_filesystem_markers['drop_ins'] ), 'Post-rollback WordPress drop-in inventory exactly matches enrollment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_owner_matches', isset( $expected_fingerprint['filesystem_owner_id'] ) && null !== $expected_fingerprint['filesystem_owner_id'] && (int) $expected_fingerprint['filesystem_owner_id'] === $post_ownership['owner_id'], 'Post-rollback WordPress root owner matches private pre-restore evidence.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_group_matches', isset( $expected_fingerprint['filesystem_group_id'] ) && null !== $expected_fingerprint['filesystem_group_id'] && (int) $expected_fingerprint['filesystem_group_id'] === $post_ownership['group_id'], 'Post-rollback WordPress root group matches private pre-restore evidence.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_filesystem_inventory_complete', ! empty( $post_filesystem_markers['scan_complete'] ) && empty( $post_filesystem_markers['symlink_samples_truncated'] ), 'Post-rollback filesystem identity scan completed without truncation.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_symlinks_match', $this->config_list_matches_actual( 'production_expected_symlink_paths', $post_filesystem_markers['symlink_samples'] ), 'Post-rollback symlink inventory exactly matches enrollment.' );
+		$this->add_restore_dry_run_check( $result['checks'], 'post_rollback_symlink_targets_match', $this->config_string_map_matches_actual( 'production_expected_symlink_targets', $post_filesystem_markers['symlink_targets'] ), 'Post-rollback symlink targets exactly match enrollment.' );
+		$result['failure_count']                    = $this->restore_check_failure_count( $result['checks'] );
+		$result['post_rollback_verification_passed'] = 0 === (int) $result['failure_count'];
+		if ( ! $result['post_rollback_verification_passed'] ) {
+			$result['failure_step']          = 'post-rollback-verification';
+			$result['manual_recovery_notes'] = array( 'Post-rollback verification failed. Keep maintenance active and inspect the verified recovery evidence.' );
+			return $this->write_production_rollback_report( $result );
+		}
 
-		return $this->write_production_rollback_report( $result );
+		$result['maintenance_deactivation_attempted'] = true;
+		$maintenance = $this->run_wp_cli_action( $target_path, 'maintenance-mode deactivate' );
+		$result['maintenance_deactivation_succeeded'] = 0 === (int) $maintenance['exit_code'];
+		if ( ! $result['maintenance_deactivation_succeeded'] ) {
+			$result['failure_step']          = 'rollback-maintenance-deactivation';
+			$result['manual_recovery_notes'] = array( 'Rollback verification passed, but maintenance mode could not be deactivated. Inspect the target before manual deactivation.' );
+			return $this->write_production_rollback_report( $result );
+		}
+
+		$result['status'] = 'succeeded';
+		$result           = $this->write_production_rollback_report( $result );
+		if ( empty( $result['rollback_report_written'] ) || '' === $result['rollback_extraction_path'] ) {
+			return $result;
+		}
+
+		// Retain recovery material until the private rollback report is durable.
+		$result['rollback_extraction_cleanup_attempted'] = true;
+		$result['rollback_extraction_cleanup_succeeded'] = $this->remove_production_rollback_staging_directory( $result['rollback_extraction_path'] );
+		$result['rollback_extraction_retained']          = is_dir( $result['rollback_extraction_path'] );
+		if ( ! $result['rollback_extraction_cleanup_succeeded'] ) {
+			$result['manual_recovery_notes'][] = 'Rollback succeeded, but its private extraction directory could not be removed. Review and clean it manually after confirming the rollback report.';
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Returns rollback-blocking failures while permitting damaged target state.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Production preflight checks.
+	 * @return array<int,string>
+	 */
+	private function production_rollback_blocking_preflight_failures( array $checks ) {
+		$recoverable = array(
+			'runtime_wp_cli_reads_passed',
+			'runtime_home_matches_config',
+			'runtime_siteurl_matches_config',
+			'runtime_site_uuid_matches_config',
+			'expected_active_plugins_match',
+			'expected_active_theme_matches',
+			'expected_drop_ins_match',
+			'filesystem_inventory_complete',
+			'expected_symlinks_match',
+			'expected_symlink_targets_match',
+			'maintenance_status_detected',
+		);
+		$failures = array();
+		foreach ( $checks as $check ) {
+			if ( ! empty( $check['passed'] ) || empty( $check['name'] ) || in_array( (string) $check['name'], $recoverable, true ) ) {
+				continue;
+			}
+			$failures[] = (string) $check['name'];
+		}
+
+		return $failures;
 	}
 
 	/**
@@ -1426,6 +1962,8 @@ class Alynt_Server_Backup_Runner {
 		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_target_site', isset( $evidence['target_site'] ) && $target_host === strtolower( (string) $evidence['target_site'] ), 'Evidence target hostname matches the enrolled target.' );
 		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_target_uuid', isset( $evidence['target_site_uuid'] ) && $target_uuid === strtolower( (string) $evidence['target_site_uuid'] ), 'Evidence target UUID matches the enrolled target.' );
 		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_timestamp', $this->valid_iso_timestamp( isset( $evidence['generated_at'] ) ? (string) $evidence['generated_at'] : '' ), 'Evidence records a valid generation timestamp.' );
+		$evidence_time = isset( $evidence['generated_at'] ) ? strtotime( (string) $evidence['generated_at'] ) : false;
+		$this->add_restore_dry_run_check( $checks, 'production_pre_restore_evidence_fresh', false !== $evidence_time && $evidence_time <= time() + 300 && time() - $evidence_time <= $this->production_pre_backup_max_age_seconds(), 'Evidence is within the configured production pre-backup freshness window.' );
 
 		if ( $this->restore_scope_includes_database( $scope ) ) {
 			$this->add_production_pre_restore_artifact_check( $checks, $evidence, 'database_export_path', 'database_export_sha256', $pre_backup_path, 'database export' );
@@ -1460,11 +1998,13 @@ class Alynt_Server_Backup_Runner {
 	 * @param string $archive_path Pre-restore archive path.
 	 * @param string $target_path Target WordPress path.
 	 * @param string $package_id Package identifier.
+	 * @param string $staging_path Generated private extraction path.
 	 * @return bool
 	 */
-	private function restore_production_files_from_pre_backup( $archive_path, $target_path, $package_id ) {
+	private function restore_production_files_from_pre_backup( $archive_path, $target_path, $package_id, &$staging_path ) {
 		$restore_path = $this->normalize_path( $this->config_string( 'production_restore_path' ) );
 		$target_path  = $this->normalize_path( $target_path );
+		$staging_path = '';
 		if ( '' === $archive_path || '' === $restore_path || ! is_file( $archive_path ) || ! is_readable( $archive_path ) || ! $this->ensure_directory( $restore_path ) || ! is_writable( $restore_path ) || $this->dangerous_restore_target_path( $target_path ) ) {
 			return false;
 		}
@@ -1479,8 +2019,29 @@ class Alynt_Server_Backup_Runner {
 		if ( 0 !== (int) $extract['exit_code'] || ! is_dir( $file_root ) || ! is_readable( $file_root ) || ! $this->directory_has_entries( $file_root ) ) {
 			return false;
 		}
+		$source_symlinks = $this->production_symlink_map( $file_root );
+		if ( false === $source_symlinks || ! $this->config_string_map_matches_actual( 'production_expected_symlink_targets', $source_symlinks ) ) {
+			return false;
+		}
 
-		return $this->replace_target_files_from_staging( $file_root, $target_path );
+		return $this->replace_target_files_from_staging( $file_root, $target_path, $source_symlinks );
+	}
+
+	/**
+	 * Removes one exact successful-rollback extraction directory.
+	 *
+	 * @param string $staging_path Generated private extraction path.
+	 * @return bool
+	 */
+	private function remove_production_rollback_staging_directory( $staging_path ) {
+		$restore_path = $this->normalize_path( $this->config_string( 'production_restore_path' ) );
+		$staging_path = $this->normalize_path( $staging_path );
+		$name         = basename( $staging_path );
+		if ( '' === $restore_path || 0 !== strpos( $name, '.rollback-' ) || ! $this->safe_cleanup_child_name( $name ) || ! $this->path_is_expected_child( $restore_path, $staging_path, $name ) ) {
+			return false;
+		}
+
+		return $this->remove_restore_staging_directory( $staging_path, $restore_path );
 	}
 
 	/**
@@ -1505,13 +2066,13 @@ class Alynt_Server_Backup_Runner {
 	 * @param array<string,mixed> $result Rollback result.
 	 * @return array<string,mixed>
 	 */
-	private function write_production_rollback_report( array $result ) {
+	protected function write_production_rollback_report( array $result ) {
 		if ( empty( $result['rollback_report_path'] ) ) {
 			$result['rollback_report_error'] = 'Production rollback reports path is missing, unsafe, or not writable.';
 			return $result;
 		}
 
-		$result['rollback_report_written'] = $this->write_json_atomic( $result['rollback_report_path'], $result );
+		$result['rollback_report_written'] = $this->write_json_atomic( $result['rollback_report_path'], $result ) && chmod( $result['rollback_report_path'], 0640 );
 		if ( ! $result['rollback_report_written'] ) {
 			$result['rollback_report_error'] = 'Could not write the production rollback report.';
 			$result['status']                = 'failed';
@@ -1529,9 +2090,10 @@ class Alynt_Server_Backup_Runner {
 	 * @param string $staged_path Staged package path.
 	 * @param string $scope Restore scope.
 	 * @param string $target_site Target hostname supplied by the operator.
+	 * @param string $apply_state Required apply flag state: disabled, enabled, or either.
 	 * @return array<string,mixed>
 	 */
-	private function restore_production_preflight_result( $staged_path, $scope, $target_site ) {
+	private function restore_production_preflight_result( $staged_path, $scope, $target_site, $apply_state = 'disabled' ) {
 		$checks              = array();
 		$target_path         = $this->normalize_path( $this->config_string( 'production_target_wordpress_path' ) );
 		$site_root           = $this->production_target_site_root( $target_path );
@@ -1550,7 +2112,11 @@ class Alynt_Server_Backup_Runner {
 		$native_evidence     = $this->read_restore_report( $native_evidence_path );
 		$disk                = $this->production_restore_disk_budget( $target_path, $staged_path, $scope, $runtime, $filesystem_markers );
 
-		$this->add_restore_dry_run_check( $checks, 'production_apply_disabled', ! $this->config_bool( 'production_restore_enabled' ), 'Production restore apply remains disabled during the preflight phase.' );
+		if ( 'enabled' === $apply_state ) {
+			$this->add_restore_dry_run_check( $checks, 'production_apply_enabled', $this->config_bool( 'production_restore_enabled' ), 'Production restore apply is explicitly enabled in private runner configuration.' );
+		} elseif ( 'disabled' === $apply_state ) {
+			$this->add_restore_dry_run_check( $checks, 'production_apply_disabled', ! $this->config_bool( 'production_restore_enabled' ), 'Production restore apply remains disabled during the preflight phase.' );
+		}
 		$this->add_restore_dry_run_check( $checks, 'production_environment', 'production-simulation' === strtolower( $this->config_string( 'production_restore_environment' ) ), 'Production restore environment is production-simulation.' );
 		$this->add_restore_dry_run_check( $checks, 'scope_supported', in_array( $scope, array( 'files', 'database', 'files-and-database' ), true ), 'Scope is files, database, or files-and-database.' );
 		$this->add_restore_dry_run_check( $checks, 'target_site_supplied', '' !== $target_site, 'The operator supplied --target-site.' );
@@ -1574,6 +2140,7 @@ class Alynt_Server_Backup_Runner {
 		$this->add_restore_dry_run_check( $checks, 'filesystem_inventory_complete', ! empty( $filesystem_markers['scan_complete'] ) && empty( $filesystem_markers['symlink_samples_truncated'] ), 'The filesystem identity scan completed without truncating symlink evidence.' );
 		$this->add_restore_dry_run_check( $checks, 'symlink_inventory_reviewed', $this->config_bool( 'production_symlink_inventory_reviewed' ), 'The target symlink inventory has been reviewed.' );
 		$this->add_restore_dry_run_check( $checks, 'expected_symlinks_match', $this->config_list_matches_actual( 'production_expected_symlink_paths', $filesystem_markers['symlink_samples'] ), 'The WordPress symlink inventory exactly matches enrollment.' );
+		$this->add_restore_dry_run_check( $checks, 'expected_symlink_targets_match', $this->config_string_map_matches_actual( 'production_expected_symlink_targets', $filesystem_markers['symlink_targets'] ), 'The WordPress symlink targets exactly match enrollment.' );
 
 		$this->add_restore_dry_run_check( $checks, 'staged_path_under_production_restore_path', '' !== $restore_base && '' !== $staged_path && $this->path_is_within_directory( $restore_base, $staged_path ) && $restore_base !== $staged_path, 'The staged package is inside the production restore path.' );
 		$this->add_restore_dry_run_check( $checks, 'canonical_staged_path_under_restore_path', $this->path_is_within_directory_canonical( $restore_base, $staged_path ) && $this->canonical_paths_differ( $restore_base, $staged_path ), 'The canonical staged package remains inside the canonical production restore path.' );
@@ -1632,8 +2199,8 @@ class Alynt_Server_Backup_Runner {
 			'native_backup_readiness'       => $this->production_native_backup_summary( $native_evidence_path, $native_evidence ),
 			'failure_count'                 => $failure_count,
 			'checks'                        => $checks,
-			'production_apply_allowed'      => false,
-			'production_apply_available'    => false,
+			'production_apply_allowed'      => 'enabled' === $apply_state && 0 === $failure_count,
+			'production_apply_available'    => $this->config_bool( 'production_restore_enabled' ) && 'production-simulation' === strtolower( $this->config_string( 'production_restore_environment' ) ),
 			'production_rollback_available' => $this->config_bool( 'production_rollback_enabled' ) && 'production-simulation' === strtolower( $this->config_string( 'production_restore_environment' ) ),
 			'destructive_actions_performed' => false,
 			'database_imported'             => false,
@@ -1746,6 +2313,60 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Runs one fixed target-changing WP-CLI action used by restore control.
+	 *
+	 * @param string $target_path WordPress path.
+	 * @param string $subcommand Fixed action subcommand.
+	 * @return array{exit_code:int,output:array<int,string>}
+	 */
+	private function run_wp_cli_action( $target_path, $subcommand ) {
+		$allowed = array( 'maintenance-mode activate', 'maintenance-mode deactivate' );
+		if ( ! in_array( $subcommand, $allowed, true ) ) {
+			return array( 'exit_code' => 1, 'output' => array( 'Unsupported WP-CLI restore action.' ) );
+		}
+
+		$command = escapeshellarg( $this->wp_cli_path() )
+			. ' --path=' . escapeshellarg( $target_path )
+			. ' ' . $subcommand
+			. ' --skip-plugins --skip-themes';
+
+		return $this->run_shell_command( $command );
+	}
+
+	/**
+	 * Re-establishes the core maintenance marker after a failed file write.
+	 *
+	 * @param string $target_path WordPress path.
+	 * @return bool
+	 */
+	protected function ensure_production_maintenance_marker( $target_path ) {
+		$target_path = $this->normalize_path( $target_path );
+		if ( '' === $target_path || $target_path !== $this->wordpress_path() || $this->dangerous_restore_target_path( $target_path ) || ! is_dir( $target_path ) || ! is_writable( $target_path ) ) {
+			return false;
+		}
+
+		$marker = $target_path . DIRECTORY_SEPARATOR . '.maintenance';
+		if ( is_link( $marker ) ) {
+			return false;
+		}
+		if ( is_file( $marker ) ) {
+			return true;
+		}
+
+		$content = "<?php\n\$upgrading = " . time() . ";\n";
+		$temp    = $marker . '.alynt-' . str_replace( '.', '', uniqid( '', true ) );
+		$written = file_put_contents( $temp, $content );
+		if ( strlen( $content ) !== $written || ! chmod( $temp, 0644 ) || ! rename( $temp, $marker ) ) {
+			if ( is_file( $temp ) && ! is_link( $temp ) ) {
+				unlink( $temp );
+			}
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Adds staged package checks for the requested scope.
 	 *
 	 * @param array<int,array<string,mixed>> $checks Checks.
@@ -1768,6 +2389,68 @@ class Alynt_Server_Backup_Runner {
 			$this->add_restore_dry_run_check( $checks, 'package_database_dump_safe', $dump_safe, 'The staged database dump is a safe path segment.' );
 			$this->add_restore_dry_run_check( $checks, 'staged_database_present', $dump_safe && is_file( $staged_path . DIRECTORY_SEPARATOR . $database_dump ) && is_readable( $staged_path . DIRECTORY_SEPARATOR . $database_dump ), 'The staged database dump is present and readable.' );
 		}
+
+		$this->add_production_staged_integrity_checks( $checks, $package, $staged_path, $scope );
+	}
+
+	/**
+	 * Adds digest checks for extracted restore inputs.
+	 *
+	 * @param array<int,array<string,mixed>> $checks Checks.
+	 * @param array<string,mixed>            $package Package report.
+	 * @param string                         $staged_path Staged path.
+	 * @param string                         $scope Restore scope.
+	 * @param string                         $prefix Check-name prefix.
+	 * @return void
+	 */
+	private function add_production_staged_integrity_checks( array &$checks, array $package, $staged_path, $scope, $prefix = '' ) {
+		$integrity = isset( $package['staged_integrity'] ) && is_array( $package['staged_integrity'] ) ? $package['staged_integrity'] : array();
+		$this->add_restore_dry_run_check( $checks, $prefix . 'staged_integrity_schema_valid', isset( $integrity['schema_version'] ) && 1 === (int) $integrity['schema_version'] && isset( $integrity['algorithm'] ) && 'sha256' === (string) $integrity['algorithm'], 'The staged-input integrity record uses supported schema 1 and SHA-256.' );
+
+		if ( $this->restore_scope_includes_files( $scope ) ) {
+			$file_root = isset( $package['file_root'] ) ? (string) $package['file_root'] : '';
+			$expected  = isset( $integrity['file_tree'] ) && is_array( $integrity['file_tree'] ) ? $integrity['file_tree'] : array();
+			$actual    = $this->restore_report_relative_name_is_safe( $file_root )
+				? $this->staged_file_tree_integrity( $staged_path . DIRECTORY_SEPARATOR . $file_root )
+				: array();
+			$this->add_restore_dry_run_check( $checks, $prefix . 'staged_file_integrity_recorded', $this->valid_staged_integrity_record( $expected, true ), 'The staged WordPress tree has a complete SHA-256 integrity record.' );
+			$this->add_restore_dry_run_check( $checks, $prefix . 'staged_file_integrity_matches', $this->valid_staged_integrity_record( $expected, true ) && $expected === $actual, 'The current staged WordPress tree exactly matches its recorded digest and counts.' );
+		}
+
+		if ( $this->restore_scope_includes_database( $scope ) ) {
+			$database_dump = isset( $package['database_dump'] ) ? (string) $package['database_dump'] : '';
+			$expected      = isset( $integrity['database_dump'] ) && is_array( $integrity['database_dump'] ) ? $integrity['database_dump'] : array();
+			$actual        = $this->restore_report_relative_name_is_safe( $database_dump )
+				? $this->staged_file_integrity( $staged_path . DIRECTORY_SEPARATOR . $database_dump )
+				: array();
+			$this->add_restore_dry_run_check( $checks, $prefix . 'staged_database_integrity_recorded', $this->valid_staged_integrity_record( $expected, false ), 'The staged database dump has a complete SHA-256 integrity record.' );
+			$this->add_restore_dry_run_check( $checks, $prefix . 'staged_database_integrity_matches', $this->valid_staged_integrity_record( $expected, false ) && $expected === $actual, 'The current staged database dump exactly matches its recorded digest and size.' );
+		}
+	}
+
+	/**
+	 * Returns whether a staged-input integrity record has the expected shape.
+	 *
+	 * @param array<string,mixed> $record Integrity record.
+	 * @param bool                $tree Whether the record describes a directory tree.
+	 * @return bool
+	 */
+	private function valid_staged_integrity_record( array $record, $tree ) {
+		if ( empty( $record['valid'] ) || empty( $record['sha256'] ) || 1 !== preg_match( '/^[a-f0-9]{64}$/', (string) $record['sha256'] ) || ! isset( $record['total_bytes'] ) || (int) $record['total_bytes'] < 0 ) {
+			return false;
+		}
+
+		if ( ! $tree ) {
+			return true;
+		}
+
+		foreach ( array( 'file_count', 'directory_count', 'symlink_count' ) as $key ) {
+			if ( ! isset( $record[ $key ] ) || (int) $record[ $key ] < 0 ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -1901,7 +2584,8 @@ class Alynt_Server_Backup_Runner {
 			}
 		}
 
-		$symlinks      = array();
+		$symlinks       = array();
+		$symlink_targets = array();
 		$symlink_count = 0;
 		$regular_bytes = 0;
 		$scan_complete = false;
@@ -1917,6 +2601,8 @@ class Alynt_Server_Backup_Runner {
 						if ( count( $symlinks ) < 100 ) {
 							$relative   = ltrim( substr( $this->normalize_path( $item->getPathname() ), strlen( $this->normalize_path( $target_path ) ) ), '/' );
 							$symlinks[] = $relative;
+							$link_target = readlink( $item->getPathname() );
+							$symlink_targets[ $relative ] = false === $link_target ? '' : (string) $link_target;
 						}
 						continue;
 					}
@@ -1926,14 +2612,16 @@ class Alynt_Server_Backup_Runner {
 				}
 				$scan_complete = true;
 			} catch ( UnexpectedValueException $exception ) {
-				$symlinks      = array();
-				$symlink_count = 0;
-				$regular_bytes = -1;
+				$symlinks       = array();
+				$symlink_targets = array();
+				$symlink_count  = 0;
+				$regular_bytes  = -1;
 			}
 		}
 
 		sort( $drop_ins );
 		sort( $symlinks );
+		ksort( $symlink_targets );
 
 		return array(
 			'drop_ins'                  => $drop_ins,
@@ -1941,8 +2629,68 @@ class Alynt_Server_Backup_Runner {
 			'scan_complete'              => $scan_complete,
 			'symlink_count'              => $symlink_count,
 			'symlink_samples'            => $symlinks,
+			'symlink_targets'            => $symlink_targets,
 			'symlink_samples_truncated'  => $symlink_count > count( $symlinks ),
 		);
+	}
+
+	/**
+	 * Captures the target values of every enrolled symlink before replacement.
+	 *
+	 * @param string $target_path Target WordPress path.
+	 * @return array<string,string>
+	 */
+	private function production_expected_symlink_snapshot( $target_path ) {
+		$snapshot = array();
+		$expected = $this->config_string_map( 'production_expected_symlink_targets' );
+		foreach ( $expected as $relative => $expected_target ) {
+			if ( ! $this->restore_report_relative_path_is_safe( $relative ) ) {
+				continue;
+			}
+
+			$link_path = $target_path . DIRECTORY_SEPARATOR . str_replace( '/', DIRECTORY_SEPARATOR, $relative );
+			$link_target = is_link( $link_path ) ? readlink( $link_path ) : false;
+			if ( false === $link_target || $expected_target !== (string) $link_target ) {
+				continue;
+			}
+
+			$snapshot[ $relative ] = $expected_target;
+		}
+
+		return $snapshot;
+	}
+
+	/**
+	 * Recreates enrolled symlinks after a production file replacement.
+	 *
+	 * @param string               $target_path Target WordPress path.
+	 * @param array<string,string> $snapshot Captured symlink targets.
+	 * @return bool
+	 */
+	private function restore_production_expected_symlinks( $target_path, array $snapshot ) {
+		foreach ( $snapshot as $relative => $link_target ) {
+			if ( ! $this->restore_report_relative_path_is_safe( $relative ) || '' === trim( $link_target ) || false !== strpos( $link_target, "\0" ) ) {
+				return false;
+			}
+
+			$link_path = $target_path . DIRECTORY_SEPARATOR . str_replace( '/', DIRECTORY_SEPARATOR, $relative );
+			$parent    = dirname( $link_path );
+			if ( ! $this->ensure_directory( $parent ) || ! $this->path_is_within_directory_canonical( $target_path, $parent ) ) {
+				return false;
+			}
+
+			if ( is_link( $link_path ) ) {
+				if ( $link_target !== readlink( $link_path ) ) {
+					return false;
+				}
+				continue;
+			}
+			if ( file_exists( $link_path ) || ! symlink( $link_target, $link_path ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -1951,8 +2699,7 @@ class Alynt_Server_Backup_Runner {
 	 * @return array<string,mixed>
 	 */
 	private function production_target_fingerprint( $target_path, $site_root, $wp_config_path, $target_url, $target_uuid, array $runtime, array $filesystem_markers ) {
-		$owner = is_dir( $target_path ) ? fileowner( $target_path ) : false;
-		$group = is_dir( $target_path ) ? filegroup( $target_path ) : false;
+		$ownership = $this->production_target_owner_group( $target_path );
 
 		return array(
 			'target_site_uuid'      => $target_uuid,
@@ -1966,8 +2713,8 @@ class Alynt_Server_Backup_Runner {
 			'database_name_sha256'  => $runtime['database_name_sha256'],
 			'database_size_bytes'   => $runtime['database_size_bytes'],
 			'table_prefix'          => $runtime['table_prefix'],
-			'filesystem_owner_id'   => false === $owner ? null : (int) $owner,
-			'filesystem_group_id'   => false === $group ? null : (int) $group,
+			'filesystem_owner_id'   => $ownership['owner_id'],
+			'filesystem_group_id'   => $ownership['group_id'],
 			'runner_version'        => self::VERSION,
 			'php_version'           => $runtime['php_version'],
 			'wp_cli_version'        => $runtime['wp_cli_version'],
@@ -1977,7 +2724,24 @@ class Alynt_Server_Backup_Runner {
 			'drop_ins'              => $filesystem_markers['drop_ins'],
 			'symlink_count'         => $filesystem_markers['symlink_count'],
 			'symlink_samples'       => $filesystem_markers['symlink_samples'],
+			'symlink_target_sha256' => $this->hash_string_map( $filesystem_markers['symlink_targets'] ),
 			'symlink_samples_truncated' => $filesystem_markers['symlink_samples_truncated'],
+		);
+	}
+
+	/**
+	 * Returns the WordPress root owner and group IDs.
+	 *
+	 * @param string $target_path WordPress path.
+	 * @return array{owner_id:?int,group_id:?int}
+	 */
+	protected function production_target_owner_group( $target_path ) {
+		$owner = is_dir( $target_path ) ? fileowner( $target_path ) : false;
+		$group = is_dir( $target_path ) ? filegroup( $target_path ) : false;
+
+		return array(
+			'owner_id' => false === $owner ? null : (int) $owner,
+			'group_id' => false === $group ? null : (int) $group,
 		);
 	}
 
@@ -1989,7 +2753,7 @@ class Alynt_Server_Backup_Runner {
 	 * @return array<string,mixed>
 	 */
 	private function production_package_identity( array $package, $package_id ) {
-		$keys   = array( 'site_id', 'site_uuid', 'site_url', 'created_at', 'producer', 'producer_version', 'backup_type', 'archive_format', 'consistency_mode', 'consistency_status', 'archive_name', 'archive_size', 'checksum_algorithm', 'checksum_value', 'file_root', 'database_dump' );
+		$keys   = array( 'site_id', 'site_uuid', 'site_url', 'created_at', 'producer', 'producer_version', 'backup_type', 'archive_format', 'consistency_mode', 'consistency_status', 'archive_name', 'archive_size', 'checksum_algorithm', 'checksum_value', 'file_root', 'database_dump', 'staged_integrity' );
 		$result = array( 'package_id' => $package_id );
 		foreach ( $keys as $key ) {
 			$result[ $key ] = isset( $package[ $key ] ) ? $package[ $key ] : '';
@@ -3095,11 +3859,12 @@ class Alynt_Server_Backup_Runner {
 	/**
 	 * Replaces the configured WordPress target files from staged files.
 	 *
-	 * @param string $source_path Staged file root.
-	 * @param string $target_path Target WordPress path.
+	 * @param string               $source_path Staged file root.
+	 * @param string               $target_path Target WordPress path.
+	 * @param array<string,string> $allowed_symlinks Exact symlinks permitted during production rollback.
 	 * @return bool
 	 */
-	private function replace_target_files_from_staging( $source_path, $target_path ) {
+	private function replace_target_files_from_staging( $source_path, $target_path, array $allowed_symlinks = array() ) {
 		$target_path = $this->normalize_path( $target_path );
 
 		if ( '' === $source_path || '' === $target_path || $target_path !== $this->wordpress_path() || $this->dangerous_restore_target_path( $target_path ) ) {
@@ -3110,7 +3875,7 @@ class Alynt_Server_Backup_Runner {
 			return false;
 		}
 
-		return $this->remove_restore_target_contents( $target_path ) && $this->copy_restore_directory_contents( $source_path, $target_path );
+		return $this->remove_restore_target_contents( $target_path ) && $this->copy_restore_directory_contents( $source_path, $target_path, $allowed_symlinks );
 	}
 
 	/**
@@ -3391,23 +4156,27 @@ class Alynt_Server_Backup_Runner {
 	/**
 	 * Copies staged directory contents into a target directory.
 	 *
-	 * @param string $source_path Source directory.
-	 * @param string $target_path Target directory.
+	 * @param string               $source_path Source directory.
+	 * @param string               $target_path Target directory.
+	 * @param array<string,string> $allowed_symlinks Exact symlinks permitted during production rollback.
 	 * @return bool
 	 */
-	private function copy_restore_directory_contents( $source_path, $target_path ) {
+	private function copy_restore_directory_contents( $source_path, $target_path, array $allowed_symlinks = array() ) {
 		$iterator = new RecursiveIteratorIterator(
 			new RecursiveDirectoryIterator( $source_path, FilesystemIterator::SKIP_DOTS ),
 			RecursiveIteratorIterator::SELF_FIRST
 		);
 
 		foreach ( $iterator as $item ) {
+			$relative_path = str_replace( DIRECTORY_SEPARATOR, '/', substr( $item->getPathname(), strlen( $source_path ) + 1 ) );
+			$target_item   = $target_path . DIRECTORY_SEPARATOR . str_replace( '/', DIRECTORY_SEPARATOR, $relative_path );
 			if ( $item->isLink() ) {
-				return false;
+				$link_target = readlink( $item->getPathname() );
+				if ( ! $this->restore_report_relative_path_is_safe( $relative_path ) || false === $link_target || ! isset( $allowed_symlinks[ $relative_path ] ) || (string) $link_target !== $allowed_symlinks[ $relative_path ] || file_exists( $target_item ) || is_link( $target_item ) || ! symlink( (string) $link_target, $target_item ) ) {
+					return false;
+				}
+				continue;
 			}
-
-			$relative_path = substr( $item->getPathname(), strlen( $source_path ) + 1 );
-			$target_item   = $target_path . DIRECTORY_SEPARATOR . $relative_path;
 
 			if ( $item->isDir() ) {
 				if ( ! is_dir( $target_item ) && ! mkdir( $target_item, 0755, true ) ) {
@@ -3416,12 +4185,59 @@ class Alynt_Server_Backup_Runner {
 				continue;
 			}
 
-			if ( ! copy( $item->getPathname(), $target_item ) ) {
+			if ( ! $this->copy_restore_file( $item->getPathname(), $target_item ) ) {
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	/**
+	 * Copies one staged restore file.
+	 *
+	 * Kept as a narrow override boundary for deterministic filesystem failure
+	 * testing without exposing a runtime failure switch.
+	 *
+	 * @param string $source Source file.
+	 * @param string $target Target file.
+	 * @return bool
+	 */
+	protected function copy_restore_file( $source, $target ) {
+		return copy( $source, $target );
+	}
+
+	/**
+	 * Returns every symlink in a private rollback tree after safe path validation.
+	 *
+	 * @param string $source_path Extracted rollback file root.
+	 * @return array<string,string>|false
+	 */
+	private function production_symlink_map( $source_path ) {
+		$symlinks = array();
+		try {
+			$iterator = new RecursiveIteratorIterator(
+				new RecursiveDirectoryIterator( $source_path, FilesystemIterator::SKIP_DOTS ),
+				RecursiveIteratorIterator::SELF_FIRST
+			);
+			foreach ( $iterator as $item ) {
+				if ( ! $item->isLink() ) {
+					continue;
+				}
+
+				$relative_path = str_replace( DIRECTORY_SEPARATOR, '/', substr( $item->getPathname(), strlen( $source_path ) + 1 ) );
+				$link_target   = readlink( $item->getPathname() );
+				if ( ! $this->restore_report_relative_path_is_safe( $relative_path ) || false === $link_target || '' === trim( (string) $link_target ) || false !== strpos( (string) $link_target, "\0" ) ) {
+					return false;
+				}
+				$symlinks[ $relative_path ] = (string) $link_target;
+			}
+		} catch ( UnexpectedValueException $exception ) {
+			return false;
+		}
+		ksort( $symlinks );
+
+		return $symlinks;
 	}
 
 	/**
@@ -4196,7 +5012,7 @@ class Alynt_Server_Backup_Runner {
 		curl_setopt( $curl, CURLOPT_FILE, $handle );
 		curl_setopt( $curl, CURLOPT_FOLLOWLOCATION, false );
 		curl_setopt( $curl, CURLOPT_CONNECTTIMEOUT, 15 );
-		curl_setopt( $curl, CURLOPT_TIMEOUT, 0 );
+		curl_setopt( $curl, CURLOPT_TIMEOUT, $this->drime_download_timeout_seconds() );
 		curl_setopt(
 			$curl,
 			CURLOPT_HEADERFUNCTION,
@@ -4289,6 +5105,17 @@ class Alynt_Server_Backup_Runner {
 		}
 
 		return $decoded;
+	}
+
+	/**
+	 * Returns the bounded timeout for one Drime package-file download.
+	 *
+	 * @return int
+	 */
+	private function drime_download_timeout_seconds() {
+		$timeout = isset( $this->config['drime_download_timeout_seconds'] ) ? (int) $this->config['drime_download_timeout_seconds'] : 21600;
+
+		return max( 300, min( 86400, $timeout ) );
 	}
 
 	/**
@@ -4962,6 +5789,30 @@ class Alynt_Server_Backup_Runner {
 	}
 
 	/**
+	 * Returns a normalized string-map config value.
+	 *
+	 * @param string $key Config key.
+	 * @return array<string,string>
+	 */
+	private function config_string_map( $key ) {
+		if ( ! array_key_exists( $key, $this->config ) || ! is_array( $this->config[ $key ] ) ) {
+			return array();
+		}
+
+		$values = array();
+		foreach ( $this->config[ $key ] as $map_key => $value ) {
+			$map_key = trim( (string) $map_key );
+			$value   = trim( (string) $value );
+			if ( '' !== $map_key && '' !== $value ) {
+				$values[ $map_key ] = $value;
+			}
+		}
+		ksort( $values );
+
+		return $values;
+	}
+
+	/**
 	 * Returns whether an enrolled string list exactly matches runtime values.
 	 *
 	 * @param string            $key Config key.
@@ -4978,6 +5829,47 @@ class Alynt_Server_Backup_Runner {
 		sort( $actual );
 
 		return $expected === $actual;
+	}
+
+	/**
+	 * Returns whether an enrolled string map exactly matches runtime values.
+	 *
+	 * @param string               $key Config key.
+	 * @param array<string,string> $actual Actual values.
+	 * @return bool
+	 */
+	private function config_string_map_matches_actual( $key, array $actual ) {
+		if ( ! array_key_exists( $key, $this->config ) || ! is_array( $this->config[ $key ] ) ) {
+			return false;
+		}
+
+		$normalized_actual = array();
+		foreach ( $actual as $map_key => $value ) {
+			$map_key = trim( (string) $map_key );
+			$value   = trim( (string) $value );
+			if ( '' !== $map_key && '' !== $value ) {
+				$normalized_actual[ $map_key ] = $value;
+			}
+		}
+		ksort( $normalized_actual );
+
+		return $this->config_string_map( $key ) === $normalized_actual;
+	}
+
+	/**
+	 * Hashes string-map values while retaining their identifying keys.
+	 *
+	 * @param array<string,string> $values Values to hash.
+	 * @return array<string,string>
+	 */
+	private function hash_string_map( array $values ) {
+		$hashed = array();
+		foreach ( $values as $key => $value ) {
+			$hashed[ (string) $key ] = hash( 'sha256', (string) $value );
+		}
+		ksort( $hashed );
+
+		return $hashed;
 	}
 
 	/**
@@ -5111,6 +6003,17 @@ class Alynt_Server_Backup_Runner {
 	 */
 	private function production_native_backup_max_age_seconds() {
 		$value = isset( $this->config['production_native_backup_max_age_seconds'] ) ? (int) $this->config['production_native_backup_max_age_seconds'] : self::DAY_IN_SECONDS;
+
+		return max( 300, $value );
+	}
+
+	/**
+	 * Returns production pre-restore evidence maximum age.
+	 *
+	 * @return int
+	 */
+	private function production_pre_backup_max_age_seconds() {
+		$value = isset( $this->config['production_pre_backup_max_age_seconds'] ) ? (int) $this->config['production_pre_backup_max_age_seconds'] : 3600;
 
 		return max( 300, $value );
 	}
@@ -5478,13 +6381,17 @@ function alynt_runner_load_config( $path ) {
  * @return string
  */
 function alynt_runner_usage() {
-	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore|restore-production-preflight|restore-production-create-pre-backup|restore-production-rollback|restore-dry-run|restore-apply> '
+	return 'Usage: php alynt-backup-runner.php <health|run|list|cleanup-preview|cleanup|verify|inspect|fetch|stage-restore|restore-production-preflight|restore-production-create-pre-backup|restore-production-apply|restore-production-rollback|restore-dry-run|restore-apply> '
 		. '--config=/path/to/config.json [--format=json] [--package=/path/to/archive.tar.gz] '
 		. '[--package-id=package-id --folder-hash=hash --download-path=/path] '
 		. '[--restore-path=/path/to/restores] [--staged-path=/path/to/staged/package] [--scope=files-and-database] [--target-site=example.com] '
 		. '[--pre-restore-evidence=/path/to/evidence.json] [--create-pre-restore-backup=1] '
 		. '[--apply-report=/path/to/report.json] [--confirm-site=example.com] [--write-report=1] [--older-than-days=14] '
-		. '[--confirm=delete-local-artifacts|restore-staging-site|create-production-pre-restore-backup|rollback-production-site]';
+		. '[--confirm=delete-local-artifacts|restore-staging-site|create-production-pre-restore-backup|restore-production-site|rollback-production-site]';
+}
+
+if ( defined( 'ALYNT_SERVER_BACKUP_RUNNER_LIBRARY_ONLY' ) && ALYNT_SERVER_BACKUP_RUNNER_LIBRARY_ONLY ) {
+	return;
 }
 
 $parsed = alynt_runner_parse_args( $argv );

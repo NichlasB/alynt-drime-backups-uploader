@@ -1,0 +1,289 @@
+<?php
+/**
+ * Admin page server runner guidance.
+ *
+ * @package Alynt_Drime_Backups_Uploader
+ * @since   0.1.0
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Admin page server runner guidance.
+ *
+ * @since 0.1.0
+ */
+trait Alynt_Drime_Backups_Uploader_Admin_Page_Runner_Guidance {
+	/**
+	 * Builds a WP-CLI command for the current site path.
+	 *
+	 * @param string $subcommand Plugin subcommand.
+	 * @return string
+	 */
+	private function wp_cli_command( $subcommand ) {
+		return 'wp --path=' . escapeshellarg( untrailingslashit( ABSPATH ) ) . ' alynt-drime-backups ' . $subcommand;
+	}
+
+	/**
+	 * Builds a GridPane-oriented server cron snippet.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function gridpane_cron_snippet( array $settings ) {
+		$runner_command = $this->server_runner_command( 'run', $settings );
+		$upload_command = $this->wp_cli_scheduled_upload_command();
+		$status_command = $this->wp_cli_command_posix( 'status --format=json' );
+
+		return implode(
+			"\n",
+			array(
+				'# Alynt Drime Backups: create one server-side package daily.',
+				'17 2 * * * ' . $runner_command,
+				'# Alynt Drime Backups: scan/upload completed packages every 15 minutes.',
+				'*/15 * * * * ' . $upload_command,
+				'# Alynt Drime Backups: optional status log check.',
+				'7 3 * * * ' . $status_command,
+			)
+		);
+	}
+
+	/**
+	 * Builds conservative server cron review commands.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_cron_review_commands( array $settings ) {
+		$current = '$HOME/alynt-drime-backups-crontab.current';
+		$next    = '$HOME/alynt-drime-backups-crontab.new';
+		$lines   = explode( "\n", $this->gridpane_cron_snippet( $settings ) );
+		$printf  = 'printf ' . $this->posix_shell_arg( '%s\n' );
+		foreach ( $lines as $line ) {
+			$printf .= ' ' . $this->posix_shell_arg( $line );
+		}
+		$printf .= ' >> "' . $next . '"';
+
+		return implode(
+			"\n",
+			array(
+				'crontab -l > "' . $current . '" 2>/dev/null || true',
+				'cp "' . $current . '" "' . $next . '"',
+				$printf,
+				'diff -u "' . $current . '" "' . $next . '" || true',
+				'# After reviewing the diff, install with:',
+				'# crontab "' . $next . '"',
+			)
+		);
+	}
+
+	/**
+	 * Builds server runner config JSON for the current site.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @param bool                $pretty   Whether to pretty-print JSON.
+	 * @return string
+	 */
+	private function server_runner_config_json( array $settings, $pretty = true ) {
+		$runner_base    = $this->runner_base_path( $settings );
+		$wordpress_path = untrailingslashit( ABSPATH );
+		$site_url       = untrailingslashit( $this->site_url_for_runner() );
+		$site_host      = $this->site_host_for_runner( $site_url );
+		$config         = array(
+			'site_id'                        => $site_host,
+			'site_uuid'                      => isset( $settings['site_uuid'] ) ? (string) $settings['site_uuid'] : '',
+			'site_url'                       => $site_url,
+			'wordpress_path'                 => $wordpress_path,
+			'outbox_path'                    => $runner_base . '/outbox',
+			'work_path'                      => $runner_base . '/work',
+			'restore_path'                   => dirname( $wordpress_path ) . '/restores/alynt-drime-backups',
+			'drime_download_timeout_seconds' => 21600,
+			'archive_format'                 => 'tar.gz',
+			'consistency_mode'               => 'light',
+			'minimum_free_space_bytes'       => 1073741824,
+			'package_prefix'                 => $this->package_prefix_for_runner( $site_host ),
+			'wp_cli_path'                    => 'wp',
+			'database'                       => array(
+				'enabled' => true,
+			),
+			'exclude_paths'                  => array(
+				'.git',
+				'wp-content/cache',
+				'wp-content/debug.log',
+				'wp-content/uploads/wpvividbackups',
+				'wp-content/updraft',
+				'wp-content/ai1wm-backups',
+				'wp-content/backup-*',
+			),
+		);
+		$options        = JSON_UNESCAPED_SLASHES;
+		if ( $pretty ) {
+			$options |= JSON_PRETTY_PRINT;
+		}
+
+		if ( function_exists( 'wp_json_encode' ) ) {
+			return wp_json_encode( $config, $options );
+		}
+
+		return json_encode( $config, $options );
+	}
+
+	/**
+	 * Builds conservative server runner install commands.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_runner_install_commands( array $settings ) {
+		$runner_base    = $this->runner_base_path( $settings );
+		$runner_dir     = $runner_base . '/runner';
+		$outbox_path    = $runner_base . '/outbox';
+		$work_path      = $runner_base . '/work';
+		$restore_path   = dirname( untrailingslashit( ABSPATH ) ) . '/restores/alynt-drime-backups';
+		$source_runner  = untrailingslashit( ALYNT_DRIME_BACKUPS_UPLOADER_PATH ) . '/server-runner/alynt-backup-runner.php';
+		$target_runner  = $runner_dir . '/alynt-backup-runner.php';
+		$target_config  = $runner_dir . '/config.json';
+		$health_command = $this->server_runner_command( 'health', $settings );
+		$config_json    = $this->server_runner_config_json( $settings, false );
+
+		return implode(
+			' && ',
+			array(
+				'mkdir -p ' . $this->posix_shell_arg( $runner_dir ) . ' ' . $this->posix_shell_arg( $outbox_path ) . ' ' . $this->posix_shell_arg( $work_path ) . ' ' . $this->posix_shell_arg( $restore_path ),
+				'cp ' . $this->posix_shell_arg( $source_runner ) . ' ' . $this->posix_shell_arg( $target_runner ),
+				"printf '%s' " . $this->posix_shell_arg( $config_json ) . ' > ' . $this->posix_shell_arg( $target_config ),
+				'chmod 750 ' . $this->posix_shell_arg( $target_runner ),
+				'chmod 640 ' . $this->posix_shell_arg( $target_config ),
+				$health_command,
+			)
+		);
+	}
+
+	/**
+	 * Builds a one-line first package creation and verify command.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_runner_test_command( array $settings ) {
+		$run_command    = $this->server_runner_command( 'run', $settings );
+		$verify_command = $this->server_runner_command( 'verify', $settings );
+
+		return 'PACKAGE=$(' . $run_command . ' | tee /dev/stderr | awk \'/^Created package:/ {print $3}\') && if test -n "$PACKAGE"; then ' . $verify_command . ' --package="$PACKAGE"; else echo \'Could not detect created package path from runner output.\' >&2; exit 1; fi';
+	}
+
+	/**
+	 * Builds a direct WP-CLI scan/upload command for first setup.
+	 *
+	 * @return string
+	 */
+	private function wp_cli_scan_upload_command() {
+		return $this->wp_cli_command_posix( 'run --max-uploads=1' );
+	}
+
+	/**
+	 * Builds a WP-CLI command that runs scheduled scan/upload hooks.
+	 *
+	 * @return string
+	 */
+	private function wp_cli_scheduled_upload_command() {
+		return 'wp --path=' . $this->posix_shell_arg( untrailingslashit( ABSPATH ) ) . ' cron event run alynt_drime_backups_scan_event alynt_drime_backups_upload_event';
+	}
+
+	/**
+	 * Builds a server runner command.
+	 *
+	 * @param string              $command Runner command.
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function server_runner_command( $command, array $settings ) {
+		$runner_base = $this->runner_base_path( $settings );
+		$runner_path = $runner_base . '/runner/alynt-backup-runner.php';
+		$config_path = $runner_base . '/runner/config.json';
+		$command     = preg_replace( '/[^a-z0-9_-]+/i', '', (string) $command );
+		$command     = '' !== $command ? $command : 'health';
+
+		return 'php ' . $this->posix_shell_arg( $runner_path ) . ' ' . $command . ' --config=' . $this->posix_shell_arg( $config_path );
+	}
+
+	/**
+	 * Returns the expected server runner base path.
+	 *
+	 * @param array<string,mixed> $settings Settings.
+	 * @return string
+	 */
+	private function runner_base_path( array $settings ) {
+		$outbox = isset( $settings['server_outbox_path'] ) ? trim( (string) $settings['server_outbox_path'] ) : '';
+		if ( '' !== $outbox ) {
+			return untrailingslashit( dirname( $outbox ) );
+		}
+
+		return untrailingslashit( dirname( untrailingslashit( ABSPATH ) ) . '/private/alynt-drime-backups' );
+	}
+
+	/**
+	 * Returns the site URL used for generated runner config.
+	 *
+	 * @return string
+	 */
+	private function site_url_for_runner() {
+		if ( function_exists( 'home_url' ) ) {
+			return (string) home_url( '/' );
+		}
+
+		if ( function_exists( 'site_url' ) ) {
+			return (string) site_url( '/' );
+		}
+
+		return 'https://example.test';
+	}
+
+	/**
+	 * Returns the host part for generated runner config.
+	 *
+	 * @param string $site_url Site URL.
+	 * @return string
+	 */
+	private function site_host_for_runner( $site_url ) {
+		$host = parse_url( $site_url, PHP_URL_HOST );
+		$host = is_string( $host ) ? strtolower( $host ) : '';
+
+		return '' !== $host ? $host : 'wordpress-site';
+	}
+
+	/**
+	 * Returns a filesystem-safe package prefix for generated runner config.
+	 *
+	 * @param string $site_host Site host.
+	 * @return string
+	 */
+	private function package_prefix_for_runner( $site_host ) {
+		$prefix = preg_replace( '/[^a-z0-9]+/', '-', strtolower( (string) $site_host ) );
+		$prefix = trim( (string) $prefix, '-' );
+
+		return '' !== $prefix ? $prefix : 'wordpress-site';
+	}
+
+	/**
+	 * Builds a WP-CLI command with POSIX quoting for GridPane crontabs.
+	 *
+	 * @param string $subcommand Plugin subcommand.
+	 * @return string
+	 */
+	private function wp_cli_command_posix( $subcommand ) {
+		return 'wp --path=' . $this->posix_shell_arg( untrailingslashit( ABSPATH ) ) . ' alynt-drime-backups ' . $subcommand;
+	}
+
+	/**
+	 * Quotes a string for a POSIX shell command.
+	 *
+	 * @param string $value Value.
+	 * @return string
+	 */
+	private function posix_shell_arg( $value ) {
+		return "'" . str_replace( "'", "'\\''", (string) $value ) . "'";
+	}
+}

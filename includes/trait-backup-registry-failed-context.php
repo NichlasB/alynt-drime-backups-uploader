@@ -3,7 +3,7 @@
  * Failed registry context sanitization.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.1
+ * @since   0.5.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Sanitizes failed upload registry context.
  *
- * @since 0.5.1
+ * @since 0.5.0
  */
 trait Alynt_Drime_Backups_Uploader_Backup_Registry_Failed_Context {
 	/**

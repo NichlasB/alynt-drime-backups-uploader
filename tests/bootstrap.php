@@ -14,6 +14,8 @@ define( 'WPINC', 'wp-includes' );
 require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/vendor/autoload.php';
 require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/tests/Support/ProducerAdapterAssertions.php';
 require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/tests/Support/ServerRunnerCliTestCase.php';
+require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/tests/Support/ServerRunnerProductionRestoreFixture.php';
+require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/tests/Support/UploaderTestCase.php';
 
 if ( ! function_exists( 'trailingslashit' ) ) {
 	function trailingslashit( $value ) {
@@ -36,6 +38,12 @@ if ( ! function_exists( 'wp_normalize_path' ) ) {
 if ( ! function_exists( 'absint' ) ) {
 	function absint( $value ) {
 		return abs( (int) $value );
+	}
+}
+
+if ( ! function_exists( 'wp_generate_uuid4' ) ) {
+	function wp_generate_uuid4() {
+		return sprintf( '%08x-%04x-4%03x-a%03x-%012x', mt_rand(), mt_rand( 0, 0xffff ), mt_rand( 0, 0xfff ), mt_rand( 0, 0xfff ), mt_rand() );
 	}
 }
 
@@ -128,3 +136,4 @@ if ( ! function_exists( 'load_plugin_textdomain' ) ) {
 }
 
 require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/alynt-drime-backups-uploader.php';
+require_once ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/tests/Support/TestDrimeClient.php';

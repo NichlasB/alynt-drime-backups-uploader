@@ -19,6 +19,8 @@ interface Alynt_Drime_Backups_Uploader_Producer_Interface {
 	/**
 	 * Returns the stable producer key.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return string
 	 */
 	public function key();
@@ -26,12 +28,16 @@ interface Alynt_Drime_Backups_Uploader_Producer_Interface {
 	/**
 	 * Returns the human-readable producer label.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return string
 	 */
 	public function label();
 
 	/**
 	 * Scans for completed backup packages.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return array{directory:string,candidates:array<int,array<string,mixed>>,errors:array<int,string>}
 	 */

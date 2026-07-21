@@ -21,10 +21,12 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Settings;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Drime_Settings;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Source_Settings;
+	use Alynt_Drime_Backups_Uploader_Admin_Page_Runner_Guidance;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Upload_Settings;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Notification_Settings;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Cron_Health;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Status;
+	use Alynt_Drime_Backups_Uploader_Admin_Page_Diagnostics_Status;
 
 	/**
 	 * Plugin.
@@ -107,6 +109,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 					'loading'                 => __( 'Loading...', 'alynt-drime-backups-uploader' ),
 					'previewing'              => __( 'Previewing...', 'alynt-drime-backups-uploader' ),
 					'requestFailed'           => __( 'The request failed. Check your connection and try again.', 'alynt-drime-backups-uploader' ),
+					'requestTimedOut'         => __( 'The request timed out. Check the server connection and try again.', 'alynt-drime-backups-uploader' ),
 					'loadFailed'              => __( 'Could not load Drime folders.', 'alynt-drime-backups-uploader' ),
 					'workspacesLoadFailed'    => __( 'Could not load Drime workspaces.', 'alynt-drime-backups-uploader' ),
 					'noWorkspaces'            => __( 'No allowed non-personal workspaces were found for this token.', 'alynt-drime-backups-uploader' ),

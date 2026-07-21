@@ -303,6 +303,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	/**
 	 * Returns allowed Drime workspace IDs from wp-config.php.
 	 *
+	 * @since 0.2.0
+	 *
 	 * @return array<int,int>
 	 */
 	public static function allowed_workspace_ids() {
@@ -335,6 +337,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	/**
 	 * Returns whether workspace allowlisting is enabled.
 	 *
+	 * @since 0.2.0
+	 *
 	 * @return bool
 	 */
 	public static function workspace_allowlist_enabled() {
@@ -343,6 +347,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 
 	/**
 	 * Returns whether a workspace ID may be used for backups.
+	 *
+	 * @since 0.2.0
 	 *
 	 * @param int $workspace_id Workspace ID.
 	 * @return bool
@@ -364,6 +370,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 	/**
 	 * Returns the admin-facing workspace restriction message.
 	 *
+	 * @since 0.2.0
+	 *
 	 * @return string
 	 */
 	public static function workspace_not_allowed_message() {
@@ -376,6 +384,8 @@ class Alynt_Drime_Backups_Uploader_Settings {
 
 	/**
 	 * Returns a stable non-secret site UUID, generating it when missing.
+	 *
+	 * @since 0.1.1
 	 *
 	 * @return string
 	 */

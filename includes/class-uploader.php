@@ -31,6 +31,13 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	const UPLOAD_LOCK_TTL             = 10 * 60;
 
 	/**
+	 * Unique owner token for the current upload-worker lease.
+	 *
+	 * @var string
+	 */
+	private $upload_lock_owner = '';
+
+	/**
 	 * Settings.
 	 *
 	 * @var Alynt_Drime_Backups_Uploader_Settings
@@ -122,6 +129,13 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			}
 
 			$result = $this->upload_item( $item );
+			if ( is_wp_error( $result ) && 'alynt_drime_upload_lock_lost' === $result->get_error_code() ) {
+				return $result;
+			}
+
+			if ( ! is_wp_error( $result ) && ! $this->renew_upload_lock() ) {
+				return $this->upload_lock_lost_error();
+			}
 
 			return is_wp_error( $result ) ? $this->handle_failed_upload( $item, $result ) : $this->complete_successful_upload( $item, $result );
 		} finally {
@@ -382,10 +396,13 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			$this->flush_upload_lock_cache();
 		}
 
+		$owner    = wp_generate_uuid4();
+		$expires  = time() + self::UPLOAD_LOCK_TTL;
 		$acquired = add_option(
 			self::UPLOAD_LOCK_OPTION,
 			array(
-				'expires' => time() + self::UPLOAD_LOCK_TTL,
+				'owner'   => $owner,
+				'expires' => $expires,
 			),
 			'',
 			false
@@ -395,13 +412,54 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			wp_cache_set(
 				self::UPLOAD_LOCK_OPTION,
 				array(
-					'expires' => time() + self::UPLOAD_LOCK_TTL,
+					'owner'   => $owner,
+					'expires' => $expires,
 				),
 				'options'
 			);
 		}
+		if ( $acquired ) {
+			$this->upload_lock_owner = $owner;
+		}
 
 		return $acquired;
+	}
+
+	/**
+	 * Renews the current upload-worker lease if this worker still owns it.
+	 *
+	 * @return bool
+	 */
+	private function renew_upload_lock() {
+		if ( '' === $this->upload_lock_owner ) {
+			return false;
+		}
+
+		$lock = get_option( self::UPLOAD_LOCK_OPTION, array() );
+		if ( ! is_array( $lock ) || empty( $lock['owner'] ) || ! hash_equals( $this->upload_lock_owner, (string) $lock['owner'] ) ) {
+			return false;
+		}
+
+		$lock['expires'] = time() + self::UPLOAD_LOCK_TTL;
+		update_option( self::UPLOAD_LOCK_OPTION, $lock, false );
+		$this->flush_upload_lock_cache();
+
+		$stored = get_option( self::UPLOAD_LOCK_OPTION, array() );
+
+		return is_array( $stored )
+			&& ! empty( $stored['owner'] )
+			&& hash_equals( $this->upload_lock_owner, (string) $stored['owner'] )
+			&& ! empty( $stored['expires'] )
+			&& absint( $stored['expires'] ) > time();
+	}
+
+	/**
+	 * Returns the consistent error used when a worker loses its lease.
+	 *
+	 * @return WP_Error
+	 */
+	private function upload_lock_lost_error() {
+		return new WP_Error( 'alynt_drime_upload_lock_lost', __( 'This backup upload stopped because another upload worker took ownership. The next worker can safely resume it.', 'alynt-drime-backups-uploader' ) );
 	}
 
 	/**
@@ -410,8 +468,17 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	 * @return void
 	 */
 	private function release_upload_lock() {
-		delete_option( self::UPLOAD_LOCK_OPTION );
-		$this->flush_upload_lock_cache();
+		if ( '' === $this->upload_lock_owner ) {
+			return;
+		}
+
+		$lock = get_option( self::UPLOAD_LOCK_OPTION, array() );
+		if ( is_array( $lock ) && ! empty( $lock['owner'] ) && hash_equals( $this->upload_lock_owner, (string) $lock['owner'] ) ) {
+			delete_option( self::UPLOAD_LOCK_OPTION );
+			$this->flush_upload_lock_cache();
+		}
+
+		$this->upload_lock_owner = '';
 	}
 
 	/**

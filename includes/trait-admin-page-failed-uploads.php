@@ -3,7 +3,7 @@
  * Admin failed-upload rendering.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.1
+ * @since   0.5.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Renders failed uploads and retry controls.
  *
- * @since 0.5.1
+ * @since 0.5.0
  */
 trait Alynt_Drime_Backups_Uploader_Admin_Page_Failed_Uploads {
 	/**

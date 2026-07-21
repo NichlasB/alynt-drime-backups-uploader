@@ -5,6 +5,7 @@ import './style.css';
 
 	const config = window.alyntDrimeBackups || {};
 	const i18n = config.i18n || {};
+	const requestTimeoutMs = 30000;
 
 	function text(key) {
 		return i18n[key] || '';
@@ -12,6 +13,8 @@ import './style.css';
 
 	function request(action, data) {
 		const formData = new window.FormData();
+		const controller = new window.AbortController();
+		const timeoutId = window.setTimeout(() => controller.abort(), requestTimeoutMs);
 
 		formData.append('action', action);
 		formData.append('nonce', config.nonce || '');
@@ -24,13 +27,20 @@ import './style.css';
 			method: 'POST',
 			credentials: 'same-origin',
 			body: formData,
+			signal: controller.signal,
 		}).then((response) => response.json()).then((payload) => {
 			if (!payload || !payload.success) {
 				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : text('requestFailed'));
 			}
 
 			return payload.data;
-		});
+		}).catch((error) => {
+			if (error && error.name === 'AbortError') {
+				throw new Error(text('requestTimedOut'));
+			}
+
+			throw error;
+		}).finally(() => window.clearTimeout(timeoutId));
 	}
 
 	function setBusy(container, busy) {

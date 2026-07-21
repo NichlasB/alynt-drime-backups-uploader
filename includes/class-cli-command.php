@@ -39,6 +39,8 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 	 *
 	 *     wp alynt-drime-backups scan
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return void
 	 */
 	public function scan() {
@@ -67,6 +69,8 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     wp alynt-drime-backups upload-next
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return void
 	 */
@@ -97,6 +101,8 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     wp alynt-drime-backups run --max-uploads=3
+	 *
+	 * @since 0.1.0
 	 *
 	 * @param array<int,string>    $args Positional args.
 	 * @param array<string,string> $assoc_args Associative args.
@@ -154,6 +160,8 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 	 *     wp alynt-drime-backups status
 	 *     wp alynt-drime-backups status --format=json
 	 *
+	 * @since 0.1.0
+	 *
 	 * @param array<int,string>    $args Positional args.
 	 * @param array<string,string> $assoc_args Associative args.
 	 * @return void
@@ -180,6 +188,8 @@ class Alynt_Drime_Backups_Uploader_CLI_Command {
 
 	/**
 	 * Builds a compact status payload for CLI and future health services.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return array<string,mixed>
 	 */

@@ -54,6 +54,8 @@ class Alynt_Drime_Backups_Uploader_Scanner {
 	/**
 	 * Scans every configured producer.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return array{directory:string,candidates:array<int,array<string,mixed>>,errors:array<int,string>,producers:array<string,array<string,mixed>>}
 	 */
 	public function scan() {

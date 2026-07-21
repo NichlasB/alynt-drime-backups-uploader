@@ -73,6 +73,7 @@ class AdminPageSettingsTest extends TestCase {
 		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups/work', $data['work_path'] );
 		$this->assertSame( '/var/www/example.com/private/alynt-drime-backups', $this->call_private( $page, 'runner_base_path', array( array( 'server_outbox_path' => '/var/www/example.com/private/alynt-drime-backups/outbox' ) ) ) );
 		$this->assertSame( 1073741824, $data['minimum_free_space_bytes'] );
+		$this->assertSame( 21600, $data['drime_download_timeout_seconds'] );
 		$this->assertSame( 'light', $data['consistency_mode'] );
 		$this->assertSame( 'example-test', $data['package_prefix'] );
 		$this->assertSame( 'wp', $data['wp_cli_path'] );

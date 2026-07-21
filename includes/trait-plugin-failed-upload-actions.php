@@ -3,7 +3,7 @@
  * Failed upload admin actions.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.1
+ * @since   0.5.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Handles failed upload retry actions.
  *
- * @since 0.5.1
+ * @since 0.5.0
  */
 trait Alynt_Drime_Backups_Uploader_Plugin_Failed_Upload_Actions {
 	/**

@@ -64,6 +64,8 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	/**
 	 * Builds a compact health payload.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @param int|false $next_scan Next scheduled scan timestamp.
 	 * @param bool      $include_paths Whether to include local filesystem paths.
 	 * @return array<string,mixed>

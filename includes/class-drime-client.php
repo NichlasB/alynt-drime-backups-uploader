@@ -94,7 +94,7 @@ class Alynt_Drime_Backups_Uploader_Drime_Client {
 	 *
 	 * @return array<string,mixed>|WP_Error
 	 *
-	 * @since 0.5.0
+	 * @since 0.2.0
 	 */
 	public function list_workspaces() {
 		return $this->request( 'GET', '/me/workspaces' );

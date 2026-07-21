@@ -3,6 +3,7 @@
 
 	const config = window.alyntDrimeBackups || {};
 	const i18n = config.i18n || {};
+	const requestTimeoutMs = 30000;
 
 	function text(key) {
 		return i18n[key] || '';
@@ -10,6 +11,8 @@
 
 	function request(action) {
 		const formData = new window.FormData();
+		const controller = new window.AbortController();
+		const timeoutId = window.setTimeout(() => controller.abort(), requestTimeoutMs);
 		formData.append('action', action);
 		formData.append('nonce', config.nonce || '');
 
@@ -17,13 +20,20 @@
 			method: 'POST',
 			credentials: 'same-origin',
 			body: formData,
+			signal: controller.signal,
 		}).then((response) => response.json()).then((payload) => {
 			if (!payload || !payload.success) {
 				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : text('workspacesLoadFailed'));
 			}
 
 			return payload.data || {};
-		});
+		}).catch((error) => {
+			if (error && error.name === 'AbortError') {
+				throw new Error(text('requestTimedOut'));
+			}
+
+			throw error;
+		}).finally(() => window.clearTimeout(timeoutId));
 	}
 
 	function setBusy(container, busy) {

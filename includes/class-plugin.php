@@ -19,6 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Alynt_Drime_Backups_Uploader_Plugin {
 	use Alynt_Drime_Backups_Uploader_Plugin_Admin_Actions;
+	use Alynt_Drime_Backups_Uploader_Plugin_Retention_Actions;
+	use Alynt_Drime_Backups_Uploader_Plugin_Destination_Ajax_Actions;
 	use Alynt_Drime_Backups_Uploader_Plugin_Failed_Upload_Actions;
 	use Alynt_Drime_Backups_Uploader_Plugin_Notification_Actions;
 
@@ -259,6 +261,11 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 
 		$queued           = $this->queue_scan_candidates( $result['candidates'] );
 		$result['queued'] = $queued;
+		if ( $this->queue->last_persistence_failed() ) {
+			$message            = __( 'Backup packages were found, but the upload queue could not be saved. Confirm the site database is writable, then scan again.', 'alynt-drime-backups-uploader' );
+			$result['errors'][] = $message;
+			$this->logger->event( 'scanner', 'error', 'queue_save_failed', $message, array( 'found' => count( $result['candidates'] ) ) );
+		}
 		$this->logger->event(
 			'scanner',
 			'info',
@@ -391,7 +398,7 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	 *
 	 * @return Alynt_Drime_Backups_Uploader_Workspace_Browser
 	 *
-	 * @since 0.5.0
+	 * @since 0.2.0
 	 */
 	public function workspace_browser() {
 

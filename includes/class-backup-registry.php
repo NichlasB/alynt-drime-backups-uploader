@@ -93,7 +93,7 @@ class Alynt_Drime_Backups_Uploader_Backup_Registry {
 	 * @param string $signature Signature.
 	 * @return array<string,mixed>
 	 *
-	 * @since 0.5.1
+	 * @since 0.5.0
 	 */
 	public function get_failed_record( $signature ) {
 		$failed = $this->get_failed();

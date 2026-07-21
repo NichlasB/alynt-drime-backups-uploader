@@ -62,6 +62,8 @@ class Alynt_Drime_Backups_Uploader_WPvivid_Producer implements Alynt_Drime_Backu
 	/**
 	 * Returns the stable producer key.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return string
 	 */
 	public function key() {
@@ -70,6 +72,8 @@ class Alynt_Drime_Backups_Uploader_WPvivid_Producer implements Alynt_Drime_Backu
 
 	/**
 	 * Returns the human-readable producer label.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return string
 	 */

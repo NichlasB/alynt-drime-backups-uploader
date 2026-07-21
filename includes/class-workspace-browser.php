@@ -3,7 +3,7 @@
  * Drime workspace browser.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.0
+ * @since   0.2.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Normalizes Drime workspaces for the admin selector.
  *
- * @since 0.5.0
+ * @since 0.2.0
  */
 class Alynt_Drime_Backups_Uploader_Workspace_Browser {
 	/**
@@ -34,6 +34,8 @@ class Alynt_Drime_Backups_Uploader_Workspace_Browser {
 
 	/**
 	 * Lists selectable workspaces.
+	 *
+	 * @since 0.2.0
 	 *
 	 * @return array<string,mixed>|WP_Error
 	 */

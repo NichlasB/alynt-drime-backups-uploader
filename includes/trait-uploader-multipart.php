@@ -40,6 +40,12 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart {
 		if ( is_wp_error( $session ) ) {
 			return $session;
 		}
+		if ( ! $this->store_active_upload_state( $path, $remote_name, $session['key'], $session['upload_id'], (string) $item['signature'], array(), $session['total'] ) ) {
+			return $this->state_persistence_error();
+		}
+		if ( ! $this->renew_upload_lock() ) {
+			return $this->upload_lock_lost_error();
+		}
 
 		$parts = $this->get_completed_multipart_parts( $session['key'], $session['upload_id'] );
 		if ( is_wp_error( $parts ) ) {
@@ -49,6 +55,9 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart {
 		$parts = $this->upload_multipart_parts( $path, $remote_name, $item, $session, $parts );
 		if ( is_wp_error( $parts ) ) {
 			return $parts;
+		}
+		if ( ! $this->renew_upload_lock() ) {
+			return $this->upload_lock_lost_error();
 		}
 
 		return $this->complete_multipart_session( $path, $remote_name, $size, $extension, $session, $parts, $parent_id, $settings );

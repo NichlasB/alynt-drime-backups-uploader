@@ -45,13 +45,128 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 		$this->assertTrue( $rollback['confirmation_site_accepted'] );
 		$this->assertTrue( $rollback['file_rollback_succeeded'] );
 		$this->assertTrue( $rollback['database_rollback_succeeded'] );
+		$this->assertTrue( $rollback['maintenance_activation_succeeded'] );
+		$this->assertTrue( $rollback['maintenance_reactivation_succeeded'] );
+		$this->assertTrue( $rollback['post_rollback_verification_passed'] );
+		$this->assertTrue( $rollback['maintenance_deactivation_succeeded'] );
 		$this->assertTrue( $rollback['destructive_actions_performed'] );
 		$this->assertTrue( $rollback['rollback_report_written'] );
 		$this->assertFileExists( $rollback['rollback_report_path'] );
+		if ( '\\' !== DIRECTORY_SEPARATOR ) {
+			$this->assertSame( 0640, fileperms( $rollback['rollback_report_path'] ) & 0777 );
+		}
 
 		$this->assertSame( '<?php echo "before";', file_get_contents( $fixture['target_path'] . DIRECTORY_SEPARATOR . 'index.php' ) );
 		$this->assertFileDoesNotExist( $fixture['target_path'] . DIRECTORY_SEPARATOR . 'failed-state.txt' );
+		$this->assertFileDoesNotExist( $fixture['maintenance_state'] );
 		$this->assertStringContainsString( 'db import', (string) file_get_contents( $fixture['wp_cli_log'] ) );
+	}
+
+	/**
+	 * Rollback restores an enrolled symlink from verified recovery evidence.
+	 *
+	 * @return void
+	 */
+	public function test_production_rollback_restores_enrolled_symlink() {
+		if ( ! $this->tar_available() ) {
+			$this->markTestSkipped( 'The tar command is required for production rollback coverage.' );
+		}
+
+		$fixture       = $this->create_fixture();
+		$relative_link = 'wp-content/mu-plugins/wp-fail2ban.php';
+		$plugin_dir    = $fixture['target_path'] . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-fail2ban';
+		$mu_plugins    = $fixture['target_path'] . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'mu-plugins';
+		$link_path     = $fixture['target_path'] . DIRECTORY_SEPARATOR . str_replace( '/', DIRECTORY_SEPARATOR, $relative_link );
+
+		mkdir( $plugin_dir, 0755, true );
+		mkdir( $mu_plugins );
+		file_put_contents( $plugin_dir . DIRECTORY_SEPARATOR . 'wp-fail2ban.php', '<?php // enrolled target.' );
+		$link_target = $plugin_dir . DIRECTORY_SEPARATOR . 'wp-fail2ban.php';
+		if ( ! @symlink( $link_target, $link_path ) ) {
+			$this->markTestSkipped( 'Filesystem symlinks are unavailable in this test runtime.' );
+		}
+
+		$config = json_decode( file_get_contents( $fixture['config'] ), true );
+		$config['production_expected_symlink_paths']   = array( $relative_link );
+		$config['production_expected_symlink_targets'] = array( $relative_link => $link_target );
+		file_put_contents( $fixture['config'], json_encode( $config ) );
+		$evidence     = $this->create_production_pre_backup( $fixture );
+		$apply_report = $this->write_apply_report( $fixture, $evidence );
+
+		$result = $this->run_runner(
+			'restore-production-rollback',
+			$fixture['config'],
+			array(
+				'--apply-report=' . escapeshellarg( $apply_report ),
+				'--target-site=example.com',
+				'--confirm=rollback-production-site',
+				'--confirm-site=example.com',
+				'--format=json',
+			)
+		);
+
+		$this->assertSame( 0, $result['exit_code'], implode( "\n", array_merge( $result['error'], $result['output'] ) ) );
+		$rollback = json_decode( implode( "\n", $result['output'] ), true );
+		$this->assertSame( 'succeeded', $rollback['status'] );
+		$this->assertTrue( $rollback['file_rollback_succeeded'] );
+		$this->assertTrue( $rollback['post_rollback_verification_passed'] );
+		$this->assertTrue( is_link( $link_path ) );
+		$this->assertSame( $link_target, readlink( $link_path ) );
+		$this->assertFileDoesNotExist( $fixture['maintenance_state'] );
+	}
+
+	/**
+	 * An unenrolled recovery symlink must refuse before target deletion.
+	 *
+	 * @return void
+	 */
+	public function test_production_rollback_refuses_unenrolled_symlink_before_target_deletion() {
+		if ( ! $this->tar_available() ) {
+			$this->markTestSkipped( 'The tar command is required for production rollback coverage.' );
+		}
+
+		$fixture = $this->create_fixture();
+		$evidence = $this->create_production_pre_backup( $fixture );
+		$record   = json_decode( (string) file_get_contents( $evidence ), true );
+		$work     = $this->make_directory( 'unenrolled-symlink-archive' );
+		$output   = array();
+		$exit     = 0;
+		exec( 'tar -xzf ' . escapeshellarg( $record['file_backup_path'] ) . ' -C ' . escapeshellarg( $work ), $output, $exit );
+		$this->assertSame( 0, $exit );
+		$link_path = $work . DIRECTORY_SEPARATOR . 'htdocs' . DIRECTORY_SEPARATOR . 'unenrolled-link.php';
+		if ( ! @symlink( 'index.php', $link_path ) ) {
+			$this->markTestSkipped( 'Filesystem symlinks are unavailable in this test runtime.' );
+		}
+
+		unlink( $record['file_backup_path'] );
+		$output = array();
+		$exit   = 0;
+		exec( 'tar -czf ' . escapeshellarg( $record['file_backup_path'] ) . ' -C ' . escapeshellarg( $work ) . ' htdocs', $output, $exit );
+		$this->assertSame( 0, $exit );
+		$record['file_backup_sha256'] = hash_file( 'sha256', $record['file_backup_path'] );
+		file_put_contents( $evidence, json_encode( $record ) );
+		file_put_contents( $fixture['target_path'] . DIRECTORY_SEPARATOR . 'index.php', '<?php echo "failed";' );
+		$apply_report = $this->write_apply_report( $fixture, $evidence );
+
+		$result = $this->run_runner(
+			'restore-production-rollback',
+			$fixture['config'],
+			array(
+				'--apply-report=' . escapeshellarg( $apply_report ),
+				'--target-site=example.com',
+				'--confirm=rollback-production-site',
+				'--confirm-site=example.com',
+				'--format=json',
+			)
+		);
+
+		$this->assertSame( 1, $result['exit_code'] );
+		$rollback = json_decode( implode( "\n", $result['output'] ), true );
+		$this->assertSame( 'file-rollback', $rollback['failure_step'] );
+		$this->assertFalse( $rollback['file_rollback_succeeded'] );
+		$this->assertSame( '<?php echo "failed";', file_get_contents( $fixture['target_path'] . DIRECTORY_SEPARATOR . 'index.php' ) );
+		$this->assertFileDoesNotExist( $fixture['target_path'] . DIRECTORY_SEPARATOR . 'unenrolled-link.php' );
+		$this->assertFileExists( $fixture['maintenance_state'] );
 	}
 
 	/**
@@ -145,7 +260,8 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 		$outbox        = $this->make_directory( 'outbox' );
 		$native        = $this->root . DIRECTORY_SEPARATOR . 'native-backup-evidence.json';
 		$wp_cli_log    = $this->root . DIRECTORY_SEPARATOR . 'wp-cli.log';
-		$wp_cli        = $this->create_fake_wp_cli( $uuid, $wp_cli_log );
+		$maintenance   = $this->root . DIRECTORY_SEPARATOR . 'maintenance.state';
+		$wp_cli        = $this->create_fake_wp_cli( $uuid, $wp_cli_log, $maintenance );
 
 		mkdir( $target_path );
 		mkdir( $target_path . DIRECTORY_SEPARATOR . 'wp-content' );
@@ -171,6 +287,7 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 					'archive_format'           => 'tar.gz',
 					'file_root'                => 'htdocs',
 					'database_dump'            => 'database.sql',
+					'staged_integrity'         => $this->staged_integrity_fixture( $staged_path . DIRECTORY_SEPARATOR . 'htdocs', $staged_path . DIRECTORY_SEPARATOR . 'database.sql' ),
 					'package_verified'         => true,
 					'archive_members_safe'     => true,
 					'database_imported'        => false,
@@ -221,6 +338,7 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 				'production_expected_drop_ins'             => array( 'wp-content/object-cache.php' ),
 				'production_symlink_inventory_reviewed'    => true,
 				'production_expected_symlink_paths'        => array(),
+				'production_expected_symlink_targets'      => array(),
 				'minimum_free_space_bytes'                 => 0,
 			)
 		);
@@ -232,6 +350,7 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 			'reports_path' => $reports_path,
 			'uuid'         => $uuid,
 			'wp_cli_log'   => $wp_cli_log,
+			'maintenance_state' => $maintenance,
 		);
 	}
 
@@ -301,15 +420,18 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 	 *
 	 * @param string $uuid Site UUID.
 	 * @param string $log_path WP-CLI log path.
+	 * @param string $state_path Maintenance state path.
 	 * @return string
 	 */
-	private function create_fake_wp_cli( $uuid, $log_path ) {
+	private function create_fake_wp_cli( $uuid, $log_path, $state_path ) {
 		$path = $this->root . DIRECTORY_SEPARATOR . ( '\\' === DIRECTORY_SEPARATOR ? 'fake-wp.bat' : 'fake-wp' );
 		if ( '\\' === DIRECTORY_SEPARATOR ) {
 			$commands = array(
 				'@echo off',
 				'echo %* >> "' . str_replace( '"', '', $log_path ) . '"',
 				'set "ARGS=%*"',
+				'echo %ARGS% | findstr /C:"maintenance-mode activate" >nul && (echo active> "' . $state_path . '"& echo Success& exit /b 0)',
+				'echo %ARGS% | findstr /C:"maintenance-mode deactivate" >nul && (del /q "' . $state_path . '" 2>nul& echo Success& exit /b 0)',
 				'echo %ARGS% | findstr /C:"option get home" >nul && (echo https://example.com& exit /b 0)',
 				'echo %ARGS% | findstr /C:"option get siteurl" >nul && (echo https://example.com& exit /b 0)',
 				'echo %ARGS% | findstr /C:"option pluck alynt_drime_backups_settings site_uuid" >nul && (echo ' . $uuid . '& exit /b 0)',
@@ -320,7 +442,7 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 				'echo %ARGS% | findstr /C:"cli version" >nul && (echo WP-CLI 2.12.0& exit /b 0)',
 				'echo %ARGS% | findstr /C:"plugin list --status=active --field=name" >nul && (echo alynt-drime-backups-uploader& exit /b 0)',
 				'echo %ARGS% | findstr /C:"theme list --status=active --field=name" >nul && (echo example-theme& exit /b 0)',
-				'echo %ARGS% | findstr /C:"maintenance-mode status" >nul && (echo Maintenance mode is not active.& exit /b 1)',
+				'echo %ARGS% | findstr /C:"maintenance-mode status" >nul && (if exist "' . $state_path . '" (echo Maintenance mode is active.& exit /b 0) else (echo Maintenance mode is not active.& exit /b 1))',
 				'echo %ARGS% | findstr /C:"db export" >nul && (set "ARG="& set "PREV="& goto alynt_arg_loop)',
 				'echo %ARGS% | findstr /C:"db import" >nul && exit /b 0',
 				'exit /b 1',
@@ -344,6 +466,8 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 			. "printf '%s\\n' \"$*\" >> " . escapeshellarg( $log_path ) . "\n"
 			. "args=\"$*\"\n"
 			. "case \"$args\" in\n"
+			. "*\"maintenance-mode activate\"*) echo active > " . escapeshellarg( $state_path ) . ";;\n"
+			. "*\"maintenance-mode deactivate\"*) rm -f " . escapeshellarg( $state_path ) . ";;\n"
 			. "*\"option get home\"*) echo https://example.com;;\n"
 			. "*\"option get siteurl\"*) echo https://example.com;;\n"
 			. "*\"option pluck alynt_drime_backups_settings site_uuid\"*) echo '" . $uuid . "';;\n"
@@ -354,7 +478,7 @@ class ServerRunnerProductionRollbackTest extends Alynt_Drime_Backups_Uploader_Se
 			. "*\"cli version\"*) echo 'WP-CLI 2.12.0';;\n"
 			. "*\"plugin list --status=active --field=name\"*) echo alynt-drime-backups-uploader;;\n"
 			. "*\"theme list --status=active --field=name\"*) echo example-theme;;\n"
-			. "*\"maintenance-mode status\"*) echo 'Maintenance mode is not active.'; exit 1;;\n"
+			. "*\"maintenance-mode status\"*) if [ -f " . escapeshellarg( $state_path ) . " ]; then echo 'Maintenance mode is active.'; else echo 'Maintenance mode is not active.'; exit 1; fi;;\n"
 			. "*\"db export\"*) for arg in \"$@\"; do case \"$arg\" in *.sql) echo '-- before db' > \"$arg\";; esac; done;;\n"
 			. "*\"db import\"*) :;;\n"
 			. "*) exit 1;;\n"

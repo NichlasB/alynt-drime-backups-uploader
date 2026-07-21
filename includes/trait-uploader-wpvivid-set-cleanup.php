@@ -3,7 +3,7 @@
  * Uploader WPvivid set cleanup helpers.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.1
+ * @since   0.5.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Handles registry context and set-aware local deletion.
  *
- * @since 0.5.1
+ * @since 0.5.0
  */
 trait Alynt_Drime_Backups_Uploader_Uploader_WPvivid_Set_Cleanup {
 	/**

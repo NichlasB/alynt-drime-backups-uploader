@@ -46,6 +46,11 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart_Parts {
 		}
 
 		for ( $part_number = 1; $part_number <= $session['total']; $part_number++ ) {
+			if ( ! $this->renew_upload_lock() ) {
+				fclose( $handle );
+				return $this->upload_lock_lost_error();
+			}
+
 			if ( isset( $parts[ $part_number ] ) ) {
 				if ( ! $this->store_active_upload_state( $path, $remote_name, $session['key'], $session['upload_id'], (string) $item['signature'], $parts, $session['total'] ) ) {
 					fclose( $handle );
@@ -59,6 +64,10 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Multipart_Parts {
 			if ( is_wp_error( $part ) ) {
 				fclose( $handle );
 				return $part;
+			}
+			if ( ! $this->renew_upload_lock() ) {
+				fclose( $handle );
+				return $this->upload_lock_lost_error();
 			}
 
 			$parts[ $part_number ] = $part;

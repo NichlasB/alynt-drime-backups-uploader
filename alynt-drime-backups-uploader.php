@@ -3,7 +3,7 @@
  * Plugin Name:       Alynt Drime Backups Uploader
  * Plugin URI:        https://alynt.com/
  * Description:       Upload completed backup packages to Drime.
- * Version:           0.4.0
+ * Version:           0.5.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Alynt
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ALYNT_DRIME_BACKUPS_UPLOADER_VERSION', '0.4.0' );
+define( 'ALYNT_DRIME_BACKUPS_UPLOADER_VERSION', '0.5.0' );
 define( 'ALYNT_DRIME_BACKUPS_UPLOADER_MINIMUM_WP', '6.0' );
 define( 'ALYNT_DRIME_BACKUPS_UPLOADER_MINIMUM_PHP', '7.4' );
 define( 'ALYNT_DRIME_BACKUPS_UPLOADER_FILE', __FILE__ );
@@ -93,11 +93,15 @@ $alynt_drime_backups_uploader_includes = array(
 	'includes/trait-admin-page-settings.php',
 	'includes/trait-admin-page-drime-settings.php',
 	'includes/trait-admin-page-source-settings.php',
+	'includes/trait-admin-page-runner-guidance.php',
 	'includes/trait-admin-page-upload-settings.php',
 	'includes/trait-admin-page-notification-settings.php',
 	'includes/trait-admin-page-cron-health.php',
 	'includes/trait-admin-page-status.php',
+	'includes/trait-admin-page-diagnostics-status.php',
 	'includes/trait-plugin-failed-upload-actions.php',
+	'includes/trait-plugin-retention-actions.php',
+	'includes/trait-plugin-destination-ajax-actions.php',
 	'includes/trait-plugin-admin-actions.php',
 	'includes/trait-plugin-notification-actions.php',
 	'includes/interface-producer.php',
@@ -145,7 +149,7 @@ function alynt_drime_backups_uploader_load_textdomain() {
 	);
 }
 
-add_action( 'plugins_loaded', 'alynt_drime_backups_uploader_load_textdomain', 0 );
+add_action( 'init', 'alynt_drime_backups_uploader_load_textdomain', 0 );
 
 /**
  * Returns the plugin singleton.

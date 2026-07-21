@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -56,11 +56,11 @@ Yes. The runner supports `restore-dry-run --staged-path=/path/to/staged/package 
 
 = Can the server runner apply a staged restore? =
 
-Yes, for staging restores only. `restore-apply --scope=database --confirm=restore-staging-site` first runs the existing dry-run/evidence checks, then imports the staged `database.sql` with WP-CLI and writes a restore apply report. `restore-apply --scope=files --confirm=restore-staging-site` first runs the file-scope dry-run/evidence checks, then replaces the staging target files from staged `htdocs/` and writes a restore apply report. `restore-apply --scope=files-and-database --confirm=restore-staging-site` replaces files first and imports the database second after the same gates pass. Add `--create-pre-restore-backup=1` to a staging apply command to create matching pre-restore database/file backup evidence immediately before apply. Production restore is not included yet.
+Yes, for staging restores. `restore-apply --scope=database --confirm=restore-staging-site` first runs the existing dry-run/evidence checks, then imports the staged `database.sql` with WP-CLI and writes a restore apply report. `restore-apply --scope=files --confirm=restore-staging-site` first runs the file-scope dry-run/evidence checks, then replaces the staging target files from staged `htdocs/` and writes a restore apply report. `restore-apply --scope=files-and-database --confirm=restore-staging-site` replaces files first and imports the database second after the same gates pass. Add `--create-pre-restore-backup=1` to a staging apply command to create matching pre-restore database/file backup evidence immediately before apply. Separately gated production-simulation commands are documented below; actual-production enrollment remains unavailable.
 
 = Can I preflight a production-simulation restore without applying it? =
 
-Yes. `restore-production-preflight` checks an explicitly enrolled target, staged package identity, disk budget, active plugin/theme and filesystem markers, maintenance/write-control readiness, and fresh host-native backup evidence. It can print JSON or write a redacted report with `--write-report=1`. A separate production-simulation pre-backup command can create private, hash-recorded recovery evidence only after its own exact confirmation. Production apply remains unavailable; rollback is disabled by default and requires a future matching production-apply report.
+Yes. `restore-production-preflight` checks an explicitly enrolled target, staged package identity, disk budget, active plugin/theme and filesystem markers, maintenance/write-control readiness, and fresh host-native backup evidence. It can print JSON or write a redacted report with `--write-report=1`. A separate production-simulation pre-backup command can create private, hash-recorded recovery evidence only after its own exact confirmation. Disabled-by-default production-simulation apply supports files-only, database-only, or combined rehearsals after exact confirmations and verified evidence; combined apply runs files first and database second. Actual-production enrollment remains unavailable.
 
 = Can I list local server-runner packages before choosing one to restore? =
 
@@ -114,10 +114,24 @@ No public custom actions or filters are exposed.
 
 == Changelog ==
 
-= Unreleased =
+= 0.5.0 =
+* Added a mandatory GitHub Actions quality gate for PHP tests/lint, the Node build, generated assets, and dependency auditing before release packaging.
+* Added administrator-only failed-upload retry actions when the original local backup remains readable.
 * Added read-only `restore-production-preflight` target, package, disk, write-control, filesystem identity, native-backup evidence, refusal, and redacted reporting checks.
-* Added production-simulation pre-restore recovery evidence and a disabled-by-default rollback foundation with hash verification and exact target confirmations. Production apply remains unavailable.
-* Advanced the standalone runner identity to `0.3.0` so Phase 3 recovery-capable server copies can be identified reliably.
+* Added production-simulation pre-restore recovery evidence and a disabled-by-default rollback foundation with hash verification and exact target confirmations.
+* Added disabled-by-default files-only, database-only, and combined production-simulation apply with target-drift checks, maintenance control, post-apply identity verification, and rollback-ready reports. Combined apply runs files first and database second under one maintenance window.
+* Advanced the standalone runner identity to `0.4.7`; added staged-input SHA-256 binding, exact enrolled-symlink handling, complete identity verification, private `0640` production rollback reports, conservative partial-copy failure reporting, combined apply/rollback coverage, and report-first cleanup of successful rollback extraction trees while failed recovery trees remain available.
+* Added production preflight and immediate pre-write verification for deterministic extracted file-tree and database-dump integrity records.
+* Added deterministic production file-copy interruption coverage, truthful live-file overwrite reporting, emergency maintenance-marker recovery, and rollback handling for damage-induced target drift.
+* Added production database apply/rollback failure coverage and conservative `database_may_be_modified` reporting whenever an SQL import is attempted.
+* Added post-write WP-CLI identity failure coverage for production apply and rollback, with rollback availability reported immediately after destructive apply work starts.
+* Added post-write WordPress root owner/group verification and deterministic ownership/enrolled drop-in mismatch recovery coverage.
+* Added rollback maintenance activation, reactivation, and deactivation failure coverage with emergency-marker and retry proofs.
+* Added combined production apply/rollback success coverage and recovery after database failure following file replacement.
+* Changed optional WPvivid local deletion to wait until every listed split-backup part is confirmed uploaded.
+* Changed workspace and destination requests to time out after 30 seconds with retry guidance.
+* Fixed scan feedback when the WordPress upload queue cannot be persisted.
+* Fixed long multipart uploads potentially outliving the upload lock by renewing an owner-aware worker lease and refusing shared queue/retry changes after ownership is lost.
 
 = 0.4.0 =
 * Added optional `restore-apply --create-pre-restore-backup=1` support so staging restores can create matching pre-restore database/file backup evidence immediately before apply.
@@ -174,6 +188,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.5.0 =
+Adds disabled-by-default production-simulation restore/rollback automation, stronger upload concurrency protection, failed-upload recovery, and mandatory release quality checks. Actual-production enrollment remains unavailable.
 
 = 0.4.0 =
 No breaking changes. Adds opt-in staging restore apply support for creating pre-restore database/file backup evidence immediately before apply.

@@ -50,6 +50,8 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 	/**
 	 * Returns the stable producer key.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return string
 	 */
 	public function key() {
@@ -59,6 +61,8 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 	/**
 	 * Returns the human-readable producer label.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return string
 	 */
 	public function label() {
@@ -67,6 +71,8 @@ class Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer implements Alynt_Drim
 
 	/**
 	 * Scans the configured outbox for stable archive packages.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return array{directory:string,candidates:array<int,array<string,mixed>>,errors:array<int,string>}
 	 */

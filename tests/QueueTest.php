@@ -112,6 +112,19 @@ class QueueTest extends TestCase {
 			)
 		);
 		$this->assertSame( array(), $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+		$this->assertTrue( $queue->last_persistence_failed() );
+	}
+
+	public function test_add_many_clears_previous_persistence_failure_state() {
+		$options = array(
+			Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION => array(),
+		);
+		$queue   = $this->queue_with_options( $options, false );
+
+		$this->assertSame( 0, $queue->add_many( array( array( 'signature' => 'one', 'path' => 'C:/backups/one.zip', 'name' => 'one.zip' ) ) ) );
+		$this->assertTrue( $queue->last_persistence_failed() );
+		$this->assertSame( 0, $queue->add_many( array() ) );
+		$this->assertFalse( $queue->last_persistence_failed() );
 	}
 
 	public function test_add_many_persists_once_for_multiple_items() {

@@ -31,6 +31,8 @@ class ServerRunnerSecurityTest extends TestCase {
 		$this->assertStringContainsString( 'CURLOPT_FOLLOWLOCATION, false', $source );
 		$this->assertStringContainsString( 'validate_download_redirect_url', $source );
 		$this->assertStringContainsString( '$this->download_url_to_temp_path( $redirect_url, $temp_path, \'\' )', $source );
+		$this->assertStringContainsString( 'CURLOPT_TIMEOUT, $this->drime_download_timeout_seconds()', $source );
+		$this->assertStringContainsString( 'max( 300, min( 86400, $timeout ) )', $source );
 	}
 
 	/**
@@ -79,27 +81,48 @@ class ServerRunnerSecurityTest extends TestCase {
 	}
 
 	/**
-	 * Production apply must remain unavailable while rollback stays explicitly locked.
+	 * Production apply must remain scope-limited and explicitly locked.
 	 *
 	 * @return void
 	 */
-	public function test_production_apply_stays_unavailable_and_rollback_is_gated() {
+	public function test_production_apply_and_rollback_are_gated() {
 		$source = $this->runner_source();
+		$config = file_get_contents( ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/server-runner/config.example.json' );
 
 		$this->assertStringContainsString( "case 'restore-production-preflight'", $source );
-		$this->assertStringNotContainsString( "case 'restore-production-apply'", $source );
+		$this->assertStringContainsString( "case 'restore-production-apply'", $source );
 		$this->assertStringContainsString( "case 'restore-production-create-pre-backup'", $source );
 		$this->assertStringContainsString( "case 'restore-production-rollback'", $source );
-		$this->assertStringContainsString( "'production_apply_allowed'      => false", $source );
-		$this->assertStringContainsString( "'production_apply_available'    => false", $source );
+		$this->assertStringContainsString( "'restore-production-site' !== \$confirm", $source );
+		$this->assertStringContainsString( "in_array( \$scope, array( 'files', 'database', 'files-and-database' ), true )", $source );
+		$this->assertStringContainsString( "in_array( \$scope, array( 'files', 'files-and-database' ), true )", $source );
+		$this->assertStringContainsString( "in_array( \$scope, array( 'database', 'files-and-database' ), true )", $source );
+		$this->assertStringContainsString( "'target_fingerprint_unchanged_since_pre_backup'", $source );
+		$this->assertStringContainsString( "'preflight_package_identity'", $source );
+		$this->assertStringContainsString( "'staged_package_identity_unchanged_since_pre_backup'", $source );
+		$this->assertStringContainsString( "'immediate_staged_package_identity_matches_evidence'", $source );
+		$this->assertStringContainsString( "'immediate_'", $source );
+		$this->assertStringContainsString( 'staged_file_tree_integrity', $source );
+		$this->assertStringContainsString( 'staged_file_integrity', $source );
+		$this->assertStringContainsString( "'production_restore_enabled'", $source );
 		$this->assertStringContainsString( "'production_rollback_available' => \$this->config_bool( 'production_rollback_enabled' )", $source );
 		$this->assertStringContainsString( "'production_rollback_enabled'", $source );
 		$this->assertStringContainsString( "'rollback-production-site' !== \$confirm", $source );
 		$this->assertStringContainsString( "'production-simulation' === strtolower( \$this->config_string( 'production_restore_environment' ) )", $source );
 		$this->assertStringContainsString( "'apply_report_command'", $source );
 		$this->assertStringContainsString( 'add_production_pre_restore_artifact_check', $source );
+		$this->assertStringContainsString( "'expected_symlink_targets_match'", $source );
+		$this->assertStringContainsString( "'post_apply_symlink_targets_match'", $source );
+		$this->assertStringContainsString( 'production_expected_symlink_snapshot', $source );
+		$this->assertStringContainsString( 'restore_production_expected_symlinks', $source );
+		$this->assertStringContainsString( 'production_symlink_map', $source );
+		$this->assertStringContainsString( "'post_rollback_symlink_targets_match'", $source );
+		$this->assertStringContainsString( "'rollback-maintenance-reactivation'", $source );
 		$this->assertStringContainsString( "'destructive_actions_performed' => false", $source );
 		$this->assertStringContainsString( 'redact_restore_report_data', $source );
+		$this->assertStringContainsString( '"production_restore_enabled": false', $config );
+		$this->assertStringContainsString( '"production_rollback_enabled": false', $config );
+		$this->assertStringContainsString( '"production_expected_symlink_targets": {}', $config );
 	}
 
 	/**

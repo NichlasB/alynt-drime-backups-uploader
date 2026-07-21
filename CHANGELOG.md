@@ -4,12 +4,37 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-21
+
 ### Added
 
+- Added a reusable GitHub Actions quality workflow covering PHPUnit and PHPCS on PHP 7.4 and 8.5 plus the Node build, generated-asset verification, and dependency audit. Release packaging now depends on that gate.
+- Added an administrator-only failed-upload table with per-file retry actions when the original local backup remains readable.
 - Added read-only `restore-production-preflight` checks for enrolled target identity, staged package identity, conservative disk headroom, active plugin/theme and filesystem markers, maintenance/write-control readiness, and fresh host-native backup evidence.
 - Added optional redacted production preflight reports plus refusal coverage for target/package mismatch, missing recovery evidence, incomplete write-control review, and unsafe report paths.
-- Added production-simulation pre-restore recovery evidence with private database/file SHA-256 records and a separately enabled explicit rollback foundation that accepts only a matching future production-apply report and exact target confirmations. Production apply remains unavailable.
-- Advanced the standalone runner identity to `0.3.0` so Phase 3 recovery-capable copies can be distinguished from earlier deployed runner scripts.
+- Added production-simulation pre-restore recovery evidence with private database/file SHA-256 records and a separately enabled explicit rollback foundation that accepts only a matching production-apply report and exact target confirmations.
+- Added disabled-by-default production-simulation files-only, database-only, and combined apply commands with exact target confirmations, verified pre-restore evidence, target-drift checks, maintenance control, post-apply identity verification, and rollback-ready private reports. Combined apply replaces files before importing the database under one maintenance window.
+- Advanced the standalone runner identity to `0.4.7` so successful-rollback extraction cleanup can be distinguished from earlier deployed runner scripts.
+- Added deterministic SHA-256 integrity records for extracted WordPress files and database dumps. Production preflight verifies them, private pre-restore evidence binds them, and production apply recomputes them after maintenance activation immediately before target writes.
+- Added exact enrolled-symlink target validation and automatic symlink recreation during production-simulation file apply, followed by complete plugin, theme, drop-in, symlink path, and symlink target verification before maintenance is removed.
+- Added deterministic partial file-copy interruption coverage, conservative live-file overwrite reporting, emergency maintenance-marker recovery, and rollback preflight handling that permits only damage-induced runtime/inventory drift while retaining immutable safety gates.
+- Added deterministic production database import-failure and rollback-import-failure coverage, including successful rollback and retry proofs plus conservative `database_may_be_modified` reporting after every attempted import.
+- Added deterministic post-write WP-CLI identity-read failure coverage for apply and rollback, including successful recovery/retry proofs and truthful rollback availability as soon as destructive apply work begins.
+- Added post-write WordPress root owner/group verification against private pre-restore evidence plus deterministic ownership and enrolled drop-in mismatch recovery coverage.
+- Added deterministic rollback maintenance activation, reactivation, and deactivation failure coverage, including emergency-marker protection and successful recovery retries.
+- Added combined production-simulation apply and rollback coverage, including successful end-to-end recovery and rollback after a database failure occurs following file replacement.
+- Added report-first cleanup of successful production rollback extraction trees while retaining those trees after extraction, copy, database, verification, maintenance, or report failures.
+
+### Changed
+
+- Changed optional WPvivid local deletion so a listed split backup set is removed only after every listed part is confirmed uploaded.
+- Changed admin workspace and destination requests to stop after 30 seconds and show retry guidance instead of waiting indefinitely.
+
+### Fixed
+
+- Fixed backup scans potentially appearing successful when the WordPress upload queue could not be persisted; the failure is now surfaced and logged.
+- Fixed production-simulation file rollback so extracted symlinks are validated against exact private enrollment before target deletion, enrolled links are preserved during copy, maintenance remains active through post-rollback verification, and complete target identity is required before maintenance is removed.
+- Fixed long multipart uploads potentially outliving the upload lock by renewing an owner-aware worker lease and refusing shared queue/retry mutations after lock ownership is lost.
 
 ## [0.4.0] - 2026-07-12
 

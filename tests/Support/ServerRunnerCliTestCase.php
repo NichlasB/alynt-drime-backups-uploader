@@ -102,6 +102,79 @@ abstract class Alynt_Drime_Backups_Uploader_Server_Runner_Cli_Test_Case extends 
 	}
 
 	/**
+	 * Builds the staged-input integrity object expected in RESTORE_REPORT.json.
+	 *
+	 * @param string $file_root Staged file root.
+	 * @param string $database_dump Staged database dump.
+	 * @return array<string,mixed>
+	 */
+	protected function staged_integrity_fixture( $file_root, $database_dump ) {
+		return array(
+			'schema_version' => 1,
+			'algorithm'      => 'sha256',
+			'file_tree'     => $this->staged_tree_integrity_fixture( $file_root ),
+			'database_dump' => array(
+				'valid'       => true,
+				'sha256'      => hash_file( 'sha256', $database_dump ),
+				'total_bytes' => (int) filesize( $database_dump ),
+			),
+		);
+	}
+
+	/**
+	 * Reproduces the runner's deterministic directory digest for fixtures.
+	 *
+	 * @param string $root Directory root.
+	 * @return array<string,mixed>
+	 */
+	private function staged_tree_integrity_fixture( $root ) {
+		$records         = array();
+		$file_count      = 0;
+		$directory_count = 0;
+		$symlink_count   = 0;
+		$total_bytes     = 0;
+		$iterator        = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::SELF_FIRST
+		);
+
+		foreach ( $iterator as $item ) {
+			$path     = $item->getPathname();
+			$relative = ltrim( substr( str_replace( '\\', '/', $path ), strlen( str_replace( '\\', '/', $root ) ) ), '/' );
+			if ( $item->isLink() ) {
+				$records[] = "link\0" . $relative . "\0" . readlink( $path );
+				++$symlink_count;
+				continue;
+			}
+			if ( $item->isDir() ) {
+				$records[] = "directory\0" . $relative;
+				++$directory_count;
+				continue;
+			}
+
+			$size      = (int) $item->getSize();
+			$records[] = "file\0" . $relative . "\0" . $size . "\0" . hash_file( 'sha256', $path );
+			++$file_count;
+			$total_bytes += $size;
+		}
+
+		sort( $records, SORT_STRING );
+		$context = hash_init( 'sha256' );
+		foreach ( $records as $record ) {
+			hash_update( $context, strlen( $record ) . ':' . $record );
+		}
+
+		return array(
+			'valid'           => true,
+			'sha256'          => hash_final( $context ),
+			'file_count'      => $file_count,
+			'directory_count' => $directory_count,
+			'symlink_count'   => $symlink_count,
+			'total_bytes'     => $total_bytes,
+		);
+	}
+
+	/**
 	 * Writes runner config.
 	 *
 	 * @param string $outbox Outbox path.

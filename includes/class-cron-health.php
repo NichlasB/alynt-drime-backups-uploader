@@ -52,6 +52,8 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 	/**
 	 * Returns stored health state.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return array<string,mixed>
 	 */
 	public function get() {
@@ -66,6 +68,8 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 
 	/**
 	 * Records a scheduled scan trigger.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return string Runner key.
 	 */
@@ -92,6 +96,8 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 	/**
 	 * Records a manual admin scan.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return bool Whether the state was recorded.
 	 */
 	public function record_manual_scan() {
@@ -109,6 +115,8 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 
 	/**
 	 * Returns whether the last record write was persisted.
+	 *
+	 * @since 0.5.0
 	 *
 	 * @return bool
 	 */
@@ -147,6 +155,8 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 	/**
 	 * Returns the current WordPress cron runner context.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return string
 	 */
 	public static function current_runner() {
@@ -163,6 +173,8 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 
 	/**
 	 * Returns a calculated status for display.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @param array<string,mixed> $settings Settings.
 	 * @param int|false           $next_scan Next scheduled scan timestamp.
@@ -210,6 +222,8 @@ class Alynt_Drime_Backups_Uploader_Cron_Health {
 
 	/**
 	 * Returns whether WP-Cron appears disabled in wp-config.php.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return bool
 	 */

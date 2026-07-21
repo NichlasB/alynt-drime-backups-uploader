@@ -16,18 +16,24 @@ Supported now:
 - Fetch a known Drime package and its sidecars into a local download directory.
 - Inspect package metadata and archive contents.
 - Extract a verified package into a separate restore staging directory.
-- Write a local `RESTORE_REPORT.json` evidence file after successful restore staging.
+- Write a local `RESTORE_REPORT.json` evidence file after successful restore staging, including deterministic SHA-256 records for the extracted WordPress tree and database dump.
 - Run a read-only `restore-dry-run` preflight against staged evidence.
 - Run a stricter read-only `restore-production-preflight` against an explicitly enrolled production-simulation target; this reports target/package identity, disk budget, write-control readiness, and native-backup evidence.
-- Create fresh production-simulation recovery evidence only through `restore-production-create-pre-backup` after preflight passes and after its separate exact confirmation; evidence records private database/file artifact SHA-256 values.
-- Use `restore-production-rollback` only after a future matching production-apply report exists, the dedicated rollback flag is enabled in private configuration, and the exact target confirmation is supplied.
+- Create fresh production-simulation recovery evidence only through `restore-production-create-pre-backup` after preflight passes and after its separate exact confirmation; evidence records private database/file artifact SHA-256 values and binds the current staged-input integrity record.
+- Apply a files-only, database-only, or combined production simulation through `restore-production-apply` only after both private enablement flags, matching evidence, unchanged target fingerprint, and both exact confirmations pass. File apply captures and recreates only symlinks whose enrolled path and exact target both match, then requires the complete plugin, theme, drop-in, symlink path, and symlink target inventories before maintenance is removed. Combined apply replaces files and restores enrolled symlinks before importing the database under the same maintenance window.
+- Use `restore-production-rollback` only after a matching production-apply report exists, the dedicated rollback flag is enabled in private configuration, and the exact target confirmation is supplied. File rollback extracts into private staging and validates every symlink path and target against enrollment before deleting target files. Its recovery preflight permits only WP-CLI and filesystem inventory drift attributable to the failed apply; target paths, package identity and integrity, private recovery evidence, disk, configuration, and native-backup gates remain mandatory. Maintenance remains active until full post-rollback identity verification passes. After the private mode-`0640` rollback report is written successfully, the runner removes only that successful rollback's exact generated `.rollback-*` extraction tree. Extraction, copy, database, verification, maintenance, and report failures retain the tree for operator recovery and later approved cleanup.
+- For database apply or rollback, treat `database_may_be_modified: true` as evidence that SQL changes may have started even when `database_imported` or the corresponding success flag is false. Keep maintenance active, resolve the WP-CLI/import failure, and use the verified apply report for rollback or retry the rollback against the same original private evidence.
+- If post-write WP-CLI identity verification fails, keep maintenance active and use the private apply report for rollback or retry the rollback after resolving the read failure. A destructive apply report may correctly show `production_rollback_available: true` even though the apply status is failed.
+- Require the post-write WordPress root owner/group and enrolled drop-in inventory checks to pass before removing maintenance. An ownership mismatch after apply should use the verified rollback report; a missing or changed drop-in after rollback should be corrected through the owning platform/plugin workflow or by retrying the verified rollback after the underlying fault is cleared.
+- Rollback maintenance failures are explicit stop conditions. Activation failure with no emergency marker stops before writes. Reactivation failure after file restoration leaves the emergency marker active. Deactivation failure after successful verification leaves maintenance active. Resolve the underlying WP-CLI/filesystem fault and retry the same verified rollback rather than manually clearing maintenance first.
+- After successful runner verification and maintenance removal, check the public HTTPS URL independently from an operator or agent environment. Version 1 intentionally does not use runner-side HTTP as an apply/rollback gate because CDN, WAF, DNS, caching, maintenance responses, and server egress can obscure the actual WordPress state.
 - Apply database-only, files-only, or combined files-and-database restores to a staging target after explicit gates pass.
 - Create staging pre-restore database/file backup evidence immediately before `restore-apply` when `--create-pre-restore-backup=1` is explicitly supplied.
 - Review restored files and `database.sql` without touching production.
 
 Not supported yet:
 
-- Running a production apply command. The rollback foundation is production-simulation-only, disabled by default, and cannot run until a matching production-apply report exists.
+- Any apply against an actual production enrollment. The implemented command is production-simulation-only and disabled by default.
 
 Any production restore must remain a manual, explicitly approved operation until the separate production-capable workflow is designed and tested. Staging-only apply is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md); future production capability is tracked in [PRODUCTION_RESTORE_AUTOMATION_PLAN.md](PRODUCTION_RESTORE_AUTOMATION_PLAN.md).
 
@@ -95,7 +101,7 @@ php /path/to/alynt-backup-runner.php fetch \
   --download-path=/var/www/example.com/private/alynt-drime-backups/downloads
 ```
 
-`fetch` requires exact remote matches for the archive, `.manifest.json`, and `.sha256` sidecar. It downloads into temporary files, refuses to overwrite existing files unless `--overwrite=1` is supplied, and verifies the package immediately after download. The Drime token must come from the environment variable named by `--token-env`, defaulting to `ALYNT_DRIME_TOKEN`.
+`fetch` requires exact remote matches for the archive, `.manifest.json`, and `.sha256` sidecar. It downloads into temporary files, refuses to overwrite existing files unless `--overwrite=1` is supplied, and verifies the package immediately after download. The Drime token must come from the environment variable named by `--token-env`, defaulting to `ALYNT_DRIME_TOKEN`. The optional `drime_download_timeout_seconds` runner setting limits each downloaded file to six hours by default and is clamped between five minutes and 24 hours.
 
 For server-runner packages uploaded through the generic outbox producer, the plugin creates or reuses a Drime package folder named after the package ID, then uploads the archive, manifest, checksum, package-level remote-index, and folder catalog snapshot sidecars into that package folder. If `fetch` reports a missing required manifest/checksum sidecar, stop and repair the remote package set before treating the backup as restorable.
 
@@ -180,7 +186,9 @@ cat /var/www/example.com/restores/alynt-drime-backups/example-com-YYYYmmdd-HHMMS
 
 `RESTORE_NOTES.txt` should state that no database import was performed and no live WordPress files were overwritten.
 
-`RESTORE_REPORT.json` is a machine-readable local evidence file. It records package ID, archive and sidecar names, checksum metadata, non-secret manifest fields, `package_verified`, `archive_members_safe`, `extracted_for_inspection`, `database_imported: false`, `live_files_overwritten: false`, and `manual_restore_required: true`.
+`RESTORE_REPORT.json` is a machine-readable local evidence file. It records package ID, archive and sidecar names, checksum metadata, non-secret manifest fields, deterministic `staged_integrity` SHA-256 records for the extracted WordPress tree and database dump, `package_verified`, `archive_members_safe`, `extracted_for_inspection`, `database_imported: false`, `live_files_overwritten: false`, and `manual_restore_required: true`.
+
+Production preflight requires the integrity object generated by runner `0.4.4` or newer. If the staged directory was created by an older runner, remove or archive that staging directory through the approved cleanup flow and run `stage-restore` again with the current runner before creating production pre-restore evidence.
 
 ## Restore Dry Run
 
