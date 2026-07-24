@@ -563,7 +563,7 @@ Phase 4 automated parity validation completed locally on 2026-07-24:
 | Current runner tests | All CLI test helpers execute `server-runner/alynt-backup-runner.php`, the generated deployable artifact |
 | Full plugin suite | `216` tests and `1668` assertions pass with `4` expected Windows symlink skips |
 | PHPCS and runner syntax | PHPCS passes all `58` configured files; every source module and generated runner passes `php -l` |
-| PHP `7.4` and `8.3` | GitHub quality matrix is configured; clean-checkout Linux execution awaits Git/CI |
+| PHP `7.4` and `8.3` | GitHub Actions Quality run `30104887039` passed both clean-checkout jobs on commit `a306b221181a0b17e932a8c9b0ad728f14ebc9e7` |
 | Deterministic build hash | `npm run verify:runner` renders twice and verifies SHA-256 `5f52fd679be5509649185cf4b4acc7774eea84da65bba49679086c7cd5e13376` |
 | Generated freshness | The same verifier compares rendered bytes with the committed generated runner |
 | CLI usage snapshot | Added `ServerRunnerParityTest::test_cli_usage_matches_snapshot` and a frozen usage fixture |
@@ -642,6 +642,29 @@ Phase 6 post-feature reviews completed on 2026-07-24:
   supported production-simulation from unavailable actual-production
   enrollment. No low-confidence item was applied.
 
-Exact next step: after explicit Git approval, run Git Operations Prompt Option
-A to commit and push the completed modularization slice, then inspect the
-clean-checkout Linux PHP `7.4`/`8.3` and packaging workflow results.
+Phase 7 pre-release and packaging validation completed on 2026-07-24:
+
+- Refreshed the complete toolkit sequence from model assessment through the
+  final security audit. No production-code or test defect was confirmed.
+- The temporary model-assessment file was removed before package creation.
+- `npm test -- --do-not-cache-result` passed `216` tests and `1668` assertions
+  with `4` expected Windows symlink skips.
+- PHPCS passed all `58` configured production files.
+- The production build completed with the generated runner already current.
+- Deterministic verification retained SHA-256
+  `5f52fd679be5509649185cf4b4acc7774eea84da65bba49679086c7cd5e13376`;
+  all 14 source files and the generated artifact passed PHP syntax checks.
+- `npm audit --audit-level=high` reported zero vulnerabilities. A local Composer
+  audit could not be rerun because neither a Composer executable nor a
+  repo-local phar is installed; the unchanged lockfile has no runtime package
+  dependency.
+- A first Windows-native ZIP was correctly refused for backslash entry names.
+  The portable release-shaped ZIP was rebuilt with standard forward-slash
+  paths and passed: `73` entries, generated runner present, modular source
+  absent, no duplicate or unsafe paths, and zero forbidden development paths.
+- Plugin release metadata remains at the accepted `0.5.1` baseline; no version
+  bump, tag, or release publication occurred during this gate.
+
+Exact next step: obtain explicit approval for the proposed `0.5.2` patch
+release, then run Git Operations Prompt Option C; do not commit, tag, or
+publish before that approval.

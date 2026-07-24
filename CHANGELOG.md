@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-07-24
+
 ### Added
 
 - Added deterministic generation, freshness verification, and dedicated syntax checks for the portable one-file server runner while keeping its initial authoritative source logically intact.

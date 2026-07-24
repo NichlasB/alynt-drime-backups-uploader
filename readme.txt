@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.1
+Stable tag: 0.5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -115,6 +115,8 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+
+= 0.5.2 =
 * Added deterministic generation, freshness verification, and dedicated syntax checks for the portable one-file server runner.
 * Added release-ZIP validation that requires the generated portable runner and rejects modular runner source before release upload.
 * Added automated portable-runner CLI usage snapshot and config-example compatibility tests.
@@ -207,6 +209,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.5.2 =
+No breaking changes. Modularizes the portable server runner while retaining its generated single-file deployment format and adding deterministic build and package validation.
 
 = 0.5.1 =
 No breaking changes. Fixes production-simulation rollback retries and PHP 7.4 CI dependency compatibility.
