@@ -1,12 +1,12 @@
 # Production-Capable Restore Automation Plan
 
-Updated: 2026-07-21
+Updated: 2026-07-24
 
 ## At A Glance
 
 | Item | Decision |
 |---|---|
-| Status | Runner `0.4.7` combined apply/rollback and report-first extraction cleanup passed on `hbf-staging`; production apply is relocked and the site is healthy |
+| Status | Runner `0.4.8` generated single-file parity passed on `hbf-staging`; prior `0.4.7` combined apply/rollback evidence remains valid, production apply is relocked, and the site is healthy |
 | Goal | Operator-supervised files-and-database restoration from a verified Alynt server-runner package |
 | Existing baseline | Staging-only `restore-apply` version 1 is implemented and rehearsed |
 | Current test target | Approved: `staging.handcraftedbotanicalformulas.com` as a production-simulation target |
@@ -968,7 +968,7 @@ Phase 7 progress on 2026-07-21:
 - Pre-release Code Quality Review found no new duplication, naming defect, debug residue, or unjustified abstraction after the earlier refactors and hardening. The configured final gate passes: PHPCS across 58 production PHP files, 214 PHPUnit tests with 1,657 assertions and 4 expected Windows symlink skips, a successful production build, and clean diff whitespace validation. Prompt 07A evidence is complete; portable runner modularization remains the separately scoped architecture backlog item.
 - Pre-release Documentation Review synchronized the README, WordPress readme, changelog, settings schema, and code annotations with the final release-candidate behavior. The docs now cover the renewable owner-aware upload lease, mandatory CI quality gate, and exact staging/production-simulation/actual-production boundary. All 28 user settings and 12 operational options are documented, local links resolve, plugin release-candidate `0.5.0` and runner `0.4.7` identities remain deliberately separate, and missing public-method `@since` annotations were completed with workspace history corrected to `0.2.0`; premature `0.5.1` annotations were normalized to the actual `0.5.0` candidate. PHPCS, build, and diff whitespace validation pass.
 - Final pre-release Security Audit reviewed all 59 runtime PHP files and the 4 JavaScript source/served assets across input validation, output escaping, capability/nonce enforcement, secret redaction, Drime requests, archive/path/symlink safety, shell construction, and every staging/production-simulation destructive gate. No Critical, High, Medium, or Low defect was confirmed. Composer and npm audits report no known vulnerabilities; syntax, PHPCS, build, and the final 214-test/1,657-assertion suite pass with 4 expected Windows symlink skips. Security remains the final completed gate and the release-candidate security status is clear.
-- The standalone runner remains intentionally deployable as one file. A future architecture slice should introduce modular runner source files and a deterministic build that emits the single portable `alynt-backup-runner.php`; this must preserve release hashing, direct deployment, rollback compatibility, and the complete runner test matrix.
+- The standalone runner remains intentionally deployable as one file. The approved project in [PORTABLE_RUNNER_MODULARIZATION_PLAN.md](PORTABLE_RUNNER_MODULARIZATION_PLAN.md) defines modular runner source files and a deterministic build that emits the single portable `alynt-backup-runner.php`; Phase 0 baseline evidence and Phase 1 deterministic single-source generation are complete locally, while responsibility-based splitting and staging parity remain pending. The project must preserve release hashing, direct deployment, rollback compatibility, and the complete runner test matrix.
 
 ### Phase 8: Release Candidate
 
@@ -1028,4 +1028,4 @@ The user explicitly confirmed:
 
 ## Current Recommendation
 
-Phase 0 through Phase 7 implementation, production-simulation rehearsals, full E2E validation, feature reviews, and ordered pre-release workflows are complete. Runner `0.4.7` is deployed on `hbf-staging` with exact reviewed SHA-256 parity and a proven zero-failure combined apply/rollback cycle, including report-first successful rollback extraction cleanup. Production apply is relocked, rollback remains enabled only for this approved production-simulation target, maintenance is inactive, and the site is healthy. Plugin release-candidate metadata is prepared as `0.5.0`; actual-production enrollment remains unavailable. The exact next step is the Git Operations Option C human approval checkpoint for release title, description, and upgrade notes before any commit, tag, push, or publication.
+Phase 0 through Phase 7 implementation, production-simulation rehearsals, full E2E validation, feature reviews, ordered pre-release workflows, and the corrective `v0.5.1` release are complete. Runner `0.4.8` is deployed on `hbf-staging` with exact generated SHA-256 parity after the approved read-only modularization rehearsal; the exact `0.4.7` runner is preserved for rollback, and its proven zero-failure combined apply/rollback cycle plus report-first extraction cleanup evidence remains valid. Production apply is relocked, rollback remains enabled only for this approved production-simulation target, maintenance is inactive, and the site is healthy. Plugin `v0.5.1` is the accepted stable baseline; actual-production enrollment remains unavailable. Portable runner modularization Phases 0 through 5 are complete, while post-feature reviews and clean-checkout Linux CI proof remain pending. Actual-production enrollment still requires selection and approval of a real production target in a separate task.

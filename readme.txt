@@ -76,7 +76,7 @@ No. The server runner creates a logical WordPress backup from a WP-CLI database 
 
 = Can I restore if the original WordPress site is unavailable? =
 
-The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, package-folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies, inspects, prints review guidance, and stages locally. Staging-only database, file, and combined file/database apply are available through gated CLI commands. wp-admin restore, production restore, and a mutable singleton remote catalog are not included.
+The server runner can fetch a known Drime package plus matching manifest and checksum sidecars from CLI when you have the package ID, workspace, package-folder hash, and token. Server-runner packages also upload `.remote-index.json` and `.remote-catalog.json` sidecars for remote discovery. It then verifies, inspects, prints review guidance, and stages locally. Staging-only database, file, and combined file/database apply are available through gated CLI commands. Separately gated production-simulation restore is available for approved staging targets, but wp-admin restore, actual-production enrollment, and a mutable singleton remote catalog are not included.
 
 = Can this run beside the old Alynt Drime WPvivid Uploader? =
 
@@ -113,6 +113,20 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= Unreleased =
+* Added deterministic generation, freshness verification, and dedicated syntax checks for the portable one-file server runner.
+* Added release-ZIP validation that requires the generated portable runner and rejects modular runner source before release upload.
+* Added automated portable-runner CLI usage snapshot and config-example compatibility tests.
+* Advanced the standalone runner identity to `0.4.8` so generated-source builds can be distinguished from the deployed `0.4.7` artifact.
+* Moved server-runner package inventory and operator-approved local cleanup behavior into the first responsibility-based source trait while retaining the generated one-file CLI.
+* Moved package verification, inspection, Drime fetching, restore staging, restore reporting, and staged integrity behavior into the second responsibility-based source trait.
+* Moved backup package creation, database export, archive construction, consistency metadata, and archive exclusion behavior into the third responsibility-based source trait.
+* Moved staging restore dry-run, pre-backup evidence creation, restore apply, reporting, and post-restore manual-review behavior into the fourth responsibility-based source trait.
+* Moved read-only production restore preflight, runtime/package identity, disk-budget, native-backup evidence, filesystem-marker, and preflight reporting behavior into the fifth responsibility-based source trait.
+* Moved production pre-restore backup creation, confirmation-gated apply orchestration, apply reporting, and apply-only symlink preservation behavior into the sixth responsibility-based source trait.
+* Moved production rollback validation, damaged-state filtering, recovery archive application, extraction cleanup, and rollback reporting behavior into the seventh responsibility-based source trait.
+* Completed the responsibility split by moving shared production control, filesystem security, package support, Drime client, configuration/runtime, and CLI startup behavior into focused source modules while retaining one generated deployable runner.
 
 = 0.5.1 =
 * Fixed a production-simulation rollback retry that could collide with a retained rollback staging directory when both attempts occurred in the same second.

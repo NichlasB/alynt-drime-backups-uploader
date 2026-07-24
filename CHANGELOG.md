@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added deterministic generation, freshness verification, and dedicated syntax checks for the portable one-file server runner while keeping its initial authoritative source logically intact.
+- Added release-ZIP validation that requires the generated portable runner, rejects modular runner source, and refuses duplicate or unsafe archive paths before a GitHub release asset is uploaded.
+- Added automated portable-runner CLI usage snapshot and published config-example compatibility tests.
+
+### Changed
+
+- Advanced the standalone runner identity to `0.4.8` so generated-source builds can be distinguished from the deployed `0.4.7` artifact.
+- Moved server-runner package inventory and operator-approved local cleanup behavior into the first responsibility-based source trait while retaining the generated one-file CLI.
+- Moved package verification, inspection, Drime fetching, restore staging, restore reporting, and staged integrity behavior into the second responsibility-based source trait.
+- Moved backup package creation, database export, archive construction, consistency metadata, and archive exclusion behavior into the third responsibility-based source trait.
+- Moved staging restore dry-run, pre-backup evidence creation, restore apply, reporting, and post-restore manual-review behavior into the fourth responsibility-based source trait.
+- Moved read-only production restore preflight, runtime/package identity, disk-budget, native-backup evidence, filesystem-marker, and preflight reporting behavior into the fifth responsibility-based source trait.
+- Moved production pre-restore backup creation, confirmation-gated apply orchestration, apply reporting, and apply-only symlink preservation behavior into the sixth responsibility-based source trait.
+- Moved production rollback validation, damaged-state filtering, recovery archive application, extraction cleanup, and rollback reporting behavior into the seventh responsibility-based source trait.
+- Completed the responsibility split by moving shared production control, filesystem security, package support, Drime client, configuration/runtime, and CLI startup behavior into focused source modules while retaining one generated deployable runner.
+
 ## [0.5.1] - 2026-07-21
 
 ### Fixed

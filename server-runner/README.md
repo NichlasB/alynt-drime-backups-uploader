@@ -12,7 +12,19 @@ This first runner is intentionally conservative:
 - It can record light consistency metadata for high-write-site review.
 - It writes temporary files first, then atomically renames completed artifacts into the outbox.
 
-The current standalone runner identity is `0.4.7`. Production apply and rollback reports carry that runner identity so older deployed copies can be identified before an approved rehearsal. This runner-only identity is independent of the WordPress plugin release version.
+The current standalone runner identity is `0.4.8`. Production apply and rollback reports carry that runner identity so older deployed copies can be identified before an approved rehearsal. This runner-only identity is independent of the WordPress plugin release version.
+
+## Source And Generated Artifact
+
+`server-runner/alynt-backup-runner.php` is the generated, single-file deployment artifact. Edit the authoritative source under `server-runner/src/` and run:
+
+```bash
+npm run build:runner
+npm run verify:runner
+npm run lint:runner
+```
+
+Generation uses an explicit source manifest, LF line endings, no timestamps, and one final newline. CI rebuilds the runner and fails when the committed artifact is stale. Release packages include the generated runner and exclude the modular source and build scripts, so existing GridPane installation and rollback commands continue to copy one portable file.
 
 ## Commands
 

@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-07-14
+Updated: 2026-07-24
 
 ## Purpose
 
@@ -10,14 +10,15 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
-- Current released stable version: `v0.4.0`.
-- Accepted as stable on 2026-07-12.
+- Current released stable version: `v0.5.1`.
+- Accepted as stable on 2026-07-22.
+- Production-simulation restore automation and its release-quality corrections are released in `v0.5.1`; GitHub CI passed on PHP 7.4 and 8.3, the generated release asset was audited, and a real WordPress Updates-screen rehearsal upgraded `plugin-tester.local` from `0.4.0` to `0.5.1` while preserving the active plugin state.
 - Automatic pre-restore backup creation has been released in `v0.4.0`; feature-stage reviews, local validation, real staging combined restore rehearsal, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Automatic local server outbox retention after confirmed upload has been released in `v0.3.2`; feature-stage reviews, local validation, staging retention test, staging cleanup/recovery verification, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Mandatory per-package Drime folders for server/generic-outbox uploads were released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
-- Real WordPress Plugins-screen update rehearsals passed for `v0.1.1`, `v0.2.0`, and `v0.3.1`; `v0.2.1`, `v0.3.1`, `v0.3.2`, and `v0.4.0` also passed Alynt Plugin Updater release-asset detection/install validation.
+- Real WordPress Plugins-screen update rehearsals passed for `v0.1.1`, `v0.2.0`, `v0.3.1`, and `v0.5.1`; `v0.2.1`, `v0.3.1`, `v0.3.2`, and `v0.4.0` also passed Alynt Plugin Updater release-asset detection/install validation.
 
 ## What Is Complete
 ### Plugin Foundation
@@ -647,7 +648,7 @@ Feature-stage workflow results:
 
 ## Genuine Remaining Backlog
 
-No required feature slice remains for the validated `v0.4.0` current-plugin baseline.
+No required feature slice remains for the validated `v0.5.1` current-plugin baseline.
 
 Conditional current-plugin extensions:
 
@@ -655,6 +656,7 @@ Conditional current-plugin extensions:
 2. Additional server archive formats. Start only after a real server or producer requires a format beyond `.tar.gz` and provides validation fixtures.
 3. Production-capable restore automation. Treat this as a new high-risk gated extension with production-specific rollback, maintenance, ownership, runtime verification, and approval design; staging-only version 1 is complete. The separate living plan is `docs/PRODUCTION_RESTORE_AUTOMATION_PLAN.md`; Phase 0 assumptions are approved, Phase 1 read-only GridPane investigation is complete, and Phase 2 read-only production preflight is implemented and reviewed. The original `alyntdrime.sitesmain.com` rehearsal safely refused only on disk capacity. On 2026-07-20, replacement target `hbf-staging` completed enrollment Gates A through F with UUID initialization, runner `0.2.0`, GridPane revision `31`, verified staged package `staging-handcraftedbotanicalformulas-com-20260720-203243`, exact runtime/write-control inventory, and ample capacity. Both the no-report preflight and approved private audit-report rerun passed all `64` checks with zero failures. The report exposes only hashed revision/database identity, contains no sensitive-key fields, and keeps production apply, rollback, destructive actions, database import, live-file overwrite, and maintenance changes false. Phase 3 pre-restore/rollback foundation work remains separately gated and must prove rollback before production-simulation apply is introduced.
 4. A dedicated third-party producer adapter. Start only after a specific producer is selected and the generic outbox cannot represent its completed packages safely.
+5. Portable runner modularization and deterministic single-file build output. Planning, Phase 0 baseline evidence, Phase 1 deterministic generation, all eight Phase 2 source-splitting batches, Phase 3 build/CI/packaging integration, the Phase 4 automated parity audit, approved Phase 5 `hbf-staging` read-only parity, and Phase 6 post-feature reviews completed on 2026-07-24. Runner `0.4.8` is produced from focused responsibility/shared-helper modules plus a small bootstrap/dispatch entrypoint. Freshness, repeat-generation, source/generated syntax, exact CLI usage snapshot, config-example compatibility, report-schema/confirmation regression, complete-suite, build, PHPCS, release-ZIP content, and deployed single-file parity gates pass. Continue with an approved Git Operations Option A commit/push so clean-checkout PHP 7.4/8.3 and Linux packaging proof can run in CI. See `docs/PORTABLE_RUNNER_MODULARIZATION_PLAN.md`.
 
 Separate project:
 

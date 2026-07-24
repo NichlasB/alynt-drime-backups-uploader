@@ -40,6 +40,9 @@ jobs:
       - name: Run PHP coding standards
         run: php vendor/bin/phpcs
 
+      - name: Run portable runner syntax checks
+        run: npm run lint:runner
+
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
 
@@ -63,8 +66,11 @@ jobs:
       - name: Build production assets
         run: npm run build
 
+      - name: Verify deterministic runner build
+        run: npm run verify:runner
+
       - name: Verify generated assets are current
-        run: git diff --exit-code -- assets/admin.js assets/admin-workspaces.js assets/admin.css
+        run: git diff --exit-code -- assets/admin.js assets/admin-workspaces.js assets/admin.css server-runner/alynt-backup-runner.php
 
       - name: Audit Node dependencies
         run: npm audit --audit-level=high

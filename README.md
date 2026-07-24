@@ -23,7 +23,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
 - Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
 - Provides WP-CLI commands for server-driven scan/upload/status workflows.
-- Includes a first-pass PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, guide non-destructive restore staging, run staging and production-simulation read-only restore preflights, preview old local artifacts, and run operator-approved local cleanup behind an explicit confirmation flag.
+- Includes a standalone PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, guide non-destructive restore staging, run staging and production-simulation restore workflows behind explicit safety gates, preview old local artifacts, and run operator-approved local cleanup behind an explicit confirmation flag.
 - Stores bounded, redacted diagnostics when diagnostics are explicitly enabled.
 - Keeps local backups after upload by default; deletion requires explicit opt-in.
 
@@ -47,9 +47,9 @@ For development and release validation, use the packaged zip and the documented 
 
 ## Development
 
-Run `npm run build` after editing files in `assets/src/admin/`; the build script regenerates the enqueued `assets/admin.js`, `assets/admin-workspaces.js`, and `assets/admin.css` files directly. Run `npm run test` and `npm run lint` before packaging. The `pot` script requires WP-CLI on the command path.
+Run `npm run build` after editing files in `assets/src/admin/` or `server-runner/src/`. The build regenerates the enqueued `assets/admin.js`, `assets/admin-workspaces.js`, and `assets/admin.css` files plus the deployable `server-runner/alynt-backup-runner.php`. Edit the modular runner source, not the generated one-file artifact. Use `npm run verify:runner` and `npm run lint:runner` for deterministic freshness and PHP syntax checks, then run `npm run test` and `npm run lint` before packaging. The `pot` script requires WP-CLI on the command path.
 
-GitHub Actions runs the reusable quality workflow on PHP 7.4 and 8.3, then verifies the Node build, generated assets, and dependency audit. Release packaging depends on that quality workflow passing.
+GitHub Actions runs the reusable quality workflow on PHP 7.4 and 8.3, then verifies the Node build, generated assets, generated-runner freshness, and dependency audit. Release packaging depends on that quality workflow passing and validates that the installable ZIP contains the generated runner but excludes modular runner source.
 
 ## Updates
 

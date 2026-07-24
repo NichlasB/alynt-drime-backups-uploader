@@ -37,6 +37,8 @@ jobs:
                     --exclude='coverage' \
                     --exclude='assets/src' \
                     --exclude='assets/dist' \
+                    --exclude='server-runner/src' \
+                    --exclude='server-runner/*.tmp' \
                     --exclude='.gitignore' \
                     --exclude='.gitattributes' \
                     --exclude='.phpcs.xml' \
@@ -64,6 +66,9 @@ jobs:
           zip -r ${PLUGIN_SLUG}-${VERSION}.zip ${PLUGIN_SLUG}
 
           echo "ZIP_FILE=${PLUGIN_SLUG}-${VERSION}.zip" >> $GITHUB_ENV
+
+      - name: Verify release package contents
+        run: npm run verify:release-zip -- "build/${ZIP_FILE}"
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v3

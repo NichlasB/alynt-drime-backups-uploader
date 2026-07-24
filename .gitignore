@@ -12,3 +12,4 @@ session-context.tmp.md
 session-handoff.tmp.md
 assets/dist/
 *.map
+server-runner/alynt-backup-runner.php.*.tmp
