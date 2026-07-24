@@ -662,9 +662,33 @@ Phase 7 pre-release and packaging validation completed on 2026-07-24:
   The portable release-shaped ZIP was rebuilt with standard forward-slash
   paths and passed: `73` entries, generated runner present, modular source
   absent, no duplicate or unsafe paths, and zero forbidden development paths.
-- Plugin release metadata remains at the accepted `0.5.1` baseline; no version
-  bump, tag, or release publication occurred during this gate.
+- Plugin release metadata remained at the accepted `0.5.1` baseline during
+  this gate; no version bump, tag, or release publication occurred until the
+  separate release approval was received.
 
-Exact next step: obtain explicit approval for the proposed `0.5.2` patch
-release, then run Git Operations Prompt Option C; do not commit, tag, or
-publish before that approval.
+Phase 8 release and acceptance completed on 2026-07-24:
+
+- Release commit `19ec5311a9f34f907c4f9af0bed1b88b52c27791` passed the required
+  Node, PHP `7.4`, and PHP `8.3` quality workflow before tagging.
+- Annotated tag and GitHub release `v0.5.2` were published with asset
+  `alynt-drime-backups-uploader-v0.5.2.zip`.
+- Release workflow `30107383101` passed its independent quality gate and
+  attached the `193557`-byte ZIP with SHA-256
+  `3323a299298b4e59276e7ee067a95d8c68e65927481609db3471d9fd3dab87e6`.
+- The downloaded 73-entry asset passed the package verifier, contained plugin
+  `0.5.2` and runner `0.4.8`, included the generated runner, excluded modular
+  source, and contained zero forbidden development paths.
+- On `plugin-tester.local`, Alynt Plugin Updater detected `0.5.2` from active
+  `0.5.1` and WordPress rendered the native update action. The first asset
+  request received a transient `504`; maintenance mode cleared and `0.5.1`
+  remained intact. A repeat WordPress HTTP probe received the complete asset
+  with HTTP `200`, and the native retry completed download, unpack, install,
+  old-version removal, and maintenance cleanup successfully.
+- Final checks confirmed active plugin `0.5.2`, no remaining update notice,
+  no maintenance marker, a working settings page, diagnostics version `0.5.2`,
+  and no browser console errors.
+- `v0.5.2` is accepted as the stable baseline.
+
+Exact next step: return to the implementation roadmap and choose an optional
+future feature slice or continue controlled site-by-site rollout; no required
+portable-runner modularization work remains.
