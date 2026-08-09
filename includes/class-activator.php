@@ -25,5 +25,6 @@ class Alynt_Drime_Backups_Uploader_Activator {
 	 */
 	public static function activate() {
 		Alynt_Drime_Backups_Uploader_Settings::maybe_install();
+		Alynt_Drime_Backups_Uploader_Dashboard_Connection::maybe_install();
 	}
 }

@@ -6,8 +6,43 @@
  */
 
 use PHPUnit\Framework\TestCase;
+use Brain\Monkey;
+use Brain\Monkey\Functions;
 
 class AdminPageSettingsTest extends TestCase {
+	protected function setUp(): void {
+		parent::setUp();
+		Monkey\setUp();
+
+		Functions\when( 'admin_url' )->alias(
+			function ( $path = '' ) {
+				return 'http://example.org/wp-admin/' . ltrim( (string) $path, '/' );
+			}
+		);
+	}
+
+	protected function tearDown(): void {
+		Monkey\tearDown();
+		parent::tearDown();
+	}
+
+	public function test_dashboard_pairing_shell_keeps_status_endpoint_disabled() {
+		$page   = $this->admin_page();
+		$output = $this->capture_private(
+			$page,
+			'render_dashboard_connection_shell',
+			array(
+				Alynt_Drime_Backups_Uploader_Dashboard_Connection::defaults(),
+			)
+		);
+
+		$this->assertStringContainsString( 'Central Dashboard', $output );
+		$this->assertStringContainsString( 'No public dashboard status route is registered in this slice.', $output );
+		$this->assertStringContainsString( 'textarea class="large-text code" rows="3" disabled', $output );
+		$this->assertStringContainsString( 'Prepare Pairing Shell', $output );
+		$this->assertStringNotContainsString( 'name="pairing_token"', $output );
+	}
+
 	public function test_gridpane_cron_snippet_uses_configured_server_outbox_base() {
 		$page    = $this->admin_page();
 		$snippet = $this->call_private(
@@ -211,5 +246,20 @@ class AdminPageSettingsTest extends TestCase {
 		}
 
 		return $reflection->invokeArgs( $object, $args );
+	}
+
+	/**
+	 * Captures a private rendering method.
+	 *
+	 * @param object           $object Object.
+	 * @param string           $method Method.
+	 * @param array<int,mixed> $args Args.
+	 * @return string
+	 */
+	private function capture_private( $object, $method, array $args ) {
+		ob_start();
+		$this->call_private( $object, $method, $args );
+
+		return (string) ob_get_clean();
 	}
 }

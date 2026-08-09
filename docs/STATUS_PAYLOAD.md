@@ -76,6 +76,8 @@ Warnings should use stable codes plus short operational messages. Avoid embeddin
 
 The first dashboard-ready contract is read-only.
 
+Current implementation status: the plugin stores local central-dashboard connection intent and renders a disabled admin pairing shell. No public dashboard REST endpoint is registered yet, and no pairing token is parsed or persisted by this shell.
+
 Out of scope for the first external monitoring version:
 
 - Remote restore.

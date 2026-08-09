@@ -23,6 +23,7 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	use Alynt_Drime_Backups_Uploader_Plugin_Destination_Ajax_Actions;
 	use Alynt_Drime_Backups_Uploader_Plugin_Failed_Upload_Actions;
 	use Alynt_Drime_Backups_Uploader_Plugin_Notification_Actions;
+	use Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions;
 
 	/**
 
@@ -32,6 +33,13 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	 */
 
 	private $settings;
+
+	/**
+	 * Dashboard connection.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Dashboard_Connection
+	 */
+	private $dashboard_connection;
 
 	/**
 
@@ -166,6 +174,8 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 
 		$this->settings = new Alynt_Drime_Backups_Uploader_Settings();
 
+		$this->dashboard_connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+
 		$this->logger = new Alynt_Drime_Backups_Uploader_Logger( $this->settings );
 
 		$this->notifier = new Alynt_Drime_Backups_Uploader_Failure_Notifier( $this->settings, $this->logger );
@@ -214,6 +224,8 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 		add_action( 'admin_enqueue_scripts', array( $this->admin_page, 'enqueue_assets' ) );
 
 		add_action( 'admin_post_alynt_drime_backups_save_settings', array( $this, 'handle_save_settings' ) );
+
+		add_action( 'admin_post_alynt_drime_backups_save_dashboard_connection', array( $this, 'handle_save_dashboard_connection' ) );
 
 		add_action( 'admin_post_alynt_drime_backups_test_connection', array( $this, 'handle_test_connection' ) );
 
@@ -315,6 +327,18 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	public function settings() {
 
 		return $this->settings;
+	}
+
+	/**
+	 * Dashboard connection getter.
+	 *
+	 * @return Alynt_Drime_Backups_Uploader_Dashboard_Connection
+	 *
+	 * @since 0.5.3
+	 */
+	public function dashboard_connection() {
+
+		return $this->dashboard_connection;
 	}
 
 	/**

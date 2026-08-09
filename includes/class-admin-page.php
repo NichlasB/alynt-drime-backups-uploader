@@ -24,6 +24,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Runner_Guidance;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Upload_Settings;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Notification_Settings;
+	use Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Cron_Health;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Status;
 	use Alynt_Drime_Backups_Uploader_Admin_Page_Diagnostics_Status;
@@ -157,6 +158,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 		$diagnostics   = $this->plugin->logger()->stats();
 		$cron_health   = $this->plugin->cron_health();
 		$health        = $this->plugin->health_summary()->status( wp_next_scheduled( Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT ) );
+		$connection    = $this->plugin->dashboard_connection()->get();
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Notice rendering is read-only.
 		$notice = isset( $_GET['alynt_notice'] ) ? sanitize_key( wp_unslash( $_GET['alynt_notice'] ) ) : '';
 
@@ -171,6 +173,7 @@ class Alynt_Drime_Backups_Uploader_Admin_Page {
 			$this->render_manual_actions();
 			$this->render_status_summary( $queue, $uploaded, $failed );
 			$this->render_health_summary( $health );
+			$this->render_dashboard_connection_shell( $connection );
 			$this->render_scan_state( $settings, $events, $cron_health );
 			$this->render_active_upload_state( $active );
 			$this->render_failed_uploads( $failed );

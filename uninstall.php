@@ -23,6 +23,7 @@ $alynt_drime_backups_options = array(
 	'alynt_drime_backups_logs',
 	'alynt_drime_backups_file_snapshots',
 	'alynt_drime_backups_outbox_file_snapshots',
+	'alynt_drime_backups_dashboard_connection',
 );
 
 $alynt_drime_backups_cron_hooks = array(

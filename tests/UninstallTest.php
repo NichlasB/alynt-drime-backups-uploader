@@ -124,6 +124,7 @@ class UninstallTest extends TestCase {
 			'alynt_drime_backups_logs',
 			'alynt_drime_backups_file_snapshots',
 			'alynt_drime_backups_outbox_file_snapshots',
+			'alynt_drime_backups_dashboard_connection',
 		);
 	}
 
