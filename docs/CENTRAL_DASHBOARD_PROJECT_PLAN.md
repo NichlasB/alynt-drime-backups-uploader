@@ -7,11 +7,29 @@ The dashboard plugin is a separate project. This document is planning preparatio
 ## At A Glance
 
 - Build a control-center WordPress plugin installed on one dashboard website.
+- Confirmed dashboard host site: `control-sitesmanage live-only`.
+- Confirmed dashboard plugin name: `Alynt Drime Backups Dashboard`.
 - Enroll multiple client/managed sites that have Alynt Drime Backups Uploader installed.
 - Show a simple read-only status overview for each site.
 - Focus version 1 on monitoring only: no remote restore, delete, backup execution, settings changes, or Drime credential changes.
 - Use the uploader's existing `site_uuid` and redacted status payload as the foundation.
 - Add any future uploader endpoint only after explicit opt-in, pairing, authentication, rate limiting, and redaction tests are designed.
+
+## Confirmed Project Decisions
+
+These decisions are approved as the starting point for the future dashboard plugin project:
+
+| Decision | Value |
+| --- | --- |
+| Dashboard host site | `control-sitesmanage live-only` |
+| Host WordPress path | `/var/www/control.sitesmanage.com/htdocs` |
+| Dashboard plugin name | `Alynt Drime Backups Dashboard` |
+| Version 1 scope | Read-only monitoring |
+| Enrollment direction | Dashboard-generated pairing token, entered on client sites |
+| Status direction | Dashboard polls enrolled client sites |
+| Remote actions in v1 | Not included |
+| Uploader endpoint state today | Not implemented |
+| Repo creation state | Not started |
 
 ## Why This Comes After Single-Site Status
 
@@ -198,8 +216,7 @@ Any future remote action should become a separate gated project with its own thr
 
 ## Open Decisions Before Implementation
 
-- Dashboard plugin name and repo name.
-- Which WordPress site will host the dashboard.
+- Dashboard plugin repo name. Suggested: `alynt-drime-backups-dashboard`.
 - Whether the first version stores snapshots in custom tables or options.
 - How long dashboard snapshots should be retained.
 - Polling interval.
@@ -214,6 +231,8 @@ Any future remote action should become a separate gated project with its own thr
 - Create a new plugin repo.
 - Add build tooling, linting, tests, updater compatibility, and release workflow only where useful.
 - Write the initial implementation plan and security model.
+- Target the dashboard plugin to run first on `control-sitesmanage live-only`.
+- Keep the first implementation local/plugin-repo focused before installing anything on the live host site.
 
 ### Phase 1: Read-Only Dashboard Shell
 
@@ -247,6 +266,36 @@ Any future remote action should become a separate gated project with its own thr
 
 - Uploader-side status foundation exists.
 - Single-site operator status helper exists and has been verified against rollout sites.
+- Host site is confirmed as `control-sitesmanage live-only`.
+- Plugin name is confirmed as `Alynt Drime Backups Dashboard`.
+- Version 1 scope is confirmed as read-only monitoring.
+- Enrollment direction is confirmed as dashboard-generated pairing token plus dashboard polling.
 - Dashboard implementation has not started.
 - No uploader endpoint exists yet.
-- Next practical step is choosing the dashboard host site and creating the separate dashboard plugin repo when ready.
+- Next practical step is creating a fresh implementation plan and repo for the separate dashboard plugin.
+
+## Fresh Implementation Chat Starting Point
+
+When the separate dashboard project begins, start with this sequence:
+
+1. Create a new plugin implementation plan for `Alynt Drime Backups Dashboard`.
+2. Confirm repo path and package identity before scaffolding.
+3. Create a new repo only after the implementation plan is accepted.
+4. Scaffold a minimal owner-managed WordPress plugin.
+5. Add only the tooling that makes sense for this plugin.
+6. Build the dashboard shell before adding uploader endpoint work.
+7. Keep `control-sitesmanage live-only` as the eventual host target, but do not install there until the local/repo baseline is reviewed.
+
+Recommended first implementation-plan sections:
+
+- Purpose and non-goals.
+- Host site and rollout target.
+- Version 1 user stories.
+- Data model.
+- Enrollment/authentication model.
+- Uploader endpoint requirements.
+- Admin UI views.
+- Polling and stale-site detection.
+- Security and redaction model.
+- Build/test/release workflow.
+- Phase checklist.

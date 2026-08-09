@@ -479,6 +479,7 @@ Current uploader-side preparation:
 - WP-CLI status output exists.
 - `docs/CENTRAL_DASHBOARD_READINESS.md` documents the future dashboard boundary, safe first-version fields, endpoint requirements, and explicit non-goals.
 - `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md` documents the recommended read-only dashboard shape, data model, enrollment model, endpoint boundary, polling direction, security boundaries, open decisions, and implementation phases.
+- Dashboard project starting decisions are recorded in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`: host site `control-sitesmanage live-only`, plugin name `Alynt Drime Backups Dashboard`, read-only v1 scope, dashboard-generated pairing token, and dashboard polling.
 
 Future dashboard boundaries:
 
