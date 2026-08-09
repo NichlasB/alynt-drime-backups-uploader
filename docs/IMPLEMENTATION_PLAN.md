@@ -125,6 +125,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - The status payload is usable for wp-admin, WP-CLI, diagnostics, and future centralized monitoring design.
 - No public dashboard REST endpoint is enabled by default.
 - Any future dashboard endpoint must add explicit pairing/enrollment, scoped authentication, and redaction enforcement.
+- Separate dashboard plugin preparation is documented in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`.
 
 ### Release And Validation Workflows
 
@@ -465,7 +466,7 @@ Remaining possible future work:
 
 ### 5. Central Dashboard Plugin Preparation
 
-Status: uploader-side readiness documented; dashboard plugin remains a separate future project.
+Status: uploader-side readiness and separate dashboard project plan documented; dashboard plugin remains a separate future project.
 
 Goal:
 
@@ -477,6 +478,7 @@ Current uploader-side preparation:
 - Redacted status payload contract exists.
 - WP-CLI status output exists.
 - `docs/CENTRAL_DASHBOARD_READINESS.md` documents the future dashboard boundary, safe first-version fields, endpoint requirements, and explicit non-goals.
+- `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md` documents the recommended read-only dashboard shape, data model, enrollment model, endpoint boundary, polling direction, security boundaries, open decisions, and implementation phases.
 
 Future dashboard boundaries:
 
@@ -493,6 +495,7 @@ Feature-stage workflow results:
 - Feature UI/UX Implementation Review: not applicable; no admin UI or dashboard UI changed.
 - Feature Security Review: completed as a boundary review; the docs explicitly require opt-in pairing, scoped authentication, redacted payloads, and no remote-control actions for any future endpoint.
 - Documentation Sync Audit: completed; README, status payload docs, package security docs, changelog, and this plan now reference the central dashboard readiness boundary.
+- Dashboard planning preparation: completed; dashboard implementation remains separate from this uploader plugin.
 
 ### 6. Additional Producer Adapters
 
@@ -646,6 +649,104 @@ Feature-stage workflow results:
 - Documentation Sync Audit: completed; README, readme.txt, CHANGELOG, settings docs, server automation docs, rollout runbook, POT entries, and this plan now describe server-specific local retention and distinguish it from broad local deletion and manual runner cleanup.
 - Validation: `npm.cmd run build`, `npm.cmd run lint`, `npm.cmd test`, and `git diff --check` passed. PHPUnit passed with 167 tests, 1103 assertions, and 1 expected skip. `git diff --check` reported line-ending normalization warnings only.
 
+## Operational Workflow Backlog
+
+### Plain-English Site Status And Configuration Workflow
+
+Status: implemented in `C:\Users\Captain\Documents\AI Workflows\Task Workflows\WordPress`; read-only helper script created and verified.
+
+Goal:
+
+- Give the operator a plain-language answer to: "Is Alynt Drime Backups Uploader working on this site, and exactly how is it configured?"
+- Make the status useful for a single target website before setup, after setup, during troubleshooting, and during normal checkups.
+- Keep status inspection read-only by default, with any configuration change moved into a separate approval-gated phase.
+
+Recommended workflow shape:
+
+- Create a separate two-phase workflow, rather than expanding the new-site setup workflow.
+- Phase 1: read-only site status audit.
+- Phase 2: approval-gated configuration changes, only after the operator chooses a specific change.
+- Follow Site Operations targeting and confirmation rules before inspecting any WordPress or live/GridPane target.
+- Do not print Drime API tokens or secret-bearing settings; all secret values must be redacted.
+
+Phase 1 should summarize, in plain English:
+
+- Overall plugin health: active version, queue count, failed count, active upload, warnings, and whether scheduled scans are running.
+- Server backup source: whether server outbox backups are configured, readable, scheduled, recently created, uploaded, clean, and retained locally.
+- WPvivid source: whether WPvivid is installed, whether the plugin is configured to upload WPvivid backups, and where those backups would go in Drime.
+- Drime destination: workspace/folder status, relative paths, whether workspace restrictions are active, and whether remote package evidence exists.
+- Local retention: whether local server package cleanup is enabled, how many confirmed uploaded package sets are kept, and what was retained most recently.
+- Remote retention: whether remote retention is configured, what policy applies, and how many known/confirmed remote backup packages exist.
+- Backup timing: server-runner cron schedule, scan/upload schedule, last package creation, last upload, and any obvious schedule overlap warnings.
+- Recommendation: no action needed, monitor, or suggested next approved change.
+
+Remote Drime verification should be optional:
+
+- Basic mode may rely on plugin status, uploaded registry records, remote index/catalog sidecars, and local package manifests.
+- Deep mode may query Drime directly through the local ignored secrets file to count actual remote package folders/files and compare them against plugin-known records.
+- Deep mode must still avoid printing token values and should summarize only destination identity and counts.
+
+Phase 2 should present configuration changes with helper text:
+
+```text
+Available configuration changes:
+
+1. Change server backup schedule
+   Choose when the server creates a full files + database backup package.
+   Affects backup creation timing, not Drime upload scanning by itself.
+   Example: daily at 01:10 UTC.
+
+2. Enable or disable WPvivid upload source
+   Decide whether completed backup files created by WPvivid should also be uploaded to Drime.
+   This does not create WPvivid backups; WPvivid scheduling remains configured inside WPvivid.
+
+3. Change Drime relative path
+   Choose the folder path inside the configured Drime destination.
+   Useful for keeping server and WPvivid backups separate.
+   Example: /example.com/server or /example.com/wpvivid.
+
+4. Change local retention count
+   Choose how many confirmed uploaded server backup package sets stay on the VPS.
+   This protects VPS disk space and does not delete remote Drime backups.
+   Example: keep the newest 2 local package sets.
+
+5. Change remote retention policy
+   Choose how many backups stay in Drime, or how old backups can be before cleanup.
+   This controls cloud storage usage and does not free VPS disk space.
+
+6. Change minimum file age
+   Choose how old a backup file must be before the plugin scans/uploads it.
+   This helps avoid uploading files that are still being written.
+   Example: 300 seconds means wait 5 minutes.
+
+7. Change multipart chunk size
+   Choose the upload part size used for large Drime uploads.
+   Larger chunks can be faster but need a stable server and network.
+   Example: 128 MB is recommended for capable VPS servers.
+
+8. Change workspace/folder lock
+   Lock the allowed Drime workspace or folder so backups cannot accidentally go to the wrong place.
+   This is usually configured in wp-config.php with the approved workspace constant.
+```
+
+Script conversion result:
+
+- Script conversion tracker ID: `SC-013`.
+- The reusable read-only helper exists at `C:\Users\Captain\Documents\AI Workflows\Task Workflows\WordPress\scripts\alynt-drime-backups\get-site-backup-status.ps1`.
+- The helper collects plugin status JSON, redacted settings, crontab schedule, local outbox and WPvivid folder facts, recent upload records, retention state, and Method 2 destination paths.
+- The helper emits compact plain text by default and structured JSON with `-Json`.
+- The helper was verified against `drmtv`, `purecleanse`, and `control-sitesmanage` live-only rollout targets on 2026-08-09.
+- Direct Drime API verification remains an optional manual workflow step because it uses the ignored local secrets file and may need case-by-case interpretation.
+
+Acceptance:
+
+- The workflow can answer, in simple language, whether server backups, WPvivid backups, local retention, remote retention, Drime destination, cron schedules, and upload health are configured and working on a target site.
+- The workflow clearly distinguishes VPS/local storage from Drime/remote storage.
+- The workflow clearly distinguishes WPvivid creating backups from Alynt Drime Backups Uploader uploading completed WPvivid backup files.
+- The workflow provides helper text before any configuration change so the operator understands what each setting affects and what it does not affect.
+- Configuration changes remain approval-gated and are verified after application.
+- Script conversion is complete for the read-only helper; configuration changes remain workflow-guided and approval-gated.
+
 ## Genuine Remaining Backlog
 
 No required feature slice remains for the validated `v0.5.2` current-plugin baseline.
@@ -660,7 +761,7 @@ Conditional current-plugin extensions:
 
 Separate project:
 
-- The centralized monitoring dashboard remains a separate plugin project. This uploader's redacted status and identity foundations are ready; dashboard implementation is not unfinished uploader work.
+- The centralized monitoring dashboard remains a separate plugin project. This uploader's redacted status and identity foundations are ready; dashboard implementation is not unfinished uploader work. Dashboard project planning preparation is recorded in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`.
 
 Intentionally deferred or blocked:
 
@@ -669,6 +770,19 @@ Intentionally deferred or blocked:
 - Automatic cron installation: deferred so the generated review/install commands retain an operator approval step.
 
 Continued site-by-site rollout is operational adoption work, not a missing plugin feature.
+
+## Temporary Rollout Tracker
+
+Keep this lightweight, site-focused list while the plugin is being adopted. It records confirmed installations and their current operational role; it is not a substitute for the site registry or for per-site private configuration.
+
+| Site | Environment | Current role | Status |
+|---|---|---|---|
+| `plugin-tester.local` | LocalWP | Disposable UI, updater, and restore-test target | Installed and validated through the native `0.5.1` to `0.5.2` updater rehearsal |
+| `alyntdrime.sitesmain.com` | GridPane staging | Historical server-runner, upload, and staging-restore validation target | Installed and extensively validated; not the preferred destructive-rehearsal target because of disk capacity |
+| `control.sitesmanage.com` | Live | Controlled server-backup and Drime-upload rollout | Installed and configured; daily server backup schedule is in use |
+| `unconditionyou.com` | Live | Controlled WPvivid upload rollout and split-backup confidence source | Installed and validated with a real WPvivid files-and-database backup/upload rehearsal |
+| `staging.handcraftedbotanicalformulas.com` | GridPane staging | Production-simulation restore and runner-parity target | Installed and validated; production apply remains relocked |
+| `purecleanse.net` | Live | Controlled server-backup and Drime-upload rollout | Installed and configured at `v0.5.2`; manual package plus automatic `01:00 UTC` packages uploaded successfully; daily `01:00 UTC` creation and 15-minute scan/upload cron are proven; first automatic package was fetched from Drime, verified, inspected, and staged non-destructively; its light-consistency warning was traced to live `wp-content` churn and the package was found to include `wp-content/wpvividbackups`; PureCleanse live runner config was updated on 2026-07-28 to exclude that WPvivid default path; manual post-change package `purecleanse-net-20260728-070237` verified clean, excluded `wp-content/wpvividbackups`, uploaded to its per-package Drime folder with archive plus sidecars, and was recorded as `remote_status: uploaded`; old local package sets were cleaned on 2026-07-28 while retaining the newest post-change package locally; automatic local server package retention is enabled with keep count `2` and verified on 2026-07-31 with only the July 30 and July 31 package sets retained locally |
 
 ## Current Recommendation
 

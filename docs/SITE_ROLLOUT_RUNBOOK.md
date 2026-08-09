@@ -133,7 +133,7 @@ Skip this phase if the site will only upload WPvivid backups.
 2. Run the command as the GridPane site user.
 3. Fix any health failure before creating a backup package.
 
-The generated install command embeds the non-secret config JSON, writes it as `config.json` beside the runner, creates private directories, copies the runner script, sets permissions, and runs health. The config includes site URL, WordPress path, outbox path, work path, restore path, archive format, package prefix, WP-CLI path, database export setting, and exclude paths.
+The generated install command embeds the non-secret config JSON, writes it as `config.json` beside the runner, creates private directories, copies the runner script, sets permissions, and runs health. The config includes site URL, WordPress path, outbox path, work path, restore path, archive format, package prefix, WP-CLI path, database export setting, and exclude paths. For dual-source sites, confirm the server runner excludes WPvivid's local storage, especially `wp-content/wpvividbackups`, so server packages do not contain separate WPvivid backup/log artifacts.
 
 The generated install command does not add cron and does not run a backup.
 

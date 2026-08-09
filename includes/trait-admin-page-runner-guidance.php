@@ -112,6 +112,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Runner_Guidance {
 				'.git',
 				'wp-content/cache',
 				'wp-content/debug.log',
+				'wp-content/wpvividbackups',
 				'wp-content/uploads/wpvividbackups',
 				'wp-content/updraft',
 				'wp-content/ai1wm-backups',

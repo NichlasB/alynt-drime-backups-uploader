@@ -79,6 +79,7 @@ class AdminPageSettingsTest extends TestCase {
 		$this->assertSame( 'wp', $data['wp_cli_path'] );
 		$this->assertTrue( $data['database']['enabled'] );
 		$this->assertContains( 'wp-content/cache', $data['exclude_paths'] );
+		$this->assertContains( 'wp-content/wpvividbackups', $data['exclude_paths'] );
 		$this->assertStringNotContainsString( 'secret-token', $json );
 	}
 
