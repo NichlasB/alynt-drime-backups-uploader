@@ -27,18 +27,21 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce is verified above; dashboard connection storage sanitizes all fields.
 		$raw = isset( $_POST['alynt_drime_backups_dashboard_connection'] ) && is_array( $_POST['alynt_drime_backups_dashboard_connection'] ) ? wp_unslash( $_POST['alynt_drime_backups_dashboard_connection'] ) : array();
 
-		$state = $this->dashboard_connection->update_shell( $raw );
+		$state  = $this->dashboard_connection->update_shell( $raw );
+		$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_invalid_token';
+
 		$this->logger->event(
 			'dashboard',
-			'info',
+			empty( $state['last_error_code'] ) ? 'info' : 'warning',
 			'dashboard_connection_shell_saved',
 			'Dashboard pairing shell state saved.',
 			array(
 				'connection_status'       => isset( $state['connection_status'] ) ? (string) $state['connection_status'] : '',
 				'status_endpoint_enabled' => ! empty( $state['status_endpoint_enabled'] ),
+				'last_error_code'         => isset( $state['last_error_code'] ) ? (string) $state['last_error_code'] : '',
 			)
 		);
 
-		$this->redirect( 'dashboard_connection_saved' );
+		$this->redirect( $notice );
 	}
 }

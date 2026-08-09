@@ -19,6 +19,11 @@ class AdminPageSettingsTest extends TestCase {
 				return 'http://example.org/wp-admin/' . ltrim( (string) $path, '/' );
 			}
 		);
+		Functions\when( 'esc_html__' )->alias(
+			function ( $text, $domain = 'default' ) {
+				return esc_html( __( $text, $domain ) );
+			}
+		);
 	}
 
 	protected function tearDown(): void {
@@ -38,9 +43,30 @@ class AdminPageSettingsTest extends TestCase {
 
 		$this->assertStringContainsString( 'Central Dashboard', $output );
 		$this->assertStringContainsString( 'No public dashboard status route is registered in this slice.', $output );
-		$this->assertStringContainsString( 'textarea class="large-text code" rows="3" disabled', $output );
+		$this->assertStringContainsString( 'name="alynt_drime_backups_dashboard_connection[pairing_token]"', $output );
 		$this->assertStringContainsString( 'Prepare Pairing Shell', $output );
-		$this->assertStringNotContainsString( 'name="pairing_token"', $output );
+		$this->assertStringContainsString( 'Review Dashboard Token', $output );
+		$this->assertStringContainsString( 'Revoke Dashboard Pairing', $output );
+		$this->assertStringContainsString( 'The raw token and one-time secret are not stored', $output );
+	}
+
+	public function test_dashboard_pairing_shell_renders_confirmation_for_reviewed_token() {
+		$page       = $this->admin_page();
+		$connection = array_merge(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::defaults(),
+			array(
+				'connection_status'      => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_TOKEN_READY,
+				'dashboard_origin'       => 'https://control.sitesmanage.com',
+				'expected_client_origin' => 'https://client.example.com',
+				'pairing_expires_at'     => '2099-01-01T00:00:00+00:00',
+			)
+		);
+		$output     = $this->capture_private( $page, 'render_dashboard_connection_shell', array( $connection ) );
+
+		$this->assertStringContainsString( 'https://control.sitesmanage.com', $output );
+		$this->assertStringContainsString( 'https://client.example.com', $output );
+		$this->assertStringContainsString( 'name="alynt_drime_backups_dashboard_connection[confirm_dashboard_origin]"', $output );
+		$this->assertStringContainsString( 'Confirm Dashboard Origin', $output );
 	}
 
 	public function test_gridpane_cron_snippet_uses_configured_server_outbox_base() {
