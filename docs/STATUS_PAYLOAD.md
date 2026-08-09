@@ -4,7 +4,7 @@ The plugin has an internal health/status payload for wp-admin, WP-CLI, diagnosti
 
 No public dashboard REST endpoint is enabled by default in the current MVP. Any future external endpoint must use this contract as a read-only, redacted baseline and must add explicit authentication before exposure.
 
-See `docs/CENTRAL_DASHBOARD_READINESS.md` for the future dashboard boundary and endpoint requirements.
+See `docs/CENTRAL_DASHBOARD_READINESS.md` for the future dashboard boundary and endpoint requirements. See `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md` for the separate dashboard plugin preparation plan.
 
 ## Versioning
 

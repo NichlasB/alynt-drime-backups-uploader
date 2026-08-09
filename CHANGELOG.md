@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added a separate central dashboard project plan that defines the future read-only monitoring plugin shape, enrollment model, endpoint boundary, security non-goals, and implementation phases without starting dashboard implementation in this uploader.
+
 ## [0.5.2] - 2026-07-24
 
 ### Added

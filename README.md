@@ -121,7 +121,7 @@ Diagnostics redact bearer tokens, authorization headers, cookies, nonces, passwo
 
 See [docs/STATUS_PAYLOAD.md](docs/STATUS_PAYLOAD.md) for the redacted health/status payload contract prepared for future dashboard work.
 
-For the future central monitoring dashboard boundary, see [docs/CENTRAL_DASHBOARD_READINESS.md](docs/CENTRAL_DASHBOARD_READINESS.md). The dashboard plugin is a separate future project; this uploader does not expose a public dashboard endpoint by default.
+For the future central monitoring dashboard boundary, see [docs/CENTRAL_DASHBOARD_READINESS.md](docs/CENTRAL_DASHBOARD_READINESS.md). For the separate dashboard plugin preparation plan, see [docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md](docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md). The dashboard plugin is a separate future project; this uploader does not expose a public dashboard endpoint by default.
 
 ## Cron Health
 

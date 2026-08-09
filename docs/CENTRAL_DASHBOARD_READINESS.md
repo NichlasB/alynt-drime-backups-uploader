@@ -17,6 +17,8 @@ The uploader already has the foundation a future dashboard would need:
 
 This is enough preparation for now. No central dashboard UI, enrollment flow, REST endpoint, or remote-control feature should be added to this plugin until that separate project is explicitly started.
 
+The separate dashboard project preparation plan is recorded in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`.
+
 ## Future Dashboard Shape
 
 The first dashboard version should be read-only monitoring.
@@ -85,6 +87,17 @@ When the dashboard project starts, prefer this order:
 6. Add tests for redaction, authentication failure, disabled endpoint behavior, and schema compatibility.
 
 Only after the read-only dashboard is proven should any remote actions be considered.
+
+## Planning Preparation
+
+`docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md` records the recommended separate-plugin shape:
+
+- read-only monitoring first;
+- dashboard-owned site registry and status snapshots;
+- explicit site enrollment and pairing;
+- dashboard polling before considering client push;
+- a disabled-by-default uploader endpoint only after authentication, rate limiting, and redaction tests are designed;
+- no remote restore, deletion, backup execution, settings changes, local cleanup, or Drime credential changes in version 1.
 
 ## Current Decision
 
