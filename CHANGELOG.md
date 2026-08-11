@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-08-11
+
 ### Added
 
 - Added client-side central dashboard pairing completion for dashboard-generated `adb1` tokens, including explicit read-only opt-in, reviewed dashboard-origin confirmation, and verifier-only polling credential storage.
