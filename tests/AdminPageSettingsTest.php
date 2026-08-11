@@ -42,12 +42,13 @@ class AdminPageSettingsTest extends TestCase {
 		);
 
 		$this->assertStringContainsString( 'Central Dashboard', $output );
-		$this->assertStringContainsString( 'No public dashboard status route is registered in this slice.', $output );
+		$this->assertStringContainsString( 'Disabled until pairing is completed with an unexpired dashboard token.', $output );
 		$this->assertStringContainsString( 'name="alynt_drime_backups_dashboard_connection[pairing_token]"', $output );
 		$this->assertStringContainsString( 'Prepare Pairing Shell', $output );
 		$this->assertStringContainsString( 'Review Dashboard Token', $output );
+		$this->assertStringContainsString( 'Complete Read-Only Pairing', $output );
 		$this->assertStringContainsString( 'Revoke Dashboard Pairing', $output );
-		$this->assertStringContainsString( 'The raw token and one-time secret are not stored', $output );
+		$this->assertStringContainsString( 'The raw token, one-time secret, and polling secret are not stored', $output );
 	}
 
 	public function test_dashboard_pairing_shell_renders_confirmation_for_reviewed_token() {

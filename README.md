@@ -119,9 +119,9 @@ Diagnostics are disabled by default. When enabled, the plugin stores a bounded e
 
 Diagnostics redact bearer tokens, authorization headers, cookies, nonces, passwords, request bodies, presigned URLs, and HTTP URLs embedded in scalar values.
 
-See [docs/STATUS_PAYLOAD.md](docs/STATUS_PAYLOAD.md) for the redacted health/status payload contract prepared for future dashboard work.
+See [docs/STATUS_PAYLOAD.md](docs/STATUS_PAYLOAD.md) for the redacted health/status payload contract used by WP-CLI, wp-admin, diagnostics, and authenticated central-dashboard polling.
 
-For the future central monitoring dashboard boundary, see [docs/CENTRAL_DASHBOARD_READINESS.md](docs/CENTRAL_DASHBOARD_READINESS.md). For the separate dashboard plugin preparation plan, see [docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md](docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md). The dashboard plugin is a separate future project; this uploader does not expose a public dashboard endpoint by default.
+For the central monitoring dashboard boundary, see [docs/CENTRAL_DASHBOARD_READINESS.md](docs/CENTRAL_DASHBOARD_READINESS.md). For the separate dashboard plugin preparation plan, see [docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md](docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md). The dashboard plugin remains separate; this uploader exposes the fixed status endpoint only after administrator opt-in, dashboard-origin review, and completed authenticated pairing.
 
 ## Cron Health
 

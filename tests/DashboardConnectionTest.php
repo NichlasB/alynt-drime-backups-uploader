@@ -35,6 +35,16 @@ class DashboardConnectionTest extends TestCase {
 				return json_encode( $value, $flags, $depth );
 			}
 		);
+		Functions\when( 'wp_remote_retrieve_response_code' )->alias(
+			function ( $response ) {
+				return isset( $response['response']['code'] ) ? $response['response']['code'] : 0;
+			}
+		);
+		Functions\when( 'wp_remote_retrieve_body' )->alias(
+			function ( $response ) {
+				return isset( $response['body'] ) ? $response['body'] : '';
+			}
+		);
 	}
 
 	protected function tearDown(): void {
@@ -239,6 +249,107 @@ class DashboardConnectionTest extends TestCase {
 		$this->assertTrue( $connection->is_status_endpoint_enabled() );
 	}
 
+	public function test_complete_pairing_requires_confirmed_reviewed_token_metadata() {
+		$options    = array();
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->complete_pairing_from_token(
+			$this->pairing_token(),
+			'https://client.example.com',
+			'11111111-1111-4111-8111-111111111111',
+			'0.5.3',
+			function () {
+				$this->fail( 'Enrollment transport should not run before dashboard origin confirmation.' );
+			}
+		);
+
+		$this->assertSame( 'dashboard_origin_confirmation_required', $state['last_error_code'] );
+		$this->assertFalse( $state['status_endpoint_enabled'] );
+	}
+
+	public function test_complete_pairing_stores_verifier_and_enables_status_endpoint_without_secrets() {
+		$options = $this->confirmed_pairing_options();
+		$secret  = str_repeat( 'B', 43 );
+		$called  = false;
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->complete_pairing_from_token(
+			$this->pairing_token(),
+			'https://client.example.com',
+			'11111111-1111-4111-8111-111111111111',
+			'0.5.3',
+			function ( $url, $args ) use ( &$called, $secret ) {
+				$called = true;
+				$body   = json_decode( $args['body'], true );
+
+				$this->assertSame( 'https://control.sitesmanage.com/wp-json/alynt-drime-backups-dashboard/v1/enroll', $url );
+				$this->assertSame( 'Bearer ' . str_repeat( 'A', 43 ), $args['headers']['Authorization'] );
+				$this->assertSame( 1, $body['protocol_version'] );
+				$this->assertSame( 1, $body['status_schema_version'] );
+				$this->assertSame( '00000000-0000-4000-8000-000000000000', $body['enrollment_id'] );
+				$this->assertSame( '11111111-1111-4111-8111-111111111111', $body['site_uuid'] );
+				$this->assertSame( 'https://client.example.com', $body['home_url'] );
+				$this->assertSame( 'https://client.example.com/wp-json/alynt-drime-backups-uploader/v1/status', $body['status_endpoint'] );
+
+				return array(
+					'response' => array(
+						'code' => 201,
+					),
+					'body'     => wp_json_encode(
+						array(
+							'protocol_version'         => 1,
+							'dashboard_site_public_id' => '00000000-0000-4000-8000-000000000000',
+							'polling_key_id'           => 'pk_test',
+							'polling_secret'           => $secret,
+							'polling_auth_scheme'      => 'Bearer adb-poll-v1.pk_test.' . $secret,
+						)
+					),
+				);
+			}
+		);
+
+		$this->assertTrue( $called );
+		$this->assertSame( Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED, $state['connection_status'] );
+		$this->assertTrue( $state['status_endpoint_enabled'] );
+		$this->assertSame( 'pk_test', $state['polling_key_id'] );
+		$this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $state['polling_credential_verifier'] );
+		$this->assertArrayNotHasKey( 'pairing_token', $state );
+		$this->assertArrayNotHasKey( 'secret', $state );
+		$this->assertStringNotContainsString( str_repeat( 'A', 43 ), wp_json_encode( $options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ] ) );
+		$this->assertStringNotContainsString( $secret, wp_json_encode( $options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ] ) );
+		$this->assertTrue( $connection->verify_polling_authorization( 'Bearer adb-poll-v1.pk_test.' . $secret ) );
+		$this->assertFalse( $connection->verify_polling_authorization( 'Bearer adb-poll-v1.pk_test.' . str_repeat( 'C', 43 ) ) );
+	}
+
+	public function test_complete_pairing_rejects_client_origin_mismatch_without_contacting_dashboard() {
+		$options    = $this->confirmed_pairing_options();
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->complete_pairing_from_token(
+			$this->pairing_token(),
+			'https://other.example.com',
+			'11111111-1111-4111-8111-111111111111',
+			'0.5.3',
+			function () {
+				$this->fail( 'Enrollment transport should not run for an origin mismatch.' );
+			}
+		);
+
+		$this->assertSame( 'expected_client_origin_mismatch', $state['last_error_code'] );
+		$this->assertFalse( $state['status_endpoint_enabled'] );
+	}
+
+	public function test_pairing_error_does_not_disable_existing_paired_endpoint() {
+		$options    = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->record_pairing_error( 'pairing_token_prefix_invalid' );
+
+		$this->assertSame( Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED, $state['connection_status'] );
+		$this->assertTrue( $state['status_endpoint_enabled'] );
+		$this->assertTrue( $connection->is_status_endpoint_enabled() );
+	}
+
 	/**
 	 * Creates connection storage with mocked option storage.
 	 *
@@ -260,6 +371,47 @@ class DashboardConnectionTest extends TestCase {
 		);
 
 		return new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+	}
+
+	/**
+	 * Creates a confirmed pairing option fixture.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function confirmed_pairing_options() {
+		return array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(
+				'connection_status'          => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_CONFIRMED,
+				'dashboard_origin'           => 'https://control.sitesmanage.com',
+				'expected_client_origin'     => 'https://client.example.com',
+				'pending_enrollment_id'      => '00000000-0000-4000-8000-000000000000',
+				'pairing_expires_at'         => '2099-01-01T00:00:00+00:00',
+				'dashboard_origin_confirmed' => true,
+				'status_endpoint_enabled'    => false,
+			),
+		);
+	}
+
+	/**
+	 * Creates paired dashboard connection options.
+	 *
+	 * @param string $key_id Polling key ID.
+	 * @param string $secret Polling secret.
+	 * @return array<string,mixed>
+	 */
+	private function paired_options( $key_id, $secret ) {
+		return array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(
+				'connection_status'           => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED,
+				'dashboard_origin'            => 'https://control.sitesmanage.com',
+				'expected_client_origin'      => 'https://client.example.com',
+				'dashboard_origin_confirmed'  => true,
+				'dashboard_site_public_id'    => '00000000-0000-4000-8000-000000000000',
+				'polling_key_id'              => $key_id,
+				'polling_credential_verifier' => hash( 'sha256', 'adb-poll-v1|' . $key_id . '|' . $secret ),
+				'status_endpoint_enabled'     => true,
+			),
+		);
 	}
 
 	/**

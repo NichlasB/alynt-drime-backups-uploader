@@ -1,8 +1,8 @@
 # Status Payload Contract
 
-The plugin has an internal health/status payload for wp-admin, WP-CLI, diagnostics review, and future centralized dashboard work.
+The plugin has a health/status payload for wp-admin, WP-CLI, diagnostics review, and authenticated centralized dashboard polling.
 
-No public dashboard REST endpoint is enabled by default in the current MVP. Any future external endpoint must use this contract as a read-only, redacted baseline and must add explicit authentication before exposure.
+No public dashboard REST endpoint is enabled by default. The fixed endpoint at `/wp-json/alynt-drime-backups-uploader/v1/status` is registered but returns status only after an administrator completes dashboard-generated token pairing and the request includes the scoped polling bearer credential.
 
 See `docs/CENTRAL_DASHBOARD_READINESS.md` for the future dashboard boundary and endpoint requirements. See `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md` for the separate dashboard plugin preparation plan.
 
@@ -52,9 +52,9 @@ Current default fields:
 | `server_outbox_path` | string | Configured server outbox path. |
 | `backup_path_override` | string | Configured WPvivid path override. |
 
-Do not use path mode for a future central dashboard payload unless the dashboard security model explicitly allows path disclosure.
+Do not use path mode for a central dashboard payload unless the dashboard security model explicitly allows path disclosure.
 
-The existing WP-CLI status command is local operator output and may use path mode. A future remote dashboard endpoint should call the health summary with path output disabled.
+The existing WP-CLI status command is local operator output and may use path mode. The remote dashboard endpoint calls the health summary with path output disabled.
 
 ## Redaction Boundary
 
@@ -76,7 +76,7 @@ Warnings should use stable codes plus short operational messages. Avoid embeddin
 
 The first dashboard-ready contract is read-only.
 
-Current implementation status: the plugin stores local central-dashboard connection intent, parses dashboard-generated `adb1` pairing tokens for safe metadata review, and records administrator dashboard-origin confirmation/revocation state. No public dashboard REST endpoint is registered yet, and raw pairing tokens or one-time secrets are not persisted by this shell.
+Current implementation status: the plugin stores local central-dashboard connection intent, parses dashboard-generated `adb1` pairing tokens for safe metadata review, records administrator dashboard-origin confirmation/revocation state, completes one-time enrollment against the dashboard REST endpoint, and stores only a verifier for the dashboard polling credential. Raw pairing tokens, one-time pairing secrets, and polling secrets are not persisted.
 
 Out of scope for the first external monitoring version:
 
@@ -86,4 +86,4 @@ Out of scope for the first external monitoring version:
 - Remote settings changes.
 - Credential updates.
 
-Any future endpoint must require explicit pairing/enrollment and scoped authentication before returning even the redacted payload.
+Any additional future endpoint must require explicit pairing/enrollment and scoped authentication before returning even the redacted payload.

@@ -156,6 +156,13 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	private $health_summary;
 
 	/**
+	 * Dashboard status REST controller.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Dashboard_Status_REST_Controller
+	 */
+	private $dashboard_status_rest_controller;
+
+	/**
 
 	 * Admin page.
 	 *
@@ -203,6 +210,8 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 		$this->cron_health = new Alynt_Drime_Backups_Uploader_Cron_Health();
 
 		$this->health_summary = new Alynt_Drime_Backups_Uploader_Health_Summary( $this->settings, $this->queue, $this->registry, $this->cron_health );
+
+		$this->dashboard_status_rest_controller = new Alynt_Drime_Backups_Uploader_Dashboard_Status_REST_Controller( $this->dashboard_connection, $this->health_summary );
 
 		$this->admin_page = new Alynt_Drime_Backups_Uploader_Admin_Page( $this );
 
@@ -252,6 +261,8 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 		add_action( 'wp_ajax_alynt_drime_backups_list_workspaces', array( $this, 'handle_ajax_list_workspaces' ) );
 
 		add_action( 'wp_ajax_alynt_drime_backups_preview_destination', array( $this, 'handle_ajax_preview_destination' ) );
+
+		add_action( 'rest_api_init', array( $this->dashboard_status_rest_controller, 'register_routes' ) );
 
 		$this->cron->hooks();
 	}

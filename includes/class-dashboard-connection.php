@@ -20,14 +20,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 0.5.3
  */
 class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
-	const OPTION_NAME        = 'alynt_drime_backups_dashboard_connection';
-	const STATUS_DISABLED    = 'disabled';
-	const STATUS_READY       = 'ready';
-	const STATUS_TOKEN_READY = 'token_ready';
-	const STATUS_CONFIRMED   = 'confirmed';
-	const STATUS_PAIRED      = 'paired';
-	const STATUS_REVOKED     = 'revoked';
-	const TOKEN_PREFIX       = 'adb1.';
+	const OPTION_NAME           = 'alynt_drime_backups_dashboard_connection';
+	const STATUS_DISABLED       = 'disabled';
+	const STATUS_READY          = 'ready';
+	const STATUS_TOKEN_READY    = 'token_ready';
+	const STATUS_CONFIRMED      = 'confirmed';
+	const STATUS_PAIRED         = 'paired';
+	const STATUS_REVOKED        = 'revoked';
+	const TOKEN_PREFIX          = 'adb1.';
+	const POLLING_AUTH_PREFIX   = 'adb-poll-v1.';
+	const PROTOCOL_VERSION      = 1;
+	const STATUS_SCHEMA_VERSION = 1;
 
 	/**
 	 * Returns default connection state.
@@ -80,7 +83,7 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	}
 
 	/**
-	 * Saves local shell intent without enabling the status endpoint.
+	 * Saves local shell intent without completing pairing.
 	 *
 	 * @param array<string,mixed> $raw Raw admin input.
 	 * @return array<string,mixed>
@@ -121,11 +124,139 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			$state = self::defaults();
 		}
 
-		$state['status_endpoint_enabled'] = false;
+		if ( self::STATUS_PAIRED !== $state['connection_status'] ) {
+			$state['status_endpoint_enabled'] = false;
+		}
 		update_option( self::OPTION_NAME, $state, false );
 		$this->sync_option_cache( $state );
 
 		return $state;
+	}
+
+	/**
+	 * Completes one-time dashboard enrollment and stores polling verifier only.
+	 *
+	 * @since 0.5.3
+	 *
+	 * @param string        $token            Pairing token.
+	 * @param string        $client_origin    Client site origin.
+	 * @param string        $site_uuid        Client site UUID.
+	 * @param string        $uploader_version Uploader plugin version.
+	 * @param callable|null $http_client      Optional HTTP transport for tests.
+	 * @return array<string,mixed>
+	 */
+	public function complete_pairing_from_token( $token, $client_origin, $site_uuid, $uploader_version, $http_client = null ) {
+		$state  = $this->get();
+		$parsed = $this->parse_pairing_token_payload( $token, true );
+
+		if ( is_wp_error( $parsed ) ) {
+			return $this->save_pairing_error( $state, $parsed->get_error_code() );
+		}
+
+		if (
+			self::STATUS_CONFIRMED !== $state['connection_status']
+			|| empty( $state['dashboard_origin_confirmed'] )
+			|| ! hash_equals( (string) $state['dashboard_origin'], $parsed['dashboard_origin'] )
+			|| ! hash_equals( (string) $state['expected_client_origin'], $parsed['expected_client_origin'] )
+			|| ! hash_equals( (string) $state['pending_enrollment_id'], $parsed['enrollment_id'] )
+		) {
+			return $this->save_pairing_error( $state, 'dashboard_origin_confirmation_required' );
+		}
+
+		$client_origin = $this->normalize_public_https_origin( $client_origin );
+		if ( '' === $client_origin || ! hash_equals( $parsed['expected_client_origin'], $client_origin ) ) {
+			return $this->save_pairing_error( $state, 'expected_client_origin_mismatch' );
+		}
+
+		$site_uuid = $this->sanitize_uuid( $site_uuid );
+		if ( '' === $site_uuid ) {
+			return $this->save_pairing_error( $state, 'site_uuid_invalid' );
+		}
+
+		$endpoint = $this->status_endpoint_for_origin( $client_origin );
+		$args     = array(
+			'timeout' => 20,
+			'headers' => array(
+				'Authorization' => 'Bearer ' . $parsed['secret'],
+				'Content-Type'  => 'application/json',
+				'Accept'        => 'application/json',
+			),
+			'body'    => wp_json_encode(
+				array(
+					'protocol_version'      => self::PROTOCOL_VERSION,
+					'status_schema_version' => self::STATUS_SCHEMA_VERSION,
+					'enrollment_id'         => $parsed['enrollment_id'],
+					'site_uuid'             => $site_uuid,
+					'home_url'              => $client_origin,
+					'status_endpoint'       => $endpoint,
+					'uploader_version'      => $this->bounded_text( $uploader_version, 64 ),
+				)
+			),
+		);
+
+		$request_url = $parsed['dashboard_origin'] . '/wp-json/alynt-drime-backups-dashboard/v1/enroll';
+		$response    = is_callable( $http_client ) ? call_user_func( $http_client, $request_url, $args ) : wp_remote_post( $request_url, $args );
+
+		if ( is_wp_error( $response ) ) {
+			return $this->save_pairing_error( $state, 'dashboard_enrollment_request_failed' );
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$body          = wp_remote_retrieve_body( $response );
+
+		if ( 201 !== absint( $response_code ) ) {
+			return $this->save_pairing_error( $state, 'dashboard_enrollment_rejected' );
+		}
+
+		$payload = json_decode( (string) $body, true );
+		if ( ! is_array( $payload ) ) {
+			return $this->save_pairing_error( $state, 'dashboard_enrollment_response_invalid' );
+		}
+
+		$polling_key_id = isset( $payload['polling_key_id'] ) ? $this->sanitize_token_identifier( (string) $payload['polling_key_id'] ) : '';
+		$polling_secret = isset( $payload['polling_secret'] ) ? (string) $payload['polling_secret'] : '';
+		$site_public_id = isset( $payload['dashboard_site_public_id'] ) ? $this->sanitize_token_identifier( (string) $payload['dashboard_site_public_id'] ) : '';
+
+		if (
+			self::PROTOCOL_VERSION !== absint( isset( $payload['protocol_version'] ) ? $payload['protocol_version'] : 0 )
+			|| '' === $site_public_id
+			|| '' === $polling_key_id
+			|| strlen( $polling_secret ) < 32
+			|| ! preg_match( '/^[A-Za-z0-9_-]+$/', $polling_secret )
+		) {
+			return $this->save_pairing_error( $state, 'dashboard_enrollment_response_invalid' );
+		}
+
+		$state['connection_status']           = self::STATUS_PAIRED;
+		$state['dashboard_origin']            = $parsed['dashboard_origin'];
+		$state['expected_client_origin']      = $parsed['expected_client_origin'];
+		$state['pending_enrollment_id']       = $parsed['enrollment_id'];
+		$state['pairing_expires_at']          = $parsed['expires_at'];
+		$state['dashboard_origin_confirmed']  = true;
+		$state['dashboard_site_public_id']    = $site_public_id;
+		$state['polling_key_id']              = $polling_key_id;
+		$state['polling_credential_verifier'] = $this->hash_polling_credential( $polling_key_id, $polling_secret );
+		$state['paired_at']                   = time();
+		$state['revoked_at']                  = 0;
+		$state['last_error_code']             = '';
+		$state['status_endpoint_enabled']     = true;
+
+		update_option( self::OPTION_NAME, $state, false );
+		$this->sync_option_cache( $state );
+
+		return $state;
+	}
+
+	/**
+	 * Records a safe local pairing error without contacting the dashboard.
+	 *
+	 * @since 0.5.3
+	 *
+	 * @param string $code Error code.
+	 * @return array<string,mixed>
+	 */
+	public function record_pairing_error( $code ) {
+		return $this->save_pairing_error( $this->get(), $code );
 	}
 
 	/**
@@ -140,6 +271,67 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	}
 
 	/**
+	 * Verifies a dashboard polling Authorization header.
+	 *
+	 * @since 0.5.3
+	 *
+	 * @param string $authorization Authorization header.
+	 * @return bool
+	 */
+	public function verify_polling_authorization( $authorization ) {
+		if ( ! $this->is_status_endpoint_enabled() ) {
+			return false;
+		}
+
+		$authorization = trim( (string) $authorization );
+		if ( ! preg_match( '/^Bearer\s+' . preg_quote( self::POLLING_AUTH_PREFIX, '/' ) . '([A-Za-z0-9_\-\.]{1,128})\.([A-Za-z0-9_-]{32,})$/', $authorization, $matches ) ) {
+			return false;
+		}
+
+		$state  = $this->get();
+		$key_id = $this->sanitize_token_identifier( $matches[1] );
+		$secret = (string) $matches[2];
+
+		if ( '' === $key_id || '' === $state['polling_key_id'] || ! hash_equals( (string) $state['polling_key_id'], $key_id ) ) {
+			return false;
+		}
+
+		$expected = isset( $state['polling_credential_verifier'] ) ? (string) $state['polling_credential_verifier'] : '';
+		$actual   = $this->hash_polling_credential( $key_id, $secret );
+
+		return '' !== $expected && hash_equals( $expected, $actual );
+	}
+
+	/**
+	 * Records the latest authenticated dashboard read timestamp.
+	 *
+	 * @since 0.5.3
+	 *
+	 * @return void
+	 */
+	public function record_authenticated_read() {
+		$state                               = $this->get();
+		$state['last_authenticated_read_at'] = time();
+		$state['last_error_code']            = '';
+		update_option( self::OPTION_NAME, $state, false );
+		$this->sync_option_cache( $state );
+	}
+
+	/**
+	 * Builds the fixed status endpoint for a client origin.
+	 *
+	 * @since 0.5.3
+	 *
+	 * @param string $origin Public HTTPS origin.
+	 * @return string
+	 */
+	public function status_endpoint_for_origin( $origin ) {
+		$origin = $this->normalize_public_https_origin( $origin );
+
+		return '' === $origin ? '' : $origin . '/wp-json/alynt-drime-backups-uploader/v1/status';
+	}
+
+	/**
 	 * Parses a dashboard-generated pairing token and returns safe metadata.
 	 *
 	 * The returned array intentionally excludes the raw token and one-time
@@ -150,6 +342,25 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	 * @return array<string,string>|WP_Error
 	 */
 	public function parse_pairing_token( $token ) {
+		$parsed = $this->parse_pairing_token_payload( $token, false );
+
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
+
+		unset( $parsed['secret'] );
+
+		return $parsed;
+	}
+
+	/**
+	 * Parses a dashboard-generated pairing token.
+	 *
+	 * @param string $token Pairing token.
+	 * @param bool   $include_secret Whether to include the one-time secret.
+	 * @return array<string,string>|WP_Error
+	 */
+	private function parse_pairing_token_payload( $token, $include_secret = false ) {
 		$token = trim( (string) $token );
 
 		if ( 0 !== strpos( $token, self::TOKEN_PREFIX ) ) {
@@ -205,12 +416,38 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			return new WP_Error( 'pairing_expired', __( 'The dashboard pairing token has expired.', 'alynt-drime-backups-uploader' ) );
 		}
 
-		return array(
+		$parsed = array(
 			'enrollment_id'          => $enrollment_id,
 			'dashboard_origin'       => $dashboard_origin,
 			'expected_client_origin' => $expected_client_origin,
 			'expires_at'             => gmdate( 'c', $expires_ts ),
 		);
+
+		if ( $include_secret ) {
+			$parsed['secret'] = $secret;
+		}
+
+		return $parsed;
+	}
+
+	/**
+	 * Saves a safe pairing error on the local connection state.
+	 *
+	 * @param array<string,mixed> $state State.
+	 * @param string              $code Error code.
+	 * @return array<string,mixed>
+	 */
+	private function save_pairing_error( array $state, $code ) {
+		$state['last_error_code'] = sanitize_key( (string) $code );
+
+		if ( self::STATUS_PAIRED !== $state['connection_status'] ) {
+			$state['status_endpoint_enabled'] = false;
+		}
+
+		update_option( self::OPTION_NAME, $state, false );
+		$this->sync_option_cache( $state );
+
+		return $state;
 	}
 
 	/**
@@ -335,6 +572,35 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	 */
 	private function sanitize_hash( $value ) {
 		return preg_match( '/^[a-f0-9]{64}$/', (string) $value ) ? (string) $value : '';
+	}
+
+	/**
+	 * Hashes polling credentials for local verifier-only storage.
+	 *
+	 * @param string $key_id Polling key ID.
+	 * @param string $secret Polling secret.
+	 * @return string
+	 */
+	private function hash_polling_credential( $key_id, $secret ) {
+		return hash( 'sha256', 'adb-poll-v1|' . (string) $key_id . '|' . (string) $secret );
+	}
+
+	/**
+	 * Sanitizes and bounds display/storage text.
+	 *
+	 * @param string $value Raw value.
+	 * @param int    $max_length Max characters.
+	 * @return string
+	 */
+	private function bounded_text( $value, $max_length ) {
+		$value      = sanitize_text_field( (string) $value );
+		$max_length = max( 1, (int) $max_length );
+
+		if ( function_exists( 'mb_substr' ) ) {
+			return mb_substr( $value, 0, $max_length );
+		}
+
+		return substr( $value, 0, $max_length );
 	}
 
 	/**

@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added client-side central dashboard pairing completion for dashboard-generated `adb1` tokens, including explicit read-only opt-in, reviewed dashboard-origin confirmation, and verifier-only polling credential storage.
+- Added the authenticated fixed read-only dashboard status endpoint at `/wp-json/alynt-drime-backups-uploader/v1/status`, returning the existing redacted health payload without filesystem paths.
 - Added a separate central dashboard project plan that defines the future read-only monitoring plugin shape, enrollment model, endpoint boundary, security non-goals, and implementation phases without starting dashboard implementation in this uploader.
 - Added local central-dashboard connection storage and an admin pairing shell that remains disabled by default and does not register a public status endpoint.
 - Added dashboard pairing-token review, dashboard-origin confirmation, and local revocation state while still avoiding raw token persistence and public endpoint registration.

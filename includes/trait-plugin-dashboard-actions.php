@@ -27,14 +27,31 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce is verified above; dashboard connection storage sanitizes all fields.
 		$raw = isset( $_POST['alynt_drime_backups_dashboard_connection'] ) && is_array( $_POST['alynt_drime_backups_dashboard_connection'] ) ? wp_unslash( $_POST['alynt_drime_backups_dashboard_connection'] ) : array();
 
-		$state  = $this->dashboard_connection->update_shell( $raw );
-		$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_invalid_token';
+		$action = isset( $raw['connection_action'] ) ? sanitize_key( wp_unslash( $raw['connection_action'] ) ) : '';
+
+		if ( 'complete_pairing' === $action ) {
+			if ( empty( $raw['read_only_opt_in'] ) ) {
+				$state = $this->dashboard_connection->record_pairing_error( 'client_read_only_opt_in_required' );
+			} else {
+				$token = isset( $raw['pairing_token'] ) ? (string) wp_unslash( $raw['pairing_token'] ) : '';
+				$state = $this->dashboard_connection->complete_pairing_from_token(
+					$token,
+					home_url(),
+					$this->settings->site_uuid(),
+					ALYNT_DRIME_BACKUPS_UPLOADER_VERSION
+				);
+			}
+			$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_paired' : 'dashboard_connection_pairing_failed';
+		} else {
+			$state  = $this->dashboard_connection->update_shell( $raw );
+			$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_invalid_token';
+		}
 
 		$this->logger->event(
 			'dashboard',
 			empty( $state['last_error_code'] ) ? 'info' : 'warning',
-			'dashboard_connection_shell_saved',
-			'Dashboard pairing shell state saved.',
+			empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_failed',
+			'Dashboard connection state saved.',
 			array(
 				'connection_status'       => isset( $state['connection_status'] ) ? (string) $state['connection_status'] : '',
 				'status_endpoint_enabled' => ! empty( $state['status_endpoint_enabled'] ),
