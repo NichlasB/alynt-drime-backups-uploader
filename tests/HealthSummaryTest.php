@@ -151,6 +151,52 @@ class HealthSummaryTest extends TestCase {
 		rmdir( $outbox );
 	}
 
+	public function test_backup_source_summaries_match_dashboard_contract_shape() {
+		$outbox = $this->create_outbox();
+		$now    = time();
+
+		$summary = $this->summary(
+			$outbox,
+			array(
+				'sig-server-uploaded' => array(
+					'producer_key'  => 'generic_outbox',
+					'created_at'    => $now - 400,
+					'uploaded_at'   => $now - 120,
+					'remote_status' => 'uploaded',
+					'metadata'      => array(
+						'generic_outbox' => array(
+							'remote_catalog' => array(
+								'package_count' => 3,
+							),
+						),
+					),
+				),
+				'sig-wpvivid'         => array(
+					'producer_key'  => 'wpvivid',
+					'uploaded_at'   => $now - 60,
+					'remote_status' => 'uploaded',
+				),
+			),
+			array(),
+			array(
+				'sig-server-queued'  => array(
+					'producer_key' => 'generic_outbox',
+				),
+				'sig-wpvivid-queued' => array(
+					'producer_key' => 'wpvivid',
+				),
+			)
+		);
+		$status  = $summary->status();
+
+		$this->assertSame( array( 'server', 'wpvivid' ), array_keys( $status['backup_sources'] ) );
+		$this->assert_backup_source_matches_dashboard_contract( $status['backup_sources']['server'], 'server' );
+		$this->assert_backup_source_matches_dashboard_contract( $status['backup_sources']['wpvivid'], 'wpvivid' );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
 	public function test_status_can_include_local_paths_for_cli_output() {
 		$summary = $this->summary( '/var/www/example/private/backups' );
 		$status  = $summary->status( false, true );
@@ -289,6 +335,65 @@ class HealthSummaryTest extends TestCase {
 			'last_wp_cli_scan_at',
 			'backup_sources',
 		);
+	}
+
+	/**
+	 * Returns the dashboard-allowlisted backup source keys.
+	 *
+	 * @return array<int,string>
+	 */
+	private function expected_backup_source_contract_keys() {
+		return array(
+			'source_key',
+			'source_label',
+			'configured',
+			'has_upload_evidence',
+			'queued_count',
+			'uploaded_count',
+			'failed_count',
+			'remote_registry_count',
+			'latest_created_at',
+			'latest_uploaded_at',
+			'latest_upload_age_seconds',
+			'latest_remote_status',
+			'latest_inventory_count',
+			'latest_inventory_evidence',
+			'freshness_status',
+			'freshness_window_seconds',
+			'warning_count',
+			'warnings',
+		);
+	}
+
+	/**
+	 * Asserts that one source summary remains compatible with the dashboard allowlist.
+	 *
+	 * @param array<string,mixed> $source Source summary.
+	 * @param string              $expected_source_key Expected source key.
+	 * @return void
+	 */
+	private function assert_backup_source_matches_dashboard_contract( array $source, $expected_source_key ) {
+		$this->assertSame( $this->expected_backup_source_contract_keys(), array_keys( $source ) );
+		$this->assertSame( $expected_source_key, $source['source_key'] );
+		$this->assertContains( $source['latest_remote_status'], array( 'uploaded', 'trashed', '' ) );
+		$this->assertContains( $source['latest_inventory_evidence'], array( 'generic_outbox_remote_catalog', 'generic_outbox_remote_index', 'local_upload_registry', '' ) );
+		$this->assertContains( $source['freshness_status'], array( 'not_configured', 'no_upload_evidence', 'stale', 'fresh', '' ) );
+		$this->assertIsString( $source['source_label'] );
+		$this->assertIsBool( $source['configured'] );
+		$this->assertIsBool( $source['has_upload_evidence'] );
+
+		foreach ( array( 'queued_count', 'uploaded_count', 'failed_count', 'remote_registry_count', 'latest_created_at', 'latest_uploaded_at', 'latest_upload_age_seconds', 'latest_inventory_count', 'freshness_window_seconds', 'warning_count' ) as $key ) {
+			$this->assertIsInt( $source[ $key ] );
+			$this->assertGreaterThanOrEqual( 0, $source[ $key ] );
+		}
+
+		$this->assertIsArray( $source['warnings'] );
+
+		foreach ( $source['warnings'] as $warning ) {
+			$this->assertSame( array( 'code', 'message' ), array_keys( $warning ) );
+			$this->assertIsString( $warning['code'] );
+			$this->assertIsString( $warning['message'] );
+		}
 	}
 
 	/**
