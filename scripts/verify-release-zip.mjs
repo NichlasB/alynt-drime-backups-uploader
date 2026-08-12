@@ -112,7 +112,64 @@ export async function verifyReleaseZip(zipPath) {
 	const uniqueEntryNames = new Set(entryNames);
 	const expectedRoot = `${pluginSlug}/`;
 	const requiredRunner = `${expectedRoot}server-runner/alynt-backup-runner.php`;
+	const requiredEntries = [
+		`${expectedRoot}alynt-drime-backups-uploader.php`,
+		`${expectedRoot}readme.txt`,
+		`${expectedRoot}uninstall.php`,
+		`${expectedRoot}assets/admin.js`,
+		`${expectedRoot}assets/admin-workspaces.js`,
+		`${expectedRoot}assets/admin.css`,
+		requiredRunner,
+	];
 	const forbiddenSourceRoot = `${expectedRoot}server-runner/src/`;
+	const forbiddenExactEntries = new Set(
+		[
+			'.editorconfig',
+			'.gitattributes',
+			'.gitignore',
+			'.phpcs.xml',
+			'.phpcs.xml.dist',
+			'.phpunit.result.cache',
+			'AI_CODING_RULES.md',
+			'CHANGELOG.md',
+			'PRE_RELEASE_CHECKLIST.md',
+			'README.md',
+			'composer.json',
+			'composer.lock',
+			'composer.phar',
+			'deploy.example.sh',
+			'deploy.sh',
+			'implementation-plan.tmp.md',
+			'package-lock.json',
+			'package.json',
+			'phpunit.xml',
+			'phpunit.xml.dist',
+			'session-context.tmp.md',
+			'session-handoff.tmp.md',
+		].map((entryName) => `${expectedRoot}${entryName}`),
+	);
+	const forbiddenRoots = [
+		'.agents/',
+		'.codex/',
+		'.cursor/',
+		'.github/',
+		'.git/',
+		'.idea/',
+		'.opencode/',
+		'.playwright-mcp/',
+		'.vscode/',
+		'assets/dist/',
+		'assets/src/',
+		'build/',
+		'coverage/',
+		'docs/',
+		'node_modules/',
+		'playwright-report/',
+		'scripts/',
+		'server-runner/src/',
+		'tests/',
+		'vendor/',
+	].map((entryName) => `${expectedRoot}${entryName}`);
 
 	if (entryNames.length === 0) {
 		throw new Error('Release ZIP contains no entries.');
@@ -130,10 +187,22 @@ export async function verifyReleaseZip(zipPath) {
 				`Release ZIP entry is outside the expected plugin root: ${entryName}`,
 			);
 		}
+
+		if (
+			forbiddenExactEntries.has(entryName) ||
+			forbiddenRoots.some((forbiddenRoot) => entryName.startsWith(forbiddenRoot)) ||
+			entryName.endsWith('.map') ||
+			entryName.endsWith('.tmp.md') ||
+			entryName.includes('/.env')
+		) {
+			throw new Error(`Release ZIP contains a forbidden development path: ${entryName}`);
+		}
 	}
 
-	if (!uniqueEntryNames.has(requiredRunner)) {
-		throw new Error(`Release ZIP is missing the generated runner: ${requiredRunner}`);
+	for (const requiredEntry of requiredEntries) {
+		if (!uniqueEntryNames.has(requiredEntry)) {
+			throw new Error(`Release ZIP is missing a required runtime file: ${requiredEntry}`);
+		}
 	}
 
 	if (entryNames.some((entryName) => entryName.startsWith(forbiddenSourceRoot))) {

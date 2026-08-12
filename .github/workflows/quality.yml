@@ -2,6 +2,11 @@ name: Quality
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: Git ref to validate.
+        required: false
+        type: string
   workflow_dispatch:
   pull_request:
   push:
@@ -26,6 +31,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -53,6 +60,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v6

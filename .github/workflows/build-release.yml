@@ -3,13 +3,24 @@ name: Build Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Release tag to package, such as v0.5.5
+        required: true
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag_name }}
+  cancel-in-progress: false
+
 jobs:
   quality:
     uses: ./.github/workflows/quality.yml
+    with:
+      ref: ${{ github.event.release.tag_name || inputs.tag_name }}
 
   build:
     needs: quality
@@ -18,16 +29,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag_name }}
 
       - name: Create plugin zip
+        id: package
         run: |
           PLUGIN_SLUG="alynt-drime-backups-uploader"
-          VERSION="${{ github.event.release.tag_name }}"
+          RAW_TAG="${{ github.event.release.tag_name || inputs.tag_name }}"
+          VERSION="${RAW_TAG}"
 
-          mkdir -p build/${PLUGIN_SLUG}
+          if [ -z "${RAW_TAG}" ] || [ -z "${VERSION}" ]; then
+            echo "Release tag is required." >&2
+            exit 1
+          fi
+
+          mkdir -p "build/${PLUGIN_SLUG}"
 
           rsync -av --exclude='.git' \
                     --exclude='.github' \
+                    --exclude='.codex' \
+                    --exclude='.agents' \
+                    --exclude='.opencode' \
+                    --exclude='.cursor' \
+                    --exclude='.idea' \
+                    --exclude='.vscode' \
+                    --exclude='.playwright-mcp' \
                     --exclude='build' \
                     --exclude='node_modules' \
                     --exclude='vendor' \
@@ -43,6 +70,7 @@ jobs:
                     --exclude='.gitattributes' \
                     --exclude='.phpcs.xml' \
                     --exclude='.phpcs.xml.dist' \
+                    --exclude='.phpunit.result.cache' \
                     --exclude='.editorconfig' \
                     --exclude='AI_CODING_RULES.md' \
                     --exclude='phpunit.xml' \
@@ -54,25 +82,32 @@ jobs:
                     --exclude='package-lock.json' \
                     --exclude='deploy.sh' \
                     --exclude='deploy.example.sh' \
+                    --exclude='PRE_RELEASE_CHECKLIST.md' \
+                    --exclude='implementation-plan.tmp.md' \
                     --exclude='session-context.tmp.md' \
                     --exclude='session-handoff.tmp.md' \
+                    --exclude='*.tmp.md' \
+                    --exclude='.env' \
+                    --exclude='.env.*' \
                     --exclude='README.md' \
                     --exclude='CHANGELOG.md' \
                     --exclude='*.map' \
                     --exclude='RELEASE-*.md' \
-                    ./ build/${PLUGIN_SLUG}/
+                    ./ "build/${PLUGIN_SLUG}/"
 
           cd build
-          zip -r ${PLUGIN_SLUG}-${VERSION}.zip ${PLUGIN_SLUG}
+          zip -r "${PLUGIN_SLUG}-${VERSION}.zip" "${PLUGIN_SLUG}"
 
-          echo "ZIP_FILE=${PLUGIN_SLUG}-${VERSION}.zip" >> $GITHUB_ENV
+          echo "zip_file=build/${PLUGIN_SLUG}-${VERSION}.zip" >> "${GITHUB_OUTPUT}"
 
       - name: Verify release package contents
-        run: npm run verify:release-zip -- "build/${ZIP_FILE}"
+        run: npm run verify:release-zip -- "${{ steps.package.outputs.zip_file }}"
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v3
         with:
-          files: build/${{ env.ZIP_FILE }}
+          tag_name: ${{ github.event.release.tag_name || inputs.tag_name }}
+          files: ${{ steps.package.outputs.zip_file }}
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
