@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-08-12
+
+### Fixed
+
+- Fixed the central dashboard pairing panel so already paired sites show read-only monitoring as active instead of rendering a misleading unchecked opt-in checkbox, while keeping the revoke action visible and preserving explicit opt-in for new pairings.
+
 ## [0.5.3] - 2026-08-11
 
 ### Added
