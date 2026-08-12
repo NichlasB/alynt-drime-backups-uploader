@@ -15,6 +15,16 @@ class HealthSummaryTest extends TestCase {
 		Monkey\setUp();
 
 		Functions\when( 'get_option' )->justReturn( array() );
+		Functions\when( 'sanitize_key' )->alias(
+			function ( $key ) {
+				return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $key ) );
+			}
+		);
+		Functions\when( 'sanitize_text_field' )->alias(
+			function ( $text ) {
+				return trim( strip_tags( (string) $text ) );
+			}
+		);
 	}
 
 	protected function tearDown(): void {
@@ -40,9 +50,102 @@ class HealthSummaryTest extends TestCase {
 		$this->assertFalse( $status['old_wpvivid_uploader_active'] );
 		$this->assertSame( 0, $status['warning_count'] );
 		$this->assertSame( Alynt_Drime_Backups_Uploader_Cron_Health::STATUS_LIKELY_CONFIGURED, $status['cron_status'] );
+		$this->assertArrayHasKey( 'server', $status['backup_sources'] );
+		$this->assertArrayHasKey( 'wpvivid', $status['backup_sources'] );
+		$this->assertSame( 'no_upload_evidence', $status['backup_sources']['server']['freshness_status'] );
+		$this->assertSame( 'no_upload_evidence', $status['backup_sources']['wpvivid']['freshness_status'] );
 		$this->assertArrayNotHasKey( 'server_outbox_path', $status );
 		$this->assertArrayNotHasKey( 'backup_path_override', $status );
 		$this->assertSame( $this->expected_redacted_status_keys(), array_keys( $status ) );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
+	public function test_status_includes_redacted_backup_source_evidence() {
+		$outbox = $this->create_outbox();
+		$now    = time();
+
+		$summary = $this->summary(
+			$outbox,
+			array(
+				'sig-server-uploaded' => array(
+					'producer_key'    => 'generic_outbox',
+					'created_at'      => $now - 400,
+					'uploaded_at'     => $now - 120,
+					'remote_status'   => 'uploaded',
+					'path'            => '/var/backups/should-not-leak.tar.gz',
+					'package_id'      => 'pkg-secret',
+					'backup_set_id'   => 'set-secret',
+					'remote_name'     => 'should-not-leak.tar.gz',
+					'file_entry_id'   => 987654,
+					'workspace_id'    => 123456,
+					'metadata'        => array(
+						'generic_outbox' => array(
+							'remote_catalog' => array(
+								'package_count' => 3,
+							),
+						),
+					),
+				),
+				'sig-server-trashed'  => array(
+					'producer_key'  => 'generic_outbox',
+					'uploaded_at'   => $now - 10,
+					'remote_status' => 'trashed',
+				),
+				'sig-wpvivid'         => array(
+					'producer_key'  => 'wpvivid',
+					'uploaded_at'   => $now - 60,
+					'remote_status' => 'uploaded',
+					'wpvivid'       => array(
+						'backup_id' => 'wpvivid-secret',
+					),
+				),
+			),
+			array(
+				'sig-wpvivid-failed' => array(
+					'producer_key' => 'wpvivid',
+				),
+			),
+			array(
+				'sig-server-queued'  => array(
+					'producer_key' => 'generic_outbox',
+				),
+				'sig-wpvivid-queued' => array(
+					'producer_key' => 'wpvivid',
+				),
+			)
+		);
+		$status  = $summary->status();
+		$server  = $status['backup_sources']['server'];
+		$wpvivid = $status['backup_sources']['wpvivid'];
+
+		$this->assertSame( 1, $status['schema_version'] );
+		$this->assertTrue( $server['configured'] );
+		$this->assertTrue( $server['has_upload_evidence'] );
+		$this->assertSame( 1, $server['queued_count'] );
+		$this->assertSame( 2, $server['uploaded_count'] );
+		$this->assertSame( 0, $server['failed_count'] );
+		$this->assertSame( 1, $server['remote_registry_count'] );
+		$this->assertSame( $now - 120, $server['latest_uploaded_at'] );
+		$this->assertSame( 'uploaded', $server['latest_remote_status'] );
+		$this->assertSame( 3, $server['latest_inventory_count'] );
+		$this->assertSame( 'generic_outbox_remote_catalog', $server['latest_inventory_evidence'] );
+		$this->assertSame( 'fresh', $server['freshness_status'] );
+		$this->assertSame( 36 * 60 * 60, $server['freshness_window_seconds'] );
+		$this->assertSame( 1, $server['warning_count'] );
+		$this->assertSame( 'source_queue_not_empty', $server['warnings'][0]['code'] );
+
+		$this->assertTrue( $wpvivid['configured'] );
+		$this->assertTrue( $wpvivid['has_upload_evidence'] );
+		$this->assertSame( 1, $wpvivid['queued_count'] );
+		$this->assertSame( 1, $wpvivid['uploaded_count'] );
+		$this->assertSame( 1, $wpvivid['failed_count'] );
+		$this->assertSame( 1, $wpvivid['remote_registry_count'] );
+		$this->assertSame( 1, $wpvivid['latest_inventory_count'] );
+		$this->assertSame( 'local_upload_registry', $wpvivid['latest_inventory_evidence'] );
+		$this->assertSame( 'fresh', $wpvivid['freshness_status'] );
+
 		$this->assert_status_payload_contains_no_sensitive_keys( $status );
 
 		rmdir( $outbox );
@@ -93,7 +196,7 @@ class HealthSummaryTest extends TestCase {
 	 *
 	 * @return Alynt_Drime_Backups_Uploader_Health_Summary
 	 */
-	private function summary( $outbox_path ) {
+	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null ) {
 		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
 		$settings->method( 'site_uuid' )->willReturn( '12345678-1234-4234-9234-123456789abc' );
 		$settings->method( 'get' )->willReturn(
@@ -107,20 +210,20 @@ class HealthSummaryTest extends TestCase {
 
 		$queue = $this->createMock( Alynt_Drime_Backups_Uploader_Queue::class );
 		$queue->method( 'all' )->willReturn(
-			array(
+			null === $queued ? array(
 				'sig-one' => array( 'name' => 'one.zip' ),
 				'sig-two' => array( 'name' => 'two.zip' ),
-			)
+			) : $queued
 		);
 		$queue->method( 'get_active' )->willReturn( array( 'signature' => 'sig-one' ) );
 
 		$registry = $this->createMock( Alynt_Drime_Backups_Uploader_Backup_Registry::class );
-		$registry->method( 'get_uploaded' )->willReturn( array( 'sig-uploaded' => array() ) );
+		$registry->method( 'get_uploaded' )->willReturn( null === $uploaded ? array( 'sig-uploaded' => array() ) : $uploaded );
 		$registry->method( 'get_failed' )->willReturn(
-			array(
+			null === $failed ? array(
 				'sig-failed-one' => array(),
 				'sig-failed-two' => array(),
-			)
+			) : $failed
 		);
 
 		$cron_health = $this->createMock( Alynt_Drime_Backups_Uploader_Cron_Health::class );
@@ -184,6 +287,7 @@ class HealthSummaryTest extends TestCase {
 			'last_runner_at',
 			'last_scheduled_scan_at',
 			'last_wp_cli_scan_at',
+			'backup_sources',
 		);
 	}
 
@@ -196,7 +300,7 @@ class HealthSummaryTest extends TestCase {
 	private function assert_status_payload_contains_no_sensitive_keys( array $status ) {
 		$encoded = json_encode( $status );
 
-		foreach ( array( 'api_token', 'authorization', 'cookie', 'nonce', 'password', 'secret', 'server_outbox_path', 'backup_path_override', 'database', 'presigned', 'signed_url' ) as $needle ) {
+		foreach ( array( 'api_token', 'authorization', 'backup_set_id', 'cookie', 'database', 'entry_id', 'file_entry_id', 'nonce', 'package_id', 'password', 'presigned', 'remote_name', 'secret', 'server_outbox_path', 'signed_url', 'workspace_id', 'backup_path_override' ) as $needle ) {
 			$this->assertStringNotContainsString( $needle, strtolower( (string) $encoded ) );
 		}
 	}

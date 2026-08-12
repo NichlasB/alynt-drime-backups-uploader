@@ -42,6 +42,45 @@ Current default fields:
 | `last_runner_at` | int | Timestamp for last observed runner evidence. |
 | `last_scheduled_scan_at` | int | Timestamp for the last scheduled scan. |
 | `last_wp_cli_scan_at` | int | Timestamp for the last WP-CLI scan evidence. |
+| `backup_sources` | object | Optional per-source backup freshness and local remote-inventory evidence for dashboard observability. |
+
+## Optional Backup Source Summaries
+
+`backup_sources` is additive in schema version `1`. Consumers must treat it as optional so older clients and dashboards can continue to exchange the baseline payload.
+
+The first observability slice reports local, redacted evidence only. It does not call Drime from the status endpoint and does not expose Drime credentials, raw Drime IDs, signed URLs, local filesystem paths, package names, backup set IDs, or raw sidecar contents.
+
+Current source keys:
+
+| Source key | Producer key | Description |
+| --- | --- | --- |
+| `server` | `generic_outbox` | Server-runner / generic outbox package evidence. |
+| `wpvivid` | `wpvivid` | WPvivid package evidence. |
+
+Each source summary may include:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `source_key` | string | Stable source key intended for dashboard display and grouping. |
+| `source_label` | string | Human-readable source label. |
+| `configured` | boolean | Whether the source appears locally configured. |
+| `has_upload_evidence` | boolean | Whether uploaded registry records exist for this source. |
+| `queued_count` | int | Queued package count for this source. |
+| `uploaded_count` | int | Uploaded registry record count for this source. |
+| `failed_count` | int | Failed registry record count for this source. |
+| `remote_registry_count` | int | Count of uploaded registry records still marked as remotely uploaded. |
+| `latest_created_at` | int | Latest source package creation timestamp when known. |
+| `latest_uploaded_at` | int | Latest uploaded registry timestamp when known. |
+| `latest_upload_age_seconds` | int | Age of the latest uploaded registry evidence. |
+| `latest_remote_status` | string | Redacted remote status label from the latest uploaded record. |
+| `latest_inventory_count` | int | Best available count of packages in local remote-inventory evidence. |
+| `latest_inventory_evidence` | string | Evidence label: `generic_outbox_remote_catalog`, `generic_outbox_remote_index`, `local_upload_registry`, or empty. |
+| `freshness_status` | string | `not_configured`, `no_upload_evidence`, `stale`, or `fresh`. |
+| `freshness_window_seconds` | int | Conservative freshness window used by the uploader. |
+| `warning_count` | int | Count of source-specific warnings. |
+| `warnings` | array | Structured source warning records with `code` and `message`. |
+
+The dashboard should display these fields as read-only operational hints. Because this evidence is produced by the client plugin from its local registry and sidecar metadata, it is not a dashboard-side Drime inventory audit.
 
 ## Local CLI Path Mode
 
