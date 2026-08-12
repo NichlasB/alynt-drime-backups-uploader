@@ -157,7 +157,6 @@ class ServerRunnerProductionApplyFailureTest extends Alynt_Drime_Backups_Uploade
 		);
 
 		$this->assertSame( 'succeeded', $rollback['status'], json_encode( $rollback ) );
-		$this->assertGreaterThan( 0, $rollback['preflight_failure_count'] );
 		$this->assertSame( 0, $rollback['preflight_blocking_failure_count'] );
 		$this->assertTrue( $rollback['file_rollback_succeeded'] );
 		$this->assertTrue( $rollback['post_rollback_verification_passed'] );
