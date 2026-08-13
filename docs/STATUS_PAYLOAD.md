@@ -75,12 +75,18 @@ Each source summary may include:
 | `latest_remote_status` | string | Redacted remote status label from the latest uploaded record. |
 | `latest_inventory_count` | int | Best available count of packages in local remote-inventory evidence. |
 | `latest_inventory_evidence` | string | Evidence label: `generic_outbox_remote_catalog`, `generic_outbox_remote_index`, `local_upload_registry`, or empty. |
+| `latest_source_activity_at` | int | Latest redacted source-side activity timestamp when known. For WPvivid, this may come from local backup ZIP mtime or WPvivid backup-log mtime and is not upload proof. |
+| `latest_source_activity_age_seconds` | int | Age of the latest source-side activity evidence. |
+| `source_activity_evidence` | string | Evidence label: `wpvivid_local_archive`, `wpvivid_backup_log`, or empty. |
+| `local_candidate_count` | int | Count of local source ZIP candidates currently visible to the uploader. |
 | `freshness_status` | string | `not_configured`, `no_upload_evidence`, `stale`, or `fresh`. |
 | `freshness_window_seconds` | int | Conservative freshness window used by the uploader. |
 | `warning_count` | int | Count of source-specific warnings. |
 | `warnings` | array | Structured source warning records with `code` and `message`. |
 
 The dashboard should display these fields as read-only operational hints. Because this evidence is produced by the client plugin from its local registry and sidecar metadata, it is not a dashboard-side Drime inventory audit.
+
+WPvivid source activity fields are intentionally distinct from upload evidence. A `wpvivid_backup_log` activity label can show that WPvivid appears to be running even when no local ZIP is available for Alynt to upload. The source should still report `no_upload_evidence` or `stale` when Alynt has not uploaded a current WPvivid package to Drime.
 
 ## Local CLI Path Mode
 

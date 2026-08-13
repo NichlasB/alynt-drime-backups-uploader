@@ -197,6 +197,43 @@ class HealthSummaryTest extends TestCase {
 		rmdir( $outbox );
 	}
 
+	/**
+	 * WPvivid source activity evidence is redacted and distinct from upload proof.
+	 *
+	 * @return void
+	 */
+	public function test_status_includes_redacted_wpvivid_activity_evidence() {
+		$outbox      = $this->create_outbox();
+		$wpvivid_dir = $this->create_outbox();
+		$log_time    = time() - 300;
+		$log_file    = $wpvivid_dir . DIRECTORY_SEPARATOR . 'wpvivid-safe_backup_log.txt';
+
+		file_put_contents( $log_file, 'WPvivid backup completed.' );
+		touch( $log_file, $log_time );
+
+		$summary = $this->summary(
+			$outbox,
+			array(),
+			array(),
+			array(),
+			$wpvivid_dir
+		);
+		$status  = $summary->status();
+		$wpvivid = $status['backup_sources']['wpvivid'];
+
+		$this->assertEqualsWithDelta( $log_time, $wpvivid['latest_source_activity_at'], 2 );
+		$this->assertGreaterThanOrEqual( 0, $wpvivid['latest_source_activity_age_seconds'] );
+		$this->assertSame( 'wpvivid_backup_log', $wpvivid['source_activity_evidence'] );
+		$this->assertSame( 0, $wpvivid['local_candidate_count'] );
+		$this->assertFalse( $wpvivid['has_upload_evidence'] );
+		$this->assertSame( 'no_upload_evidence', $wpvivid['freshness_status'] );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		unlink( $log_file );
+		rmdir( $wpvivid_dir );
+		rmdir( $outbox );
+	}
+
 	public function test_status_can_include_local_paths_for_cli_output() {
 		$summary = $this->summary( '/var/www/example/private/backups' );
 		$status  = $summary->status( false, true );
@@ -242,7 +279,7 @@ class HealthSummaryTest extends TestCase {
 	 *
 	 * @return Alynt_Drime_Backups_Uploader_Health_Summary
 	 */
-	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null ) {
+	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null, $wpvivid_path = '/var/www/example/wp-content/uploads/wpvividbackups' ) {
 		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
 		$settings->method( 'site_uuid' )->willReturn( '12345678-1234-4234-9234-123456789abc' );
 		$settings->method( 'get' )->willReturn(
@@ -250,7 +287,7 @@ class HealthSummaryTest extends TestCase {
 				'auto_scan_enabled'    => true,
 				'server_cron_expected' => true,
 				'server_outbox_path'   => $outbox_path,
-				'backup_path_override' => '/var/www/example/wp-content/uploads/wpvividbackups',
+				'backup_path_override' => $wpvivid_path,
 			)
 		);
 
@@ -358,6 +395,10 @@ class HealthSummaryTest extends TestCase {
 			'latest_remote_status',
 			'latest_inventory_count',
 			'latest_inventory_evidence',
+			'latest_source_activity_at',
+			'latest_source_activity_age_seconds',
+			'source_activity_evidence',
+			'local_candidate_count',
 			'freshness_status',
 			'freshness_window_seconds',
 			'warning_count',
@@ -377,12 +418,13 @@ class HealthSummaryTest extends TestCase {
 		$this->assertSame( $expected_source_key, $source['source_key'] );
 		$this->assertContains( $source['latest_remote_status'], array( 'uploaded', 'trashed', '' ) );
 		$this->assertContains( $source['latest_inventory_evidence'], array( 'generic_outbox_remote_catalog', 'generic_outbox_remote_index', 'local_upload_registry', '' ) );
+		$this->assertContains( $source['source_activity_evidence'], array( 'wpvivid_backup_log', 'wpvivid_local_archive', '' ) );
 		$this->assertContains( $source['freshness_status'], array( 'not_configured', 'no_upload_evidence', 'stale', 'fresh', '' ) );
 		$this->assertIsString( $source['source_label'] );
 		$this->assertIsBool( $source['configured'] );
 		$this->assertIsBool( $source['has_upload_evidence'] );
 
-		foreach ( array( 'queued_count', 'uploaded_count', 'failed_count', 'remote_registry_count', 'latest_created_at', 'latest_uploaded_at', 'latest_upload_age_seconds', 'latest_inventory_count', 'freshness_window_seconds', 'warning_count' ) as $key ) {
+		foreach ( array( 'queued_count', 'uploaded_count', 'failed_count', 'remote_registry_count', 'latest_created_at', 'latest_uploaded_at', 'latest_upload_age_seconds', 'latest_inventory_count', 'latest_source_activity_at', 'latest_source_activity_age_seconds', 'local_candidate_count', 'freshness_window_seconds', 'warning_count' ) as $key ) {
 			$this->assertIsInt( $source[ $key ] );
 			$this->assertGreaterThanOrEqual( 0, $source[ $key ] );
 		}

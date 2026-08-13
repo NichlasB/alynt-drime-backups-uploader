@@ -131,6 +131,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 				__( 'Server runner / generic outbox', 'alynt-drime-backups-uploader' ),
 				'generic_outbox',
 				! empty( $settings['server_outbox_path'] ),
+				$settings,
 				$queued,
 				$uploaded,
 				$failed
@@ -140,6 +141,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 				__( 'WPvivid', 'alynt-drime-backups-uploader' ),
 				'wpvivid',
 				! empty( $settings['backup_path_override'] ) || ! empty( $settings['wpvivid_relative_path'] ),
+				$settings,
 				$queued,
 				$uploaded,
 				$failed
@@ -154,12 +156,13 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	 * @param string              $source_label Source label.
 	 * @param string              $producer_key Producer key.
 	 * @param bool                $configured Whether the source appears configured.
+	 * @param array<string,mixed> $settings Settings.
 	 * @param array<string,mixed> $queued Queue records.
 	 * @param array<string,mixed> $uploaded Uploaded registry records.
 	 * @param array<string,mixed> $failed Failed registry records.
 	 * @return array<string,mixed>
 	 */
-	private function backup_source_summary( $source_key, $source_label, $producer_key, $configured, array $queued, array $uploaded, array $failed ) {
+	private function backup_source_summary( $source_key, $source_label, $producer_key, $configured, array $settings, array $queued, array $uploaded, array $failed ) {
 		$source_uploaded = $this->records_for_producer( $uploaded, $producer_key );
 		$source_failed   = $this->records_for_producer( $failed, $producer_key );
 		$source_queued   = $this->records_for_producer( $queued, $producer_key );
@@ -171,27 +174,116 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 		$inventory_count = $this->latest_inventory_count( $latest, $remote_count );
 		$freshness       = $this->freshness_status( (bool) $configured, $latest_uploaded );
 		$warnings        = $this->source_warnings( (bool) $configured, count( $source_queued ), $freshness );
+		$activity        = $this->source_activity_evidence( (string) $source_key, $settings );
 
 		return array(
-			'source_key'                => sanitize_key( $source_key ),
-			'source_label'              => sanitize_text_field( $source_label ),
-			'configured'                => (bool) $configured,
-			'has_upload_evidence'       => ! empty( $source_uploaded ),
-			'queued_count'              => count( $source_queued ),
-			'uploaded_count'            => count( $source_uploaded ),
-			'failed_count'              => count( $source_failed ),
-			'remote_registry_count'     => $remote_count,
-			'latest_created_at'         => $latest_created,
-			'latest_uploaded_at'        => $latest_uploaded,
-			'latest_upload_age_seconds' => $latest_uploaded > 0 ? max( 0, time() - $latest_uploaded ) : 0,
-			'latest_remote_status'      => isset( $latest['remote_status'] ) ? sanitize_key( (string) $latest['remote_status'] ) : '',
-			'latest_inventory_count'    => $inventory_count,
-			'latest_inventory_evidence' => $this->latest_inventory_evidence( $latest, $inventory_count, $remote_count ),
-			'freshness_status'          => $freshness,
-			'freshness_window_seconds'  => self::BACKUP_FRESHNESS_WINDOW_SECONDS,
-			'warning_count'             => count( $warnings ),
-			'warnings'                  => $warnings,
+			'source_key'                         => sanitize_key( $source_key ),
+			'source_label'                       => sanitize_text_field( $source_label ),
+			'configured'                         => (bool) $configured,
+			'has_upload_evidence'                => ! empty( $source_uploaded ),
+			'queued_count'                       => count( $source_queued ),
+			'uploaded_count'                     => count( $source_uploaded ),
+			'failed_count'                       => count( $source_failed ),
+			'remote_registry_count'              => $remote_count,
+			'latest_created_at'                  => $latest_created,
+			'latest_uploaded_at'                 => $latest_uploaded,
+			'latest_upload_age_seconds'          => $latest_uploaded > 0 ? max( 0, time() - $latest_uploaded ) : 0,
+			'latest_remote_status'               => isset( $latest['remote_status'] ) ? sanitize_key( (string) $latest['remote_status'] ) : '',
+			'latest_inventory_count'             => $inventory_count,
+			'latest_inventory_evidence'          => $this->latest_inventory_evidence( $latest, $inventory_count, $remote_count ),
+			'latest_source_activity_at'          => $activity['latest_source_activity_at'],
+			'latest_source_activity_age_seconds' => $activity['latest_source_activity_at'] > 0 ? max( 0, time() - $activity['latest_source_activity_at'] ) : 0,
+			'source_activity_evidence'           => $activity['source_activity_evidence'],
+			'local_candidate_count'              => $activity['local_candidate_count'],
+			'freshness_status'                   => $freshness,
+			'freshness_window_seconds'           => self::BACKUP_FRESHNESS_WINDOW_SECONDS,
+			'warning_count'                      => count( $warnings ),
+			'warnings'                           => $warnings,
 		);
+	}
+
+	/**
+	 * Returns redacted source-side activity evidence that is not equivalent to upload proof.
+	 *
+	 * @param string              $source_key Source key.
+	 * @param array<string,mixed> $settings Settings.
+	 * @return array{latest_source_activity_at:int,source_activity_evidence:string,local_candidate_count:int}
+	 */
+	private function source_activity_evidence( $source_key, array $settings ) {
+		if ( 'wpvivid' !== $source_key ) {
+			return $this->empty_source_activity();
+		}
+
+		$detector  = new Alynt_Drime_Backups_Uploader_WPvivid_Detector();
+		$directory = $detector->get_backup_dir( $settings );
+
+		if ( ! is_dir( $directory ) || ! is_readable( $directory ) ) {
+			return $this->empty_source_activity();
+		}
+
+		$archive_times            = $this->file_mtimes( glob( trailingslashit( $directory ) . '*.zip' ) );
+		$direct_log_times         = $this->file_mtimes( glob( trailingslashit( $directory ) . '*backup_log.txt' ) );
+		$nested_log_times         = $this->file_mtimes( glob( trailingslashit( $directory ) . 'wpvivid_log/*backup_log.txt' ) );
+		$latest_archive_time      = empty( $archive_times ) ? 0 : max( $archive_times );
+		$latest_log_time          = empty( $direct_log_times ) && empty( $nested_log_times ) ? 0 : max( array_merge( $direct_log_times, $nested_log_times ) );
+		$latest_activity_time     = max( $latest_archive_time, $latest_log_time );
+		$source_activity_evidence = '';
+
+		if ( $latest_archive_time > 0 && $latest_archive_time >= $latest_log_time ) {
+			$source_activity_evidence = 'wpvivid_local_archive';
+		} elseif ( $latest_log_time > 0 ) {
+			$source_activity_evidence = 'wpvivid_backup_log';
+		}
+
+		return array(
+			'latest_source_activity_at' => $latest_activity_time,
+			'source_activity_evidence'  => $source_activity_evidence,
+			'local_candidate_count'     => count( $archive_times ),
+		);
+	}
+
+	/**
+	 * Returns an empty source activity summary.
+	 *
+	 * @return array{latest_source_activity_at:int,source_activity_evidence:string,local_candidate_count:int}
+	 */
+	private function empty_source_activity() {
+		return array(
+			'latest_source_activity_at' => 0,
+			'source_activity_evidence'  => '',
+			'local_candidate_count'     => 0,
+		);
+	}
+
+	/**
+	 * Returns readable non-empty file modification times from a glob result.
+	 *
+	 * @param array<int,string>|false $files Files.
+	 * @return array<int,int>
+	 */
+	private function file_mtimes( $files ) {
+		if ( ! is_array( $files ) ) {
+			return array();
+		}
+
+		$times = array();
+
+		foreach ( $files as $file ) {
+			if ( ! is_file( $file ) || ! is_readable( $file ) ) {
+				continue;
+			}
+
+			$size  = filesize( $file );
+			$mtime = filemtime( $file );
+
+			if ( false === $size || false === $mtime || $size <= 0 ) {
+				continue;
+			}
+
+			$times[] = max( 0, (int) $mtime );
+		}
+
+		return $times;
 	}
 
 	/**

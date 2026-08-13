@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added redacted WPvivid source-activity hints to the authenticated read-only status payload so dashboards can distinguish WPvivid activity/log evidence from Alynt WPvivid upload proof.
+
 ## [0.5.6] - 2026-08-13
 
 ### Added
