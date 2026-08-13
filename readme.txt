@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.6
+Stable tag: 0.5.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,9 @@ No public custom actions or filters are exposed.
 
 = Unreleased =
 
+= 0.5.7 =
+* Added redacted WPvivid source-activity hints to the authenticated read-only dashboard status payload so dashboards can distinguish WPvivid activity/log evidence from Alynt WPvivid upload proof.
+
 = 0.5.3 =
 * Added client-side central dashboard pairing completion for dashboard-generated `adb1` tokens, including explicit read-only opt-in, reviewed dashboard-origin confirmation, and verifier-only polling credential storage.
 * Added the authenticated fixed read-only dashboard status endpoint at `/wp-json/alynt-drime-backups-uploader/v1/status`, returning the existing redacted health payload without filesystem paths.
@@ -213,6 +216,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.5.7 =
+No breaking changes. Adds redacted WPvivid source-activity hints for central dashboard observability without exposing paths, package identifiers, or Drime credentials.
 
 = 0.5.3 =
 No breaking changes. Adds opt-in read-only central dashboard pairing and an authenticated redacted status endpoint for dashboard polling.
