@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-08-13
+
+### Added
+
+- Added redacted per-source backup freshness and local remote-inventory evidence to the authenticated read-only dashboard status payload, covering server-runner/generic-outbox and WPvivid sources without exposing paths, package identifiers, Drime credentials, or raw remote data.
+
+### Changed
+
+- Hardened the updater release workflow and refreshed the translation template.
+
 ## [0.5.5] - 2026-08-12
 
 ### Fixed
