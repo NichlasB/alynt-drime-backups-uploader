@@ -230,6 +230,43 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$this->assertArrayNotHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
 	}
 
+	public function test_duplicate_wpvivid_file_is_recorded_as_skipped_upload() {
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ]['sig-one'] = array(
+			'name'    => basename( $this->file ),
+			'message' => 'A file with this name already exists in Drime, so the upload was skipped.',
+		);
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key'      => 'wpvivid',
+				'producer_label'    => 'WPvivid',
+				'package_id'        => 'wpvivid-part-one',
+				'filename'          => basename( $this->file ),
+				'backup_set_id'     => 'wpvivid-set-one',
+				'backup_set_total'  => 2,
+				'wpvivid'           => $this->wpvivid_metadata( array( basename( $this->file ), 'part-two.zip' ) ),
+			)
+		);
+
+		$client                    = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$client->duplicate_names[] = basename( $this->file );
+		$uploader                  = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
+
+		$this->assertFalse( is_wp_error( $result ) );
+		$this->assertSame( 0, $client->create_multipart_calls );
+		$this->assertSame( array(), $client->simple_upload_names );
+		$this->assertTrue( $record['drime']['duplicate_skipped'] );
+		$this->assertSame( 'wpvivid', $record['producer_key'] );
+		$this->assertSame( 'wpvivid-set-one', $record['backup_set_id'] );
+		$this->assertArrayNotHasKey( 'sidecars', $record );
+		$this->assertArrayNotHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+		$this->assertSame( array(), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ] );
+	}
+
 	public function test_generic_outbox_upload_accepts_archive_stem_sidecars() {
 		$stem                = substr( $this->file, 0, -4 );
 		$manifest            = $stem . '.manifest.json';

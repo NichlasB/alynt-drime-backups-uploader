@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.7
+Stable tag: 0.5.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,9 @@ No public custom actions or filters are exposed.
 
 = Unreleased =
 
+= 0.5.8 =
+* Fixed duplicate-skip handling so already-present WPvivid backup files are recorded as completed uploads instead of retrying into failed-upload email notifications.
+
 = 0.5.7 =
 * Added redacted WPvivid source-activity hints to the authenticated read-only dashboard status payload so dashboards can distinguish WPvivid activity/log evidence from Alynt WPvivid upload proof.
 
@@ -216,6 +219,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.5.8 =
+No breaking changes. Fixes duplicate-skip handling for WPvivid files already present in Drime so queues can settle without failure emails.
 
 = 0.5.7 =
 No breaking changes. Adds redacted WPvivid source-activity hints for central dashboard observability without exposing paths, package identifiers, or Drime credentials.

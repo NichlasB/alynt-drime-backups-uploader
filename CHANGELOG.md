@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.8] - 2026-08-15
+
+### Fixed
+
+- Treat Drime duplicate-skip results as completed uploads even when the queued item has no sidecars, preventing already-present WPvivid backup files from retrying into failed-upload email notifications.
+
 ## [0.5.7] - 2026-08-13
 
 ### Added

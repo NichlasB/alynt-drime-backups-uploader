@@ -537,20 +537,21 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 				return $sidecars;
 			}
 
+			$result = array(
+				'path'                      => $path,
+				'remote_name'               => basename( $path ),
+				'size'                      => (int) $size,
+				'destination_relative_path' => (string) $settings['relative_path'],
+				'drime'                     => array(
+					'duplicate_skipped' => true,
+				),
+			);
+
 			if ( ! empty( $sidecars ) ) {
-				return array(
-					'path'                      => $path,
-					'remote_name'               => basename( $path ),
-					'size'                      => (int) $size,
-					'destination_relative_path' => (string) $settings['relative_path'],
-					'drime'                     => array(
-						'duplicate_skipped' => true,
-					),
-					'sidecars'                  => $sidecars,
-				);
+				$result['sidecars'] = $sidecars;
 			}
 
-			return new WP_Error( 'alynt_drime_duplicate_skipped', __( 'A file with this name already exists in Drime, so the upload was skipped.', 'alynt-drime-backups-uploader' ) );
+			return $result;
 		}
 
 		$result = $size < Alynt_Drime_Backups_Uploader_Drime_Client::MIN_MULTIPART_CHUNK_SIZE
