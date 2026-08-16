@@ -174,6 +174,30 @@ class QueueTest extends TestCase {
 		$this->assertSame( array( 'one' ), array_keys( $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] ) );
 	}
 
+	public function test_add_many_rejects_previously_failed_signature() {
+		$options = null;
+		$queue   = $this->queue_with_options( $options );
+
+		$added = $queue->add_many(
+			array(
+				array(
+					'signature' => 'one',
+					'path'      => 'C:/backups/one.zip',
+					'name'      => 'one.zip',
+				),
+			),
+			array(),
+			array(
+				'one' => array(
+					'message' => 'Previous final failure.',
+				),
+			)
+		);
+
+		$this->assertSame( 0, $added );
+		$this->assertSame( array(), $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+	}
+
 	public function test_add_many_rejects_duplicate_wpvivid_file_in_same_batch() {
 		$options = null;
 		$queue   = $this->queue_with_options( $options );
@@ -285,6 +309,23 @@ class QueueTest extends TestCase {
 		$queue->clear_active();
 
 		$this->assertArrayNotHasKey( Alynt_Drime_Backups_Uploader_Queue::ACTIVE_OPTION, $options );
+	}
+
+	public function test_set_attempts_updates_existing_queue_item() {
+		$options = array(
+			Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION => array(
+				'one' => array(
+					'signature' => 'one',
+					'path'      => 'C:/backups/one.zip',
+					'name'      => 'one.zip',
+					'attempts'  => 3,
+				),
+			),
+		);
+		$queue   = $this->queue_with_options( $options );
+
+		$this->assertTrue( $queue->set_attempts( 'one', 0 ) );
+		$this->assertSame( 0, $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['one']['attempts'] );
 	}
 
 	/**

@@ -202,11 +202,59 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 		}
 
 		if ( $this->attempts_reached_limit( $attempts ) ) {
+			if ( $this->is_transient_upload_error( $result ) ) {
+				return $this->defer_transient_retry_limit( $item, $attempts, $result );
+			}
+
 			$removed = $this->remove_retry_limited_item( $item, $attempts );
 			if ( is_wp_error( $removed ) ) {
 				return $removed;
 			}
 		}
+
+		return $result;
+	}
+
+	/**
+	 * Checks whether an upload error is likely recoverable on a later worker run.
+	 *
+	 * @param WP_Error $result Upload error.
+	 * @return bool
+	 */
+	private function is_transient_upload_error( WP_Error $result ) {
+		$status = $result->get_error_data( 'alynt_drime_api_error' );
+		if ( is_array( $status ) && isset( $status['status'] ) ) {
+			$status = absint( $status['status'] );
+			return 429 === $status || ( $status >= 500 && $status < 600 );
+		}
+
+		return in_array( $result->get_error_code(), array( 'http_request_failed', 'request_failed' ), true );
+	}
+
+	/**
+	 * Keeps a transiently failing item queued without sending a final-failure email.
+	 *
+	 * @param array<string,mixed> $item Queue item.
+	 * @param int                 $attempts Attempts.
+	 * @param WP_Error            $result Upload error.
+	 * @return WP_Error
+	 */
+	private function defer_transient_retry_limit( array $item, $attempts, WP_Error $result ) {
+		if ( ! $this->queue->set_attempts( (string) $item['signature'], 0 ) ) {
+			return $this->state_persistence_error();
+		}
+
+		$this->logger->event(
+			'upload',
+			'warning',
+			'transient_retry_limit_deferred',
+			'Transient upload retry limit reached; item kept queued for a later worker.',
+			array(
+				'file'     => basename( (string) $item['path'] ),
+				'attempts' => $attempts,
+				'reason'   => $result->get_error_message(),
+			)
+		);
 
 		return $result;
 	}

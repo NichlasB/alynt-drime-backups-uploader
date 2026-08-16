@@ -30,6 +30,7 @@ class PluginScanTest extends TestCase {
 
 		$registry = $this->createMock( Alynt_Drime_Backups_Uploader_Backup_Registry::class );
 		$registry->method( 'get_uploaded' )->willReturn( array() );
+		$registry->method( 'get_failed' )->willReturn( array() );
 
 		$logger = $this->createMock( Alynt_Drime_Backups_Uploader_Logger::class );
 		$logger->expects( $this->atLeastOnce() )->method( 'event' );
@@ -46,6 +47,51 @@ class PluginScanTest extends TestCase {
 		$this->assertSame( 0, $result['queued'] );
 		$this->assertCount( 1, $result['errors'] );
 		$this->assertStringContainsString( 'upload queue could not be saved', $result['errors'][0] );
+	}
+
+	public function test_scan_passes_failed_registry_to_queue() {
+		$candidate = array(
+			'signature' => 'one',
+			'path'      => 'C:/backups/one.zip',
+			'name'      => 'one.zip',
+		);
+		$scanner   = $this->createMock( Alynt_Drime_Backups_Uploader_Scanner::class );
+		$scanner->method( 'scan' )->willReturn(
+			array(
+				'directory'  => 'C:/backups',
+				'candidates' => array( $candidate ),
+				'errors'     => array(),
+				'producers'  => array(),
+			)
+		);
+
+		$uploaded = array( 'uploaded-one' => array() );
+		$failed   = array( 'one' => array( 'message' => 'Previous final failure.' ) );
+
+		$queue = $this->createMock( Alynt_Drime_Backups_Uploader_Queue::class );
+		$queue->expects( $this->once() )
+			->method( 'add_many' )
+			->with( array( $candidate ), $uploaded, $failed )
+			->willReturn( 0 );
+		$queue->method( 'last_persistence_failed' )->willReturn( false );
+
+		$registry = $this->createMock( Alynt_Drime_Backups_Uploader_Backup_Registry::class );
+		$registry->method( 'get_uploaded' )->willReturn( $uploaded );
+		$registry->method( 'get_failed' )->willReturn( $failed );
+
+		$logger = $this->createMock( Alynt_Drime_Backups_Uploader_Logger::class );
+
+		$reflection = new ReflectionClass( Alynt_Drime_Backups_Uploader_Plugin::class );
+		$plugin     = $reflection->newInstanceWithoutConstructor();
+		$this->set_property( $reflection, $plugin, 'scanner', $scanner );
+		$this->set_property( $reflection, $plugin, 'queue', $queue );
+		$this->set_property( $reflection, $plugin, 'registry', $registry );
+		$this->set_property( $reflection, $plugin, 'logger', $logger );
+
+		$result = $plugin->scan_and_queue();
+
+		$this->assertSame( 0, $result['queued'] );
+		$this->assertSame( array(), $result['errors'] );
 	}
 
 	private function set_property( ReflectionClass $reflection, $object, $name, $value ) {

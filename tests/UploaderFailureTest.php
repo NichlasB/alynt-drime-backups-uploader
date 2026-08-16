@@ -98,6 +98,39 @@ class UploaderFailureTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$this->assertSame( 1, $failed['attempts'] );
 	}
 
+	public function test_transient_retry_limit_is_deferred_without_removing_queue_item() {
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['attempts'] = 2;
+		$client  = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$client->connection_result = new WP_Error( 'alynt_drime_api_error', 'Server Error', array( 'status' => 500 ) );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$failed = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ]['sig-one'];
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'alynt_drime_api_error', $result->get_error_code() );
+		$this->assertArrayHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+		$this->assertSame( 0, $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['attempts'] );
+		$this->assertSame( 'Server Error', $failed['message'] );
+		$this->assertSame( 3, $failed['attempts'] );
+	}
+
+	public function test_non_transient_retry_limit_removes_queue_item() {
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['attempts'] = 2;
+		$client  = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$client->connection_result = new WP_Error( 'alynt_drime_api_error', 'Unauthenticated.', array( 'status' => 401 ) );
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'alynt_drime_api_error', $result->get_error_code() );
+		$this->assertArrayNotHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+		$this->assertSame( 3, $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ]['sig-one']['attempts'] );
+	}
+
 	public function test_upload_worker_lock_blocks_overlapping_uploads() {
 		$options = $this->base_options();
 		$options[ Alynt_Drime_Backups_Uploader_Uploader::UPLOAD_LOCK_OPTION ] = array(

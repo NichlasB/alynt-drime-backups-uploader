@@ -143,7 +143,7 @@ No. Remote retention is disabled by default, runs only from manual admin actions
 
 ### How are failed upload emails delivered?
 
-Failure emails are disabled by default and use WordPress `wp_mail()`, so the active site mail stack or SMTP plugin handles delivery. Emails are plain text and include only safe operational details such as site URL, backup filename, sanitized reason, attempt count, timestamp, and the admin page URL.
+Failure emails are disabled by default and use WordPress `wp_mail()`, so the active site mail stack or SMTP plugin handles delivery. Emails are plain text and include only safe operational details such as site URL, backup filename, sanitized reason, attempt count, timestamp, and the admin page URL. Transient Drime API responses such as `429` or `5xx` remain queued for later workers instead of immediately becoming final failure emails.
 
 ### Can a failed upload be retried?
 

@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.8
+Stable tag: 0.5.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -96,7 +96,7 @@ No. The settings screen generates single-line review commands that build a propo
 
 = How are failed upload emails delivered? =
 
-Failure emails are disabled by default and use WordPress mail, so the active site mail stack or SMTP plugin handles delivery. Emails are plain text and avoid tokens, signed URLs, raw request bodies, file contents, stack traces, and absolute server paths.
+Failure emails are disabled by default and use WordPress mail, so the active site mail stack or SMTP plugin handles delivery. Emails are plain text and avoid tokens, signed URLs, raw request bodies, file contents, stack traces, and absolute server paths. Transient Drime API responses such as `429` or `5xx` remain queued for later workers instead of immediately becoming final failure emails.
 
 = How do the Drime base folder and relative path work? =
 
@@ -115,6 +115,10 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+
+= 0.5.9 =
+* Deferred final failed-upload emails for transient Drime API failures such as `429` and `5xx` responses so retryable packages remain queued instead of being removed and re-discovered by the scanner.
+* Stopped automatic scans from requeueing signatures that are already in the failed-upload registry, leaving true final failures for explicit administrator retry.
 
 = 0.5.8 =
 * Fixed duplicate-skip handling so already-present WPvivid backup files are recorded as completed uploads instead of retrying into failed-upload email notifications.
@@ -219,6 +223,9 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.5.9 =
+No breaking changes. Reduces noisy final-failure emails when Drime returns transient API errors and leaves true final failures for explicit administrator retry.
 
 = 0.5.8 =
 No breaking changes. Fixes duplicate-skip handling for WPvivid files already present in Drime so queues can settle without failure emails.

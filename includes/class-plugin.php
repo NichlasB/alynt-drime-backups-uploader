@@ -324,7 +324,7 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	 * @return int
 	 */
 	private function queue_scan_candidates( array $candidates ) {
-		return $this->queue->add_many( $candidates, $this->registry->get_uploaded() );
+		return $this->queue->add_many( $candidates, $this->registry->get_uploaded(), $this->registry->get_failed() );
 	}
 
 	/**

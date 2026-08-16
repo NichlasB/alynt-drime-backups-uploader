@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.9] - 2026-08-16
+
+### Fixed
+
+- Deferred final failed-upload emails for transient Drime API failures such as `429` and `5xx` responses so retryable packages remain queued instead of being removed and re-discovered by the scanner.
+- Stopped automatic scans from requeueing signatures that are already in the failed-upload registry, leaving true final failures for explicit administrator retry.
+
 ## [0.5.8] - 2026-08-15
 
 ### Fixed

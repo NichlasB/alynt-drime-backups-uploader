@@ -74,18 +74,19 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	 *
 	 * @param array<int,array<string,mixed>>    $items Items.
 	 * @param array<string,array<string,mixed>> $uploaded Uploaded records keyed by signature.
+	 * @param array<string,array<string,mixed>> $failed   Failed records keyed by signature.
 	 * @return int Number of queued items, or 0 if persistence fails.
 	 *
 	 * @since 0.1.0
 	 */
-	public function add_many( array $items, array $uploaded = array() ) {
+	public function add_many( array $items, array $uploaded = array(), array $failed = array() ) {
 		$this->last_persistence_failed = false;
 		$queue                         = $this->all();
 		$index                         = $this->duplicate_index( $queue );
 		$added                         = 0;
 
 		foreach ( $items as $item ) {
-			if ( ! $this->queue_item( $queue, $index, $uploaded, $item ) ) {
+			if ( ! $this->queue_item( $queue, $index, $uploaded, $failed, $item ) ) {
 				continue;
 			}
 
@@ -121,18 +122,19 @@ class Alynt_Drime_Backups_Uploader_Queue {
 	 * @param array<string,array<string,mixed>> $queue Queue.
 	 * @param array<string,array<string,bool>>  $index Duplicate index.
 	 * @param array<string,array<string,mixed>> $uploaded Uploaded records keyed by signature.
-	 * @param array<string,mixed>               $item Item.
+	 * @param array<string,array<string,mixed>> $failed   Failed records keyed by signature.
+	 * @param array<string,mixed>               $item     Item.
 	 * @return bool
 	 *
 	 * @since 0.1.0
 	 */
-	private function queue_item( array &$queue, array &$index, array $uploaded, array $item ) {
+	private function queue_item( array &$queue, array &$index, array $uploaded, array $failed, array $item ) {
 		if ( empty( $item['signature'] ) ) {
 			return false;
 		}
 
 		$signature = (string) $item['signature'];
-		if ( isset( $uploaded[ $signature ] ) || isset( $queue[ $signature ] ) ) {
+		if ( isset( $uploaded[ $signature ] ) || isset( $failed[ $signature ] ) || isset( $queue[ $signature ] ) ) {
 			return false;
 		}
 
@@ -213,6 +215,24 @@ class Alynt_Drime_Backups_Uploader_Queue {
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Sets the attempt count for a queued item.
+	 *
+	 * @param string $signature Signature.
+	 * @param int    $attempts Attempts.
+	 * @return bool
+	 */
+	public function set_attempts( $signature, $attempts ) {
+		$queue = $this->all();
+		if ( ! isset( $queue[ $signature ] ) ) {
+			return false;
+		}
+
+		$queue[ $signature ]['attempts'] = absint( $attempts );
+
+		return $this->persist_array_option( self::QUEUE_OPTION, $queue );
 	}
 
 	/**
