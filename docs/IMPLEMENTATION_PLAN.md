@@ -139,7 +139,7 @@ Goal:
 Implementation direction:
 
 - Add optional `backup_sources.wpvivid.schedule_policy` to the default status payload with path mode disabled.
-- Detect the known WPvivid Free local backup schedule from `wpvivid_schedule_setting` and WordPress cron recurrence metadata such as `wpvivid_main_schedule_event`.
+- Detect the known WPvivid Free local backup schedule from `wpvivid_schedule_setting`, WPvivid Pro/addon local schedules from `wpvivid_schedule_addon_setting` and `wpvivid_incremental_schedules`, and WordPress cron recurrence metadata such as `wpvivid_main_schedule_event` when no schedule option state is available.
 - Report only safe scalar fields: detected flag, redacted basis, sanitized recurrence key, supported schedule count, interval seconds, grace seconds, and recommended policy window seconds.
 - If multiple supported local WPvivid schedules are discovered, use the least frequent local cadence (largest interval) for the aggregate WPvivid freshness policy.
 - Ignore unknown, disabled, or remote-only schedules rather than guessing.

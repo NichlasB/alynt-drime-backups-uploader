@@ -93,14 +93,14 @@ WPvivid source activity fields are intentionally distinct from upload evidence. 
 
 `backup_sources.wpvivid.schedule_policy` is additive in schema version `1`. It reports a compact, redacted summary of the local WPvivid backup cadence so the dashboard can use the site's intended backup schedule instead of only a dashboard-wide fallback.
 
-The uploader should derive this from known local WPvivid schedule state, such as `wpvivid_schedule_setting` and the `wpvivid_main_schedule_event` WP-Cron recurrence. It must not expose raw WPvivid option payloads, task IDs, backup IDs, database values, file paths, backup names, Drime identifiers, credentials, or secrets.
+The uploader should derive this from known local WPvivid schedule state, such as `wpvivid_schedule_setting`, WPvivid Pro/addon schedule state in `wpvivid_schedule_addon_setting` or `wpvivid_incremental_schedules`, and the `wpvivid_main_schedule_event` WP-Cron recurrence when no schedule option state is available. It must not expose raw WPvivid option payloads, task IDs, backup IDs, database values, file paths, backup names, Drime identifiers, credentials, or secrets.
 
 Fields:
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `detected` | boolean | Whether a supported local WPvivid schedule was detected. |
-| `basis` | string | Redacted evidence basis, such as `wpvivid_schedule_setting`, `wp_cron_event`, or `not_detected`. |
+| `basis` | string | Redacted evidence basis, such as `wpvivid_schedule_setting`, `wpvivid_schedule_addon_setting`, `wpvivid_incremental_schedules`, `wp_cron_event`, or `not_detected`. |
 | `recurrence` | string | Sanitized recurrence key for the least frequent detected local schedule. |
 | `schedule_count` | int | Count of supported local schedules detected. |
 | `interval_seconds` | int | Largest detected local schedule interval in seconds. |

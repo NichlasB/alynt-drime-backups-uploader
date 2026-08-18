@@ -218,11 +218,17 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	 */
 	private function wpvivid_schedule_policy() {
 		$candidates       = array();
-		$option           = function_exists( 'get_option' ) ? get_option( 'wpvivid_schedule_setting', array() ) : array();
-		$option_has_state = is_array( $option ) && ! empty( $option ) && $this->wpvivid_schedule_option_has_state( $option );
+		$option_has_state = false;
 
-		if ( is_array( $option ) ) {
-			$this->collect_wpvivid_schedule_candidates( $option, 'wpvivid_schedule_setting', $candidates );
+		foreach ( array( 'wpvivid_schedule_setting', 'wpvivid_schedule_addon_setting', 'wpvivid_incremental_schedules' ) as $option_name ) {
+			$option = function_exists( 'get_option' ) ? get_option( $option_name, array() ) : array();
+
+			if ( ! is_array( $option ) ) {
+				continue;
+			}
+
+			$option_has_state = $option_has_state || ( ! empty( $option ) && $this->wpvivid_schedule_option_has_state( $option ) );
+			$this->collect_wpvivid_schedule_candidates( $option, $option_name, $candidates );
 		}
 
 		if ( empty( $candidates ) && ! $option_has_state && function_exists( 'wp_get_schedule' ) ) {
@@ -303,9 +309,14 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 		}
 
 		$enabled = ! array_key_exists( 'enable', $value ) || ! empty( $value['enable'] );
-		$local   = $this->wpvivid_schedule_allows_local_backup( $value );
 
-		foreach ( array( 'type', 'recurrence' ) as $key ) {
+		if ( isset( $value['status'] ) && 'active' !== sanitize_key( (string) $value['status'] ) ) {
+			$enabled = false;
+		}
+
+		$local = $this->wpvivid_schedule_allows_local_backup( $value );
+
+		foreach ( array( 'type', 'recurrence', 'incremental_recurrence', 'files_recurrence', 'db_recurrence' ) as $key ) {
 			if ( empty( $value[ $key ] ) || ! is_string( $value[ $key ] ) ) {
 				continue;
 			}
@@ -341,7 +352,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 			return false;
 		}
 
-		foreach ( array( 'enable', 'type', 'recurrence', 'backup', 'save_local_remote' ) as $key ) {
+		foreach ( array( 'enable', 'status', 'type', 'recurrence', 'incremental_recurrence', 'files_recurrence', 'db_recurrence', 'backup', 'save_local_remote' ) as $key ) {
 			if ( array_key_exists( $key, $value ) ) {
 				return true;
 			}

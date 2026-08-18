@@ -285,6 +285,56 @@ class HealthSummaryTest extends TestCase {
 	}
 
 	/**
+	 * WPvivid Pro schedule policy is detected from addon schedule settings.
+	 *
+	 * @return void
+	 */
+	public function test_status_includes_redacted_wpvivid_addon_schedule_policy() {
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) {
+				if ( 'wpvivid_schedule_addon_setting' === $name ) {
+					return array(
+						'daily_remote' => array(
+							'status' => 'Active',
+							'type'   => 'wpvivid_daily',
+							'backup' => array(
+								'local'  => 0,
+								'remote' => 1,
+							),
+						),
+						'weekly_local' => array(
+							'status' => 'Active',
+							'type'   => 'wpvivid_weekly',
+							'backup' => array(
+								'local'  => 1,
+								'remote' => 0,
+							),
+						),
+					);
+				}
+
+				return $default;
+			}
+		);
+
+		$outbox  = $this->create_outbox();
+		$summary = $this->summary( $outbox );
+		$status  = $summary->status();
+		$policy  = $status['backup_sources']['wpvivid']['schedule_policy'];
+
+		$this->assertTrue( $policy['detected'] );
+		$this->assertSame( 'wpvivid_schedule_addon_setting', $policy['basis'] );
+		$this->assertSame( 'wpvivid_weekly', $policy['recurrence'] );
+		$this->assertSame( 1, $policy['schedule_count'] );
+		$this->assertSame( 604800, $policy['interval_seconds'] );
+		$this->assertSame( 172800, $policy['grace_seconds'] );
+		$this->assertSame( 777600, $policy['policy_window_seconds'] );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
+	/**
 	 * Remote-only WPvivid schedules are not treated as local Alynt upload freshness policy.
 	 *
 	 * @return void
