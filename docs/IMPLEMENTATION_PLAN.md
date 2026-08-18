@@ -127,6 +127,30 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Any future dashboard endpoint must add explicit pairing/enrollment, scoped authentication, and redaction enforcement.
 - Separate dashboard plugin preparation is documented in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`.
 
+### Dashboard WPvivid Schedule-Aware Status Payload Slice
+
+Status: planned/implementation slice.
+
+Goal:
+
+- Let the read-only dashboard understand the client's intended WPvivid cadence without hardcoding one global WPvivid freshness policy for every site.
+- Keep the dashboard contract additive, schema-1 compatible, and redacted.
+
+Implementation direction:
+
+- Add optional `backup_sources.wpvivid.schedule_policy` to the default status payload with path mode disabled.
+- Detect the known WPvivid Free local backup schedule from `wpvivid_schedule_setting` and WordPress cron recurrence metadata such as `wpvivid_main_schedule_event`.
+- Report only safe scalar fields: detected flag, redacted basis, sanitized recurrence key, supported schedule count, interval seconds, grace seconds, and recommended policy window seconds.
+- If multiple supported local WPvivid schedules are discovered, use the least frequent local cadence (largest interval) for the aggregate WPvivid freshness policy.
+- Ignore unknown, disabled, or remote-only schedules rather than guessing.
+- Do not expose raw WPvivid option blobs, local filesystem paths, backup IDs, task IDs, package names, Drime identifiers, credentials, database values, or secrets.
+
+Acceptance:
+
+- Existing dashboard clients remain compatible because the field is optional and additive under schema version `1`.
+- The dashboard can use detected WPvivid schedule policy on every normal polling cycle.
+- The status payload remains safe for authenticated central-dashboard polling.
+
 ### Release And Validation Workflows
 
 - Pre-release review workflows have been run where they made sense for the completed baseline.

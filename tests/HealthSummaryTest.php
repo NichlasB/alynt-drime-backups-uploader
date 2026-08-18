@@ -54,6 +54,8 @@ class HealthSummaryTest extends TestCase {
 		$this->assertArrayHasKey( 'wpvivid', $status['backup_sources'] );
 		$this->assertSame( 'no_upload_evidence', $status['backup_sources']['server']['freshness_status'] );
 		$this->assertSame( 'no_upload_evidence', $status['backup_sources']['wpvivid']['freshness_status'] );
+		$this->assertFalse( $status['backup_sources']['wpvivid']['schedule_policy']['detected'] );
+		$this->assertSame( 'not_detected', $status['backup_sources']['wpvivid']['schedule_policy']['basis'] );
 		$this->assertArrayNotHasKey( 'server_outbox_path', $status );
 		$this->assertArrayNotHasKey( 'backup_path_override', $status );
 		$this->assertSame( $this->expected_redacted_status_keys(), array_keys( $status ) );
@@ -145,6 +147,7 @@ class HealthSummaryTest extends TestCase {
 		$this->assertSame( 1, $wpvivid['latest_inventory_count'] );
 		$this->assertSame( 'local_upload_registry', $wpvivid['latest_inventory_evidence'] );
 		$this->assertSame( 'fresh', $wpvivid['freshness_status'] );
+		$this->assertArrayHasKey( 'schedule_policy', $wpvivid );
 
 		$this->assert_status_payload_contains_no_sensitive_keys( $status );
 
@@ -231,6 +234,89 @@ class HealthSummaryTest extends TestCase {
 
 		unlink( $log_file );
 		rmdir( $wpvivid_dir );
+		rmdir( $outbox );
+	}
+
+	/**
+	 * WPvivid schedule policy is detected from local schedule settings without leaking raw settings.
+	 *
+	 * @return void
+	 */
+	public function test_status_includes_redacted_wpvivid_schedule_policy() {
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) {
+				if ( 'wpvivid_schedule_setting' === $name ) {
+					return array(
+						'enable' => 1,
+						'type'   => 'wpvivid_weekly',
+						'backup' => array(
+							'local'  => 1,
+							'remote' => 0,
+						),
+						'nested' => array(
+							'enable' => 1,
+							'type'   => 'wpvivid_monthly',
+							'backup' => array(
+								'local' => 1,
+							),
+						),
+					);
+				}
+
+				return $default;
+			}
+		);
+
+		$outbox  = $this->create_outbox();
+		$summary = $this->summary( $outbox );
+		$status  = $summary->status();
+		$policy  = $status['backup_sources']['wpvivid']['schedule_policy'];
+
+		$this->assertTrue( $policy['detected'] );
+		$this->assertSame( 'wpvivid_schedule_setting', $policy['basis'] );
+		$this->assertSame( 'wpvivid_monthly', $policy['recurrence'] );
+		$this->assertSame( 2, $policy['schedule_count'] );
+		$this->assertSame( 2592000, $policy['interval_seconds'] );
+		$this->assertSame( 259200, $policy['grace_seconds'] );
+		$this->assertSame( 2851200, $policy['policy_window_seconds'] );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
+	/**
+	 * Remote-only WPvivid schedules are not treated as local Alynt upload freshness policy.
+	 *
+	 * @return void
+	 */
+	public function test_remote_only_wpvivid_schedule_is_not_detected_as_local_policy() {
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) {
+				if ( 'wpvivid_schedule_setting' === $name ) {
+					return array(
+						'enable' => 1,
+						'type'   => 'wpvivid_weekly',
+						'backup' => array(
+							'local'  => 0,
+							'remote' => 1,
+						),
+					);
+				}
+
+				return $default;
+			}
+		);
+
+		$outbox  = $this->create_outbox();
+		$summary = $this->summary( $outbox );
+		$status  = $summary->status();
+		$policy  = $status['backup_sources']['wpvivid']['schedule_policy'];
+
+		$this->assertFalse( $policy['detected'] );
+		$this->assertSame( 'not_detected', $policy['basis'] );
+		$this->assertSame( 0, $policy['policy_window_seconds'] );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
 		rmdir( $outbox );
 	}
 
@@ -377,10 +463,11 @@ class HealthSummaryTest extends TestCase {
 	/**
 	 * Returns the dashboard-allowlisted backup source keys.
 	 *
+	 * @param string $source_key Source key.
 	 * @return array<int,string>
 	 */
-	private function expected_backup_source_contract_keys() {
-		return array(
+	private function expected_backup_source_contract_keys( $source_key ) {
+		$keys = array(
 			'source_key',
 			'source_label',
 			'configured',
@@ -404,6 +491,12 @@ class HealthSummaryTest extends TestCase {
 			'warning_count',
 			'warnings',
 		);
+
+		if ( 'wpvivid' === $source_key ) {
+			$keys[] = 'schedule_policy';
+		}
+
+		return $keys;
 	}
 
 	/**
@@ -414,7 +507,7 @@ class HealthSummaryTest extends TestCase {
 	 * @return void
 	 */
 	private function assert_backup_source_matches_dashboard_contract( array $source, $expected_source_key ) {
-		$this->assertSame( $this->expected_backup_source_contract_keys(), array_keys( $source ) );
+		$this->assertSame( $this->expected_backup_source_contract_keys( $expected_source_key ), array_keys( $source ) );
 		$this->assertSame( $expected_source_key, $source['source_key'] );
 		$this->assertContains( $source['latest_remote_status'], array( 'uploaded', 'trashed', '' ) );
 		$this->assertContains( $source['latest_inventory_evidence'], array( 'generic_outbox_remote_catalog', 'generic_outbox_remote_index', 'local_upload_registry', '' ) );
@@ -430,6 +523,18 @@ class HealthSummaryTest extends TestCase {
 		}
 
 		$this->assertIsArray( $source['warnings'] );
+
+		if ( 'wpvivid' === $expected_source_key ) {
+			$this->assertSame( array( 'detected', 'basis', 'recurrence', 'schedule_count', 'interval_seconds', 'grace_seconds', 'policy_window_seconds' ), array_keys( $source['schedule_policy'] ) );
+			$this->assertIsBool( $source['schedule_policy']['detected'] );
+			$this->assertIsString( $source['schedule_policy']['basis'] );
+			$this->assertIsString( $source['schedule_policy']['recurrence'] );
+
+			foreach ( array( 'schedule_count', 'interval_seconds', 'grace_seconds', 'policy_window_seconds' ) as $key ) {
+				$this->assertIsInt( $source['schedule_policy'][ $key ] );
+				$this->assertGreaterThanOrEqual( 0, $source['schedule_policy'][ $key ] );
+			}
+		}
 
 		foreach ( $source['warnings'] as $warning ) {
 			$this->assertSame( array( 'code', 'message' ), array_keys( $warning ) );

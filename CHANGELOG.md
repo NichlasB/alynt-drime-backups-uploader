@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added a redacted WPvivid schedule policy summary to the authenticated read-only status payload so dashboards can align WPvivid freshness with the client's detected local backup cadence.
+
 ## [0.5.9] - 2026-08-16
 
 ### Fixed

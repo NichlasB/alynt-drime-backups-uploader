@@ -81,12 +81,33 @@ Each source summary may include:
 | `local_candidate_count` | int | Count of local source ZIP candidates currently visible to the uploader. |
 | `freshness_status` | string | `not_configured`, `no_upload_evidence`, `stale`, or `fresh`. |
 | `freshness_window_seconds` | int | Conservative freshness window used by the uploader. |
+| `schedule_policy` | object | Optional WPvivid-only redacted schedule-derived freshness policy summary. |
 | `warning_count` | int | Count of source-specific warnings. |
 | `warnings` | array | Structured source warning records with `code` and `message`. |
 
 The dashboard should display these fields as read-only operational hints. Because this evidence is produced by the client plugin from its local registry and sidecar metadata, it is not a dashboard-side Drime inventory audit.
 
 WPvivid source activity fields are intentionally distinct from upload evidence. A `wpvivid_backup_log` activity label can show that WPvivid appears to be running even when no local ZIP is available for Alynt to upload. The source should still report `no_upload_evidence` or `stale` when Alynt has not uploaded a current WPvivid package to Drime.
+
+### Optional WPvivid Schedule Policy
+
+`backup_sources.wpvivid.schedule_policy` is additive in schema version `1`. It reports a compact, redacted summary of the local WPvivid backup cadence so the dashboard can use the site's intended backup schedule instead of only a dashboard-wide fallback.
+
+The uploader should derive this from known local WPvivid schedule state, such as `wpvivid_schedule_setting` and the `wpvivid_main_schedule_event` WP-Cron recurrence. It must not expose raw WPvivid option payloads, task IDs, backup IDs, database values, file paths, backup names, Drime identifiers, credentials, or secrets.
+
+Fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `detected` | boolean | Whether a supported local WPvivid schedule was detected. |
+| `basis` | string | Redacted evidence basis, such as `wpvivid_schedule_setting`, `wp_cron_event`, or `not_detected`. |
+| `recurrence` | string | Sanitized recurrence key for the least frequent detected local schedule. |
+| `schedule_count` | int | Count of supported local schedules detected. |
+| `interval_seconds` | int | Largest detected local schedule interval in seconds. |
+| `grace_seconds` | int | Bounded schedule grace added by the uploader. |
+| `policy_window_seconds` | int | Recommended WPvivid dashboard freshness window. |
+
+When multiple supported local WPvivid schedules are detected, the summary uses the least frequent cadence (the largest interval). Unknown or remote-only schedules should report `detected: false` rather than guessing.
 
 ## Local CLI Path Mode
 
