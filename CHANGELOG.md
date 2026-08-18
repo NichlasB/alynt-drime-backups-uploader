@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.11] - 2026-08-18
+
+### Fixed
+
+- Added WPvivid Pro/addon schedule detection for `wpvivid_schedule_addon_setting` and `wpvivid_incremental_schedules`, so live sites with local weekly WPvivid schedules can report schedule-aware freshness policy.
+
 ## [0.5.10] - 2026-08-18
 
 ### Added
