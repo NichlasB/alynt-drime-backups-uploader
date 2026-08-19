@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.9
+Stable tag: 0.5.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,12 @@ No public custom actions or filters are exposed.
 
 = Unreleased =
 
+= 0.5.11 =
+* Added WPvivid Pro/addon schedule detection for `wpvivid_schedule_addon_setting` and `wpvivid_incremental_schedules`, so live sites with local weekly WPvivid schedules can report schedule-aware freshness policy.
+
+= 0.5.10 =
+* Added a redacted WPvivid schedule policy summary to the authenticated read-only status payload so dashboards can align WPvivid freshness with the client's detected local backup cadence.
+
 = 0.5.9 =
 * Deferred final failed-upload emails for transient Drime API failures such as `429` and `5xx` responses so retryable packages remain queued instead of being removed and re-discovered by the scanner.
 * Stopped automatic scans from requeueing signatures that are already in the failed-upload registry, leaving true final failures for explicit administrator retry.
@@ -223,6 +229,12 @@ No public custom actions or filters are exposed.
 * Initial development version for the new backup-producer-agnostic plugin line. Historical releases for the previous WPvivid-specific uploader remain in the old plugin repository.
 
 == Upgrade Notice ==
+
+= 0.5.11 =
+No breaking changes. Adds WPvivid Pro/addon schedule detection so dashboard freshness can better match each site's actual WPvivid cadence.
+
+= 0.5.10 =
+No breaking changes. Adds redacted WPvivid schedule policy details to the authenticated read-only status payload.
 
 = 0.5.9 =
 No breaking changes. Reduces noisy final-failure emails when Drime returns transient API errors and leaves true final failures for explicit administrator retry.

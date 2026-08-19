@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-07-24
+Updated: 2026-08-19
 
 ## Purpose
 
@@ -10,15 +10,18 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
-- Current released stable version: `v0.5.1`.
-- Accepted as stable on 2026-07-22.
-- Production-simulation restore automation and its release-quality corrections are released in `v0.5.1`; GitHub CI passed on PHP 7.4 and 8.3, the generated release asset was audited, and a real WordPress Updates-screen rehearsal upgraded `plugin-tester.local` from `0.4.0` to `0.5.1` while preserving the active plugin state.
+- Current released stable version: `v0.5.11`.
+- Accepted production baseline: the uploader is production-ready for the validated backup upload, server-runner, WPvivid, status payload, and operator-assisted restore-support scope. Actual-production restore enrollment remains a separate gated project and is not enabled by default.
+- `v0.5.11` is published on GitHub with release asset `alynt-drime-backups-uploader-v0.5.11.zip`; the release asset digest is `sha256:b67a1227dabdad5ba5007c1eddd5fa11bf2aeda1c5094f84ad5d3ba02f0294c4`.
+- `v0.5.10` and `v0.5.11` completed the dashboard/WPvivid schedule-aware status payload work: the authenticated read-only status payload can report redacted WPvivid schedule policy, including WPvivid Pro/addon schedule detection, so central monitoring can use site-specific freshness expectations.
+- `v0.5.9` reduced noisy final failed-upload notifications for transient Drime `429` and `5xx` responses and stopped automatic scans from requeueing signatures already in the failed-upload registry.
+- Production-simulation restore automation and its release-quality corrections were released in `v0.5.1`; GitHub CI passed on PHP 7.4 and 8.3, the generated release asset was audited, and a real WordPress Updates-screen rehearsal upgraded `plugin-tester.local` from `0.4.0` to `0.5.1` while preserving the active plugin state.
 - Automatic pre-restore backup creation has been released in `v0.4.0`; feature-stage reviews, local validation, real staging combined restore rehearsal, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Automatic local server outbox retention after confirmed upload has been released in `v0.3.2`; feature-stage reviews, local validation, staging retention test, staging cleanup/recovery verification, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Mandatory per-package Drime folders for server/generic-outbox uploads were released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
-- Real WordPress Plugins-screen update rehearsals passed for `v0.1.1`, `v0.2.0`, `v0.3.1`, and `v0.5.1`; `v0.2.1`, `v0.3.1`, `v0.3.2`, and `v0.4.0` also passed Alynt Plugin Updater release-asset detection/install validation.
+- Real WordPress Plugins-screen and Alynt Plugin Updater rehearsals have passed across the release line, including the validated `v0.5.1` and `v0.5.2` baselines and later live rollout/update releases through `v0.5.11`.
 
 ## What Is Complete
 ### Plugin Foundation
@@ -93,7 +96,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 - Restore documentation exists in `docs/RESTORE_RUNBOOK.md`.
 - Restore rehearsal checklist/report template exists in `docs/RESTORE_REHEARSAL_CHECKLIST.md`.
-- Staging-only destructive restore automation version 1 is implemented and tracked in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md`; production-capable restore remains a separate future gated extension.
+- Staging-only destructive restore automation version 1 is implemented and tracked in `docs/DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md`; production-simulation restore support is implemented, while actual-production restore enrollment remains a separate future gated operational extension.
 - First read-only GridPane investigation findings for `alyntdrime.sitesmain.com` are recorded in that plan.
 - Remote discovery notes exist in `docs/REMOTE_RESTORE_DISCOVERY.md`.
 - Package security boundaries are documented in `docs/PACKAGE_SECURITY.md`.
@@ -129,7 +132,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ### Dashboard WPvivid Schedule-Aware Status Payload Slice
 
-Status: planned/implementation slice.
+Status: completed and released in `v0.5.10` and `v0.5.11`.
 
 Goal:
 
@@ -150,6 +153,7 @@ Acceptance:
 - Existing dashboard clients remain compatible because the field is optional and additive under schema version `1`.
 - The dashboard can use detected WPvivid schedule policy on every normal polling cycle.
 - The status payload remains safe for authenticated central-dashboard polling.
+- WPvivid Free, WPvivid Pro/addon, incremental schedule, and WP-Cron fallback detection are represented only through redacted scalar policy fields.
 
 ### Release And Validation Workflows
 
@@ -774,15 +778,15 @@ Acceptance:
 
 ## Genuine Remaining Backlog
 
-No required feature slice remains for the validated `v0.5.2` current-plugin baseline.
+No required feature slice remains for the validated `v0.5.11` current-plugin baseline.
 
 Conditional current-plugin extensions:
 
 1. Stronger consistency for high-write sites, such as an approved maintenance-window mode, temporary write pausing, or proven host-level snapshots. Start only for a real target whose write activity makes light consistency insufficient.
 2. Additional server archive formats. Start only after a real server or producer requires a format beyond `.tar.gz` and provides validation fixtures.
-3. Production-capable restore automation. Treat this as a new high-risk gated extension with production-specific rollback, maintenance, ownership, runtime verification, and approval design; staging-only version 1 is complete. The separate living plan is `docs/PRODUCTION_RESTORE_AUTOMATION_PLAN.md`; Phase 0 assumptions are approved, Phase 1 read-only GridPane investigation is complete, and Phase 2 read-only production preflight is implemented and reviewed. The original `alyntdrime.sitesmain.com` rehearsal safely refused only on disk capacity. On 2026-07-20, replacement target `hbf-staging` completed enrollment Gates A through F with UUID initialization, runner `0.2.0`, GridPane revision `31`, verified staged package `staging-handcraftedbotanicalformulas-com-20260720-203243`, exact runtime/write-control inventory, and ample capacity. Both the no-report preflight and approved private audit-report rerun passed all `64` checks with zero failures. The report exposes only hashed revision/database identity, contains no sensitive-key fields, and keeps production apply, rollback, destructive actions, database import, live-file overwrite, and maintenance changes false. Phase 3 pre-restore/rollback foundation work remains separately gated and must prove rollback before production-simulation apply is introduced.
+3. Actual-production restore enrollment. Treat this as a new high-risk gated operational project for a specific real production target. Production-simulation restore tooling is implemented and rehearsed, but actual-production enrollment remains unavailable until a target is selected, read-only preflight is run, native rollback evidence is verified, and explicit production approvals are granted.
 4. A dedicated third-party producer adapter. Start only after a specific producer is selected and the generic outbox cannot represent its completed packages safely.
-5. Portable runner modularization and deterministic single-file build output. Completed on 2026-07-24 through planning, baseline capture, deterministic generation, all source-splitting batches, build/CI/release integration, automated parity, approved `hbf-staging` read-only parity, feature-stage reviews, clean-checkout GitHub Actions proof, the complete pre-release workflow refresh, final release-package audit, `v0.5.2` publication, and a real `plugin-tester.local` native updater rehearsal. Runner `0.4.8` is produced from 14 focused responsibility/shared-helper modules plus a 104-line bootstrap/dispatch entrypoint. Freshness, repeat-generation, source/generated syntax, exact CLI usage snapshot, config-example compatibility, report-schema/confirmation regression, the 216-test/1,668-assertion suite, PHPCS, the build, deployed single-file parity, and the 73-entry published release ZIP all pass. `v0.5.2` is accepted as the stable baseline. See `docs/PORTABLE_RUNNER_MODULARIZATION_PLAN.md`.
+5. Portable runner modularization and deterministic single-file build output. Completed on 2026-07-24 through planning, baseline capture, deterministic generation, all source-splitting batches, build/CI/release integration, automated parity, approved `hbf-staging` read-only parity, feature-stage reviews, clean-checkout GitHub Actions proof, the complete pre-release workflow refresh, final release-package audit, `v0.5.2` publication, and a real `plugin-tester.local` native updater rehearsal. Runner `0.4.8` is produced from 14 focused responsibility/shared-helper modules plus a 104-line bootstrap/dispatch entrypoint. Freshness, repeat-generation, source/generated syntax, exact CLI usage snapshot, config-example compatibility, report-schema/confirmation regression, the 216-test/1,668-assertion suite, PHPCS, the build, deployed single-file parity, and the 73-entry published release ZIP all pass. `v0.5.2` remains the accepted stable baseline for that modularization slice; the current overall plugin baseline is `v0.5.11`. See `docs/PORTABLE_RUNNER_MODULARIZATION_PLAN.md`.
 
 Separate project:
 
@@ -811,6 +815,6 @@ Keep this lightweight, site-focused list while the plugin is being adopted. It r
 
 ## Current Recommendation
 
-The plugin baseline is effectively complete for the validated MVP/new-plugin scope.
+The plugin baseline is effectively complete for the validated current-plugin scope and is production-ready for backup upload operations.
 
-The staging destructive restore automation project is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md). The current implemented slices are `restore-dry-run`, optional `--write-report=1` dry-run evidence reports, pre-restore backup evidence validation, `restore-apply --scope=database`, `restore-apply --scope=files`, file restore symlink/drop-in reporting, post-restore known drop-in review items, `restore-apply --scope=files-and-database`, and opt-in staging pre-restore backup creation through `--create-pre-restore-backup=1`. The server runner checks staged restore evidence, staging-only gates, matching pre-restore backup evidence, and readable pre-restore backup artifacts before any apply. Database apply requires `--confirm=restore-staging-site`, imports only the staged `database.sql` through WP-CLI, and writes a restore apply report under configured `restore_reports_path`. File apply requires the same confirmation and evidence gates, replaces the configured staging WordPress path from staged `htdocs/`, reports missing pre-restore symlinked drop-ins and known post-restore drop-ins such as `wp-content/db.php` for manual review, and writes a restore apply report. Combined apply runs file replacement first and database import second after the same gates pass. When `--create-pre-restore-backup=1` is supplied, apply first creates the matching database export and/or file backup evidence under `restore_pre_backup_path`; if evidence creation fails, apply stops before destructive work. Database, file, combined, and automatic pre-restore backup creation apply flows have all passed real staging rehearsals on `alyntdrime.sitesmain.com`. Production-capable restore remains a future gated extension tracked in [PRODUCTION_RESTORE_AUTOMATION_PLAN.md](PRODUCTION_RESTORE_AUTOMATION_PLAN.md).
+The staging destructive restore automation project is tracked in [DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md](DESTRUCTIVE_RESTORE_AUTOMATION_PLAN.md). The current implemented slices are `restore-dry-run`, optional `--write-report=1` dry-run evidence reports, pre-restore backup evidence validation, `restore-apply --scope=database`, `restore-apply --scope=files`, file restore symlink/drop-in reporting, post-restore known drop-in review items, `restore-apply --scope=files-and-database`, and opt-in staging pre-restore backup creation through `--create-pre-restore-backup=1`. The server runner checks staged restore evidence, staging-only gates, matching pre-restore backup evidence, and readable pre-restore backup artifacts before any apply. Database apply requires `--confirm=restore-staging-site`, imports only the staged `database.sql` through WP-CLI, and writes a restore apply report under configured `restore_reports_path`. File apply requires the same confirmation and evidence gates, replaces the configured staging WordPress path from staged `htdocs/`, reports missing pre-restore symlinked drop-ins and known post-restore drop-ins such as Query Monitor's `wp-content/db.php` for manual review, and writes a restore apply report. Combined apply runs file replacement first and database import second after the same gates pass. When `--create-pre-restore-backup=1` is supplied, apply first creates the matching database export and/or file backup evidence under `restore_pre_backup_path`; if evidence creation fails, apply stops before destructive work. Database, file, combined, and automatic pre-restore backup creation apply flows have all passed real staging rehearsals. Production-simulation restore support is implemented and rehearsed. Actual-production restore enrollment remains a future gated operational extension tracked in [PRODUCTION_RESTORE_AUTOMATION_PLAN.md](PRODUCTION_RESTORE_AUTOMATION_PLAN.md).
