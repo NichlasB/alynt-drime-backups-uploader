@@ -23,10 +23,11 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 	 * @return void
 	 */
 	private function render_dashboard_connection_shell( array $connection ) {
-		$status          = isset( $connection['connection_status'] ) ? (string) $connection['connection_status'] : Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_DISABLED;
-		$paired_enabled  = Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED === $status && ! empty( $connection['status_endpoint_enabled'] );
-		$client_origin   = function_exists( 'home_url' ) ? home_url() : 'https://example.org';
-		$status_endpoint = ( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() )->status_endpoint_for_origin( $client_origin );
+		$status                 = isset( $connection['connection_status'] ) ? (string) $connection['connection_status'] : Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_DISABLED;
+		$paired_enabled         = Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED === $status && ! empty( $connection['status_endpoint_enabled'] );
+		$remote_actions_enabled = $paired_enabled && ! empty( $connection['remote_actions_enabled'] ) && ! empty( $connection['action_key_id'] );
+		$client_origin          = function_exists( 'home_url' ) ? home_url() : 'https://example.org';
+		$status_endpoint        = ( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() )->status_endpoint_for_origin( $client_origin );
 		?>
 		<h2><?php esc_html_e( 'Central Dashboard', 'alynt-drime-backups-uploader' ); ?></h2>
 		<p><?php esc_html_e( 'Alynt Drime Backups Dashboard pairing is completed here by pasting a dashboard-generated token and explicitly opting in to read-only monitoring.', 'alynt-drime-backups-uploader' ); ?></p>
@@ -73,7 +74,15 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 				</tr>
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Remote actions', 'alynt-drime-backups-uploader' ); ?></th>
-					<td><?php esc_html_e( 'Not available in v1. The dashboard contract is read-only monitoring only.', 'alynt-drime-backups-uploader' ); ?></td>
+					<td>
+						<?php if ( $remote_actions_enabled ) : ?>
+							<?php esc_html_e( 'V2 action opt-in completed for scan/upload-now capability. Dispatch remains unavailable until the signed request endpoint is implemented.', 'alynt-drime-backups-uploader' ); ?>
+						<?php elseif ( $paired_enabled ) : ?>
+							<?php esc_html_e( 'V1 read-only monitoring is active. V2 actions require a separate dashboard-generated adb2a token and explicit local opt-in.', 'alynt-drime-backups-uploader' ); ?>
+						<?php else : ?>
+							<?php esc_html_e( 'Not available until read-only dashboard pairing is completed.', 'alynt-drime-backups-uploader' ); ?>
+						<?php endif; ?>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -87,6 +96,34 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 						<td>
 							<p><?php esc_html_e( 'This site is already opted in to read-only dashboard monitoring.', 'alynt-drime-backups-uploader' ); ?></p>
 							<p class="description"><?php esc_html_e( 'Only the authenticated, fixed, redacted status endpoint is enabled. This does not grant backup, restore, delete, cleanup, settings, credential, Drime token, or command actions.', 'alynt-drime-backups-uploader' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'V2 action opt-in token', 'alynt-drime-backups-uploader' ); ?></th>
+						<td>
+							<?php if ( $remote_actions_enabled ) : ?>
+								<p><?php esc_html_e( 'This site has opted in to V2 scan/upload-now capability for the paired dashboard.', 'alynt-drime-backups-uploader' ); ?></p>
+								<p class="description">
+									<?php
+									printf(
+										/* translators: %s: action key identifier. */
+										esc_html__( 'Current action key ID: %s. Dispatch is still unavailable until the signed request endpoint is implemented.', 'alynt-drime-backups-uploader' ),
+										esc_html( (string) $connection['action_key_id'] )
+									);
+									?>
+								</p>
+							<?php else : ?>
+								<label for="alynt-dashboard-action-opt-in-token" class="screen-reader-text"><?php esc_html_e( 'V2 action opt-in token', 'alynt-drime-backups-uploader' ); ?></label>
+								<textarea id="alynt-dashboard-action-opt-in-token" class="large-text code" rows="3" name="alynt_drime_backups_dashboard_connection[action_opt_in_token]" aria-describedby="alynt-dashboard-action-opt-in-token-description" placeholder="<?php esc_attr_e( 'Paste the dashboard-generated adb2a token here.', 'alynt-drime-backups-uploader' ); ?>"></textarea>
+								<p id="alynt-dashboard-action-opt-in-token-description" class="description"><?php esc_html_e( 'Use this only after read-only pairing is active. It stores the dashboard action public key locally and advertises scan/upload-now capability; it does not expose a remote action endpoint yet.', 'alynt-drime-backups-uploader' ); ?></p>
+								<fieldset>
+									<legend class="screen-reader-text"><?php esc_html_e( 'V2 action opt-in confirmation', 'alynt-drime-backups-uploader' ); ?></legend>
+									<label>
+										<input type="checkbox" name="alynt_drime_backups_dashboard_connection[remote_action_opt_in]" value="1">
+										<?php esc_html_e( 'Opt in to V2 scan/upload-now capability for the paired dashboard.', 'alynt-drime-backups-uploader' ); ?>
+									</label>
+								</fieldset>
+							<?php endif; ?>
 						</td>
 					</tr>
 				<?php else : ?>
@@ -133,6 +170,11 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 					<button type="submit" class="button button-primary" name="alynt_drime_backups_dashboard_connection[connection_action]" value="complete_pairing"><?php esc_html_e( 'Complete Read-Only Pairing', 'alynt-drime-backups-uploader' ); ?></button>
 				<?php endif; ?>
 				<button type="submit" class="button" name="alynt_drime_backups_dashboard_connection[connection_action]" value="revoke"><?php esc_html_e( 'Revoke Dashboard Pairing', 'alynt-drime-backups-uploader' ); ?></button>
+				<?php if ( $paired_enabled && ! $remote_actions_enabled ) : ?>
+					<button type="submit" class="button button-secondary" name="alynt_drime_backups_dashboard_connection[connection_action]" value="complete_remote_action_opt_in"><?php esc_html_e( 'Complete V2 Action Opt-In', 'alynt-drime-backups-uploader' ); ?></button>
+				<?php elseif ( $remote_actions_enabled ) : ?>
+					<button type="submit" class="button" name="alynt_drime_backups_dashboard_connection[connection_action]" value="disable_remote_actions"><?php esc_html_e( 'Disable V2 Action Opt-In', 'alynt-drime-backups-uploader' ); ?></button>
+				<?php endif; ?>
 				<?php if ( ! $paired_enabled ) : ?>
 					<button type="submit" class="button" name="alynt_drime_backups_dashboard_connection[connection_action]" value="disable"><?php esc_html_e( 'Keep Dashboard Disabled', 'alynt-drime-backups-uploader' ); ?></button>
 				<?php endif; ?>

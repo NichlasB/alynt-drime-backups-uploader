@@ -42,6 +42,18 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions {
 				);
 			}
 			$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_paired' : 'dashboard_connection_pairing_failed';
+		} elseif ( 'complete_remote_action_opt_in' === $action ) {
+			if ( empty( $raw['remote_action_opt_in'] ) ) {
+				$state = $this->dashboard_connection->record_pairing_error( 'remote_action_opt_in_required' );
+			} else {
+				$token = isset( $raw['action_opt_in_token'] ) ? (string) wp_unslash( $raw['action_opt_in_token'] ) : '';
+				$state = $this->dashboard_connection->complete_remote_action_opt_in_from_token(
+					$token,
+					home_url(),
+					$this->settings->site_uuid()
+				);
+			}
+			$notice = empty( $state['last_error_code'] ) ? 'dashboard_remote_actions_enabled' : 'dashboard_remote_actions_failed';
 		} else {
 			$state  = $this->dashboard_connection->update_shell( $raw );
 			$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_invalid_token';
@@ -55,6 +67,7 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions {
 			array(
 				'connection_status'       => isset( $state['connection_status'] ) ? (string) $state['connection_status'] : '',
 				'status_endpoint_enabled' => ! empty( $state['status_endpoint_enabled'] ),
+				'remote_actions_enabled'  => ! empty( $state['remote_actions_enabled'] ),
 				'last_error_code'         => isset( $state['last_error_code'] ) ? (string) $state['last_error_code'] : '',
 			)
 		);

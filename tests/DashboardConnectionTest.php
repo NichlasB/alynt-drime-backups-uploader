@@ -390,6 +390,106 @@ class DashboardConnectionTest extends TestCase {
 		$this->assertSame( $enabled ? 'ak_test' : '', $summary['key_id'] );
 	}
 
+	public function test_parse_action_opt_in_token_returns_safe_public_metadata() {
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$token      = $this->action_opt_in_token();
+
+		$parsed = $connection->parse_action_opt_in_token( $token );
+
+		$this->assertIsArray( $parsed );
+		$this->assertSame( 'https://control.sitesmanage.com', $parsed['dashboard_origin'] );
+		$this->assertSame( 'https://client.example.com', $parsed['expected_client_origin'] );
+		$this->assertSame( '00000000-0000-4000-8000-000000000000', $parsed['dashboard_site_public_id'] );
+		$this->assertSame( '11111111-1111-4111-8111-111111111111', $parsed['site_uuid'] );
+		$this->assertSame( 'ak_test', $parsed['action_key_id'] );
+		$this->assertSame( str_repeat( 'A', 43 ), $parsed['action_public_key'] );
+		$this->assertSame( array( 'scan_upload_now' ), $parsed['allowed_actions'] );
+		$this->assertArrayNotHasKey( 'action_private_key', $parsed );
+	}
+
+	public function test_parse_action_opt_in_rejects_expired_or_unsafe_payload() {
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+
+		$expired = $connection->parse_action_opt_in_token(
+			$this->action_opt_in_token(
+				array(
+					'expires_at' => '2020-01-01T00:00:00Z',
+				)
+			)
+		);
+		$unsafe  = $connection->parse_action_opt_in_token(
+			$this->action_opt_in_token(
+				array(
+					'dashboard_origin' => 'http://127.0.0.1',
+				)
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $expired );
+		$this->assertSame( 'action_opt_in_expired', $expired->get_error_code() );
+		$this->assertInstanceOf( WP_Error::class, $unsafe );
+		$this->assertSame( 'action_dashboard_origin_invalid', $unsafe->get_error_code() );
+	}
+
+	public function test_complete_remote_action_opt_in_requires_existing_paired_read_only_connection() {
+		$options    = array();
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->complete_remote_action_opt_in_from_token(
+			$this->action_opt_in_token(),
+			'https://client.example.com',
+			'11111111-1111-4111-8111-111111111111'
+		);
+
+		$this->assertSame( 'remote_action_opt_in_requires_pairing', $state['last_error_code'] );
+		$this->assertFalse( $state['remote_actions_enabled'] );
+	}
+
+	public function test_complete_remote_action_opt_in_stores_public_key_without_private_material() {
+		$options    = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->complete_remote_action_opt_in_from_token(
+			$this->action_opt_in_token(),
+			'https://client.example.com',
+			'11111111-1111-4111-8111-111111111111'
+		);
+
+		$enabled = function_exists( 'sodium_crypto_sign_verify_detached' );
+
+		if ( ! $enabled ) {
+			$this->assertSame( 'remote_action_signing_unavailable', $state['last_error_code'] );
+			$this->assertFalse( $state['remote_actions_enabled'] );
+			return;
+		}
+
+		$this->assertSame( '', $state['last_error_code'] );
+		$this->assertTrue( $state['remote_actions_enabled'] );
+		$this->assertSame( 'ak_test', $state['action_key_id'] );
+		$this->assertSame( str_repeat( 'A', 43 ), $state['action_public_key'] );
+		$this->assertGreaterThan( 0, $state['remote_actions_opted_in_at'] );
+		$this->assertArrayNotHasKey( 'action_private_key', $state );
+		$this->assertStringNotContainsString( 'private', strtolower( wp_json_encode( $options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ] ) ) );
+	}
+
+	public function test_complete_remote_action_opt_in_rejects_site_identity_mismatch() {
+		$options    = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->complete_remote_action_opt_in_from_token(
+			$this->action_opt_in_token(
+				array(
+					'dashboard_site_public_id' => '99999999-9999-4999-8999-999999999999',
+				)
+			),
+			'https://client.example.com',
+			'11111111-1111-4111-8111-111111111111'
+		);
+
+		$this->assertSame( 'remote_action_opt_in_site_mismatch', $state['last_error_code'] );
+		$this->assertFalse( $state['remote_actions_enabled'] );
+	}
+
 	/**
 	 * Creates connection storage with mocked option storage.
 	 *
@@ -476,5 +576,33 @@ class DashboardConnectionTest extends TestCase {
 		$encoded = rtrim( strtr( base64_encode( $json ), '+/', '-_' ), '=' );
 
 		return Alynt_Drime_Backups_Uploader_Dashboard_Connection::TOKEN_PREFIX . $encoded;
+	}
+
+	/**
+	 * Creates a dashboard-style action opt-in token for tests.
+	 *
+	 * @param array<string,mixed> $overrides Payload overrides.
+	 * @return string
+	 */
+	private function action_opt_in_token( array $overrides = array() ) {
+		$payload = array_merge(
+			array(
+				'protocol_version'         => 2,
+				'purpose'                  => 'remote_action_opt_in',
+				'dashboard_origin'         => 'https://control.sitesmanage.com',
+				'expected_client_origin'   => 'https://client.example.com',
+				'dashboard_site_public_id' => '00000000-0000-4000-8000-000000000000',
+				'site_uuid'                => '11111111-1111-4111-8111-111111111111',
+				'action_key_id'            => 'ak_test',
+				'action_public_key'        => str_repeat( 'A', 43 ),
+				'allowed_actions'          => array( 'scan_upload_now' ),
+				'expires_at'               => '2099-01-01T00:00:00Z',
+			),
+			$overrides
+		);
+		$json    = wp_json_encode( $payload );
+		$encoded = rtrim( strtr( base64_encode( $json ), '+/', '-_' ), '=' );
+
+		return Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_TOKEN_PREFIX . $encoded;
 	}
 }

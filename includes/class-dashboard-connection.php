@@ -28,12 +28,14 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	const STATUS_PAIRED           = 'paired';
 	const STATUS_REVOKED          = 'revoked';
 	const TOKEN_PREFIX            = 'adb1.';
+	const ACTION_TOKEN_PREFIX     = 'adb2a.';
 	const POLLING_AUTH_PREFIX     = 'adb-poll-v1.';
 	const PROTOCOL_VERSION        = 1;
 	const STATUS_SCHEMA_VERSION   = 1;
 	const ACTION_PROTOCOL_VERSION = 2;
 	const ACTION_SCAN_UPLOAD_NOW  = 'scan_upload_now';
 	const ACTION_MIN_INTERVAL     = 3600;
+	const ACTION_TOKEN_PURPOSE    = 'remote_action_opt_in';
 
 	/**
 	 * Returns default connection state.
@@ -127,6 +129,12 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			$state                      = self::defaults();
 			$state['connection_status'] = self::STATUS_REVOKED;
 			$state['revoked_at']        = time();
+		} elseif ( 'disable_remote_actions' === $action ) {
+			$state['remote_actions_enabled']     = false;
+			$state['action_key_id']              = '';
+			$state['action_public_key']          = '';
+			$state['remote_actions_opted_in_at'] = 0;
+			$state['last_error_code']            = '';
 		} elseif ( 'disable' === $action ) {
 			$state = self::defaults();
 		}
@@ -134,6 +142,65 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 		if ( self::STATUS_PAIRED !== $state['connection_status'] ) {
 			$state['status_endpoint_enabled'] = false;
 		}
+		update_option( self::OPTION_NAME, $state, false );
+		$this->sync_option_cache( $state );
+
+		return $state;
+	}
+
+	/**
+	 * Completes explicit client-site V2 remote-action opt-in from a dashboard token.
+	 *
+	 * @since 0.5.12
+	 *
+	 * @param string $token         Dashboard-generated adb2a action opt-in token.
+	 * @param string $client_origin Client site origin.
+	 * @param string $site_uuid     Client site UUID.
+	 * @return array<string,mixed>
+	 */
+	public function complete_remote_action_opt_in_from_token( $token, $client_origin, $site_uuid ) {
+		$state  = $this->get();
+		$parsed = $this->parse_action_opt_in_token_payload( $token );
+
+		if ( is_wp_error( $parsed ) ) {
+			return $this->save_pairing_error( $state, $parsed->get_error_code() );
+		}
+
+		if ( self::STATUS_PAIRED !== $state['connection_status'] || empty( $state['status_endpoint_enabled'] ) ) {
+			return $this->save_pairing_error( $state, 'remote_action_opt_in_requires_pairing' );
+		}
+
+		if (
+			empty( $state['dashboard_origin'] )
+			|| empty( $state['expected_client_origin'] )
+			|| empty( $state['dashboard_site_public_id'] )
+			|| ! hash_equals( (string) $state['dashboard_origin'], $parsed['dashboard_origin'] )
+			|| ! hash_equals( (string) $state['expected_client_origin'], $parsed['expected_client_origin'] )
+			|| ! hash_equals( (string) $state['dashboard_site_public_id'], $parsed['dashboard_site_public_id'] )
+		) {
+			return $this->save_pairing_error( $state, 'remote_action_opt_in_site_mismatch' );
+		}
+
+		$client_origin = $this->normalize_public_https_origin( $client_origin );
+		if ( '' === $client_origin || ! hash_equals( $parsed['expected_client_origin'], $client_origin ) ) {
+			return $this->save_pairing_error( $state, 'remote_action_opt_in_origin_mismatch' );
+		}
+
+		$site_uuid = $this->sanitize_uuid( $site_uuid );
+		if ( '' === $site_uuid || ! hash_equals( $parsed['site_uuid'], $site_uuid ) ) {
+			return $this->save_pairing_error( $state, 'remote_action_opt_in_site_uuid_mismatch' );
+		}
+
+		if ( ! $this->is_sodium_available() ) {
+			return $this->save_pairing_error( $state, 'remote_action_signing_unavailable' );
+		}
+
+		$state['remote_actions_enabled']     = true;
+		$state['action_key_id']              = $parsed['action_key_id'];
+		$state['action_public_key']          = $parsed['action_public_key'];
+		$state['remote_actions_opted_in_at'] = time();
+		$state['last_error_code']            = '';
+
 		update_option( self::OPTION_NAME, $state, false );
 		$this->sync_option_cache( $state );
 
@@ -391,6 +458,18 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	}
 
 	/**
+	 * Parses a dashboard-generated V2 action opt-in token and returns safe metadata.
+	 *
+	 * @since 0.5.12
+	 *
+	 * @param string $token Action opt-in token.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	public function parse_action_opt_in_token( $token ) {
+		return $this->parse_action_opt_in_token_payload( $token );
+	}
+
+	/**
 	 * Parses a dashboard-generated pairing token.
 	 *
 	 * @param string $token Pairing token.
@@ -465,6 +544,91 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 		}
 
 		return $parsed;
+	}
+
+	/**
+	 * Parses a dashboard-generated V2 action opt-in token.
+	 *
+	 * @since 0.5.12
+	 *
+	 * @param string $token Action opt-in token.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	private function parse_action_opt_in_token_payload( $token ) {
+		$token = trim( (string) $token );
+
+		if ( 0 !== strpos( $token, self::ACTION_TOKEN_PREFIX ) ) {
+			return new WP_Error( 'action_opt_in_token_prefix_invalid', __( 'The dashboard action opt-in token must begin with adb2a.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$encoded = substr( $token, strlen( self::ACTION_TOKEN_PREFIX ) );
+		if ( '' === $encoded || ! preg_match( '/^[A-Za-z0-9_-]+$/', $encoded ) ) {
+			return new WP_Error( 'action_opt_in_token_payload_invalid', __( 'The dashboard action opt-in token payload is not valid.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$json = $this->base64url_decode( $encoded );
+		if ( false === $json ) {
+			return new WP_Error( 'action_opt_in_token_payload_invalid', __( 'The dashboard action opt-in token payload could not be decoded.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$payload = json_decode( $json, true );
+		if ( ! is_array( $payload ) ) {
+			return new WP_Error( 'action_opt_in_token_payload_invalid', __( 'The dashboard action opt-in token payload is not JSON.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		if ( self::ACTION_PROTOCOL_VERSION !== absint( isset( $payload['protocol_version'] ) ? $payload['protocol_version'] : 0 ) ) {
+			return new WP_Error( 'action_protocol_unsupported', __( 'The dashboard action opt-in token uses an unsupported protocol version.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		if ( self::ACTION_TOKEN_PURPOSE !== ( isset( $payload['purpose'] ) ? sanitize_key( (string) $payload['purpose'] ) : '' ) ) {
+			return new WP_Error( 'action_opt_in_token_purpose_invalid', __( 'The dashboard action opt-in token purpose is not valid.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$dashboard_origin = $this->normalize_public_https_origin( isset( $payload['dashboard_origin'] ) ? (string) $payload['dashboard_origin'] : '' );
+		if ( '' === $dashboard_origin ) {
+			return new WP_Error( 'action_dashboard_origin_invalid', __( 'The dashboard action opt-in token does not include a supported dashboard HTTPS origin.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$expected_client_origin = $this->normalize_public_https_origin( isset( $payload['expected_client_origin'] ) ? (string) $payload['expected_client_origin'] : '' );
+		if ( '' === $expected_client_origin ) {
+			return new WP_Error( 'action_expected_client_origin_invalid', __( 'The dashboard action opt-in token does not include a supported expected client HTTPS origin.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$dashboard_site_public_id = isset( $payload['dashboard_site_public_id'] ) ? $this->sanitize_token_identifier( (string) $payload['dashboard_site_public_id'] ) : '';
+		$site_uuid                = isset( $payload['site_uuid'] ) ? $this->sanitize_uuid( (string) $payload['site_uuid'] ) : '';
+		$action_key_id            = isset( $payload['action_key_id'] ) ? $this->sanitize_token_identifier( (string) $payload['action_key_id'] ) : '';
+		$action_public_key        = isset( $payload['action_public_key'] ) ? $this->sanitize_action_public_key( (string) $payload['action_public_key'] ) : '';
+
+		if ( '' === $dashboard_site_public_id || '' === $site_uuid || '' === $action_key_id || '' === $action_public_key ) {
+			return new WP_Error( 'action_opt_in_token_identity_invalid', __( 'The dashboard action opt-in token does not include valid site and key identifiers.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$allowed_actions = isset( $payload['allowed_actions'] ) && is_array( $payload['allowed_actions'] ) ? array_values( array_filter( array_map( 'sanitize_key', $payload['allowed_actions'] ) ) ) : array();
+		$allowed_actions = array_values( array_unique( $allowed_actions ) );
+		if ( array( self::ACTION_SCAN_UPLOAD_NOW ) !== $allowed_actions ) {
+			return new WP_Error( 'action_opt_in_allowed_actions_invalid', __( 'The dashboard action opt-in token does not grant the supported scan/upload-now action.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$expires_at = isset( $payload['expires_at'] ) ? trim( (string) $payload['expires_at'] ) : '';
+		$expires_ts = '' === $expires_at ? false : strtotime( $expires_at );
+		if ( false === $expires_ts ) {
+			return new WP_Error( 'action_opt_in_expires_at_invalid', __( 'The dashboard action opt-in token expiry is not valid.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		if ( $expires_ts <= time() ) {
+			return new WP_Error( 'action_opt_in_expired', __( 'The dashboard action opt-in token has expired.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		return array(
+			'dashboard_origin'         => $dashboard_origin,
+			'expected_client_origin'   => $expected_client_origin,
+			'dashboard_site_public_id' => $dashboard_site_public_id,
+			'site_uuid'                => $site_uuid,
+			'action_key_id'            => $action_key_id,
+			'action_public_key'        => $action_public_key,
+			'allowed_actions'          => $allowed_actions,
+			'expires_at'               => gmdate( 'c', $expires_ts ),
+		);
 	}
 
 	/**
