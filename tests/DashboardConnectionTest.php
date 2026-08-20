@@ -350,6 +350,46 @@ class DashboardConnectionTest extends TestCase {
 		$this->assertTrue( $connection->is_status_endpoint_enabled() );
 	}
 
+	public function test_remote_action_summary_is_absent_until_read_only_pairing_exists() {
+		$options    = array();
+		$connection = $this->connection_with_options( $options );
+
+		$this->assertSame( array(), $connection->remote_action_summary() );
+	}
+
+	public function test_remote_action_summary_reports_disabled_v2_capability_without_secrets() {
+		$options    = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$connection = $this->connection_with_options( $options );
+		$summary    = $connection->remote_action_summary();
+
+		$this->assertSame( 2, $summary['protocol_version'] );
+		$this->assertFalse( $summary['enabled'] );
+		$this->assertSame( '', $summary['key_id'] );
+		$this->assertSame( array(), $summary['allowed_actions'] );
+		$this->assertSame( 3600, $summary['min_interval_seconds'] );
+		$this->assertTrue( $summary['one_running_action_per_site'] );
+		$this->assertArrayNotHasKey( 'action_public_key', $summary );
+		$this->assertArrayNotHasKey( 'action_private_key', $summary );
+	}
+
+	public function test_remote_action_summary_reports_enabled_only_with_key_and_sodium() {
+		$options = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['remote_actions_enabled'] = true;
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['action_key_id']          = 'ak_test';
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['action_public_key']      = str_repeat( 'A', 43 );
+
+		$connection = $this->connection_with_options( $options );
+		$summary    = $connection->remote_action_summary();
+		$enabled    = function_exists( 'sodium_crypto_sign_verify_detached' );
+
+		$this->assertSame( $enabled, $summary['enabled'] );
+		$this->assertSame(
+			$enabled ? array( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW ) : array(),
+			$summary['allowed_actions']
+		);
+		$this->assertSame( $enabled ? 'ak_test' : '', $summary['key_id'] );
+	}
+
 	/**
 	 * Creates connection storage with mocked option storage.
 	 *

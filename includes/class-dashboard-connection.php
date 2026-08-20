@@ -20,17 +20,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 0.5.3
  */
 class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
-	const OPTION_NAME           = 'alynt_drime_backups_dashboard_connection';
-	const STATUS_DISABLED       = 'disabled';
-	const STATUS_READY          = 'ready';
-	const STATUS_TOKEN_READY    = 'token_ready';
-	const STATUS_CONFIRMED      = 'confirmed';
-	const STATUS_PAIRED         = 'paired';
-	const STATUS_REVOKED        = 'revoked';
-	const TOKEN_PREFIX          = 'adb1.';
-	const POLLING_AUTH_PREFIX   = 'adb-poll-v1.';
-	const PROTOCOL_VERSION      = 1;
-	const STATUS_SCHEMA_VERSION = 1;
+	const OPTION_NAME             = 'alynt_drime_backups_dashboard_connection';
+	const STATUS_DISABLED         = 'disabled';
+	const STATUS_READY            = 'ready';
+	const STATUS_TOKEN_READY      = 'token_ready';
+	const STATUS_CONFIRMED        = 'confirmed';
+	const STATUS_PAIRED           = 'paired';
+	const STATUS_REVOKED          = 'revoked';
+	const TOKEN_PREFIX            = 'adb1.';
+	const POLLING_AUTH_PREFIX     = 'adb-poll-v1.';
+	const PROTOCOL_VERSION        = 1;
+	const STATUS_SCHEMA_VERSION   = 1;
+	const ACTION_PROTOCOL_VERSION = 2;
+	const ACTION_SCAN_UPLOAD_NOW  = 'scan_upload_now';
+	const ACTION_MIN_INTERVAL     = 3600;
 
 	/**
 	 * Returns default connection state.
@@ -53,6 +56,10 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			'last_error_code'             => '',
 			'last_authenticated_read_at'  => 0,
 			'status_endpoint_enabled'     => false,
+			'remote_actions_enabled'      => false,
+			'action_key_id'               => '',
+			'action_public_key'           => '',
+			'remote_actions_opted_in_at'  => 0,
 		);
 	}
 
@@ -318,6 +325,36 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	}
 
 	/**
+	 * Builds a redacted V2 remote-action capability summary.
+	 *
+	 * @since 0.5.3
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function remote_action_summary() {
+		$state = $this->get();
+
+		if ( self::STATUS_PAIRED !== $state['connection_status'] || empty( $state['status_endpoint_enabled'] ) ) {
+			return array();
+		}
+
+		$enabled = ! empty( $state['remote_actions_enabled'] )
+			&& '' !== $state['action_key_id']
+			&& '' !== $state['action_public_key']
+			&& $this->is_sodium_available();
+
+		return array(
+			'protocol_version'            => self::ACTION_PROTOCOL_VERSION,
+			'enabled'                     => $enabled,
+			'key_id'                      => $enabled ? (string) $state['action_key_id'] : '',
+			'allowed_actions'             => $enabled ? array( self::ACTION_SCAN_UPLOAD_NOW ) : array(),
+			'sodium_available'            => $this->is_sodium_available(),
+			'min_interval_seconds'        => self::ACTION_MIN_INTERVAL,
+			'one_running_action_per_site' => true,
+		);
+	}
+
+	/**
 	 * Builds the fixed status endpoint for a client origin.
 	 *
 	 * @since 0.5.3
@@ -479,6 +516,10 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			'last_error_code'             => isset( $state['last_error_code'] ) ? sanitize_key( (string) $state['last_error_code'] ) : $defaults['last_error_code'],
 			'last_authenticated_read_at'  => isset( $state['last_authenticated_read_at'] ) ? max( 0, absint( $state['last_authenticated_read_at'] ) ) : $defaults['last_authenticated_read_at'],
 			'status_endpoint_enabled'     => self::STATUS_PAIRED === $status && ! empty( $state['status_endpoint_enabled'] ),
+			'remote_actions_enabled'      => self::STATUS_PAIRED === $status && ! empty( $state['remote_actions_enabled'] ),
+			'action_key_id'               => isset( $state['action_key_id'] ) ? $this->sanitize_token_identifier( (string) $state['action_key_id'] ) : $defaults['action_key_id'],
+			'action_public_key'           => isset( $state['action_public_key'] ) ? $this->sanitize_action_public_key( (string) $state['action_public_key'] ) : $defaults['action_public_key'],
+			'remote_actions_opted_in_at'  => isset( $state['remote_actions_opted_in_at'] ) ? max( 0, absint( $state['remote_actions_opted_in_at'] ) ) : $defaults['remote_actions_opted_in_at'],
 		);
 	}
 
@@ -572,6 +613,27 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	 */
 	private function sanitize_hash( $value ) {
 		return preg_match( '/^[a-f0-9]{64}$/', (string) $value ) ? (string) $value : '';
+	}
+
+	/**
+	 * Sanitizes a base64url action public key.
+	 *
+	 * @param string $value Raw value.
+	 * @return string
+	 */
+	private function sanitize_action_public_key( $value ) {
+		$value = trim( (string) $value );
+
+		return preg_match( '/^[A-Za-z0-9_-]{32,128}$/', $value ) ? $value : '';
+	}
+
+	/**
+	 * Returns whether Ed25519 support is available.
+	 *
+	 * @return bool
+	 */
+	private function is_sodium_available() {
+		return function_exists( 'sodium_crypto_sign_verify_detached' );
 	}
 
 	/**

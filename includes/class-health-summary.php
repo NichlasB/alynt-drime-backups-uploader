@@ -51,18 +51,27 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	private $cron_health;
 
 	/**
+	 * Dashboard connection state.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Dashboard_Connection|null
+	 */
+	private $dashboard_connection;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Alynt_Drime_Backups_Uploader_Settings        $settings Settings.
-	 * @param Alynt_Drime_Backups_Uploader_Queue           $queue Queue.
-	 * @param Alynt_Drime_Backups_Uploader_Backup_Registry $registry Registry.
-	 * @param Alynt_Drime_Backups_Uploader_Cron_Health     $cron_health Cron health.
+	 * @param Alynt_Drime_Backups_Uploader_Settings                  $settings Settings.
+	 * @param Alynt_Drime_Backups_Uploader_Queue                     $queue Queue.
+	 * @param Alynt_Drime_Backups_Uploader_Backup_Registry           $registry Registry.
+	 * @param Alynt_Drime_Backups_Uploader_Cron_Health               $cron_health Cron health.
+	 * @param Alynt_Drime_Backups_Uploader_Dashboard_Connection|null $dashboard_connection Dashboard connection.
 	 */
-	public function __construct( Alynt_Drime_Backups_Uploader_Settings $settings, Alynt_Drime_Backups_Uploader_Queue $queue, Alynt_Drime_Backups_Uploader_Backup_Registry $registry, Alynt_Drime_Backups_Uploader_Cron_Health $cron_health ) {
-		$this->settings    = $settings;
-		$this->queue       = $queue;
-		$this->registry    = $registry;
-		$this->cron_health = $cron_health;
+	public function __construct( Alynt_Drime_Backups_Uploader_Settings $settings, Alynt_Drime_Backups_Uploader_Queue $queue, Alynt_Drime_Backups_Uploader_Backup_Registry $registry, Alynt_Drime_Backups_Uploader_Cron_Health $cron_health, $dashboard_connection = null ) {
+		$this->settings             = $settings;
+		$this->queue                = $queue;
+		$this->registry             = $registry;
+		$this->cron_health          = $cron_health;
+		$this->dashboard_connection = $dashboard_connection instanceof Alynt_Drime_Backups_Uploader_Dashboard_Connection ? $dashboard_connection : null;
 	}
 
 	/**
@@ -109,6 +118,14 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 			'last_wp_cli_scan_at'         => isset( $cron_state['last_wp_cli_scan_at'] ) ? absint( $cron_state['last_wp_cli_scan_at'] ) : 0,
 			'backup_sources'              => $this->backup_sources( $settings, $queued, $uploaded, $failed ),
 		);
+
+		if ( $this->dashboard_connection ) {
+			$remote_actions = $this->dashboard_connection->remote_action_summary();
+
+			if ( ! empty( $remote_actions ) ) {
+				$status['remote_actions'] = $remote_actions;
+			}
+		}
 
 		if ( $include_paths ) {
 			$status['server_outbox_path']   = isset( $settings['server_outbox_path'] ) ? (string) $settings['server_outbox_path'] : '';

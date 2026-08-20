@@ -209,7 +209,7 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 
 		$this->cron_health = new Alynt_Drime_Backups_Uploader_Cron_Health();
 
-		$this->health_summary = new Alynt_Drime_Backups_Uploader_Health_Summary( $this->settings, $this->queue, $this->registry, $this->cron_health );
+		$this->health_summary = new Alynt_Drime_Backups_Uploader_Health_Summary( $this->settings, $this->queue, $this->registry, $this->cron_health, $this->dashboard_connection );
 
 		$this->dashboard_status_rest_controller = new Alynt_Drime_Backups_Uploader_Dashboard_Status_REST_Controller( $this->dashboard_connection, $this->health_summary );
 

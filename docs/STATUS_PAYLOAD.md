@@ -43,6 +43,7 @@ Current default fields:
 | `last_scheduled_scan_at` | int | Timestamp for the last scheduled scan. |
 | `last_wp_cli_scan_at` | int | Timestamp for the last WP-CLI scan evidence. |
 | `backup_sources` | object | Optional per-source backup freshness and local remote-inventory evidence for dashboard observability. |
+| `remote_actions` | object | Optional V2 remote-action capability summary. Additive, redacted, and disabled by default unless the client has explicitly opted in to V2 actions. |
 
 ## Optional Backup Source Summaries
 
@@ -108,6 +109,26 @@ Fields:
 | `policy_window_seconds` | int | Recommended WPvivid dashboard freshness window. |
 
 When multiple supported local WPvivid schedules are detected, the summary uses the least frequent cadence (the largest interval). Unknown or remote-only schedules should report `detected: false` rather than guessing.
+
+## Optional Remote Action Capability Summary
+
+`remote_actions` is additive in schema version `1`. It is intended for the dashboard's future V2.1 "Request Backup Now" UI and must not be treated as permission for the V1 polling credential to run commands.
+
+When present, the summary is redacted and capability-only:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `protocol_version` | int | Remote-action protocol version. Currently `2`. |
+| `enabled` | boolean | True only when the client has explicitly opted in to V2 actions, has a stored dashboard action public key, and Sodium verification is available. |
+| `key_id` | string | Non-secret dashboard action key ID when enabled; empty when disabled. |
+| `allowed_actions` | array | Allowlisted action types when enabled. Initial candidate: `scan_upload_now`. |
+| `sodium_available` | boolean | Whether this PHP runtime can verify Ed25519 signatures. |
+| `min_interval_seconds` | int | Client-side minimum interval between accepted action requests. |
+| `one_running_action_per_site` | boolean | Whether the client enforces a single running remote action at a time. |
+
+This summary must not include action private keys, raw dashboard tokens, polling secrets, Drime credentials, paths, package names, Drime object IDs, signed URLs, raw client responses, SQL, cookies, nonces, or arbitrary commands.
+
+The first implementation slice may report the object with `enabled: false` for paired clients so the dashboard can explain that V2 is understood but not opted in. It must not register an action endpoint or accept action intents until the separate V2 opt-in/signing/worker slice is implemented.
 
 ## Local CLI Path Mode
 

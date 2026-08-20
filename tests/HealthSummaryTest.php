@@ -25,6 +25,11 @@ class HealthSummaryTest extends TestCase {
 				return trim( strip_tags( (string) $text ) );
 			}
 		);
+		Functions\when( 'esc_url_raw' )->alias(
+			function ( $url ) {
+				return trim( (string) $url );
+			}
+		);
 	}
 
 	protected function tearDown(): void {
@@ -60,6 +65,35 @@ class HealthSummaryTest extends TestCase {
 		$this->assertArrayNotHasKey( 'backup_path_override', $status );
 		$this->assertSame( $this->expected_redacted_status_keys(), array_keys( $status ) );
 		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
+	public function test_status_includes_remote_action_summary_when_dashboard_connection_is_paired() {
+		$options = array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(
+				'connection_status'       => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED,
+				'status_endpoint_enabled' => true,
+			),
+		);
+
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+
+		$outbox     = $this->create_outbox();
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$summary    = $this->summary( $outbox, null, null, null, '/var/www/example/wp-content/uploads/wpvividbackups', $connection );
+		$status     = $summary->status( 1234567890 );
+
+		$this->assertArrayHasKey( 'remote_actions', $status );
+		$this->assertSame( 2, $status['remote_actions']['protocol_version'] );
+		$this->assertFalse( $status['remote_actions']['enabled'] );
+		$this->assertSame( array(), $status['remote_actions']['allowed_actions'] );
+		$this->assertArrayNotHasKey( 'action_public_key', $status['remote_actions'] );
+		$this->assertArrayNotHasKey( 'action_private_key', $status['remote_actions'] );
 
 		rmdir( $outbox );
 	}
@@ -415,7 +449,7 @@ class HealthSummaryTest extends TestCase {
 	 *
 	 * @return Alynt_Drime_Backups_Uploader_Health_Summary
 	 */
-	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null, $wpvivid_path = '/var/www/example/wp-content/uploads/wpvividbackups' ) {
+	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null, $wpvivid_path = '/var/www/example/wp-content/uploads/wpvividbackups', $dashboard_connection = null ) {
 		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
 		$settings->method( 'site_uuid' )->willReturn( '12345678-1234-4234-9234-123456789abc' );
 		$settings->method( 'get' )->willReturn(
@@ -462,7 +496,7 @@ class HealthSummaryTest extends TestCase {
 		);
 		$cron_health->method( 'is_wp_cron_disabled' )->willReturn( true );
 
-		return new Alynt_Drime_Backups_Uploader_Health_Summary( $settings, $queue, $registry, $cron_health );
+		return new Alynt_Drime_Backups_Uploader_Health_Summary( $settings, $queue, $registry, $cron_health, $dashboard_connection );
 	}
 
 	/**
