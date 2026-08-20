@@ -462,23 +462,27 @@ msgstr ""
 msgid "Remote scan/upload action finished with scan errors; no unsafe details were stored."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:87
+#: includes/class-remote-action-worker.php:86
+msgid "Remote scan/upload action scanned for eligible packages and found nothing new to queue."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:92
 msgid "Remote scan/upload action scanned for eligible packages but could not schedule the upload worker."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:91
+#: includes/class-remote-action-worker.php:96
 msgid "Remote scan/upload action scanned for eligible packages and scheduled the upload worker."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:94
+#: includes/class-remote-action-worker.php:99
 msgid "Remote scan/upload action failed without storing unsafe error details."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:126
+#: includes/class-remote-action-worker.php:131
 msgid "WordPress cron scheduling is not available for the upload worker."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:136
+#: includes/class-remote-action-worker.php:145
 msgid "WordPress could not schedule the upload worker."
 msgstr ""
 

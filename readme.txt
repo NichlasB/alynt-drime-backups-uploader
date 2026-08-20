@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.12
+Stable tag: 0.5.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,9 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+
+= 0.5.13 =
+* Fixed V2.1 Request Backup Now worker completion so a scan with no new candidates succeeds without scheduling unnecessary upload work, and an already scheduled upload worker is treated as available instead of a failure.
 
 = 0.5.12 =
 * Added the V2.1 signed dashboard action-intent endpoint for separately opted-in clients. The endpoint accepts only `scan_upload_now`, verifies dashboard signatures, enforces idempotency/rate/busy state, schedules local scan/upload work, and reports redacted action summaries.
