@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-08-19
+Updated: 2026-08-20
 
 ## Purpose
 
@@ -20,6 +20,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Automatic local server outbox retention after confirmed upload has been released in `v0.3.2`; feature-stage reviews, local validation, staging retention test, staging cleanup/recovery verification, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Mandatory per-package Drime folders for server/generic-outbox uploads were released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
+- Current release candidate: `v0.5.12`, which adds the disabled-by-default V2.1 signed action-intent endpoint for paired dashboard sites that separately opt in to `scan_upload_now`.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
 - Real WordPress Plugins-screen and Alynt Plugin Updater rehearsals have passed across the release line, including the validated `v0.5.1` and `v0.5.2` baselines and later live rollout/update releases through `v0.5.11`.
 
@@ -125,10 +126,11 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 ### Dashboard Readiness Foundation
 
 - A redacted status payload contract exists in `docs/STATUS_PAYLOAD.md`.
-- The status payload is usable for wp-admin, WP-CLI, diagnostics, and future centralized monitoring design.
+- The status payload is usable for wp-admin, WP-CLI, diagnostics, and the separate centralized dashboard plugin.
 - No public dashboard REST endpoint is enabled by default.
-- Any future dashboard endpoint must add explicit pairing/enrollment, scoped authentication, and redaction enforcement.
-- Separate dashboard plugin preparation is documented in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`.
+- The read-only dashboard status endpoint requires explicit pairing/enrollment, scoped authentication, and redaction enforcement.
+- V2.1 adds a separate, disabled-by-default signed action-intent endpoint for the single bounded `scan_upload_now` request after administrator opt-in.
+- Separate dashboard plugin preparation is documented historically in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`; the active dashboard implementation now lives in the dashboard repository.
 
 ### Dashboard WPvivid Schedule-Aware Status Payload Slice
 
@@ -217,7 +219,7 @@ Historical E2E validation recorded in this plan and supporting docs:
 - Live rate-limit induction remains intentionally untested to avoid abusive Drime API traffic.
 - Composer audit has previously been blocked locally when Composer was unavailable; rerun when Composer is available in the relevant environment.
 - Staging restore apply is implemented and rehearsed, but production database import and file replacement remain intentionally gated future work.
-- Centralized dashboard work is not implemented yet; only the redacted status payload foundation exists.
+- The separate centralized dashboard plugin and V1 read-only polling foundation are implemented. V2.1 Request Backup Now remains a release-candidate slice and is limited to signed, separately opted-in `scan_upload_now`.
 - Third-party producer adapters beyond WPvivid and generic outbox are not implemented yet.
 - Drime workspace destination guardrails are implemented in source/docs and passed feature-stage review workflows.
 

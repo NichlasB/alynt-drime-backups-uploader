@@ -1,8 +1,8 @@
 # Central Dashboard Plugin Project Plan
 
-This plan defines the future separate dashboard plugin for monitoring sites that run Alynt Drime Backups Uploader.
+This plan defined the separate dashboard plugin for monitoring sites that run Alynt Drime Backups Uploader. It remains as historical planning context; current runtime protocol details live in the dashboard repository's V1/V2 protocol and threat-model docs.
 
-The dashboard plugin is a separate project. This document is planning preparation only; it does not start implementation and does not change the uploader's current runtime behavior.
+The dashboard plugin is a separate project. This document started as planning preparation and should not be treated as the current implementation source of truth for V2.1.
 
 ## At A Glance
 
@@ -13,7 +13,7 @@ The dashboard plugin is a separate project. This document is planning preparatio
 - Show a simple read-only status overview for each site.
 - Focus version 1 on monitoring only: no remote restore, delete, backup execution, settings changes, or Drime credential changes.
 - Use the uploader's existing `site_uuid` and redacted status payload as the foundation.
-- Add any future uploader endpoint only after explicit opt-in, pairing, authentication, rate limiting, and redaction tests are designed.
+- V2.1 adds a disabled-by-default uploader action endpoint only after explicit V1 pairing, separate action opt-in, signed request verification, rate limiting, idempotency, and redaction tests.
 
 ## Confirmed Project Decisions
 
@@ -28,8 +28,8 @@ These decisions are approved as the starting point for the future dashboard plug
 | Enrollment direction | Dashboard-generated pairing token, entered on client sites |
 | Status direction | Dashboard polls enrolled client sites |
 | Remote actions in v1 | Not included |
-| Uploader endpoint state today | Not implemented |
-| Repo creation state | Not started |
+| Uploader endpoint state today | V1 read-only status endpoint implemented; V2.1 signed action-intent endpoint implemented locally and disabled until separate opt-in |
+| Repo creation state | Dashboard repository exists separately |
 
 ## Why This Comes After Single-Site Status
 

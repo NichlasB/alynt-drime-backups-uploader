@@ -22,6 +22,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Provides optional server-specific local retention that prunes older uploaded generic outbox/server-runner packages while keeping the newest configured package sets.
 - Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
 - Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
+- Supports explicit central-dashboard V2.1 action opt-in for one bounded signed action, `scan_upload_now`, which asks this client to scan for ready packages and upload eligible items using its own local settings and Drime credentials.
 - Provides WP-CLI commands for server-driven scan/upload/status workflows.
 - Includes a standalone PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, guide non-destructive restore staging, run staging and production-simulation restore workflows behind explicit safety gates, preview old local artifacts, and run operator-approved local cleanup behind an explicit confirmation flag.
 - Stores bounded, redacted diagnostics when diagnostics are explicitly enabled.
@@ -74,6 +75,7 @@ The settings screen controls:
 - Optional failed upload email notifications and recipient list.
 - Maximum retry count.
 - Diagnostics enablement, minimum severity, and retention.
+- Central-dashboard read-only pairing and optional separate V2.1 action opt-in token.
 
 See [docs/SETTINGS.md](docs/SETTINGS.md) for the full option schema.
 
@@ -121,7 +123,7 @@ Diagnostics redact bearer tokens, authorization headers, cookies, nonces, passwo
 
 See [docs/STATUS_PAYLOAD.md](docs/STATUS_PAYLOAD.md) for the redacted health/status payload contract used by WP-CLI, wp-admin, diagnostics, and authenticated central-dashboard polling.
 
-For the central monitoring dashboard boundary, see [docs/CENTRAL_DASHBOARD_READINESS.md](docs/CENTRAL_DASHBOARD_READINESS.md). For the separate dashboard plugin preparation plan, see [docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md](docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md). The dashboard plugin remains separate; this uploader exposes the fixed status endpoint only after administrator opt-in, dashboard-origin review, and completed authenticated pairing.
+For the central monitoring dashboard boundary, see [docs/CENTRAL_DASHBOARD_READINESS.md](docs/CENTRAL_DASHBOARD_READINESS.md). For the separate dashboard plugin preparation plan, see [docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md](docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md). The dashboard plugin remains separate; this uploader exposes the fixed status endpoint only after administrator opt-in, dashboard-origin review, and completed authenticated pairing. V2.1 action intents require a second dashboard-generated `adb2a` token and explicit local opt-in; the only accepted action is `scan_upload_now`.
 
 ## Cron Health
 

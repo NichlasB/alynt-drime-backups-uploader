@@ -494,11 +494,9 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 			return $this->empty_source_activity();
 		}
 
-		$archive_times            = $this->file_mtimes( glob( trailingslashit( $directory ) . '*.zip' ) );
-		$direct_log_times         = $this->file_mtimes( glob( trailingslashit( $directory ) . '*backup_log.txt' ) );
-		$nested_log_times         = $this->file_mtimes( glob( trailingslashit( $directory ) . 'wpvivid_log/*backup_log.txt' ) );
-		$latest_archive_time      = empty( $archive_times ) ? 0 : max( $archive_times );
-		$latest_log_time          = empty( $direct_log_times ) && empty( $nested_log_times ) ? 0 : max( array_merge( $direct_log_times, $nested_log_times ) );
+		$activity                 = $this->wpvivid_activity_scan( $directory );
+		$latest_archive_time      = $activity['latest_archive_time'];
+		$latest_log_time          = $activity['latest_log_time'];
 		$latest_activity_time     = max( $latest_archive_time, $latest_log_time );
 		$source_activity_evidence = '';
 
@@ -511,7 +509,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 		return array(
 			'latest_source_activity_at' => $latest_activity_time,
 			'source_activity_evidence'  => $source_activity_evidence,
-			'local_candidate_count'     => count( $archive_times ),
+			'local_candidate_count'     => $activity['archive_count'],
 		);
 	}
 
@@ -529,34 +527,97 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	}
 
 	/**
-	 * Returns readable non-empty file modification times from a glob result.
+	 * Scans WPvivid activity evidence without allocating glob match arrays.
 	 *
-	 * @param array<int,string>|false $files Files.
-	 * @return array<int,int>
+	 * @param string $directory WPvivid backup directory.
+	 * @return array{latest_archive_time:int,latest_log_time:int,archive_count:int}
 	 */
-	private function file_mtimes( $files ) {
-		if ( ! is_array( $files ) ) {
-			return array();
+	private function wpvivid_activity_scan( $directory ) {
+		$activity = array(
+			'latest_archive_time' => 0,
+			'latest_log_time'     => 0,
+			'archive_count'       => 0,
+		);
+
+		$this->scan_wpvivid_activity_directory( $directory, false, $activity );
+
+		$log_directory = trailingslashit( $directory ) . 'wpvivid_log';
+		if ( is_dir( $log_directory ) && is_readable( $log_directory ) ) {
+			$this->scan_wpvivid_activity_directory( $log_directory, true, $activity );
 		}
 
-		$times = array();
+		return $activity;
+	}
 
-		foreach ( $files as $file ) {
-			if ( ! is_file( $file ) || ! is_readable( $file ) ) {
+	/**
+	 * Scans one directory for WPvivid archive/log evidence.
+	 *
+	 * @param string            $directory Directory.
+	 * @param bool              $logs_only Whether only log files should be considered.
+	 * @param array<string,int> $activity Activity accumulator.
+	 * @return void
+	 */
+	private function scan_wpvivid_activity_directory( $directory, $logs_only, array &$activity ) {
+		try {
+			$iterator = new DirectoryIterator( $directory );
+		} catch ( Exception $exception ) {
+			unset( $exception );
+			return;
+		}
+
+		foreach ( $iterator as $file ) {
+			if ( $file->isDot() || ! $file->isFile() ) {
 				continue;
 			}
 
-			$size  = filesize( $file );
-			$mtime = filemtime( $file );
+			$name  = $file->getFilename();
+			$mtime = $this->readable_non_empty_file_mtime( $file->getPathname() );
 
-			if ( false === $size || false === $mtime || $size <= 0 ) {
+			if ( $mtime <= 0 ) {
 				continue;
 			}
 
-			$times[] = max( 0, (int) $mtime );
+			if ( ! $logs_only && $this->string_ends_with( $name, '.zip' ) ) {
+				++$activity['archive_count'];
+				$activity['latest_archive_time'] = max( $activity['latest_archive_time'], $mtime );
+				continue;
+			}
+
+			if ( $this->string_ends_with( $name, 'backup_log.txt' ) ) {
+				$activity['latest_log_time'] = max( $activity['latest_log_time'], $mtime );
+			}
+		}
+	}
+
+	/**
+	 * Returns a readable non-empty file modification time.
+	 *
+	 * @param string $file File path.
+	 * @return int
+	 */
+	private function readable_non_empty_file_mtime( $file ) {
+		if ( ! is_file( $file ) || ! is_readable( $file ) ) {
+			return 0;
 		}
 
-		return $times;
+		$size  = filesize( $file );
+		$mtime = filemtime( $file );
+
+		return false === $size || false === $mtime || $size <= 0 ? 0 : max( 0, (int) $mtime );
+	}
+
+	/**
+	 * Returns whether a string ends with a suffix.
+	 *
+	 * @param string $value Value.
+	 * @param string $suffix Suffix.
+	 * @return bool
+	 */
+	private function string_ends_with( $value, $suffix ) {
+		$value  = (string) $value;
+		$suffix = (string) $suffix;
+
+		return '' === $suffix || substr( $value, -strlen( $suffix ) ) === $suffix;
 	}
 
 	/**

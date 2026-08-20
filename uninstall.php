@@ -24,11 +24,13 @@ $alynt_drime_backups_options = array(
 	'alynt_drime_backups_file_snapshots',
 	'alynt_drime_backups_outbox_file_snapshots',
 	'alynt_drime_backups_dashboard_connection',
+	'alynt_drime_backups_remote_action_state',
 );
 
 $alynt_drime_backups_cron_hooks = array(
 	'alynt_drime_backups_scan_event',
 	'alynt_drime_backups_upload_event',
+	'alynt_drime_backups_remote_action_event',
 );
 
 $alynt_drime_backups_cleanup_site = static function () use ( $alynt_drime_backups_options, $alynt_drime_backups_cron_hooks ) {

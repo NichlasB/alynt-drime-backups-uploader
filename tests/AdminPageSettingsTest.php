@@ -44,6 +44,8 @@ class AdminPageSettingsTest extends TestCase {
 		$this->assertStringContainsString( 'Central Dashboard', $output );
 		$this->assertStringContainsString( 'Disabled until pairing is completed with an unexpired dashboard token.', $output );
 		$this->assertStringContainsString( 'name="alynt_drime_backups_dashboard_connection[pairing_token]"', $output );
+		$this->assertStringContainsString( 'for="alynt-dashboard-token"', $output );
+		$this->assertStringContainsString( 'id="alynt-dashboard-token"', $output );
 		$this->assertStringContainsString( 'Prepare Pairing Shell', $output );
 		$this->assertStringContainsString( 'Review Dashboard Token', $output );
 		$this->assertStringContainsString( 'Complete Read-Only Pairing', $output );
@@ -94,6 +96,30 @@ class AdminPageSettingsTest extends TestCase {
 		$this->assertStringNotContainsString( 'Complete Read-Only Pairing', $output );
 		$this->assertStringNotContainsString( 'polling_credential_verifier', $output );
 		$this->assertStringNotContainsString( 'secret', $output );
+	}
+
+	public function test_dashboard_pairing_shell_shows_enabled_v2_action_copy() {
+		$page       = $this->admin_page();
+		$connection = array_merge(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::defaults(),
+			array(
+				'connection_status'           => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED,
+				'status_endpoint_enabled'     => true,
+				'dashboard_origin'            => 'https://control.sitesmanage.com',
+				'expected_client_origin'      => 'https://client.example.com',
+				'dashboard_site_public_id'    => '00000000-0000-4000-8000-000000000000',
+				'polling_key_id'              => 'pk_test',
+				'polling_credential_verifier' => hash( 'sha256', 'secret' ),
+				'remote_actions_enabled'      => true,
+				'action_key_id'               => 'ak_test',
+			)
+		);
+		$output     = $this->capture_private( $page, 'render_dashboard_connection_shell', array( $connection ) );
+
+		$this->assertStringContainsString( 'The bounded signed scan/upload-now endpoint is enabled for the paired dashboard only.', $output );
+		$this->assertStringContainsString( 'Current action key ID: ak_test.', $output );
+		$this->assertStringContainsString( 'restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable', $output );
+		$this->assertStringNotContainsString( 'until the signed request endpoint is implemented', $output );
 	}
 
 	public function test_gridpane_cron_snippet_uses_configured_server_outbox_base() {

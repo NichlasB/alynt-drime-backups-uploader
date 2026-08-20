@@ -115,8 +115,14 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 			return $this->response_from_record( $record, 409 );
 		}
 
-		$record = $this->store->upsert_action( $intent, 'accepted', 'action_accepted', __( 'Remote action accepted and queued for local scan/upload processing.', 'alynt-drime-backups-uploader' ) );
-		$this->schedule_worker( $record['action_id'] );
+		$record    = $this->store->upsert_action( $intent, 'accepted', 'action_accepted', __( 'Remote action accepted and queued for local scan/upload processing.', 'alynt-drime-backups-uploader' ) );
+		$scheduled = $this->schedule_worker( $record['action_id'] );
+
+		if ( is_wp_error( $scheduled ) ) {
+			$record = $this->store->upsert_action( $intent, 'failed', 'action_schedule_failed', __( 'Remote action accepted but could not be scheduled on the client site.', 'alynt-drime-backups-uploader' ) );
+
+			return $this->response_from_record( $record, 500 );
+		}
 
 		return $this->response_from_record( $record, 202 );
 	}
@@ -136,12 +142,24 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 	 * Schedules local worker.
 	 *
 	 * @param string $action_id Action ID.
-	 * @return void
+	 * @return true|WP_Error
 	 */
 	private function schedule_worker( $action_id ) {
-		if ( function_exists( 'wp_schedule_single_event' ) ) {
-			wp_schedule_single_event( time() + 5, Alynt_Drime_Backups_Uploader_Remote_Action_Worker::EVENT, array( $action_id ) );
+		if ( ! function_exists( 'wp_schedule_single_event' ) ) {
+			return new WP_Error( 'action_scheduler_unavailable', __( 'WordPress cron scheduling is not available for the remote action worker.', 'alynt-drime-backups-uploader' ) );
 		}
+
+		$scheduled = wp_schedule_single_event( time() + 5, Alynt_Drime_Backups_Uploader_Remote_Action_Worker::EVENT, array( $action_id ), true );
+
+		if ( is_wp_error( $scheduled ) ) {
+			return $scheduled;
+		}
+
+		if ( false === $scheduled ) {
+			return new WP_Error( 'action_schedule_failed', __( 'WordPress could not schedule the remote action worker.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		return true;
 	}
 
 	/**

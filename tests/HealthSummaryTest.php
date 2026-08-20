@@ -315,6 +315,53 @@ class HealthSummaryTest extends TestCase {
 	}
 
 	/**
+	 * WPvivid source activity scanning ignores empty archives and prefers the newest evidence type.
+	 *
+	 * @return void
+	 */
+	public function test_status_scans_wpvivid_activity_without_counting_empty_archives() {
+		$outbox      = $this->create_outbox();
+		$wpvivid_dir = $this->create_outbox();
+		$log_dir     = $wpvivid_dir . DIRECTORY_SEPARATOR . 'wpvivid_log';
+		$archive     = $wpvivid_dir . DIRECTORY_SEPARATOR . 'wpvivid-site-backup.zip';
+		$empty       = $wpvivid_dir . DIRECTORY_SEPARATOR . 'wpvivid-empty-backup.zip';
+		$log_file    = $log_dir . DIRECTORY_SEPARATOR . 'wpvivid-safe_backup_log.txt';
+		$log_time    = time() - 600;
+		$zip_time    = time() - 120;
+
+		mkdir( $log_dir );
+		file_put_contents( $log_file, 'WPvivid backup completed.' );
+		file_put_contents( $archive, 'archive-bytes' );
+		touch( $empty );
+		touch( $log_file, $log_time );
+		touch( $archive, $zip_time );
+
+		$summary = $this->summary(
+			$outbox,
+			array(),
+			array(),
+			array(),
+			$wpvivid_dir
+		);
+		$status  = $summary->status();
+		$wpvivid = $status['backup_sources']['wpvivid'];
+
+		$this->assertEqualsWithDelta( $zip_time, $wpvivid['latest_source_activity_at'], 2 );
+		$this->assertSame( 'wpvivid_local_archive', $wpvivid['source_activity_evidence'] );
+		$this->assertSame( 1, $wpvivid['local_candidate_count'] );
+		$this->assertFalse( $wpvivid['has_upload_evidence'] );
+		$this->assertSame( 'no_upload_evidence', $wpvivid['freshness_status'] );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		unlink( $log_file );
+		unlink( $empty );
+		unlink( $archive );
+		rmdir( $log_dir );
+		rmdir( $wpvivid_dir );
+		rmdir( $outbox );
+	}
+
+	/**
 	 * WPvivid schedule policy is detected from local schedule settings without leaking raw settings.
 	 *
 	 * @return void

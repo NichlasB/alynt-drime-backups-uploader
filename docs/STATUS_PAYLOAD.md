@@ -4,7 +4,7 @@ The plugin has a health/status payload for wp-admin, WP-CLI, diagnostics review,
 
 No public dashboard REST endpoint is enabled by default. The fixed endpoint at `/wp-json/alynt-drime-backups-uploader/v1/status` is registered but returns status only after an administrator completes dashboard-generated token pairing and the request includes the scoped polling bearer credential.
 
-See `docs/CENTRAL_DASHBOARD_READINESS.md` for the future dashboard boundary and endpoint requirements. See `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md` for the separate dashboard plugin preparation plan.
+See `docs/CENTRAL_DASHBOARD_READINESS.md` for the dashboard boundary and endpoint requirements. See `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md` for historical dashboard preparation context; the dashboard plugin now lives in its own repository.
 
 ## Versioning
 
@@ -112,7 +112,7 @@ When multiple supported local WPvivid schedules are detected, the summary uses t
 
 ## Optional Remote Action Capability Summary
 
-`remote_actions` is additive in schema version `1`. It is intended for the dashboard's future V2.1 "Request Backup Now" UI and must not be treated as permission for the V1 polling credential to run commands.
+`remote_actions` is additive in schema version `1`. It is used by the dashboard's V2.1 "Request Backup Now" UI and must not be treated as permission for the V1 polling credential to run commands.
 
 When present, the summary is redacted and capability-only:
 
@@ -128,7 +128,7 @@ When present, the summary is redacted and capability-only:
 
 This summary must not include action private keys, raw dashboard tokens, polling secrets, Drime credentials, paths, package names, Drime object IDs, signed URLs, raw client responses, SQL, cookies, nonces, or arbitrary commands.
 
-The first implementation slice may report the object with `enabled: false` for paired clients so the dashboard can explain that V2 is understood but not opted in. It must not register an action endpoint or accept action intents until the separate V2 opt-in/signing/worker slice is implemented.
+The V2.1 implementation may report the object with `enabled: false` for paired clients so the dashboard can explain that V2 is understood but not opted in. The action-intent endpoint is registered by the V2.1 plugin but fails closed unless V1 pairing, separate V2 action opt-in, Sodium verification, signature validation, idempotency, rate limiting, and the local action allowlist all pass. The only accepted action is `scan_upload_now`.
 
 ## Local CLI Path Mode
 

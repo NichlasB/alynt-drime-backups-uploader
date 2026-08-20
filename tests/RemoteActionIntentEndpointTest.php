@@ -232,6 +232,39 @@ class RemoteActionIntentEndpointTest extends TestCase {
 		$this->assertStringNotContainsString( $options['_private_key'], json_encode( $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ] ) );
 	}
 
+	public function test_schedule_failure_records_failed_state_without_claiming_acceptance() {
+		if ( ! $this->sodium_supported() ) {
+			$this->markTestSkipped( 'Sodium signing is not available.' );
+		}
+
+		$options = $this->options_with_remote_actions();
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+		Functions\when( 'update_option' )->alias(
+			function ( $name, $value ) use ( &$options ) {
+				$options[ $name ] = $value;
+				return true;
+			}
+		);
+		Functions\when( 'wp_schedule_single_event' )->justReturn( false );
+
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$store      = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+		$verifier   = new Alynt_Drime_Backups_Uploader_Remote_Action_Verifier( $connection );
+		$controller = new Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller( $verifier, $store );
+
+		$response = $controller->handle_action_intent( $this->signed_request( $verifier, $options['_private_key'] ) );
+
+		$this->assertSame( 500, $response['status'] );
+		$this->assertSame( 'failed', $response['data']['state'] );
+		$this->assertSame( 'action_schedule_failed', $response['data']['code'] );
+		$this->assertSame( 'failed', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['state'] );
+		$this->assertSame( 'action_schedule_failed', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['code'] );
+	}
+
 	public function test_invalid_signature_fails_closed_without_scheduling_work() {
 		if ( ! $this->sodium_supported() ) {
 			$this->markTestSkipped( 'Sodium signing is not available.' );

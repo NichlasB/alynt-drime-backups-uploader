@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added the V2.1 signed dashboard action-intent endpoint for separately opted-in clients. The endpoint accepts only the bounded `scan_upload_now` action, verifies dashboard signatures with the locally stored action public key, enforces idempotency/rate/busy state, schedules local scan/upload work, and reports redacted action summaries.
+
+### Changed
+
+- Bumped the release candidate to `0.5.12` because `v0.5.11` is already used by the prior schedule-policy release.
+- Updated Composer dev-tool lockfile packages to clear release security audit advisories in PHPCS/WPCS tooling.
+- Replaced WPvivid source-activity glob allocation with a `DirectoryIterator` scan for dashboard status payload generation.
+- Clarified the Central Dashboard admin copy so an opted-in client says the bounded signed endpoint is enabled for the paired dashboard only.
+
+### Fixed
+
+- Remote action acceptance now fails closed if WordPress cannot schedule the local remote-action worker or upload worker.
+- Uninstall now removes the V2.1 remote-action state option and pending remote-action worker hook.
+
 ## [0.5.11] - 2026-08-18
 
 ### Fixed

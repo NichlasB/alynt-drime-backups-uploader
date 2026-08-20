@@ -125,6 +125,7 @@ class UninstallTest extends TestCase {
 			'alynt_drime_backups_file_snapshots',
 			'alynt_drime_backups_outbox_file_snapshots',
 			'alynt_drime_backups_dashboard_connection',
+			'alynt_drime_backups_remote_action_state',
 		);
 	}
 
@@ -137,6 +138,7 @@ class UninstallTest extends TestCase {
 		return array(
 			'alynt_drime_backups_scan_event',
 			'alynt_drime_backups_upload_event',
+			'alynt_drime_backups_remote_action_event',
 		);
 	}
 }

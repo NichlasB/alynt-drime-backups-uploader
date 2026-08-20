@@ -76,7 +76,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 					<th scope="row"><?php esc_html_e( 'Remote actions', 'alynt-drime-backups-uploader' ); ?></th>
 					<td>
 						<?php if ( $remote_actions_enabled ) : ?>
-							<?php esc_html_e( 'V2 action opt-in completed for scan/upload-now capability. Dispatch remains unavailable until the signed request endpoint is implemented.', 'alynt-drime-backups-uploader' ); ?>
+							<?php esc_html_e( 'V2 action opt-in completed. The bounded signed scan/upload-now endpoint is enabled for the paired dashboard only.', 'alynt-drime-backups-uploader' ); ?>
 						<?php elseif ( $paired_enabled ) : ?>
 							<?php esc_html_e( 'V1 read-only monitoring is active. V2 actions require a separate dashboard-generated adb2a token and explicit local opt-in.', 'alynt-drime-backups-uploader' ); ?>
 						<?php else : ?>
@@ -107,7 +107,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 									<?php
 									printf(
 										/* translators: %s: action key identifier. */
-										esc_html__( 'Current action key ID: %s. Dispatch is still unavailable until the signed request endpoint is implemented.', 'alynt-drime-backups-uploader' ),
+										esc_html__( 'Current action key ID: %s. Only signed scan/upload-now intents from the paired dashboard are accepted; restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable.', 'alynt-drime-backups-uploader' ),
 										esc_html( (string) $connection['action_key_id'] )
 									);
 									?>
@@ -115,7 +115,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 							<?php else : ?>
 								<label for="alynt-dashboard-action-opt-in-token" class="screen-reader-text"><?php esc_html_e( 'V2 action opt-in token', 'alynt-drime-backups-uploader' ); ?></label>
 								<textarea id="alynt-dashboard-action-opt-in-token" class="large-text code" rows="3" name="alynt_drime_backups_dashboard_connection[action_opt_in_token]" aria-describedby="alynt-dashboard-action-opt-in-token-description" placeholder="<?php esc_attr_e( 'Paste the dashboard-generated adb2a token here.', 'alynt-drime-backups-uploader' ); ?>"></textarea>
-								<p id="alynt-dashboard-action-opt-in-token-description" class="description"><?php esc_html_e( 'Use this only after read-only pairing is active. It stores the dashboard action public key locally and advertises scan/upload-now capability; it does not expose a remote action endpoint yet.', 'alynt-drime-backups-uploader' ); ?></p>
+								<p id="alynt-dashboard-action-opt-in-token-description" class="description"><?php esc_html_e( 'Use this only after read-only pairing is active. It stores the dashboard action public key locally and enables the bounded signed scan/upload-now endpoint for the paired dashboard only.', 'alynt-drime-backups-uploader' ); ?></p>
 								<fieldset>
 									<legend class="screen-reader-text"><?php esc_html_e( 'V2 action opt-in confirmation', 'alynt-drime-backups-uploader' ); ?></legend>
 									<label>
@@ -130,7 +130,8 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Pairing token', 'alynt-drime-backups-uploader' ); ?></th>
 						<td>
-							<textarea class="large-text code" rows="3" name="alynt_drime_backups_dashboard_connection[pairing_token]" aria-describedby="alynt-dashboard-token-description" placeholder="<?php esc_attr_e( 'Paste the dashboard-generated adb1 token here.', 'alynt-drime-backups-uploader' ); ?>"></textarea>
+							<label for="alynt-dashboard-token" class="screen-reader-text"><?php esc_html_e( 'Pairing token', 'alynt-drime-backups-uploader' ); ?></label>
+							<textarea id="alynt-dashboard-token" class="large-text code" rows="3" name="alynt_drime_backups_dashboard_connection[pairing_token]" aria-describedby="alynt-dashboard-token-description" placeholder="<?php esc_attr_e( 'Paste the dashboard-generated adb1 token here.', 'alynt-drime-backups-uploader' ); ?>"></textarea>
 							<p id="alynt-dashboard-token-description" class="description"><?php esc_html_e( 'The token is used once to complete pairing with the dashboard, then discarded. The raw token, one-time secret, and polling secret are not stored.', 'alynt-drime-backups-uploader' ); ?></p>
 						</td>
 					</tr>

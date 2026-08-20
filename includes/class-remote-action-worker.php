@@ -82,7 +82,12 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 				return;
 			}
 
-			$this->schedule_upload_worker();
+			$scheduled = $this->schedule_upload_worker();
+			if ( is_wp_error( $scheduled ) ) {
+				$this->store->upsert_action( $record, 'failed', 'action_upload_schedule_failed', __( 'Remote scan/upload action scanned for eligible packages but could not schedule the upload worker.', 'alynt-drime-backups-uploader' ), $counts );
+				return;
+			}
+
 			$this->store->upsert_action( $record, 'succeeded', 'action_scan_completed', __( 'Remote scan/upload action scanned for eligible packages and scheduled the upload worker.', 'alynt-drime-backups-uploader' ), $counts );
 		} catch ( Exception $exception ) {
 			unset( $exception );
@@ -114,11 +119,23 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 	/**
 	 * Schedules the existing upload worker.
 	 *
-	 * @return void
+	 * @return true|WP_Error
 	 */
 	private function schedule_upload_worker() {
-		if ( function_exists( 'wp_schedule_single_event' ) ) {
-			wp_schedule_single_event( time() + 5, Alynt_Drime_Backups_Uploader_Cron::UPLOAD_EVENT );
+		if ( ! function_exists( 'wp_schedule_single_event' ) ) {
+			return new WP_Error( 'action_upload_scheduler_unavailable', __( 'WordPress cron scheduling is not available for the upload worker.', 'alynt-drime-backups-uploader' ) );
 		}
+
+		$scheduled = wp_schedule_single_event( time() + 5, Alynt_Drime_Backups_Uploader_Cron::UPLOAD_EVENT, array(), true );
+
+		if ( is_wp_error( $scheduled ) ) {
+			return $scheduled;
+		}
+
+		if ( false === $scheduled ) {
+			return new WP_Error( 'action_upload_schedule_failed', __( 'WordPress could not schedule the upload worker.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		return true;
 	}
 }

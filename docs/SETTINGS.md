@@ -16,7 +16,7 @@ Option name: `alynt_drime_backups_settings`
 | `server_outbox_path` | string | `''` | `sanitize_text_field` | Generic Outbox Source | Optional local directory scanned for completed backup packages produced by the server runner or another backup producer. |
 | `server_relative_path` | string | `''` | `sanitize_text_field`, slash normalization, rejects `..` | Generic Outbox Source | Optional Drime subpath used for generic outbox/server-runner packages. Falls back to `relative_path` when empty. |
 | `wpvivid_relative_path` | string | `''` | `sanitize_text_field`, slash normalization, rejects `..` | WPvivid Source | Optional Drime subpath used for WPvivid packages. Falls back to `relative_path` when empty. |
-| `site_uuid` | string | `''` | Generated internally and sanitized as UUID | Internal | Stable non-secret site identifier used in health/status payloads for future centralized monitoring. |
+| `site_uuid` | string | `''` | Generated internally and sanitized as UUID | Internal | Stable non-secret site identifier used in health/status payloads for centralized monitoring. |
 | `duplicate_mode` | string | `skip` | `sanitize_key`, allowlist `skip` or `rename` | Behavior | Controls whether existing Drime filenames are skipped or renamed. |
 | `auto_scan_enabled` | boolean | `false` | boolean cast from checkbox presence | Behavior | Enables scheduled WP-Cron scanning. |
 | `server_cron_expected` | boolean | `false` | boolean cast from checkbox presence | Behavior | Enables admin reminders when scheduled scans should be driven by WP-CLI but no WP-CLI scan evidence has been observed. |
@@ -48,7 +48,8 @@ These options are owned by the plugin and are removed on uninstall.
 | `alynt_drime_backups_drime_locations` | array | `array()` | `Alynt_Drime_Backups_Uploader_Backup_Registry` | Cached Drime parent folder IDs for configured relative paths. |
 | `alynt_drime_backups_failure_notifications` | array | `array()` | `Alynt_Drime_Backups_Uploader_Failure_Notifier` | Sent-notification ledger keyed by backup signature and failure state to suppress duplicate failure emails. |
 | `alynt_drime_backups_cron_health` | array | `array()` | `Alynt_Drime_Backups_Uploader_Cron_Health` | Scheduled-scan runner evidence used to report whether scans have been observed from WP-CLI, HTTP WP-Cron, manual admin actions, or an unknown runtime. |
-| `alynt_drime_backups_dashboard_connection` | array | disabled connection state | `Alynt_Drime_Backups_Uploader_Dashboard_Connection` | Local central-dashboard pairing intent, reviewed token metadata, dashboard-origin confirmation/revocation state, and future credential metadata. The shell keeps the external status endpoint disabled and never stores raw pairing tokens or one-time secrets. |
+| `alynt_drime_backups_dashboard_connection` | array | disabled connection state | `Alynt_Drime_Backups_Uploader_Dashboard_Connection` | Local central-dashboard pairing intent, reviewed token metadata, dashboard-origin confirmation/revocation state, verifier-only polling credential metadata, and V2.1 action opt-in public-key metadata. The shell keeps the external status endpoint disabled until V1 pairing succeeds, keeps V2.1 action intents disabled until separate `adb2a` opt-in succeeds, and never stores raw pairing/action tokens or one-time secrets. |
+| `alynt_drime_backups_remote_action_state` | array | `array()` | `Alynt_Drime_Backups_Uploader_Remote_Action_Store` | Bounded V2.1 remote-action state, idempotency ledger, lock data, latest action summary, and recent redacted action history. Stored with autoload disabled and removed on uninstall. |
 | `alynt_drime_backups_file_snapshots` | array | `array()` | `Alynt_Drime_Backups_Uploader_Scanner` | File size/modified-time snapshots used to verify stability across scans. |
 | `alynt_drime_backups_outbox_file_snapshots` | array | `array()` | `Alynt_Drime_Backups_Uploader_Generic_Outbox_Producer` | File size/modified-time snapshots used to verify generic outbox package stability across scans. |
 | `alynt_drime_backups_logs` | array | `array()` | `Alynt_Drime_Backups_Uploader_Logger` | Redacted diagnostics events when diagnostics are enabled. |
@@ -110,7 +111,7 @@ When the constant is present, the workspace picker filters to those IDs. Setting
 
 ## Health Payload Fields
 
-See `docs/STATUS_PAYLOAD.md` for the full redacted status payload contract and future dashboard boundary.
+See `docs/STATUS_PAYLOAD.md` for the full redacted status payload contract and dashboard boundary.
 
 The health summary includes these non-secret migration/coexistence fields:
 

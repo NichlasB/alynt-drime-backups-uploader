@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Alynt Drime Backups Uploader 0.5.11\n"
+"Project-Id-Version: Alynt Drime Backups Uploader 0.5.12\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/alynt-drime-backups-uploader\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-12T15:21:04+00:00\n"
+"POT-Creation-Date: 2026-08-20T16:04:48+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: alynt-drime-backups-uploader\n"
@@ -173,48 +173,133 @@ msgstr ""
 msgid "Every 15 minutes"
 msgstr ""
 
-#: includes/class-dashboard-connection.php:367
+#: includes/class-dashboard-action-intents-rest-controller.php:93
+msgid "Remote action request rejected before work was queued."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:99
+msgid "The remote action idempotency key was already used for a different request."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:107
+msgid "Remote action request rate-limited by the client site."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:113
+#: includes/class-remote-action-worker.php:68
+msgid "Another remote action is already running on this client site."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:118
+msgid "Remote action accepted and queued for local scan/upload processing."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:122
+msgid "Remote action accepted but could not be scheduled on the client site."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:149
+msgid "WordPress cron scheduling is not available for the remote action worker."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:159
+msgid "WordPress could not schedule the remote action worker."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:176
+msgid "Remote action request rejected."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:500
 msgid "The dashboard pairing token must begin with adb1."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:372
+#: includes/class-dashboard-connection.php:505
 msgid "The dashboard pairing token payload is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:377
+#: includes/class-dashboard-connection.php:510
 msgid "The dashboard pairing token payload could not be decoded."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:382
+#: includes/class-dashboard-connection.php:515
 msgid "The dashboard pairing token payload is not JSON."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:386
+#: includes/class-dashboard-connection.php:519
 msgid "The dashboard pairing token uses an unsupported protocol version."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:391
+#: includes/class-dashboard-connection.php:524
 msgid "The dashboard pairing token does not include a valid enrollment ID."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:396
+#: includes/class-dashboard-connection.php:529
 msgid "The dashboard pairing token does not include a supported dashboard HTTPS origin."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:401
+#: includes/class-dashboard-connection.php:534
 msgid "The dashboard pairing token does not include a supported expected client HTTPS origin."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:406
+#: includes/class-dashboard-connection.php:539
 msgid "The dashboard pairing token secret is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:412
+#: includes/class-dashboard-connection.php:545
 msgid "The dashboard pairing token expiry is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:416
+#: includes/class-dashboard-connection.php:549
 msgid "The dashboard pairing token has expired."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:578
+msgid "The dashboard action opt-in token must begin with adb2a."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:583
+msgid "The dashboard action opt-in token payload is not valid."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:588
+msgid "The dashboard action opt-in token payload could not be decoded."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:593
+msgid "The dashboard action opt-in token payload is not JSON."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:597
+msgid "The dashboard action opt-in token uses an unsupported protocol version."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:601
+msgid "The dashboard action opt-in token purpose is not valid."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:606
+msgid "The dashboard action opt-in token does not include a supported dashboard HTTPS origin."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:611
+msgid "The dashboard action opt-in token does not include a supported expected client HTTPS origin."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:620
+msgid "The dashboard action opt-in token does not include valid site and key identifiers."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:626
+msgid "The dashboard action opt-in token does not grant the supported scan/upload-now action."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:632
+msgid "The dashboard action opt-in token expiry is not valid."
+msgstr ""
+
+#: includes/class-dashboard-connection.php:636
+msgid "The dashboard action opt-in token has expired."
 msgstr ""
 
 #: includes/class-dashboard-status-rest-controller.php:74
@@ -265,44 +350,136 @@ msgstr ""
 msgid "The backup outbox scan state could not be saved. Confirm the site database is writable, then try again."
 msgstr ""
 
-#: includes/class-health-summary.php:131
+#: includes/class-health-summary.php:166
 msgid "Server runner / generic outbox"
 msgstr ""
 
-#: includes/class-health-summary.php:140
+#: includes/class-health-summary.php:176
 msgid "WPvivid"
 msgstr ""
 
-#: includes/class-health-summary.php:352
+#: includes/class-health-summary.php:778
 msgid "This source is configured but has no uploaded backup evidence yet."
 msgstr ""
 
-#: includes/class-health-summary.php:359
+#: includes/class-health-summary.php:785
 msgid "The latest uploaded backup evidence is older than the default freshness window."
 msgstr ""
 
-#: includes/class-health-summary.php:366
+#: includes/class-health-summary.php:792
 msgid "This source has queued backup packages waiting to upload."
 msgstr ""
 
-#: includes/class-health-summary.php:386
+#: includes/class-health-summary.php:812
 msgid "Server outbox path is not configured."
 msgstr ""
 
-#: includes/class-health-summary.php:391
+#: includes/class-health-summary.php:817
 msgid "Server outbox path is not readable by WordPress."
 msgstr ""
 
-#: includes/class-health-summary.php:398
+#: includes/class-health-summary.php:824
 msgid "Server cron attention is needed."
 msgstr ""
 
-#: includes/class-health-summary.php:405
+#: includes/class-health-summary.php:831
 msgid "The old Alynt Drime WPvivid Uploader plugin is active. Disable automatic uploads in one uploader before using the WPvivid source here to avoid duplicate uploads."
 msgstr ""
 
-#: includes/class-plugin.php:288
+#: includes/class-plugin.php:328
 msgid "Backup packages were found, but the upload queue could not be saved. Confirm the site database is writable, then scan again."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:58
+msgid "Remote actions are not enabled for this client site."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:62
+msgid "Remote action signing support is unavailable on this client site."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:70
+msgid "The remote action request is missing required signed headers."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:74
+msgid "The remote action key is not recognized by this client site."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:78
+msgid "The remote action route is not supported."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:83
+msgid "The remote action signature timestamp is outside the allowed freshness window."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:93
+msgid "The remote action intent has expired."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:97
+msgid "The remote action is not for this dashboard site record."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:102
+msgid "The remote action is not for this client site."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:112
+msgid "The paired client origin is not valid for remote action verification."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:117
+msgid "The remote action signature is not valid."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:134
+msgid "The remote action body is invalid."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:139
+msgid "The remote action body is not valid JSON."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:145
+msgid "The remote action body contains unsupported fields."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:169
+msgid "The remote action intent is not supported by this client site."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:186
+msgid "The remote action body could not be encoded."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:72
+msgid "Remote scan/upload action is running on the client site."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:81
+msgid "Remote scan/upload action finished with scan errors; no unsafe details were stored."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:87
+msgid "Remote scan/upload action scanned for eligible packages but could not schedule the upload worker."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:91
+msgid "Remote scan/upload action scanned for eligible packages and scheduled the upload worker."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:94
+msgid "Remote scan/upload action failed without storing unsafe error details."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:126
+msgid "WordPress cron scheduling is not available for the upload worker."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:136
+msgid "WordPress could not schedule the upload worker."
 msgstr ""
 
 #. translators: %s: backup producer key.
@@ -327,33 +504,29 @@ msgstr ""
 msgid "There are no queued backups to upload."
 msgstr ""
 
-#: includes/class-uploader.php:254
+#: includes/class-uploader.php:302
 #: includes/trait-uploader-retry-state.php:51
 msgid "The queued backup reached the retry limit."
 msgstr ""
 
-#: includes/class-uploader.php:379
+#: includes/class-uploader.php:427
 msgid "The upload state could not be saved. Check that the WordPress database is writable, then try again."
 msgstr ""
 
-#: includes/class-uploader.php:462
+#: includes/class-uploader.php:510
 msgid "This backup upload stopped because another upload worker took ownership. The next worker can safely resume it."
 msgstr ""
 
-#: includes/class-uploader.php:504
+#: includes/class-uploader.php:552
 msgid "The queued backup file is no longer readable."
 msgstr ""
 
-#: includes/class-uploader.php:518
+#: includes/class-uploader.php:566
 msgid "The queued backup file is empty."
 msgstr ""
 
-#: includes/class-uploader.php:522
+#: includes/class-uploader.php:570
 msgid "The queued backup file changed after it was scanned. Run a new scan before uploading it."
-msgstr ""
-
-#: includes/class-uploader.php:553
-msgid "A file with this name already exists in Drime, so the upload was skipped."
 msgstr ""
 
 #. translators: %d: Drime workspace ID.
@@ -393,7 +566,7 @@ msgid "Enabled"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:39
-#: includes/trait-admin-page-dashboard-settings.php:152
+#: includes/trait-admin-page-dashboard-settings.php:195
 msgid "Disabled"
 msgstr ""
 
@@ -526,139 +699,187 @@ msgstr ""
 msgid "%1$s (in %2$s)"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:31
+#: includes/trait-admin-page-dashboard-settings.php:32
 msgid "Central Dashboard"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:32
+#: includes/trait-admin-page-dashboard-settings.php:33
 msgid "Alynt Drime Backups Dashboard pairing is completed here by pasting a dashboard-generated token and explicitly opting in to read-only monitoring."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:34
+#: includes/trait-admin-page-dashboard-settings.php:35
 msgid "Central dashboard connection summary"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:37
+#: includes/trait-admin-page-dashboard-settings.php:38
 msgid "Connection status"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:42
+#: includes/trait-admin-page-dashboard-settings.php:43
 msgid "Dashboard origin"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:48
+#: includes/trait-admin-page-dashboard-settings.php:49
 msgid "Expected client origin"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:54
+#: includes/trait-admin-page-dashboard-settings.php:55
 msgid "Pairing token expires"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:59
+#: includes/trait-admin-page-dashboard-settings.php:60
 msgid "Status endpoint"
 msgstr ""
 
 #. translators: %s: status endpoint URL.
-#: includes/trait-admin-page-dashboard-settings.php:65
+#: includes/trait-admin-page-dashboard-settings.php:66
 #, php-format
 msgid "Enabled for authenticated dashboard polling at %s"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:70
+#: includes/trait-admin-page-dashboard-settings.php:71
 msgid "Disabled until pairing is completed with an unexpired dashboard token."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:75
+#: includes/trait-admin-page-dashboard-settings.php:76
 msgid "Remote actions"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:76
-msgid "Not available in v1. The dashboard contract is read-only monitoring only."
+#: includes/trait-admin-page-dashboard-settings.php:79
+msgid "V2 action opt-in completed. The bounded signed scan/upload-now endpoint is enabled for the paired dashboard only."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:86
+#: includes/trait-admin-page-dashboard-settings.php:81
+msgid "V1 read-only monitoring is active. V2 actions require a separate dashboard-generated adb2a token and explicit local opt-in."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:83
+msgid "Not available until read-only dashboard pairing is completed."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:95
 msgid "Read-only dashboard monitoring"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:88
+#: includes/trait-admin-page-dashboard-settings.php:97
 msgid "This site is already opted in to read-only dashboard monitoring."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:89
+#: includes/trait-admin-page-dashboard-settings.php:98
 msgid "Only the authenticated, fixed, redacted status endpoint is enabled. This does not grant backup, restore, delete, cleanup, settings, credential, Drime token, or command actions."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:94
-msgid "Pairing token"
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php:96
-msgid "Paste the dashboard-generated adb1 token here."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php:97
-msgid "The token is used once to complete pairing with the dashboard, then discarded. The raw token, one-time secret, and polling secret are not stored."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php:101
-msgid "Local opt-in intent"
+#: includes/trait-admin-page-dashboard-settings.php:102
+#: includes/trait-admin-page-dashboard-settings.php:116
+msgid "V2 action opt-in token"
 msgstr ""
 
 #: includes/trait-admin-page-dashboard-settings.php:105
+msgid "This site has opted in to V2 scan/upload-now capability for the paired dashboard."
+msgstr ""
+
+#. translators: %s: action key identifier.
+#: includes/trait-admin-page-dashboard-settings.php:110
+#, php-format
+msgid "Current action key ID: %s. Only signed scan/upload-now intents from the paired dashboard are accepted; restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:117
+msgid "Paste the dashboard-generated adb2a token here."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:118
+msgid "Use this only after read-only pairing is active. It stores the dashboard action public key locally and enables the bounded signed scan/upload-now endpoint for the paired dashboard only."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:120
+msgid "V2 action opt-in confirmation"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:123
+msgid "Opt in to V2 scan/upload-now capability for the paired dashboard."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:131
+#: includes/trait-admin-page-dashboard-settings.php:133
+msgid "Pairing token"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:134
+msgid "Paste the dashboard-generated adb1 token here."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:135
+msgid "The token is used once to complete pairing with the dashboard, then discarded. The raw token, one-time secret, and polling secret are not stored."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:139
+msgid "Local opt-in intent"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:143
 msgid "Opt in to read-only dashboard monitoring for this site."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:107
+#: includes/trait-admin-page-dashboard-settings.php:145
 msgid "This enables only an authenticated, fixed, redacted status endpoint after pairing succeeds. It does not grant backup, restore, delete, cleanup, settings, credential, Drime token, or command actions."
 msgstr ""
 
 #. translators: %s: dashboard origin.
-#: includes/trait-admin-page-dashboard-settings.php:119
+#: includes/trait-admin-page-dashboard-settings.php:157
 #, php-format
 msgid "I confirm this site should pair with %s for read-only monitoring."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:128
+#: includes/trait-admin-page-dashboard-settings.php:166
 msgid "Prepare Pairing Shell"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:129
+#: includes/trait-admin-page-dashboard-settings.php:167
 msgid "Review Dashboard Token"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:131
+#: includes/trait-admin-page-dashboard-settings.php:169
 msgid "Confirm Dashboard Origin"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:133
+#: includes/trait-admin-page-dashboard-settings.php:171
 msgid "Complete Read-Only Pairing"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:135
+#: includes/trait-admin-page-dashboard-settings.php:173
 msgid "Revoke Dashboard Pairing"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:137
+#: includes/trait-admin-page-dashboard-settings.php:175
+msgid "Complete V2 Action Opt-In"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:177
+msgid "Disable V2 Action Opt-In"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:180
 msgid "Keep Dashboard Disabled"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:153
+#: includes/trait-admin-page-dashboard-settings.php:196
 msgid "Ready for pairing shell"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:154
+#: includes/trait-admin-page-dashboard-settings.php:197
 msgid "Dashboard token reviewed"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:155
+#: includes/trait-admin-page-dashboard-settings.php:198
 msgid "Dashboard origin confirmed"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:156
+#: includes/trait-admin-page-dashboard-settings.php:199
 msgid "Paired"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:157
+#: includes/trait-admin-page-dashboard-settings.php:200
 msgid "Revoked"
 msgstr ""
 
@@ -987,19 +1208,27 @@ msgid "The dashboard pairing token could not be accepted. Confirm that it is an 
 msgstr ""
 
 #: includes/trait-admin-page-notices.php:50
-msgid "Settings were not saved because the selected Drime workspace is not allowed for backup destinations. Choose an allowed non-personal workspace, then save again."
+msgid "V2 action opt-in completed. The site now advertises scan/upload-now capability to the paired dashboard, but no action endpoint is exposed yet."
 msgstr ""
 
 #: includes/trait-admin-page-notices.php:51
-msgid "Settings could not be saved. Confirm the site database is writable, then try again."
+msgid "V2 action opt-in could not be completed. Confirm the adb2a token is unexpired, belongs to this paired site, and PHP Sodium support is available."
 msgstr ""
 
 #: includes/trait-admin-page-notices.php:52
+msgid "Settings were not saved because the selected Drime workspace is not allowed for backup destinations. Choose an allowed non-personal workspace, then save again."
+msgstr ""
+
+#: includes/trait-admin-page-notices.php:53
+msgid "Settings could not be saved. Confirm the site database is writable, then try again."
+msgstr ""
+
+#: includes/trait-admin-page-notices.php:54
 msgid "The action could not be completed. Review the recent events, adjust the settings, and try again."
 msgstr ""
 
 #. translators: 1: number of failed files, 2: number of files moved to trash.
-#: includes/trait-admin-page-notices.php:71
+#: includes/trait-admin-page-notices.php:73
 #, php-format
 msgid "Remote retention cleanup could not be completed for %1$d candidate(s). %2$d file(s) were moved to trash. Review recent events before trying again."
 msgstr ""

@@ -1,21 +1,23 @@
 # Central Dashboard Readiness
 
-This document records what Alynt Drime Backups Uploader already provides for a future central monitoring dashboard, and what must remain out of scope until a separate dashboard plugin project is started.
+This document records what Alynt Drime Backups Uploader provides for the separate central monitoring dashboard, and what must remain out of scope unless a later protocol expands the approved boundary.
 
 The dashboard plugin is not part of this repository.
 
 ## Current Uploader-Side Foundation
 
-The uploader already has the foundation a future dashboard would need:
+The uploader has the foundation the dashboard needs:
 
 - A stable non-secret `site_uuid`.
 - A redacted status payload contract in `docs/STATUS_PAYLOAD.md`.
 - WP-CLI status output through `wp alynt-drime-backups status`.
 - Queue, uploaded, failed, active-upload, producer, cron-health, and warning counts.
 - Redaction tests that guard the default status payload against secret and path-like fields.
-- Documentation that keeps restore, deletion, backup execution, and credential mutation out of the first dashboard version.
+- Explicit V2.1 action opt-in for one bounded signed action, `scan_upload_now`.
+- A signed action-intent endpoint that remains inert unless V1 pairing and separate V2.1 opt-in are both active.
+- Documentation that keeps restore, deletion, fresh backup creation, cleanup, settings changes, and credential mutation out of the V2.1 action boundary.
 
-This is enough preparation for now. No central dashboard UI, enrollment flow, REST endpoint, or remote-control feature should be added to this plugin until that separate project is explicitly started.
+No central dashboard UI should be added to this plugin. The dashboard remains a separate project.
 
 The separate dashboard project preparation plan is recorded in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`.
 
@@ -86,7 +88,7 @@ When the dashboard project starts, prefer this order:
 5. Add dashboard polling and stale-site detection.
 6. Add tests for redaction, authentication failure, disabled endpoint behavior, and schema compatibility.
 
-Only after the read-only dashboard is proven should any remote actions be considered.
+V2.1 adds the first remote-action slice only after separate local opt-in and only for `scan_upload_now`. Any broader remote action must receive its own design, threat model, tests, and release plan.
 
 ## Planning Preparation
 
@@ -96,9 +98,9 @@ Only after the read-only dashboard is proven should any remote actions be consid
 - dashboard-owned site registry and status snapshots;
 - explicit site enrollment and pairing;
 - dashboard polling before considering client push;
-- a disabled-by-default uploader endpoint only after authentication, rate limiting, and redaction tests are designed;
-- no remote restore, deletion, backup execution, settings changes, local cleanup, or Drime credential changes in version 1.
+- a disabled-by-default V2.1 action endpoint that requires separate opt-in, signed requests, rate limiting, idempotency, and redaction tests;
+- no remote restore, deletion, fresh backup creation, settings changes, local cleanup, or Drime credential changes in version 1 or V2.1.
 
 ## Current Decision
 
-For the current uploader plugin, preparation is complete when the docs clearly identify the existing status foundation and future boundaries. Starting the central dashboard plugin is a separate future project.
+For the current uploader plugin, dashboard readiness is complete when the docs clearly identify the existing read-only status foundation, the explicit V2.1 action opt-in boundary, and the higher-risk future boundaries.
