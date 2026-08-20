@@ -98,6 +98,49 @@ class HealthSummaryTest extends TestCase {
 		rmdir( $outbox );
 	}
 
+	public function test_status_includes_latest_redacted_remote_action_summary_when_available() {
+		$options = array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(
+				'connection_status'       => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED,
+				'status_endpoint_enabled' => true,
+			),
+			Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME => array(
+				'latest_action' => array(
+					'action_id'   => '11111111-2222-4333-8444-555555555555',
+					'action_type' => 'scan_upload_now',
+					'state'       => 'succeeded',
+					'code'        => 'action_scan_completed',
+					'summary'     => 'Remote scan/upload action scanned for eligible packages and scheduled the upload worker.',
+					'counts'      => array(
+						'found'  => 3,
+						'queued' => 1,
+					),
+					'updated_at'  => time(),
+				),
+			),
+		);
+
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+
+		$outbox     = $this->create_outbox();
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$store      = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+		$summary    = $this->summary( $outbox, null, null, null, '/var/www/example/wp-content/uploads/wpvividbackups', $connection, $store );
+		$status     = $summary->status( 1234567890 );
+
+		$this->assertArrayHasKey( 'last_action', $status['remote_actions'] );
+		$this->assertSame( 'scan_upload_now', $status['remote_actions']['last_action']['action_type'] );
+		$this->assertSame( 'succeeded', $status['remote_actions']['last_action']['state'] );
+		$this->assertSame( 3, $status['remote_actions']['last_action']['counts']['found'] );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
 	public function test_status_includes_redacted_backup_source_evidence() {
 		$outbox = $this->create_outbox();
 		$now    = time();
@@ -449,7 +492,7 @@ class HealthSummaryTest extends TestCase {
 	 *
 	 * @return Alynt_Drime_Backups_Uploader_Health_Summary
 	 */
-	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null, $wpvivid_path = '/var/www/example/wp-content/uploads/wpvividbackups', $dashboard_connection = null ) {
+	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null, $wpvivid_path = '/var/www/example/wp-content/uploads/wpvividbackups', $dashboard_connection = null, $remote_action_store = null ) {
 		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
 		$settings->method( 'site_uuid' )->willReturn( '12345678-1234-4234-9234-123456789abc' );
 		$settings->method( 'get' )->willReturn(
@@ -496,7 +539,7 @@ class HealthSummaryTest extends TestCase {
 		);
 		$cron_health->method( 'is_wp_cron_disabled' )->willReturn( true );
 
-		return new Alynt_Drime_Backups_Uploader_Health_Summary( $settings, $queue, $registry, $cron_health, $dashboard_connection );
+		return new Alynt_Drime_Backups_Uploader_Health_Summary( $settings, $queue, $registry, $cron_health, $dashboard_connection, $remote_action_store );
 	}
 
 	/**

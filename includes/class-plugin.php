@@ -42,6 +42,20 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	private $dashboard_connection;
 
 	/**
+	 * Remote action store.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Remote_Action_Store
+	 */
+	private $remote_action_store;
+
+	/**
+	 * Remote action verifier.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Remote_Action_Verifier
+	 */
+	private $remote_action_verifier;
+
+	/**
 
 	 * Logger.
 	 *
@@ -163,6 +177,20 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	private $dashboard_status_rest_controller;
 
 	/**
+	 * Dashboard action intents REST controller.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller
+	 */
+	private $dashboard_action_intents_rest_controller;
+
+	/**
+	 * Remote action worker.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Remote_Action_Worker
+	 */
+	private $remote_action_worker;
+
+	/**
 
 	 * Admin page.
 	 *
@@ -182,6 +210,10 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 		$this->settings = new Alynt_Drime_Backups_Uploader_Settings();
 
 		$this->dashboard_connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+
+		$this->remote_action_store = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+
+		$this->remote_action_verifier = new Alynt_Drime_Backups_Uploader_Remote_Action_Verifier( $this->dashboard_connection );
 
 		$this->logger = new Alynt_Drime_Backups_Uploader_Logger( $this->settings );
 
@@ -209,9 +241,13 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 
 		$this->cron_health = new Alynt_Drime_Backups_Uploader_Cron_Health();
 
-		$this->health_summary = new Alynt_Drime_Backups_Uploader_Health_Summary( $this->settings, $this->queue, $this->registry, $this->cron_health, $this->dashboard_connection );
+		$this->health_summary = new Alynt_Drime_Backups_Uploader_Health_Summary( $this->settings, $this->queue, $this->registry, $this->cron_health, $this->dashboard_connection, $this->remote_action_store );
 
 		$this->dashboard_status_rest_controller = new Alynt_Drime_Backups_Uploader_Dashboard_Status_REST_Controller( $this->dashboard_connection, $this->health_summary );
+
+		$this->dashboard_action_intents_rest_controller = new Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller( $this->remote_action_verifier, $this->remote_action_store );
+
+		$this->remote_action_worker = new Alynt_Drime_Backups_Uploader_Remote_Action_Worker( $this, $this->remote_action_store );
 
 		$this->admin_page = new Alynt_Drime_Backups_Uploader_Admin_Page( $this );
 
@@ -264,7 +300,11 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 
 		add_action( 'rest_api_init', array( $this->dashboard_status_rest_controller, 'register_routes' ) );
 
+		add_action( 'rest_api_init', array( $this->dashboard_action_intents_rest_controller, 'register_routes' ) );
+
 		$this->cron->hooks();
+
+		$this->remote_action_worker->hooks();
 	}
 
 	/**
@@ -350,6 +390,18 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	public function dashboard_connection() {
 
 		return $this->dashboard_connection;
+	}
+
+	/**
+	 * Remote action store getter.
+	 *
+	 * @return Alynt_Drime_Backups_Uploader_Remote_Action_Store
+	 *
+	 * @since 0.5.12
+	 */
+	public function remote_action_store() {
+
+		return $this->remote_action_store;
 	}
 
 	/**

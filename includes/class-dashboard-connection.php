@@ -422,6 +422,23 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	}
 
 	/**
+	 * Returns the local site UUID used for V2 remote-action binding.
+	 *
+	 * @since 0.5.12
+	 *
+	 * @return string
+	 */
+	public function site_uuid_for_remote_actions() {
+		$settings = get_option( Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME, array() );
+
+		if ( ! is_array( $settings ) || empty( $settings['site_uuid'] ) ) {
+			return '';
+		}
+
+		return $this->sanitize_uuid( (string) $settings['site_uuid'] );
+	}
+
+	/**
 	 * Builds the fixed status endpoint for a client origin.
 	 *
 	 * @since 0.5.3

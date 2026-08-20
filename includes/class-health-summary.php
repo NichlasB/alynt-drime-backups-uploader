@@ -58,6 +58,13 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	private $dashboard_connection;
 
 	/**
+	 * Remote action store.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Remote_Action_Store|null
+	 */
+	private $remote_action_store;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Alynt_Drime_Backups_Uploader_Settings                  $settings Settings.
@@ -65,13 +72,15 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	 * @param Alynt_Drime_Backups_Uploader_Backup_Registry           $registry Registry.
 	 * @param Alynt_Drime_Backups_Uploader_Cron_Health               $cron_health Cron health.
 	 * @param Alynt_Drime_Backups_Uploader_Dashboard_Connection|null $dashboard_connection Dashboard connection.
+	 * @param Alynt_Drime_Backups_Uploader_Remote_Action_Store|null  $remote_action_store Remote action store.
 	 */
-	public function __construct( Alynt_Drime_Backups_Uploader_Settings $settings, Alynt_Drime_Backups_Uploader_Queue $queue, Alynt_Drime_Backups_Uploader_Backup_Registry $registry, Alynt_Drime_Backups_Uploader_Cron_Health $cron_health, $dashboard_connection = null ) {
+	public function __construct( Alynt_Drime_Backups_Uploader_Settings $settings, Alynt_Drime_Backups_Uploader_Queue $queue, Alynt_Drime_Backups_Uploader_Backup_Registry $registry, Alynt_Drime_Backups_Uploader_Cron_Health $cron_health, $dashboard_connection = null, $remote_action_store = null ) {
 		$this->settings             = $settings;
 		$this->queue                = $queue;
 		$this->registry             = $registry;
 		$this->cron_health          = $cron_health;
 		$this->dashboard_connection = $dashboard_connection instanceof Alynt_Drime_Backups_Uploader_Dashboard_Connection ? $dashboard_connection : null;
+		$this->remote_action_store  = $remote_action_store instanceof Alynt_Drime_Backups_Uploader_Remote_Action_Store ? $remote_action_store : null;
 	}
 
 	/**
@@ -123,6 +132,12 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 			$remote_actions = $this->dashboard_connection->remote_action_summary();
 
 			if ( ! empty( $remote_actions ) ) {
+				if ( $this->remote_action_store ) {
+					$latest_action = $this->remote_action_store->latest_action();
+					if ( ! empty( $latest_action ) ) {
+						$remote_actions['last_action'] = $latest_action;
+					}
+				}
 				$status['remote_actions'] = $remote_actions;
 			}
 		}
