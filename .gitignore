@@ -2,6 +2,7 @@ node_modules/
 vendor/
 composer.phar
 coverage/
+build/
 .phpunit.result.cache
 .env
 .env.local
