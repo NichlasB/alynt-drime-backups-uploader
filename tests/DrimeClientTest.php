@@ -156,6 +156,27 @@ class DrimeClientTest extends TestCase {
 		$this->assertSame( array( 'status' => 429 ), $result->get_error_data() );
 	}
 
+	public function test_direct_upload_rejection_returns_api_error_with_status() {
+		$client = new Alynt_Drime_Backups_Uploader_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$method = new ReflectionMethod( $client, 'decode_simple_upload_response' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$method->setAccessible( true );
+		}
+
+		$result = $method->invoke(
+			$client,
+			array(
+				'raw'  => '{"message":"Too many requests."}',
+				'code' => 429,
+			)
+		);
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'alynt_drime_api_error', $result->get_error_code() );
+		$this->assertSame( 'Too many requests.', $result->get_error_message() );
+		$this->assertSame( array( 'status' => 429 ), $result->get_error_data() );
+	}
+
 	public function test_api_requests_use_extended_timeout() {
 		Functions\when( 'get_option' )->alias(
 			function ( $name, $default = array() ) {

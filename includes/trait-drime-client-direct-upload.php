@@ -113,7 +113,7 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 				)
 			);
 
-			return new WP_Error( 'alynt_drime_upload_failed', __( 'The direct upload request failed. Check the server network connection and try again.', 'alynt-drime-backups-uploader' ) );
+			return new WP_Error( 'http_request_failed', __( 'The direct upload request failed. Check the server network connection and try again.', 'alynt-drime-backups-uploader' ) );
 		}
 
 		return array(
@@ -132,7 +132,10 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 		$decoded = json_decode( $response['raw'], true );
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 || ! is_array( $decoded ) ) {
-			return new WP_Error( 'alynt_drime_upload_failed', __( 'Drime rejected the direct upload request.', 'alynt-drime-backups-uploader' ) );
+			$message = is_array( $decoded ) && ! empty( $decoded['message'] ) ? (string) $decoded['message'] : __( 'Drime rejected the direct upload request.', 'alynt-drime-backups-uploader' );
+			$data    = array( 'status' => absint( $response['code'] ) );
+
+			return new WP_Error( 'alynt_drime_api_error', $message, $data );
 		}
 
 		if ( empty( $decoded['fileEntry'] ) || ! is_array( $decoded['fileEntry'] ) ) {
