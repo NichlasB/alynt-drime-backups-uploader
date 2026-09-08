@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.14] - 2026-09-08
+
+### Fixed
+
+- Preserved HTTP status metadata for rejected Drime direct uploads so transient `429` and `5xx` sidecar upload failures can be retried instead of being promoted to final failed-upload notifications.
+
 ### Added
 
 - Added the V2.1 signed dashboard action-intent endpoint for separately opted-in clients. The endpoint accepts only the bounded `scan_upload_now` action, verifies dashboard signatures with the locally stored action public key, enforces idempotency/rate/busy state, schedules local scan/upload work, and reports redacted action summaries.
