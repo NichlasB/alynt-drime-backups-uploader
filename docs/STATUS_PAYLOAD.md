@@ -125,10 +125,51 @@ When present, the summary is redacted and capability-only:
 | `sodium_available` | boolean | Whether this PHP runtime can verify Ed25519 signatures. |
 | `min_interval_seconds` | int | Client-side minimum interval between accepted action requests. |
 | `one_running_action_per_site` | boolean | Whether the client enforces a single running remote action at a time. |
+| `schedule_management` | object | Optional V2.3 preview-only schedule-management capability summary. It reports redacted availability only and does not enable schedule mutation. |
 
 This summary must not include action private keys, raw dashboard tokens, polling secrets, Drime credentials, paths, package names, Drime object IDs, signed URLs, raw client responses, SQL, cookies, nonces, or arbitrary commands.
 
 The V2.1 implementation may report the object with `enabled: false` for paired clients so the dashboard can explain that V2 is understood but not opted in. The action-intent endpoint is registered by the V2.1 plugin but fails closed unless V1 pairing, separate V2 action opt-in, Sodium verification, signature validation, idempotency, rate limiting, and the local action allowlist all pass. The only accepted action is `scan_upload_now`.
+
+### Optional Preview-Only Schedule Management Capability
+
+`remote_actions.schedule_management` is additive in schema version `1`. It is a V2.3 preview-only capability report so the dashboard can display which Alynt-owned schedules may be manageable later. It must not be treated as permission to change schedules, and the uploader must not accept `schedule_preview`, `schedule_apply`, or `schedule_rollback` action types until a later protocol slice explicitly implements them.
+
+The first supported schedule target is:
+
+| Schedule ID | Owner | Description |
+| --- | --- | --- |
+| `alynt_scan_upload` | `alynt_uploader` | The plugin's own WP-Cron scan/upload cadence. |
+
+Capability fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `protocol_version` | int | Remote-action protocol version. Currently `2`. |
+| `capability_version` | int | Schedule capability shape version. Currently `1`. |
+| `enabled` | boolean | True only when remote actions are opted in and the schedule can be safely identified. |
+| `preview_only` | boolean | Always true for this slice. |
+| `apply_supported` | boolean | Always false for this slice. |
+| `rollback_supported` | boolean | Always false for this slice. |
+| `schedules` | array | Redacted schedule capability records. |
+
+Schedule fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `schedule_id` | string | Allowlisted schedule identifier, initially `alynt_scan_upload`. |
+| `label` | string | Operator-facing label. |
+| `owner` | string | Allowlisted owner label, initially `alynt_uploader`. |
+| `manageable` | boolean | Whether the schedule is safely identifiable and remote actions are opted in. |
+| `current_cadence` | string | Allowlisted cadence label such as `every_15_minutes`, or `unknown`. |
+| `current_next_run_at` | string | ISO-8601 UTC next-run timestamp when WordPress reports one, otherwise empty. |
+| `supported_cadences` | array | Allowlisted cadence labels. Initial producer reports only the current supported cadence. |
+| `minimum_interval_seconds` | int | Minimum supported interval for the schedule. |
+| `can_disable` | boolean | False for this slice. |
+| `requires_high_friction_disable` | boolean | True when disabling would require a later explicit high-friction flow. |
+| `rollback_supported` | boolean | False for this slice. |
+
+The schedule capability summary must not include raw cron lines, raw WP-Cron arrays, crontab fragments, usernames, shell commands, local filesystem paths, raw WPvivid option blobs, package names, Drime identifiers, credentials, tokens, cookies, nonces, salts, or arbitrary setting payloads.
 
 ## Local CLI Path Mode
 

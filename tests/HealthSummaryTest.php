@@ -30,6 +30,9 @@ class HealthSummaryTest extends TestCase {
 				return trim( (string) $url );
 			}
 		);
+		Functions\when( 'wp_get_schedule' )->justReturn( false );
+		Functions\when( 'wp_next_scheduled' )->justReturn( false );
+		Functions\when( 'wp_get_schedules' )->justReturn( array() );
 	}
 
 	protected function tearDown(): void {
@@ -92,8 +95,85 @@ class HealthSummaryTest extends TestCase {
 		$this->assertSame( 2, $status['remote_actions']['protocol_version'] );
 		$this->assertFalse( $status['remote_actions']['enabled'] );
 		$this->assertSame( array(), $status['remote_actions']['allowed_actions'] );
+		$this->assertArrayHasKey( 'schedule_management', $status['remote_actions'] );
+		$this->assertFalse( $status['remote_actions']['schedule_management']['enabled'] );
+		$this->assertTrue( $status['remote_actions']['schedule_management']['preview_only'] );
+		$this->assertFalse( $status['remote_actions']['schedule_management']['apply_supported'] );
+		$this->assertFalse( $status['remote_actions']['schedule_management']['rollback_supported'] );
 		$this->assertArrayNotHasKey( 'action_public_key', $status['remote_actions'] );
 		$this->assertArrayNotHasKey( 'action_private_key', $status['remote_actions'] );
+
+		rmdir( $outbox );
+	}
+
+	public function test_status_includes_preview_only_schedule_capability_when_remote_actions_are_enabled() {
+		if ( ! function_exists( 'sodium_crypto_sign_verify_detached' ) ) {
+			$this->markTestSkipped( 'Sodium is required for enabled remote-action capability.' );
+		}
+
+		$options = array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(
+				'connection_status'           => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED,
+				'status_endpoint_enabled'     => true,
+				'remote_actions_enabled'      => true,
+				'action_key_id'               => 'ak_test_123',
+				'action_public_key'           => str_repeat( 'A', 44 ),
+				'dashboard_site_public_id'    => '22222222-2222-4222-8222-222222222222',
+				'expected_client_origin'      => 'https://example.com',
+				'remote_actions_opted_in_at'  => time(),
+			),
+		);
+
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+		Functions\when( 'wp_get_schedule' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 'fifteen_minutes' : false;
+			}
+		);
+		Functions\when( 'wp_next_scheduled' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 1782405900 : false;
+			}
+		);
+
+		$outbox     = $this->create_outbox();
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$summary    = $this->summary( $outbox, null, null, null, '/var/www/example/wp-content/uploads/wpvividbackups', $connection );
+		$status     = $summary->status( 1234567890 );
+
+		$this->assertTrue( $status['remote_actions']['enabled'] );
+		$this->assertSame( array( 'scan_upload_now' ), $status['remote_actions']['allowed_actions'] );
+		$this->assertArrayHasKey( 'schedule_management', $status['remote_actions'] );
+
+		$capability = $status['remote_actions']['schedule_management'];
+		$this->assertSame( 2, $capability['protocol_version'] );
+		$this->assertSame( 1, $capability['capability_version'] );
+		$this->assertTrue( $capability['enabled'] );
+		$this->assertTrue( $capability['preview_only'] );
+		$this->assertFalse( $capability['apply_supported'] );
+		$this->assertFalse( $capability['rollback_supported'] );
+		$this->assertCount( 1, $capability['schedules'] );
+
+		$schedule = $capability['schedules'][0];
+		$this->assertSame( 'alynt_scan_upload', $schedule['schedule_id'] );
+		$this->assertSame( 'alynt_uploader', $schedule['owner'] );
+		$this->assertTrue( $schedule['manageable'] );
+		$this->assertSame( 'every_15_minutes', $schedule['current_cadence'] );
+		$this->assertSame( '2026-06-25T16:45:00+00:00', $schedule['current_next_run_at'] );
+		$this->assertSame( array( 'every_15_minutes' ), $schedule['supported_cadences'] );
+		$this->assertSame( 900, $schedule['minimum_interval_seconds'] );
+		$this->assertFalse( $schedule['can_disable'] );
+		$this->assertTrue( $schedule['requires_high_friction_disable'] );
+		$this->assertFalse( $schedule['rollback_supported'] );
+		$encoded = json_encode( $status );
+		$this->assertStringNotContainsString( 'schedule_preview', $encoded );
+		$this->assertStringNotContainsString( 'schedule_apply', $encoded );
+		$this->assertStringNotContainsString( 'schedule_rollback', $encoded );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
 
 		rmdir( $outbox );
 	}
