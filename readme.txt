@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.14
+Stable tag: 0.5.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, staging and production-simulation read-only restore preflights, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, optional redacted diagnostics for support, and explicit central-dashboard V2.1 action opt-in for the bounded signed `scan_upload_now` action. Broad local deletion, server-package local retention, remote retention, failure emails, and V2.1 remote actions are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, staging and production-simulation read-only restore preflights, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, optional redacted diagnostics for support, explicit central-dashboard V2.1 action opt-in for the bounded signed `scan_upload_now` action, and preview-only V2.3 schedule capability reporting for the Alynt scan/upload schedule. Broad local deletion, server-package local retention, remote retention, failure emails, and V2.1 remote actions are disabled by default.
 
 == Installation ==
 
@@ -49,6 +49,10 @@ The scanner waits until files are old enough and their size is stable across sca
 = Can the central dashboard request a backup now? =
 
 Only after V1 read-only pairing and a separate V2.1 `adb2a` action opt-in. The only accepted action is `scan_upload_now`, which asks this client to scan for ready packages and upload eligible items using its own local settings and Drime credentials. It does not create fresh WPvivid or server-runner backups, restore, delete, clean up, change settings, expose filesystem paths, or give the dashboard Drime credentials.
+
+= Can the central dashboard change this site's schedules? =
+
+No. Version 0.5.15 can report preview-only Alynt scan/upload schedule capability evidence to a paired dashboard, but it does not expose any schedule apply, disable, rollback, settings, credential, backup creation, restore, cleanup, or Drime-token action.
 
 = How are server-runner packages verified before restore staging? =
 
@@ -119,6 +123,10 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+
+= 0.5.15 =
+* Added preview-only V2.3 schedule-management capability reporting for the Alynt scan/upload schedule.
+* Preserved the read-only boundary: no schedule mutation, rollback, backup creation, restore, cleanup, settings, credential, or Drime-token actions are exposed.
 
 = 0.5.13 =
 * Fixed V2.1 Request Backup Now worker completion so a scan with no new candidates succeeds without scheduling unnecessary upload work, and an already scheduled upload worker is treated as available instead of a failure.

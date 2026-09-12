@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.15] - 2026-09-12
+
+### Added
+
+- Added preview-only V2.3 schedule-management capability reporting to the authenticated dashboard status payload for the Alynt scan/upload schedule.
+
+### Changed
+
+- Kept schedule management strictly read-only in this release: the client reports redacted schedule posture only and does not expose schedule mutation, rollback, backup creation, restore, cleanup, settings, credential, or Drime-token actions.
+
 ## [0.5.14] - 2026-09-08
 
 ### Fixed
