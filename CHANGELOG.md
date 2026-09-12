@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.16] - 2026-09-12
+
+### Fixed
+
+- Request JSON API responses for Drime direct sidecar uploads and keep unexpected upload redirects retryable, preventing web-app `302` responses from becoming final failed-upload notifications.
+
 ## [0.5.15] - 2026-09-12
 
 ### Added

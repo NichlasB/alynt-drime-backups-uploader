@@ -39,10 +39,19 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 			return new WP_Error( 'alynt_drime_missing_token', __( 'Add a Drime API token before uploading.', 'alynt-drime-backups-uploader' ) );
 		}
 
-		$response = $this->execute_simple_upload_request( $token, $this->simple_upload_fields( $path, $remote_name, $settings, $parent_id ) );
+		$fields   = $this->simple_upload_fields( $path, $remote_name, $settings, $parent_id );
+		$response = $this->execute_simple_upload_request( $token, $fields );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
+		}
+
+		$redirect_url = $this->safe_simple_upload_redirect_url( $response );
+		if ( '' !== $redirect_url ) {
+			$response = $this->execute_simple_upload_request( $token, $fields, $redirect_url );
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
 		}
 
 		return $this->decode_simple_upload_response( $response );
@@ -80,26 +89,29 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 	/**
 	 * Executes the direct upload request.
 	 *
-	 * @param string              $token API token.
+	 * @param string              $token  API token.
 	 * @param array<string,mixed> $fields Form fields.
-	 * @return array{raw:string,code:int}|WP_Error
+	 * @param string|null         $url    Upload URL.
+	 * @return array{raw:string,code:int,location:string}|WP_Error
 	 */
-	private function execute_simple_upload_request( $token, array $fields ) {
-		$ch = curl_init( self::BASE_URL . '/uploads' );
+	private function execute_simple_upload_request( $token, array $fields, $url = null ) {
+		$ch = curl_init( null === $url ? self::BASE_URL . '/uploads' : $url );
 		if ( false === $ch ) {
 			return new WP_Error( 'alynt_drime_upload_failed', __( 'The direct upload request could not be initialized.', 'alynt-drime-backups-uploader' ) );
 		}
 
 		curl_setopt( $ch, CURLOPT_POST, true );
 		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-		curl_setopt( $ch, CURLOPT_HTTPHEADER, array( 'Authorization: Bearer ' . $token ) );
+		curl_setopt( $ch, CURLOPT_HEADER, true );
+		curl_setopt( $ch, CURLOPT_HTTPHEADER, $this->simple_upload_headers( $token ) );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, $fields );
 		curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 15 );
 		curl_setopt( $ch, CURLOPT_TIMEOUT, 300 );
 
-		$raw   = curl_exec( $ch );
-		$code  = (int) curl_getinfo( $ch, CURLINFO_RESPONSE_CODE );
-		$error = curl_error( $ch );
+		$raw         = curl_exec( $ch );
+		$code        = (int) curl_getinfo( $ch, CURLINFO_RESPONSE_CODE );
+		$header_size = (int) curl_getinfo( $ch, CURLINFO_HEADER_SIZE );
+		$error       = curl_error( $ch );
 		// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated -- Supported PHP 7.4 runtimes still benefit from explicit cURL handle cleanup.
 		curl_close( $ch );
 
@@ -124,16 +136,87 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 			);
 		}
 
+		$raw_string = (string) $raw;
+		$headers    = substr( $raw_string, 0, $header_size );
+		$body       = substr( $raw_string, $header_size );
+
 		return array(
-			'raw'  => (string) $raw,
-			'code' => $code,
+			'raw'      => (string) $body,
+			'code'     => $code,
+			'location' => $this->simple_upload_redirect_location( (string) $headers ),
 		);
+	}
+
+	/**
+	 * Builds direct upload request headers.
+	 *
+	 * @param string $token API token.
+	 * @return array<int,string>
+	 */
+	private function simple_upload_headers( $token ) {
+		return array(
+			'Authorization: Bearer ' . $token,
+			'Accept: application/json',
+		);
+	}
+
+	/**
+	 * Returns a same-host HTTPS redirect URL for a direct upload response.
+	 *
+	 * @param array{raw:string,code:int,location:string} $response Upload response.
+	 * @return string
+	 */
+	private function safe_simple_upload_redirect_url( array $response ) {
+		if ( ! in_array( absint( $response['code'] ), array( 301, 302, 303, 307, 308 ), true ) ) {
+			return '';
+		}
+
+		$location = isset( $response['location'] ) ? trim( (string) $response['location'] ) : '';
+		if ( '' === $location ) {
+			return '';
+		}
+
+		$base_host = parse_url( self::BASE_URL, PHP_URL_HOST );
+		$base_path = (string) parse_url( self::BASE_URL, PHP_URL_PATH );
+
+		if ( 0 === strpos( $location, '/' ) ) {
+			$location = 'https://' . $base_host . $location;
+		}
+
+		$location_host = parse_url( $location, PHP_URL_HOST );
+		$location_path = (string) parse_url( $location, PHP_URL_PATH );
+
+		if ( 'https' !== parse_url( $location, PHP_URL_SCHEME ) || $location_host !== $base_host ) {
+			return '';
+		}
+
+		if ( 0 !== strpos( $location_path, rtrim( $base_path, '/' ) . '/uploads' ) ) {
+			return '';
+		}
+
+		return $location;
+	}
+
+	/**
+	 * Extracts a Location header from a direct upload response.
+	 *
+	 * @param string $headers Response headers.
+	 * @return string
+	 */
+	private function simple_upload_redirect_location( $headers ) {
+		foreach ( preg_split( "/\r\n|\n|\r/", $headers ) as $line ) {
+			if ( 0 === stripos( $line, 'Location:' ) ) {
+				return trim( substr( $line, 9 ) );
+			}
+		}
+
+		return '';
 	}
 
 	/**
 	 * Decodes a direct upload response.
 	 *
-	 * @param array{raw:string,code:int} $response Upload response.
+	 * @param array{raw:string,code:int,location?:string} $response Upload response.
 	 * @return array<string,mixed>|WP_Error
 	 */
 	private function decode_simple_upload_response( array $response ) {

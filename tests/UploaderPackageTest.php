@@ -287,6 +287,51 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$this->assertSame( basename( $catalog ), $failed['sidecar_name'] );
 	}
 
+	public function test_sidecar_direct_upload_redirect_failure_remains_queued() {
+		$manifest            = $this->file . '.manifest.json';
+		$checksum            = $this->file . '.sha256';
+		$this->extra_files[] = $manifest;
+		$this->extra_files[] = $checksum;
+		file_put_contents( $manifest, '{"package_id":"test"}' );
+		file_put_contents( $checksum, 'abc123  ' . basename( $this->file ) );
+
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['attempts'] = 2;
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key'  => 'generic_outbox',
+				'package_id'    => 'site-one-20260626',
+				'manifest_path' => $manifest,
+				'checksum_path' => $checksum,
+			)
+		);
+
+		$client                                      = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$client->duplicate_names[]                   = basename( $this->file );
+		$client->duplicate_names[]                   = basename( $manifest );
+		$client->simple_upload_failures[ basename( $checksum ) ] = new WP_Error(
+			'alynt_drime_api_error',
+			'Drime rejected the direct upload request.',
+			array(
+				'status'   => 302,
+				'endpoint' => '/uploads',
+			)
+		);
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$failed = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ]['sig-one'];
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'alynt_drime_sidecar_upload_failed', $result->get_error_code() );
+		$this->assertArrayHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+		$this->assertSame( 0, $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['attempts'] );
+		$this->assertSame( 302, $failed['error_status'] );
+		$this->assertSame( 'checksum', $failed['sidecar_type'] );
+		$this->assertSame( basename( $checksum ), $failed['sidecar_name'] );
+	}
+
 	public function test_duplicate_wpvivid_file_is_recorded_as_skipped_upload() {
 		$options = $this->base_options();
 		$options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ]['sig-one'] = array(

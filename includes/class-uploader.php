@@ -224,7 +224,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	private function is_transient_upload_error( WP_Error $result ) {
 		$status = $this->upload_error_status( $result );
 		if ( $status > 0 ) {
-			return 408 === $status || 409 === $status || 425 === $status || 429 === $status || ( $status >= 500 && $status < 600 );
+			return in_array( $status, array( 301, 302, 303, 307, 308, 408, 409, 425, 429 ), true ) || ( $status >= 500 && $status < 600 );
 		}
 
 		if ( 'alynt_drime_sidecar_upload_failed' === $result->get_error_code() ) {

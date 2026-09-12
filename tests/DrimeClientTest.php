@@ -188,6 +188,75 @@ class DrimeClientTest extends TestCase {
 		);
 	}
 
+	public function test_direct_upload_redirects_are_limited_to_same_drime_upload_endpoint() {
+		$client = new Alynt_Drime_Backups_Uploader_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$method = new ReflectionMethod( $client, 'safe_simple_upload_redirect_url' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$method->setAccessible( true );
+		}
+
+		$this->assertSame(
+			Alynt_Drime_Backups_Uploader_Drime_Client::BASE_URL . '/uploads/',
+			$method->invoke(
+				$client,
+				array(
+					'raw'      => '',
+					'code'     => 302,
+					'location' => Alynt_Drime_Backups_Uploader_Drime_Client::BASE_URL . '/uploads/',
+				)
+			)
+		);
+		$this->assertSame(
+			'',
+			$method->invoke(
+				$client,
+				array(
+					'raw'      => '',
+					'code'     => 302,
+					'location' => 'https://example.test/api/v1/uploads/',
+				)
+			)
+		);
+		$this->assertSame(
+			'',
+			$method->invoke(
+				$client,
+				array(
+					'raw'      => '',
+					'code'     => 302,
+					'location' => 'http://app.drime.cloud/api/v1/uploads/',
+				)
+			)
+		);
+		$this->assertSame(
+			'',
+			$method->invoke(
+				$client,
+				array(
+					'raw'      => '',
+					'code'     => 302,
+					'location' => 'https://app.drime.cloud/api/v1/me/workspaces',
+				)
+			)
+		);
+	}
+
+	public function test_direct_upload_headers_request_json_api_response() {
+		$client = new Alynt_Drime_Backups_Uploader_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$method = new ReflectionMethod( $client, 'simple_upload_headers' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$method->setAccessible( true );
+		}
+
+		$this->assertSame(
+			array(
+				'Authorization: Bearer test-token',
+				'Accept: application/json',
+			),
+			$method->invoke( $client, 'test-token' )
+		);
+	}
+
 	public function test_api_requests_use_extended_timeout() {
 		Functions\when( 'get_option' )->alias(
 			function ( $name, $default = array() ) {
