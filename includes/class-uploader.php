@@ -166,7 +166,7 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 			! $this->registry->mark_failed(
 				(string) $item['signature'],
 				$result->get_error_message(),
-				$this->registry_item_context( $item, $attempts )
+				array_merge( $this->registry_item_context( $item, $attempts ), $this->upload_error_context( $result ) )
 			)
 		) {
 			return $this->state_persistence_error();
@@ -222,13 +222,64 @@ class Alynt_Drime_Backups_Uploader_Uploader {
 	 * @return bool
 	 */
 	private function is_transient_upload_error( WP_Error $result ) {
-		$status = $result->get_error_data( 'alynt_drime_api_error' );
-		if ( is_array( $status ) && isset( $status['status'] ) ) {
-			$status = absint( $status['status'] );
-			return 429 === $status || ( $status >= 500 && $status < 600 );
+		$status = $this->upload_error_status( $result );
+		if ( $status > 0 ) {
+			return 408 === $status || 409 === $status || 425 === $status || 429 === $status || ( $status >= 500 && $status < 600 );
+		}
+
+		if ( 'alynt_drime_sidecar_upload_failed' === $result->get_error_code() ) {
+			return true;
 		}
 
 		return in_array( $result->get_error_code(), array( 'http_request_failed', 'request_failed' ), true );
+	}
+
+	/**
+	 * Returns sanitized upload-error context for failed registry records.
+	 *
+	 * @param WP_Error $result Upload error.
+	 * @return array<string,mixed>
+	 */
+	private function upload_error_context( WP_Error $result ) {
+		$context = array(
+			'error_code' => $result->get_error_code(),
+		);
+
+		$status = $this->upload_error_status( $result );
+		if ( $status > 0 ) {
+			$context['error_status'] = $status;
+		}
+
+		$data = $result->get_error_data();
+		if ( is_array( $data ) ) {
+			foreach ( array( 'endpoint', 'sidecar_type', 'sidecar_name' ) as $key ) {
+				if ( isset( $data[ $key ] ) && is_scalar( $data[ $key ] ) ) {
+					$context[ $key ] = (string) $data[ $key ];
+				}
+			}
+		}
+
+		return $context;
+	}
+
+	/**
+	 * Returns an HTTP status from an upload error when available.
+	 *
+	 * @param WP_Error $result Upload error.
+	 * @return int
+	 */
+	private function upload_error_status( WP_Error $result ) {
+		$data = $result->get_error_data();
+		if ( is_array( $data ) && isset( $data['status'] ) ) {
+			return absint( $data['status'] );
+		}
+
+		$data = $result->get_error_data( 'alynt_drime_api_error' );
+		if ( is_array( $data ) && isset( $data['status'] ) ) {
+			return absint( $data['status'] );
+		}
+
+		return 0;
 	}
 
 	/**

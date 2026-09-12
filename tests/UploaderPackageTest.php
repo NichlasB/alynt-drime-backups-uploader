@@ -230,6 +230,63 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$this->assertArrayNotHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
 	}
 
+	public function test_sidecar_direct_upload_failure_remains_queued_and_stores_context() {
+		$manifest            = $this->file . '.manifest.json';
+		$checksum            = $this->file . '.sha256';
+		$index               = $this->file . '.remote-index.json';
+		$catalog             = $this->file . '.remote-catalog.json';
+		$this->extra_files[] = $manifest;
+		$this->extra_files[] = $checksum;
+		$this->extra_files[] = $index;
+		$this->extra_files[] = $catalog;
+		file_put_contents( $manifest, '{"package_id":"test"}' );
+		file_put_contents( $checksum, 'abc123  ' . basename( $this->file ) );
+		file_put_contents( $index, '{"schema_version":1,"index_type":"single_package_restore_index","package_count":1}' );
+		file_put_contents( $catalog, '{"schema_version":1,"catalog_type":"folder_package_catalog_snapshot","package_count":1}' );
+
+		$options = $this->base_options();
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['attempts'] = 2;
+		$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'] = array_merge(
+			$options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one'],
+			array(
+				'producer_key'        => 'generic_outbox',
+				'package_id'          => 'site-one-20260626',
+				'manifest_path'       => $manifest,
+				'checksum_path'       => $checksum,
+				'remote_index_path'   => $index,
+				'remote_catalog_path' => $catalog,
+			)
+		);
+
+		$client                    = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$client->duplicate_names[] = basename( $this->file );
+		$client->duplicate_names[] = basename( $manifest );
+		$client->duplicate_names[] = basename( $checksum );
+		$client->duplicate_names[] = basename( $index );
+		$client->simple_upload_failures[ basename( $catalog ) ] = new WP_Error(
+			'alynt_drime_api_error',
+			'Drime rejected the direct upload request.',
+			array(
+				'status'   => 502,
+				'endpoint' => '/uploads',
+			)
+		);
+		$uploader = $this->uploader_with_options( $options, $client );
+
+		$result = $uploader->upload_next();
+		$failed = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ]['sig-one'];
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'alynt_drime_sidecar_upload_failed', $result->get_error_code() );
+		$this->assertArrayHasKey( 'sig-one', $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ] );
+		$this->assertSame( 0, $options[ Alynt_Drime_Backups_Uploader_Queue::QUEUE_OPTION ]['sig-one']['attempts'] );
+		$this->assertSame( 'alynt_drime_sidecar_upload_failed', $failed['error_code'] );
+		$this->assertSame( 502, $failed['error_status'] );
+		$this->assertSame( '/uploads', $failed['endpoint'] );
+		$this->assertSame( 'remote_catalog', $failed['sidecar_type'] );
+		$this->assertSame( basename( $catalog ), $failed['sidecar_name'] );
+	}
+
 	public function test_duplicate_wpvivid_file_is_recorded_as_skipped_upload() {
 		$options = $this->base_options();
 		$options[ Alynt_Drime_Backups_Uploader_Backup_Registry::FAILED_OPTION ]['sig-one'] = array(

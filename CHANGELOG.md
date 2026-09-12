@@ -14,6 +14,10 @@ All notable changes to this project will be documented in this file.
 
 - Kept schedule management strictly read-only in this release: the client reports redacted schedule posture only and does not expose schedule mutation, rollback, backup creation, restore, cleanup, settings, credential, or Drime-token actions.
 
+### Fixed
+
+- Preserved direct-upload HTTP status, endpoint, and sidecar context for wrapped sidecar upload failures so transient Drime sidecar failures stay retryable and leave clearer diagnostics.
+
 ## [0.5.14] - 2026-09-08
 
 ### Fixed

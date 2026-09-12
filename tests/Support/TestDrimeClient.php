@@ -30,6 +30,7 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	public $simple_upload_names    = array();
 	public $simple_upload_parent_ids = array();
 	public $simple_upload_settings = array();
+	public $simple_upload_failures = array();
 	public $duplicate_names        = array();
 	public $upload_part_callback   = null;
 	private $next_folder_id        = 654;
@@ -58,6 +59,10 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 		$this->simple_upload_names[] = $remote_name;
 		$this->simple_upload_parent_ids[] = $parent_id;
 		$this->simple_upload_settings[] = $settings_override;
+
+		if ( isset( $this->simple_upload_failures[ $remote_name ] ) ) {
+			return $this->simple_upload_failures[ $remote_name ];
+		}
 
 		return array(
 			'fileEntry' => array(

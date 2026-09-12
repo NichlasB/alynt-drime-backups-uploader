@@ -53,7 +53,7 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Sidecars {
 
 			$result = $this->simple_upload_item( $path, $remote_name, (int) $size, $parent_id, $settings );
 			if ( is_wp_error( $result ) ) {
-				return $result;
+				return $this->sidecar_upload_error( $result, $kind, $remote_name );
 			}
 
 			$result['type'] = $kind;
@@ -99,6 +99,24 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Sidecars {
 		}
 
 		return $paths;
+	}
+
+	/**
+	 * Wraps sidecar upload failures with safe context for retry and diagnostics.
+	 *
+	 * @param WP_Error $error       Upload error.
+	 * @param string   $kind        Sidecar kind.
+	 * @param string   $remote_name Remote name.
+	 * @return WP_Error
+	 */
+	private function sidecar_upload_error( WP_Error $error, $kind, $remote_name ) {
+		$data = $error->get_error_data();
+		$data = is_array( $data ) ? $data : array();
+
+		$data['sidecar_type'] = sanitize_key( $kind );
+		$data['sidecar_name'] = sanitize_text_field( basename( $remote_name ) );
+
+		return new WP_Error( 'alynt_drime_sidecar_upload_failed', $error->get_error_message(), $data );
 	}
 
 	/**

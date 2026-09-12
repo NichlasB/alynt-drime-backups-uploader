@@ -127,6 +127,7 @@ No public custom actions or filters are exposed.
 = 0.5.15 =
 * Added preview-only V2.3 schedule-management capability reporting for the Alynt scan/upload schedule.
 * Preserved the read-only boundary: no schedule mutation, rollback, backup creation, restore, cleanup, settings, credential, or Drime-token actions are exposed.
+* Fixed wrapped sidecar direct-upload failures so transient Drime sidecar errors preserve HTTP status, endpoint, and sidecar diagnostics and remain retryable.
 
 = 0.5.13 =
 * Fixed V2.1 Request Backup Now worker completion so a scan with no new candidates succeeds without scheduling unnecessary upload work, and an already scheduled upload worker is treated as available instead of a failure.

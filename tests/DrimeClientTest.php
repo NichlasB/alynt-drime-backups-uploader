@@ -153,7 +153,12 @@ class DrimeClientTest extends TestCase {
 		$this->assertTrue( is_wp_error( $result ) );
 		$this->assertSame( 'alynt_drime_api_error', $result->get_error_code() );
 		$this->assertSame( 'Too many requests.', $result->get_error_message() );
-		$this->assertSame( array( 'status' => 429 ), $result->get_error_data() );
+		$this->assertSame(
+			array(
+				'status' => 429,
+			),
+			$result->get_error_data()
+		);
 	}
 
 	public function test_direct_upload_rejection_returns_api_error_with_status() {
@@ -174,7 +179,13 @@ class DrimeClientTest extends TestCase {
 		$this->assertTrue( is_wp_error( $result ) );
 		$this->assertSame( 'alynt_drime_api_error', $result->get_error_code() );
 		$this->assertSame( 'Too many requests.', $result->get_error_message() );
-		$this->assertSame( array( 'status' => 429 ), $result->get_error_data() );
+		$this->assertSame(
+			array(
+				'status'   => 429,
+				'endpoint' => '/uploads',
+			),
+			$result->get_error_data()
+		);
 	}
 
 	public function test_api_requests_use_extended_timeout() {
