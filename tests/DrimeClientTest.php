@@ -257,6 +257,20 @@ class DrimeClientTest extends TestCase {
 		);
 	}
 
+	public function test_direct_upload_mime_types_match_sidecars_and_archives() {
+		$client = new Alynt_Drime_Backups_Uploader_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
+		$method = new ReflectionMethod( $client, 'simple_upload_mime_type' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$method->setAccessible( true );
+		}
+
+		$this->assertSame( 'text/plain', $method->invoke( $client, 'backup.tar.gz.sha256' ) );
+		$this->assertSame( 'text/plain', $method->invoke( $client, 'backup.tar.gz.remote-index.json' ) );
+		$this->assertSame( 'application/gzip', $method->invoke( $client, 'backup.tar.gz' ) );
+		$this->assertSame( 'application/zip', $method->invoke( $client, 'backup.zip' ) );
+		$this->assertSame( 'application/octet-stream', $method->invoke( $client, 'backup.custom' ) );
+	}
+
 	public function test_api_requests_use_extended_timeout() {
 		Functions\when( 'get_option' )->alias(
 			function ( $name, $default = array() ) {

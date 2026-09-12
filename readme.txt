@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.16
+Stable tag: 0.5.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,7 +52,7 @@ Only after V1 read-only pairing and a separate V2.1 `adb2a` action opt-in. The o
 
 = Can the central dashboard change this site's schedules? =
 
-No. Version 0.5.16 can report preview-only Alynt scan/upload schedule capability evidence to a paired dashboard, but it does not expose any schedule apply, disable, rollback, settings, credential, backup creation, restore, cleanup, or Drime-token action.
+No. Version 0.5.17 can report preview-only Alynt scan/upload schedule capability evidence to a paired dashboard, but it does not expose any schedule apply, disable, rollback, settings, credential, backup creation, restore, cleanup, or Drime-token action.
 
 = How are server-runner packages verified before restore staging? =
 
@@ -123,6 +123,10 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+
+= 0.5.17 =
+* Fixed server package sidecar uploads by routing restore-critical metadata through the multipart/S3 upload flow while preserving the normal sidecar filenames.
+* Improved remaining direct uploads so they request JSON API responses and keep unexpected redirect responses retryable instead of becoming final failed-upload notifications.
 
 = 0.5.16 =
 * Fixed Drime sidecar direct uploads so they request JSON API responses and keep unexpected redirect responses retryable instead of becoming final failed-upload notifications.

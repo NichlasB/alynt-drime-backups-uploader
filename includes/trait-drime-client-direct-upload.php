@@ -68,7 +68,7 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 	 */
 	private function simple_upload_fields( $path, $remote_name, array $settings, $parent_id = null ) {
 		$fields = array(
-			'file'        => curl_file_create( $path, 'application/zip', $remote_name ),
+			'file'        => curl_file_create( $path, $this->simple_upload_mime_type( $remote_name ), $remote_name ),
 			'workspaceId' => (string) absint( $settings['workspace_id'] ),
 		);
 
@@ -145,6 +145,38 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 			'code'     => $code,
 			'location' => $this->simple_upload_redirect_location( (string) $headers ),
 		);
+	}
+
+	/**
+	 * Returns a conservative MIME type for direct uploads.
+	 *
+	 * @param string $remote_name Remote display name.
+	 * @return string
+	 */
+	private function simple_upload_mime_type( $remote_name ) {
+		$remote_name = strtolower( (string) $remote_name );
+
+		if ( preg_match( '/\.json$/', $remote_name ) ) {
+			return 'text/plain';
+		}
+
+		if ( preg_match( '/\.(sha256|txt|log)$/', $remote_name ) ) {
+			return 'text/plain';
+		}
+
+		if ( preg_match( '/\.(tar\.gz|tgz)$/', $remote_name ) ) {
+			return 'application/gzip';
+		}
+
+		if ( preg_match( '/\.tar$/', $remote_name ) ) {
+			return 'application/x-tar';
+		}
+
+		if ( preg_match( '/\.zip$/', $remote_name ) ) {
+			return 'application/zip';
+		}
+
+		return 'application/octet-stream';
 	}
 
 	/**
@@ -229,6 +261,10 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 				'endpoint' => '/uploads',
 			);
 
+			if ( is_array( $decoded ) && isset( $decoded['errors'] ) ) {
+				$data['error_detail'] = $this->compact_simple_upload_errors( $decoded['errors'] );
+			}
+
 			return new WP_Error( 'alynt_drime_api_error', $message, $data );
 		}
 
@@ -237,5 +273,30 @@ trait Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload {
 		}
 
 		return $decoded;
+	}
+
+	/**
+	 * Compacts direct upload validation errors for non-secret diagnostics.
+	 *
+	 * @param mixed $errors Error payload.
+	 * @return string
+	 */
+	private function compact_simple_upload_errors( $errors ) {
+		if ( ! is_array( $errors ) ) {
+			return '';
+		}
+
+		$messages = array();
+		foreach ( $errors as $field => $field_errors ) {
+			if ( is_array( $field_errors ) ) {
+				$field_errors = implode( ' ', array_filter( array_map( 'strval', $field_errors ) ) );
+			}
+
+			if ( is_scalar( $field_errors ) && '' !== trim( (string) $field_errors ) ) {
+				$messages[] = sanitize_text_field( (string) $field . ': ' . (string) $field_errors );
+			}
+		}
+
+		return substr( implode( ' | ', $messages ), 0, 500 );
 	}
 }

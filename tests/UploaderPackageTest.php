@@ -103,13 +103,15 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$this->assertFalse( is_wp_error( $result ) );
 		$this->assertSame(
 			array(
+				basename( $this->file ),
 				basename( $manifest ),
 				basename( $checksum ),
 				basename( $index ),
 				basename( $catalog ),
 			),
-			$client->simple_upload_names
+			$client->create_s3_names
 		);
+		$this->assertSame( array(), $client->simple_upload_names );
 		$this->assertCount( 4, $record['sidecars'] );
 		$this->assertSame( 'manifest', $record['sidecars'][0]['type'] );
 		$this->assertSame( basename( $manifest ), $record['sidecars'][0]['remote_name'] );
@@ -161,7 +163,7 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$this->assertSame( 656, $client->validate_parent_id );
 		$this->assertSame( 656, $client->create_multipart_parent_id );
 		$this->assertSame( 656, $client->create_s3_parent_id );
-		$this->assertSame( array( 656, 656 ), $client->simple_upload_parent_ids );
+		$this->assertSame( array(), $client->simple_upload_parent_ids );
 		$this->assertSame( '/site1.com/server/site-one-20260626', $record['destination_relative_path'] );
 		$this->assertArrayHasKey( $this->location_key( 1, '/site1.com/server/site-one-20260626', 321 ), $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::DRIME_LOCATION_OPTION ] );
 	}
@@ -217,13 +219,13 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$record = $options[ Alynt_Drime_Backups_Uploader_Backup_Registry::UPLOADED_OPTION ]['sig-one'];
 
 		$this->assertFalse( is_wp_error( $result ) );
-		$this->assertSame( 0, $client->create_multipart_calls );
+		$this->assertSame( 2, $client->create_multipart_calls );
 		$this->assertSame(
 			array(
 				basename( $manifest ),
 				basename( $checksum ),
 			),
-			$client->simple_upload_names
+			$client->create_s3_names
 		);
 		$this->assertTrue( $record['drime']['duplicate_skipped'] );
 		$this->assertCount( 2, $record['sidecars'] );
@@ -263,7 +265,7 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$client->duplicate_names[] = basename( $manifest );
 		$client->duplicate_names[] = basename( $checksum );
 		$client->duplicate_names[] = basename( $index );
-		$client->simple_upload_failures[ basename( $catalog ) ] = new WP_Error(
+		$client->create_s3_failures[ basename( $catalog ) ] = new WP_Error(
 			'alynt_drime_api_error',
 			'Drime rejected the direct upload request.',
 			array(
@@ -310,7 +312,7 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$client                                      = new Alynt_Drime_Backups_Uploader_Test_Drime_Client( new Alynt_Drime_Backups_Uploader_Settings() );
 		$client->duplicate_names[]                   = basename( $this->file );
 		$client->duplicate_names[]                   = basename( $manifest );
-		$client->simple_upload_failures[ basename( $checksum ) ] = new WP_Error(
+		$client->create_s3_failures[ basename( $checksum ) ] = new WP_Error(
 			'alynt_drime_api_error',
 			'Drime rejected the direct upload request.',
 			array(
@@ -395,10 +397,11 @@ class UploaderPackageTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Cas
 		$this->assertFalse( is_wp_error( $result ) );
 		$this->assertSame(
 			array(
+				basename( $this->file ),
 				basename( $manifest ),
 				basename( $checksum ),
 			),
-			$client->simple_upload_names
+			$client->create_s3_names
 		);
 	}
 }

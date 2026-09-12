@@ -51,7 +51,7 @@ trait Alynt_Drime_Backups_Uploader_Uploader_Sidecars {
 				continue;
 			}
 
-			$result = $this->simple_upload_item( $path, $remote_name, (int) $size, $parent_id, $settings );
+			$result = $this->multipart_upload( $path, $remote_name, (int) $size, $item, $parent_id, $settings );
 			if ( is_wp_error( $result ) ) {
 				return $this->sidecar_upload_error( $result, $kind, $remote_name );
 			}

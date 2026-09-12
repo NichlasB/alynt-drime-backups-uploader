@@ -127,7 +127,14 @@ trait Alynt_Server_Backup_Runner_Package_Restore {
 		}
 
 		foreach ( $names as $name ) {
-			$entry = $this->find_drime_entry_by_name( $entries, $name );
+			$entry = array();
+			foreach ( $this->fetch_remote_name_candidates( $name ) as $remote_name ) {
+				$entry = $this->find_drime_entry_by_name( $entries, $remote_name );
+				if ( ! empty( $entry ) ) {
+					break;
+				}
+			}
+
 			if ( empty( $entry['hash'] ) ) {
 				$this->error( 'Required remote package file was not found: ' . $name );
 				return 1;

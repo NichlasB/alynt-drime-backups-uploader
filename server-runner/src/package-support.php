@@ -292,6 +292,22 @@ trait Alynt_Server_Backup_Runner_Package_Support {
 		);
 	}
 
+	/**
+	 * Returns accepted remote filenames for one local fetch destination.
+	 *
+	 * @param string $name Local package or sidecar filename.
+	 * @return array<int,string>
+	 */
+	private function fetch_remote_name_candidates( $name ) {
+		$names = array( (string) $name );
+
+		if ( preg_match( '/\.(manifest\.json|sha256)$/', (string) $name ) ) {
+			$names[] = (string) $name . '.txt';
+		}
+
+		return $names;
+	}
+
 
 	/**
 	 * Validates archive members before restore extraction.

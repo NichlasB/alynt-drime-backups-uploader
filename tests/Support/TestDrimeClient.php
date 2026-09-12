@@ -14,7 +14,10 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	public $validate_files         = array();
 	public $validate_parent_id     = null;
 	public $create_multipart_parent_id = null;
+	public $create_multipart_names = array();
 	public $create_s3_parent_id    = null;
+	public $create_s3_names        = array();
+	public $create_s3_failures     = array();
 	public $create_multipart_settings = array();
 	public $create_s3_settings     = array();
 	public $entry_parent_id        = 0;
@@ -74,8 +77,9 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	}
 
 	public function create_multipart_upload( $filename, $size, $extension, $parent_id = null, ?array $settings_override = null ) {
-		unset( $filename, $size, $extension );
+		unset( $size, $extension );
 		++$this->create_multipart_calls;
+		$this->create_multipart_names[] = $filename;
 		$this->create_multipart_parent_id = $parent_id;
 		$this->create_multipart_settings  = null === $settings_override ? array() : $settings_override;
 		return array(
@@ -135,9 +139,14 @@ class Alynt_Drime_Backups_Uploader_Test_Drime_Client extends Alynt_Drime_Backups
 	}
 
 	public function create_s3_entry( $key, $client_name, $size, $extension, $parent_id = null, ?array $settings_override = null ) {
-		unset( $key, $client_name, $size, $extension );
+		unset( $key, $size, $extension );
+		$this->create_s3_names[]     = $client_name;
 		$this->create_s3_parent_id = $parent_id;
 		$this->create_s3_settings  = null === $settings_override ? array() : $settings_override;
+		if ( isset( $this->create_s3_failures[ $client_name ] ) ) {
+			return $this->create_s3_failures[ $client_name ];
+		}
+
 		$file_entry = array( 'id' => 123 );
 
 		if ( $this->entry_parent_id > 0 ) {

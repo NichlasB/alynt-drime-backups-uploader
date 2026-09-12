@@ -707,7 +707,14 @@ trait Alynt_Server_Backup_Runner_Package_Restore {
 		}
 
 		foreach ( $names as $name ) {
-			$entry = $this->find_drime_entry_by_name( $entries, $name );
+			$entry = array();
+			foreach ( $this->fetch_remote_name_candidates( $name ) as $remote_name ) {
+				$entry = $this->find_drime_entry_by_name( $entries, $remote_name );
+				if ( ! empty( $entry ) ) {
+					break;
+				}
+			}
+
 			if ( empty( $entry['hash'] ) ) {
 				$this->error( 'Required remote package file was not found: ' . $name );
 				return 1;
@@ -5245,6 +5252,22 @@ trait Alynt_Server_Backup_Runner_Package_Support {
 			$archive . '.manifest.json',
 			$archive . '.sha256',
 		);
+	}
+
+	/**
+	 * Returns accepted remote filenames for one local fetch destination.
+	 *
+	 * @param string $name Local package or sidecar filename.
+	 * @return array<int,string>
+	 */
+	private function fetch_remote_name_candidates( $name ) {
+		$names = array( (string) $name );
+
+		if ( preg_match( '/\.(manifest\.json|sha256)$/', (string) $name ) ) {
+			$names[] = (string) $name . '.txt';
+		}
+
+		return $names;
 	}
 
 

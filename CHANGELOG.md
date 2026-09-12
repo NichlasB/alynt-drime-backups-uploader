@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.17] - 2026-09-12
+
+### Fixed
+
+- Route server package sidecars through the multipart/S3 upload flow instead of Drime's direct upload endpoint, preserving restore-critical sidecar filenames while avoiding direct-upload `302`/`422` failures.
+- Request JSON API responses for remaining direct uploads and keep unexpected upload redirects retryable, preventing web-app redirects from becoming final failed-upload notifications.
+
 ## [0.5.16] - 2026-09-12
 
 ### Fixed
