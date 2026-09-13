@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.18] - 2026-09-13
+
+### Added
+
+- Added signed V2.3 `schedule_preview` action support for separately opted-in dashboard clients. The client verifies the signed intent, stores a bounded redacted action record, and computes Alynt scan/upload schedule preview evidence without changing the schedule.
+
+### Changed
+
+- Expanded action opt-in tokens and status capability reporting to advertise both `scan_upload_now` and `schedule_preview` while preserving compatibility with existing `scan_upload_now`-only tokens.
+- Kept schedule management read-only: this release does not apply, disable, roll back, or otherwise change schedules, and it does not expose backup creation, restore, cleanup, settings, credential, Drime-token, or arbitrary-command actions.
+- Regenerated the uploader POT with release-artifact directories excluded.
+
 ## [0.5.17] - 2026-09-12
 
 ### Fixed
