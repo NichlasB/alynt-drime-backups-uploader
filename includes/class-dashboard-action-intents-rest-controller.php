@@ -115,7 +115,7 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 			return $this->response_from_record( $record, 409 );
 		}
 
-		$record    = $this->store->upsert_action( $intent, 'accepted', 'action_accepted', __( 'Remote action accepted and queued for local scan/upload processing.', 'alynt-drime-backups-uploader' ) );
+		$record    = $this->store->upsert_action( $intent, 'accepted', 'action_accepted', $this->accepted_summary( $intent['action_type'] ) );
 		$scheduled = $this->schedule_worker( $record['action_id'] );
 
 		if ( is_wp_error( $scheduled ) ) {
@@ -160,6 +160,20 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Returns an action-specific accepted summary.
+	 *
+	 * @param string $action_type Action type.
+	 * @return string
+	 */
+	private function accepted_summary( $action_type ) {
+		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW === $action_type ) {
+			return __( 'Remote schedule preview accepted and queued for local read-only processing.', 'alynt-drime-backups-uploader' );
+		}
+
+		return __( 'Remote action accepted and queued for local scan/upload processing.', 'alynt-drime-backups-uploader' );
 	}
 
 	/**

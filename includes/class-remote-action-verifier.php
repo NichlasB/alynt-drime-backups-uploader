@@ -139,7 +139,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			return $this->error( 'action_body_invalid', __( 'The remote action body is not valid JSON.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
-		$allowed = array( 'protocol_version', 'action_id', 'dashboard_site_public_id', 'site_uuid', 'action_type', 'requested_at', 'expires_at', 'idempotency_key' );
+		$allowed = array( 'protocol_version', 'action_id', 'dashboard_site_public_id', 'site_uuid', 'action_type', 'requested_at', 'expires_at', 'idempotency_key', 'schedule_preview' );
 		$extra   = array_diff( array_keys( $body ), $allowed );
 		if ( ! empty( $extra ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
@@ -156,17 +156,67 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			'idempotency_key'          => isset( $body['idempotency_key'] ) ? $this->sanitize_identifier( (string) $body['idempotency_key'] ) : '',
 		);
 
+		$supported_action_types = array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
+		);
+
 		if (
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_PROTOCOL_VERSION !== $parsed['protocol_version']
 			|| '' === $parsed['action_id']
 			|| '' === $parsed['dashboard_site_public_id']
 			|| '' === $parsed['site_uuid']
-			|| Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW !== $parsed['action_type']
+			|| ! in_array( $parsed['action_type'], $supported_action_types, true )
 			|| '' === $parsed['idempotency_key']
 			|| false === strtotime( $parsed['requested_at'] )
 			|| false === strtotime( $parsed['expires_at'] )
 		) {
 			return $this->error( 'action_intent_invalid', __( 'The remote action intent is not supported by this client site.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW === $parsed['action_type'] ) {
+			if ( empty( $body['schedule_preview'] ) || ! is_array( $body['schedule_preview'] ) ) {
+				return $this->error( 'action_schedule_preview_invalid', __( 'The schedule preview request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
+			}
+
+			$schedule_preview = $this->parse_schedule_preview( $body['schedule_preview'] );
+			if ( is_wp_error( $schedule_preview ) ) {
+				return $schedule_preview;
+			}
+
+			$parsed['schedule_preview'] = $schedule_preview;
+		} elseif ( array_key_exists( 'schedule_preview', $body ) ) {
+			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		return $parsed;
+	}
+
+	/**
+	 * Parses and validates the bounded schedule preview request.
+	 *
+	 * @param array<string,mixed> $preview Preview request.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	private function parse_schedule_preview( array $preview ) {
+		$allowed = array( 'schedule_id', 'proposed_cadence', 'capability_version' );
+		$extra   = array_diff( array_keys( $preview ), $allowed );
+		if ( ! empty( $extra ) ) {
+			return $this->error( 'action_schedule_preview_keys_invalid', __( 'The schedule preview request contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		$parsed = array(
+			'schedule_id'        => isset( $preview['schedule_id'] ) ? sanitize_key( (string) $preview['schedule_id'] ) : '',
+			'proposed_cadence'   => isset( $preview['proposed_cadence'] ) ? sanitize_key( (string) $preview['proposed_cadence'] ) : '',
+			'capability_version' => isset( $preview['capability_version'] ) ? absint( $preview['capability_version'] ) : 0,
+		);
+
+		if (
+			'alynt_scan_upload' !== $parsed['schedule_id']
+			|| 1 !== $parsed['capability_version']
+			|| ! in_array( $parsed['proposed_cadence'], array( 'every_15_minutes', 'every_30_minutes', 'hourly' ), true )
+		) {
+			return $this->error( 'action_schedule_preview_invalid', __( 'The schedule preview request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
 		return $parsed;

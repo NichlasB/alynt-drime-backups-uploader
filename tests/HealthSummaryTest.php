@@ -146,7 +146,7 @@ class HealthSummaryTest extends TestCase {
 		$status     = $summary->status( 1234567890 );
 
 		$this->assertTrue( $status['remote_actions']['enabled'] );
-		$this->assertSame( array( 'scan_upload_now' ), $status['remote_actions']['allowed_actions'] );
+		$this->assertSame( array( 'scan_upload_now', 'schedule_preview' ), $status['remote_actions']['allowed_actions'] );
 		$this->assertArrayHasKey( 'schedule_management', $status['remote_actions'] );
 
 		$capability = $status['remote_actions']['schedule_management'];
@@ -164,13 +164,12 @@ class HealthSummaryTest extends TestCase {
 		$this->assertTrue( $schedule['manageable'] );
 		$this->assertSame( 'every_15_minutes', $schedule['current_cadence'] );
 		$this->assertSame( '2026-06-25T16:45:00+00:00', $schedule['current_next_run_at'] );
-		$this->assertSame( array( 'every_15_minutes' ), $schedule['supported_cadences'] );
+		$this->assertSame( array( 'every_15_minutes', 'every_30_minutes', 'hourly' ), $schedule['supported_cadences'] );
 		$this->assertSame( 900, $schedule['minimum_interval_seconds'] );
 		$this->assertFalse( $schedule['can_disable'] );
 		$this->assertTrue( $schedule['requires_high_friction_disable'] );
 		$this->assertFalse( $schedule['rollback_supported'] );
 		$encoded = json_encode( $status );
-		$this->assertStringNotContainsString( 'schedule_preview', $encoded );
 		$this->assertStringNotContainsString( 'schedule_apply', $encoded );
 		$this->assertStringNotContainsString( 'schedule_rollback', $encoded );
 		$this->assert_status_payload_contains_no_sensitive_keys( $status );

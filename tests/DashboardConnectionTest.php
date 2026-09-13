@@ -384,7 +384,7 @@ class DashboardConnectionTest extends TestCase {
 
 		$this->assertSame( $enabled, $summary['enabled'] );
 		$this->assertSame(
-			$enabled ? array( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW ) : array(),
+			$enabled ? array( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW, Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW ) : array(),
 			$summary['allowed_actions']
 		);
 		$this->assertSame( $enabled ? 'ak_test' : '', $summary['key_id'] );

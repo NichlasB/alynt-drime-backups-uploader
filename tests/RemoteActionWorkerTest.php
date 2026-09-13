@@ -100,6 +100,55 @@ class RemoteActionWorkerTest extends TestCase {
 		$this->assertSame( 'action_scan_completed', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['code'] );
 	}
 
+	public function test_schedule_preview_succeeds_without_scanning_or_scheduling_upload_worker() {
+		$options         = $this->options_with_accepted_schedule_preview_action();
+		$schedule_called = false;
+		$this->mock_options( $options );
+
+		Functions\when( 'wp_get_schedule' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 'fifteen_minutes' : false;
+			}
+		);
+		Functions\when( 'wp_get_schedules' )->justReturn(
+			array(
+				'fifteen_minutes' => array(
+					'interval' => 900,
+				),
+			)
+		);
+		Functions\when( 'wp_next_scheduled' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 1782405900 : false;
+			}
+		);
+		Functions\when( 'wp_schedule_single_event' )->alias(
+			function () use ( &$schedule_called ) {
+				$schedule_called = true;
+				return false;
+			}
+		);
+
+		$worker = new Alynt_Drime_Backups_Uploader_Remote_Action_Worker(
+			$this->plugin_for_schedule_preview(),
+			new Alynt_Drime_Backups_Uploader_Remote_Action_Store()
+		);
+
+		$worker->handle( '6b650de7-c7ee-4f90-a5cb-59c4753a2c50' );
+
+		$latest = $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action'];
+		$this->assertFalse( $schedule_called );
+		$this->assertSame( 'succeeded', $latest['state'] );
+		$this->assertSame( 'schedule_preview_ready', $latest['code'] );
+		$this->assertSame( 'schedule_preview', $latest['action_type'] );
+		$this->assertSame( 'every_15_minutes', $latest['schedule_preview']['current_cadence'] );
+		$this->assertSame( 'every_30_minutes', $latest['schedule_preview']['proposed_cadence'] );
+		$this->assertSame( '2026-06-25T16:45:00+00:00', $latest['schedule_preview']['current_next_run_at'] );
+		$this->assertTrue( $latest['schedule_preview']['would_change'] );
+		$this->assertFalse( $latest['schedule_preview']['apply_supported'] );
+		$this->assertFalse( $latest['schedule_preview']['rollback_supported'] );
+	}
+
 	/**
 	 * Mocks option storage.
 	 *
@@ -138,6 +187,27 @@ class RemoteActionWorkerTest extends TestCase {
 	}
 
 	/**
+	 * Creates a plugin mock for schedule preview without scan/upload side effects.
+	 *
+	 * @return Alynt_Drime_Backups_Uploader_Plugin
+	 */
+	private function plugin_for_schedule_preview() {
+		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
+		$settings->expects( $this->once() )->method( 'get' )->willReturn(
+			array(
+				'auto_scan_enabled' => true,
+			)
+		);
+
+		$plugin = $this->createMock( Alynt_Drime_Backups_Uploader_Plugin::class );
+		$plugin->expects( $this->once() )->method( 'settings' )->willReturn( $settings );
+		$plugin->expects( $this->never() )->method( 'cron_health' );
+		$plugin->expects( $this->never() )->method( 'scan_and_queue' );
+
+		return $plugin;
+	}
+
+	/**
 	 * Returns option state with one accepted remote action.
 	 *
 	 * @return array<string,mixed>
@@ -154,6 +224,49 @@ class RemoteActionWorkerTest extends TestCase {
 			'code'                     => 'action_accepted',
 			'summary'                  => 'Remote action accepted and queued for local scan/upload processing.',
 			'counts'                   => array(),
+			'created_at'               => time(),
+			'updated_at'               => time(),
+			'retry_after'              => 0,
+		);
+
+		return array(
+			Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME => array(
+				'records'          => array(
+					$action_id => $record,
+				),
+				'idempotency'      => array(),
+				'running_lock'     => array(
+					'action_id'  => '',
+					'expires_at' => 0,
+				),
+				'last_accepted_at' => array(),
+				'latest_action'    => $record,
+			),
+		);
+	}
+
+	/**
+	 * Returns option state with one accepted schedule preview action.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function options_with_accepted_schedule_preview_action() {
+		$action_id = '6b650de7-c7ee-4f90-a5cb-59c4753a2c50';
+		$record    = array(
+			'action_id'                => $action_id,
+			'action_type'              => 'schedule_preview',
+			'dashboard_site_public_id' => 'd277c82f-6d75-4d80-93ff-fa842dcdd80b',
+			'idempotency_key'          => 'idem-preview-1',
+			'request_hash'             => str_repeat( 'b', 64 ),
+			'state'                    => 'accepted',
+			'code'                     => 'action_accepted',
+			'summary'                  => 'Remote schedule preview accepted and queued for local read-only processing.',
+			'counts'                   => array(),
+			'schedule_preview'         => array(
+				'schedule_id'        => 'alynt_scan_upload',
+				'proposed_cadence'   => 'every_30_minutes',
+				'capability_version' => 1,
+			),
 			'created_at'               => time(),
 			'updated_at'               => time(),
 			'retry_after'              => 0,

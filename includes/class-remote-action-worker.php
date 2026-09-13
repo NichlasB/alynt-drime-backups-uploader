@@ -69,6 +69,14 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 			return;
 		}
 
+		$action_type = isset( $record['action_type'] ) ? sanitize_key( (string) $record['action_type'] ) : '';
+
+		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW === $action_type ) {
+			$this->handle_schedule_preview( $record );
+			$this->store->release_lock( $record['action_id'] );
+			return;
+		}
+
 		$this->store->upsert_action( $record, 'running', 'action_running', __( 'Remote scan/upload action is running on the client site.', 'alynt-drime-backups-uploader' ) );
 
 		try {
@@ -100,6 +108,136 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 		} finally {
 			$this->store->release_lock( $record['action_id'] );
 		}
+	}
+
+	/**
+	 * Builds and stores a read-only schedule preview.
+	 *
+	 * @param array<string,mixed> $record Action record.
+	 * @return void
+	 */
+	private function handle_schedule_preview( array $record ) {
+		$this->store->upsert_action( $record, 'running', 'schedule_preview_running', __( 'Remote schedule preview action is running on the client site.', 'alynt-drime-backups-uploader' ) );
+
+		try {
+			$preview = $this->schedule_preview_from_record( $record );
+			if ( is_wp_error( $preview ) ) {
+				$this->store->upsert_action( $record, 'failed', $preview->get_error_code(), __( 'Remote schedule preview could not be completed.', 'alynt-drime-backups-uploader' ) );
+				return;
+			}
+
+			$this->store->upsert_action( $record, 'succeeded', 'schedule_preview_ready', __( 'Schedule preview is ready. No schedule was changed.', 'alynt-drime-backups-uploader' ), array(), 0, $preview );
+		} catch ( Exception $exception ) {
+			unset( $exception );
+			$this->store->upsert_action( $record, 'failed', 'schedule_preview_failed', __( 'Remote schedule preview failed without storing unsafe error details.', 'alynt-drime-backups-uploader' ) );
+		}
+	}
+
+	/**
+	 * Returns a bounded non-mutating preview for the Alynt scan/upload schedule.
+	 *
+	 * @param array<string,mixed> $record Action record.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	private function schedule_preview_from_record( array $record ) {
+		$request = isset( $record['schedule_preview'] ) && is_array( $record['schedule_preview'] ) ? $record['schedule_preview'] : array();
+		if ( 'alynt_scan_upload' !== ( isset( $request['schedule_id'] ) ? sanitize_key( (string) $request['schedule_id'] ) : '' ) ) {
+			return new WP_Error( 'schedule_preview_schedule_invalid', __( 'The requested schedule is not supported.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$proposed_cadence = isset( $request['proposed_cadence'] ) ? sanitize_key( (string) $request['proposed_cadence'] ) : '';
+		$proposed_seconds = $this->cadence_seconds( $proposed_cadence );
+		if ( $proposed_seconds <= 0 ) {
+			return new WP_Error( 'schedule_preview_cadence_invalid', __( 'The requested cadence is not supported.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$current_recurrence = function_exists( 'wp_get_schedule' ) ? wp_get_schedule( Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT ) : '';
+		$current_seconds    = is_string( $current_recurrence ) ? $this->recurrence_interval_seconds( $current_recurrence ) : 0;
+		$current_cadence    = $this->cadence_from_seconds( $current_seconds );
+		$current_next_run   = function_exists( 'wp_next_scheduled' ) ? wp_next_scheduled( Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT ) : false;
+		$settings           = $this->plugin->settings()->get();
+		$warnings           = array();
+
+		if ( empty( $settings['auto_scan_enabled'] ) ) {
+			$warnings[] = 'auto_scan_disabled';
+		}
+		if ( 'unknown' === $current_cadence ) {
+			$warnings[] = 'current_cadence_unknown';
+		}
+		if ( ! is_numeric( $current_next_run ) || $current_next_run <= 0 ) {
+			$warnings[] = 'current_next_run_unavailable';
+		}
+
+		return array(
+			'schedule_id'                   => 'alynt_scan_upload',
+			'label'                         => __( 'Alynt scan/upload', 'alynt-drime-backups-uploader' ),
+			'owner'                         => 'alynt_uploader',
+			'current_cadence'               => $current_cadence,
+			'proposed_cadence'              => $proposed_cadence,
+			'current_next_run_at'           => is_numeric( $current_next_run ) && $current_next_run > 0 ? gmdate( 'c', (int) $current_next_run ) : '',
+			'proposed_next_run_estimate_at' => gmdate( 'c', time() + $proposed_seconds ),
+			'would_change'                  => $current_cadence !== $proposed_cadence,
+			'apply_supported'               => false,
+			'rollback_supported'            => false,
+			'warnings'                      => $warnings,
+		);
+	}
+
+	/**
+	 * Maps a supported cadence label to seconds.
+	 *
+	 * @param string $cadence Cadence label.
+	 * @return int
+	 */
+	private function cadence_seconds( $cadence ) {
+		$map = array(
+			'every_15_minutes' => 900,
+			'every_30_minutes' => 1800,
+			'hourly'           => 3600,
+		);
+
+		$cadence = sanitize_key( (string) $cadence );
+
+		return isset( $map[ $cadence ] ) ? $map[ $cadence ] : 0;
+	}
+
+	/**
+	 * Maps a recurrence name to an interval in seconds.
+	 *
+	 * @param string $recurrence Recurrence name.
+	 * @return int
+	 */
+	private function recurrence_interval_seconds( $recurrence ) {
+		if ( 'fifteen_minutes' === $recurrence ) {
+			return 900;
+		}
+
+		if ( function_exists( 'wp_get_schedules' ) ) {
+			$schedules = wp_get_schedules();
+			if ( is_array( $schedules ) && isset( $schedules[ $recurrence ]['interval'] ) ) {
+				return max( 0, absint( $schedules[ $recurrence ]['interval'] ) );
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Maps an interval in seconds to the public cadence label.
+	 *
+	 * @param int $seconds Interval seconds.
+	 * @return string
+	 */
+	private function cadence_from_seconds( $seconds ) {
+		$map = array(
+			900  => 'every_15_minutes',
+			1800 => 'every_30_minutes',
+			3600 => 'hourly',
+		);
+
+		$seconds = absint( $seconds );
+
+		return isset( $map[ $seconds ] ) ? $map[ $seconds ] : 'unknown';
 	}
 
 	/**

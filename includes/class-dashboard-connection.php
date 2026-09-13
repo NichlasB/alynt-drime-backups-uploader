@@ -34,6 +34,7 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	const STATUS_SCHEMA_VERSION   = 1;
 	const ACTION_PROTOCOL_VERSION = 2;
 	const ACTION_SCAN_UPLOAD_NOW  = 'scan_upload_now';
+	const ACTION_SCHEDULE_PREVIEW = 'schedule_preview';
 	const ACTION_MIN_INTERVAL     = 3600;
 	const ACTION_TOKEN_PURPOSE    = 'remote_action_opt_in';
 
@@ -414,7 +415,7 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			'protocol_version'            => self::ACTION_PROTOCOL_VERSION,
 			'enabled'                     => $enabled,
 			'key_id'                      => $enabled ? (string) $state['action_key_id'] : '',
-			'allowed_actions'             => $enabled ? array( self::ACTION_SCAN_UPLOAD_NOW ) : array(),
+			'allowed_actions'             => $enabled ? array( self::ACTION_SCAN_UPLOAD_NOW, self::ACTION_SCHEDULE_PREVIEW ) : array(),
 			'sodium_available'            => $this->is_sodium_available(),
 			'min_interval_seconds'        => self::ACTION_MIN_INTERVAL,
 			'one_running_action_per_site' => true,
@@ -622,7 +623,11 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 
 		$allowed_actions = isset( $payload['allowed_actions'] ) && is_array( $payload['allowed_actions'] ) ? array_values( array_filter( array_map( 'sanitize_key', $payload['allowed_actions'] ) ) ) : array();
 		$allowed_actions = array_values( array_unique( $allowed_actions ) );
-		if ( array( self::ACTION_SCAN_UPLOAD_NOW ) !== $allowed_actions ) {
+		sort( $allowed_actions );
+		$supported_actions = array( self::ACTION_SCAN_UPLOAD_NOW, self::ACTION_SCHEDULE_PREVIEW );
+		sort( $supported_actions );
+		$legacy_actions = array( self::ACTION_SCAN_UPLOAD_NOW );
+		if ( $legacy_actions !== $allowed_actions && $supported_actions !== $allowed_actions ) {
 			return new WP_Error( 'action_opt_in_allowed_actions_invalid', __( 'The dashboard action opt-in token does not grant the supported scan/upload-now action.', 'alynt-drime-backups-uploader' ) );
 		}
 

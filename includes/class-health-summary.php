@@ -291,7 +291,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 			'manageable'                     => (bool) $manageable,
 			'current_cadence'                => $cadence,
 			'current_next_run_at'            => is_numeric( $next_run ) && $next_run > 0 ? gmdate( 'c', (int) $next_run ) : '',
-			'supported_cadences'             => array( 'every_15_minutes' ),
+			'supported_cadences'             => array( 'every_15_minutes', 'every_30_minutes', 'hourly' ),
 			'minimum_interval_seconds'       => 900,
 			'can_disable'                    => false,
 			'requires_high_friction_disable' => true,

@@ -232,6 +232,114 @@ class RemoteActionIntentEndpointTest extends TestCase {
 		$this->assertStringNotContainsString( $options['_private_key'], json_encode( $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ] ) );
 	}
 
+	public function test_valid_schedule_preview_intent_is_accepted_without_unsafe_details() {
+		if ( ! $this->sodium_supported() ) {
+			$this->markTestSkipped( 'Sodium signing is not available.' );
+		}
+
+		$options   = $this->options_with_remote_actions();
+		$scheduled = array();
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+		Functions\when( 'update_option' )->alias(
+			function ( $name, $value ) use ( &$options ) {
+				$options[ $name ] = $value;
+				return true;
+			}
+		);
+		Functions\when( 'wp_schedule_single_event' )->alias(
+			function ( $timestamp, $hook, $args = array() ) use ( &$scheduled ) {
+				$scheduled[] = array(
+					'timestamp' => $timestamp,
+					'hook'      => $hook,
+					'args'      => $args,
+				);
+
+				return true;
+			}
+		);
+
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$store      = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+		$verifier   = new Alynt_Drime_Backups_Uploader_Remote_Action_Verifier( $connection );
+		$controller = new Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller( $verifier, $store );
+		$body       = $this->intent_body(
+			array(
+				'action_type'      => 'schedule_preview',
+				'idempotency_key'  => 'adb-act-preview-1',
+				'schedule_preview' => array(
+					'schedule_id'        => 'alynt_scan_upload',
+					'proposed_cadence'   => 'every_30_minutes',
+					'capability_version' => 1,
+				),
+			)
+		);
+
+		$response = $controller->handle_action_intent( $this->signed_request( $verifier, $options['_private_key'], $body ) );
+
+		$this->assertSame( 202, $response['status'] );
+		$this->assertSame( 'accepted', $response['data']['state'] );
+		$this->assertSame( 'action_accepted', $response['data']['code'] );
+		$this->assertCount( 1, $scheduled );
+		$this->assertSame( Alynt_Drime_Backups_Uploader_Remote_Action_Worker::EVENT, $scheduled[0]['hook'] );
+		$this->assertSame( 'schedule_preview', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['action_type'] );
+		$this->assertSame( 'every_30_minutes', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['schedule_preview']['proposed_cadence'] );
+		$this->assertStringNotContainsString( $options['_private_key'], json_encode( $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ] ) );
+	}
+
+	public function test_schedule_preview_rejects_unknown_cadence_before_work_is_scheduled() {
+		if ( ! $this->sodium_supported() ) {
+			$this->markTestSkipped( 'Sodium signing is not available.' );
+		}
+
+		$options   = $this->options_with_remote_actions();
+		$scheduled = array();
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+		Functions\when( 'update_option' )->alias(
+			function ( $name, $value ) use ( &$options ) {
+				$options[ $name ] = $value;
+				return true;
+			}
+		);
+		Functions\when( 'wp_schedule_single_event' )->alias(
+			function () use ( &$scheduled ) {
+				$scheduled[] = true;
+
+				return true;
+			}
+		);
+
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$store      = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+		$verifier   = new Alynt_Drime_Backups_Uploader_Remote_Action_Verifier( $connection );
+		$controller = new Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller( $verifier, $store );
+		$body       = $this->intent_body(
+			array(
+				'action_type'      => 'schedule_preview',
+				'idempotency_key'  => 'adb-act-preview-2',
+				'schedule_preview' => array(
+					'schedule_id'        => 'alynt_scan_upload',
+					'proposed_cadence'   => 'raw_cron',
+					'capability_version' => 1,
+				),
+			)
+		);
+
+		$response = $controller->handle_action_intent( $this->signed_request( $verifier, $options['_private_key'], $body ) );
+
+		$this->assertSame( 400, $response['status'] );
+		$this->assertSame( 'rejected', $response['data']['state'] );
+		$this->assertSame( 'action_schedule_preview_invalid', $response['data']['code'] );
+		$this->assertCount( 0, $scheduled );
+	}
+
 	public function test_schedule_failure_records_failed_state_without_claiming_acceptance() {
 		if ( ! $this->sodium_supported() ) {
 			$this->markTestSkipped( 'Sodium signing is not available.' );
