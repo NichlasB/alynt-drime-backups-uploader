@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-08-20
+Updated: 2026-09-15
 
 ## Purpose
 
@@ -10,10 +10,10 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
-- Current released stable version: `v0.5.18`.
+- Current released stable version: `v0.5.19`.
 - Accepted production baseline: the uploader is production-ready for the validated backup upload, server-runner, WPvivid, status payload, and operator-assisted restore-support scope. Actual-production restore enrollment remains a separate gated project and is not enabled by default.
-- `v0.5.18` is the current released baseline. Recent releases through `v0.5.18` added schedule-aware dashboard evidence, preview-only Alynt scan/upload schedule capability reporting, and signed non-mutating `schedule_preview`.
-- Unreleased local development now contains the uploader-side V2.3 `schedule_apply` implementation for the plugin-owned `alynt_scan_upload` cadence only. It remains disabled by default and has not been released, deployed, or live-piloted.
+- `v0.5.19` is the current released baseline. Recent releases through `v0.5.18` added schedule-aware dashboard evidence, preview-only Alynt scan/upload schedule capability reporting, and signed non-mutating `schedule_preview`; `v0.5.19` added guarded `schedule_apply` for the plugin-owned `alynt_scan_upload` cadence only.
+- V2.3 `schedule_apply` remains disabled by default on each client. It requires V1 pairing, V2 action opt-in, separate local Schedule Apply opt-in, a fresh matching preview, and local schedule revalidation. Broad client enablement remains a separate per-site approval gate.
 - `v0.5.10` and `v0.5.11` completed the dashboard/WPvivid schedule-aware status payload work: the authenticated read-only status payload can report redacted WPvivid schedule policy, including WPvivid Pro/addon schedule detection, so central monitoring can use site-specific freshness expectations.
 - `v0.5.9` reduced noisy final failed-upload notifications for transient Drime `429` and `5xx` responses and stopped automatic scans from requeueing signatures already in the failed-upload registry.
 - Production-simulation restore automation and its release-quality corrections were released in `v0.5.1`; GitHub CI passed on PHP 7.4 and 8.3, the generated release asset was audited, and a real WordPress Updates-screen rehearsal upgraded `plugin-tester.local` from `0.4.0` to `0.5.1` while preserving the active plugin state.
@@ -21,7 +21,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Automatic local server outbox retention after confirmed upload has been released in `v0.3.2`; feature-stage reviews, local validation, staging retention test, staging cleanup/recovery verification, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Mandatory per-package Drime folders for server/generic-outbox uploads were released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
-- Current release candidate: none. The latest released baseline is `v0.5.18`, which adds signed non-mutating V2.3 `schedule_preview` for paired dashboard sites that separately opt in to remote actions.
+- Current release candidate: none. The latest released baseline is `v0.5.19`, which adds separately opted-in guarded V2.3 `schedule_apply` for paired dashboard sites that separately opt in to remote actions and local Schedule Apply.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
 - Real WordPress Plugins-screen and Alynt Plugin Updater rehearsals have passed across the release line, including the validated `v0.5.1` and `v0.5.2` baselines and later live rollout/update releases through `v0.5.18`.
 
@@ -131,7 +131,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - No public dashboard REST endpoint is enabled by default.
 - The read-only dashboard status endpoint requires explicit pairing/enrollment, scoped authentication, and redaction enforcement.
 - V2.1 adds a separate, disabled-by-default signed action-intent endpoint for the single bounded `scan_upload_now` request after administrator opt-in.
-- V2.3 adds preview-only Alynt scan/upload schedule capability reporting and a signed non-mutating `schedule_preview` action after administrator opt-in.
+- V2.3 adds preview-only Alynt scan/upload schedule capability reporting, a signed non-mutating `schedule_preview` action after administrator opt-in, and separately opted-in guarded `schedule_apply` for the plugin-owned Alynt scan/upload cadence only.
 - Separate dashboard plugin preparation is documented historically in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`; the active dashboard implementation now lives in the dashboard repository.
 
 ### Dashboard WPvivid Schedule-Aware Status Payload Slice
@@ -161,7 +161,7 @@ Acceptance:
 
 ### Dashboard V2.3 Schedule Apply Implementation Slice
 
-Status: uploader-side local implementation in progress; not released, deployed, or live-piloted.
+Status: released in uploader `v0.5.19`. Client-side Schedule Apply remains disabled by default and requires separate local opt-in before capability reporting advertises apply support.
 
 Goal:
 
@@ -169,8 +169,8 @@ Goal:
 - Limit the first apply target to this plugin's own `alynt_scan_upload` cadence.
 - Require a fresh successful `schedule_preview` before apply.
 - Revalidate local schedule state on the client before mutation.
-- Capture local rollback metadata before changing the schedule.
-- Keep `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, backup creation, cleanup/delete, restore, arbitrary commands, and Drime credential changes out of scope.
+- Keep rollback execution, WPvivid schedule changes, server-runner schedule changes, backup creation, cleanup/delete, restore, arbitrary commands, and Drime credential changes out of scope.
+- Treat rollback metadata capture/readiness as the next separate planning slice; it must not enable `schedule_rollback`.
 
 Planning/scope artifact:
 
@@ -184,7 +184,7 @@ Implemented local direction:
 - Apply only allowlisted cadence labels through WordPress scheduling APIs.
 - Store only redacted action evidence in status/action history.
 
-Current implemented boundaries:
+Released boundaries:
 
 - `schedule_apply` is absent unless local schedule mutation is explicitly enabled.
 - `schedule_apply` targets only `alynt_scan_upload`.
@@ -192,15 +192,36 @@ Current implemented boundaries:
 - Preview expiry is 15 minutes.
 - Client revalidates the current schedule fingerprint before mutation.
 - Client uses WordPress scheduling APIs and allowlisted cadence labels only.
-- Rollback metadata is stored as redacted action evidence, but runtime rollback remains unavailable.
+- Apply result reports rollback unavailable; dedicated rollback metadata capture/readiness remains a future slice.
 - WPvivid schedule changes, server-runner schedule changes, disable/pause, fresh backup creation, restore, delete, cleanup, arbitrary settings, filesystem paths, commands, and Drime credential actions remain unavailable.
 
-Remaining before release/deploy:
+Remaining after release/deploy:
 
-- Complete applicable ds2 feature workflow reviews.
-- Run the required pre-release checks.
-- Implement matching dashboard-side controls in the dashboard plugin before any end-to-end pilot.
-- Release/deploy only after explicit approval.
+- Keep client-side Schedule Apply disabled unless a site is explicitly approved for local opt-in.
+- Monitor live/pilot evidence for schedule-apply stability.
+- Plan rollback metadata capture/readiness as a separate slice before any `schedule_rollback` action is designed.
+- Keep `schedule_rollback` unavailable until separately approved, implemented, reviewed, released, and proven.
+
+### Dashboard V2.3 Rollback Metadata Capture / Readiness Slice
+
+Status: planning-only. No runtime rollback behavior is approved.
+
+Goal:
+
+- Capture bounded support-safe previous-schedule metadata after a successful `schedule_apply` so future rollback design has reliable evidence.
+- Keep `schedule_rollback` rejected/unavailable.
+- Avoid exposing raw cron arrays, option blobs, filesystem paths, shell/user context, backup package names, Drime IDs, credentials, or arbitrary settings.
+
+Planning/scope artifact:
+
+- Dashboard `docs/V2_3_ROLLBACK_METADATA_CAPTURE_PLAN.md`
+
+Initial direction:
+
+- Store metadata in the existing bounded remote-action state/audit store if possible.
+- Report only redacted scalar fields such as previous cadence, applied cadence, before/after fingerprints, capture time, expiry time, and an explicit unavailable reason such as `rollback_runtime_not_implemented`.
+- Keep `rollback_available` false until a later approved runtime rollback slice exists.
+- Add tests proving metadata capture does not make `schedule_rollback` dispatchable.
 
 ### Release And Validation Workflows
 
