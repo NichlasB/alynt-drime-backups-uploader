@@ -506,6 +506,18 @@ class Alynt_Drime_Backups_Uploader_Plugin {
 	}
 
 	/**
+	 * Cron getter.
+	 *
+	 * @return Alynt_Drime_Backups_Uploader_Cron
+	 *
+	 * @since 0.5.19
+	 */
+	public function cron() {
+
+		return $this->cron;
+	}
+
+	/**
 	 * Remote retention getter.
 	 *
 	 * @return Alynt_Drime_Backups_Uploader_Remote_Retention

@@ -139,7 +139,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			return $this->error( 'action_body_invalid', __( 'The remote action body is not valid JSON.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
-		$allowed = array( 'protocol_version', 'action_id', 'dashboard_site_public_id', 'site_uuid', 'action_type', 'requested_at', 'expires_at', 'idempotency_key', 'schedule_preview' );
+		$allowed = array( 'protocol_version', 'action_id', 'dashboard_site_public_id', 'site_uuid', 'action_type', 'requested_at', 'expires_at', 'idempotency_key', 'schedule_preview', 'schedule_apply' );
 		$extra   = array_diff( array_keys( $body ), $allowed );
 		if ( ! empty( $extra ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
@@ -159,6 +159,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 		$supported_action_types = array(
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW,
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY,
 		);
 
 		if (
@@ -185,7 +186,24 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			}
 
 			$parsed['schedule_preview'] = $schedule_preview;
+		} elseif ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY === $parsed['action_type'] ) {
+			if ( ! $this->connection->is_schedule_mutation_enabled() ) {
+				return $this->error( 'schedule_apply_unavailable', __( 'Schedule apply is not enabled on this client site.', 'alynt-drime-backups-uploader' ), 403 );
+			}
+
+			if ( empty( $body['schedule_apply'] ) || ! is_array( $body['schedule_apply'] ) ) {
+				return $this->error( 'action_schedule_apply_invalid', __( 'The schedule apply request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
+			}
+
+			$schedule_apply = $this->parse_schedule_apply( $body['schedule_apply'] );
+			if ( is_wp_error( $schedule_apply ) ) {
+				return $schedule_apply;
+			}
+
+			$parsed['schedule_apply'] = $schedule_apply;
 		} elseif ( array_key_exists( 'schedule_preview', $body ) ) {
+			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
+		} elseif ( array_key_exists( 'schedule_apply', $body ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
@@ -217,6 +235,42 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			|| ! in_array( $parsed['proposed_cadence'], array( 'every_15_minutes', 'every_30_minutes', 'hourly' ), true )
 		) {
 			return $this->error( 'action_schedule_preview_invalid', __( 'The schedule preview request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		return $parsed;
+	}
+
+	/**
+	 * Parses and validates the bounded schedule apply request.
+	 *
+	 * @since 0.5.19
+	 *
+	 * @param array<string,mixed> $apply Apply request.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	private function parse_schedule_apply( array $apply ) {
+		$allowed = array( 'schedule_id', 'proposed_cadence', 'capability_version', 'preview_action_id', 'preview_fingerprint' );
+		$extra   = array_diff( array_keys( $apply ), $allowed );
+		if ( ! empty( $extra ) ) {
+			return $this->error( 'action_schedule_apply_keys_invalid', __( 'The schedule apply request contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		$parsed = array(
+			'schedule_id'         => isset( $apply['schedule_id'] ) ? sanitize_key( (string) $apply['schedule_id'] ) : '',
+			'proposed_cadence'    => isset( $apply['proposed_cadence'] ) ? sanitize_key( (string) $apply['proposed_cadence'] ) : '',
+			'capability_version'  => isset( $apply['capability_version'] ) ? absint( $apply['capability_version'] ) : 0,
+			'preview_action_id'   => isset( $apply['preview_action_id'] ) ? $this->sanitize_uuid( (string) $apply['preview_action_id'] ) : '',
+			'preview_fingerprint' => isset( $apply['preview_fingerprint'] ) ? $this->sanitize_hash( (string) $apply['preview_fingerprint'] ) : '',
+		);
+
+		if (
+			'alynt_scan_upload' !== $parsed['schedule_id']
+			|| 1 !== $parsed['capability_version']
+			|| ! in_array( $parsed['proposed_cadence'], array( 'every_15_minutes', 'every_30_minutes', 'hourly' ), true )
+			|| '' === $parsed['preview_action_id']
+			|| '' === $parsed['preview_fingerprint']
+		) {
+			return $this->error( 'action_schedule_apply_invalid', __( 'The schedule apply request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
 		return $parsed;
@@ -388,6 +442,18 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 	 */
 	private function sanitize_identifier( $identifier ) {
 		return substr( preg_replace( '/[^A-Za-z0-9_\-\.]/', '', (string) $identifier ), 0, 128 );
+	}
+
+	/**
+	 * Sanitizes a SHA-256 hash.
+	 *
+	 * @since 0.5.19
+	 *
+	 * @param string $hash Hash.
+	 * @return string
+	 */
+	private function sanitize_hash( $hash ) {
+		return preg_match( '/^[a-f0-9]{64}$/', (string) $hash ) ? (string) $hash : '';
 	}
 
 	/**

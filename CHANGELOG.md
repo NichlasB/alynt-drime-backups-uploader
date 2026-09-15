@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added the guarded V2.3 `schedule_apply` client implementation for the plugin-owned `alynt_scan_upload` cadence only. It remains disabled by default, requires V1 pairing, V2 action opt-in, a separate local schedule-apply opt-in, a fresh matching `schedule_preview`, current schedule fingerprint revalidation, and redacted action history.
+
+### Changed
+
+- Expanded V2 action capability reporting so `schedule_apply` appears only when the local schedule-apply policy is enabled. Existing clients remain preview-only by default.
+- Added a 30-minute WP-Cron schedule for the allowlisted Alynt scan/upload cadence choices.
+
 ## [0.5.18] - 2026-09-13
 
 ### Added

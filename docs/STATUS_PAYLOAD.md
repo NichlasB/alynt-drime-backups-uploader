@@ -121,11 +121,11 @@ When present, the summary is redacted and capability-only:
 | `protocol_version` | int | Remote-action protocol version. Currently `2`. |
 | `enabled` | boolean | True only when the client has explicitly opted in to V2 actions, has a stored dashboard action public key, and Sodium verification is available. |
 | `key_id` | string | Non-secret dashboard action key ID when enabled; empty when disabled. |
-| `allowed_actions` | array | Allowlisted action types when enabled. Current released actions include `scan_upload_now` and, when schedule capability is available, non-mutating `schedule_preview`. Future `schedule_apply` must remain absent until a separate local schedule-mutation policy and implementation are approved. |
+| `allowed_actions` | array | Allowlisted action types when enabled. Current released actions include `scan_upload_now` and, when schedule capability is available, non-mutating `schedule_preview`. The unreleased `schedule_apply` slice adds `schedule_apply` only when a separate local schedule-mutation policy is enabled. |
 | `sodium_available` | boolean | Whether this PHP runtime can verify Ed25519 signatures. |
 | `min_interval_seconds` | int | Client-side minimum interval between accepted action requests. |
 | `one_running_action_per_site` | boolean | Whether the client enforces a single running remote action at a time. |
-| `schedule_management` | object | Optional V2.3 schedule-management capability summary. Released versions report preview capability and non-mutating `schedule_preview`; future schedule mutation must remain disabled unless a separate `schedule_apply` slice is implemented and locally enabled. |
+| `schedule_management` | object | Optional V2.3 schedule-management capability summary. Released versions report preview capability and non-mutating `schedule_preview`; the unreleased `schedule_apply` slice remains disabled unless a separate local schedule-mutation policy is enabled. |
 
 This summary must not include action private keys, raw dashboard tokens, polling secrets, Drime credentials, paths, package names, Drime object IDs, signed URLs, raw client responses, SQL, cookies, nonces, or arbitrary commands.
 
@@ -133,7 +133,7 @@ The V2.1 implementation may report the object with `enabled: false` for paired c
 
 ### Optional Schedule Management Capability
 
-`remote_actions.schedule_management` is additive in schema version `1`. Released versions can report the Alynt scan/upload schedule and accept a signed non-mutating `schedule_preview` action after separate V2 action opt-in. It must not be treated as permission to change schedules. The uploader must not accept `schedule_apply` or `schedule_rollback` until later protocol slices explicitly implement and locally enable them.
+`remote_actions.schedule_management` is additive in schema version `1`. Released versions can report the Alynt scan/upload schedule and accept a signed non-mutating `schedule_preview` action after separate V2 action opt-in. The unreleased `schedule_apply` slice can accept a signed apply request only after a separate local schedule-mutation policy is enabled. The uploader must not accept `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, disable/pause actions, backup creation, cleanup, delete, restore, settings mutation, credential changes, or Drime-token actions.
 
 The first supported schedule target is:
 
@@ -148,8 +148,8 @@ Capability fields:
 | `protocol_version` | int | Remote-action protocol version. Currently `2`. |
 | `capability_version` | int | Schedule capability shape version. Currently `1`. |
 | `enabled` | boolean | True only when remote actions are opted in and the schedule can be safely identified. |
-| `preview_only` | boolean | True when the client can preview but cannot apply schedule changes. Future apply-capable clients may report false only after local schedule mutation is separately enabled. |
-| `apply_supported` | boolean | False in the released preview/schedule-preview baseline. Future apply-capable clients may report true only for approved, locally enabled `alynt_scan_upload` cadence changes. |
+| `preview_only` | boolean | True when the client can preview but cannot apply schedule changes. Apply-capable clients may report false only after local schedule mutation is separately enabled. |
+| `apply_supported` | boolean | False in the released preview/schedule-preview baseline. The unreleased apply-capable slice may report true only for approved, locally enabled `alynt_scan_upload` cadence changes. |
 | `rollback_supported` | boolean | False until a separate rollback slice is implemented and locally enabled. |
 | `schedules` | array | Redacted schedule capability records. |
 
@@ -169,11 +169,11 @@ Schedule fields:
 | `requires_high_friction_disable` | boolean | True when disabling would require a later explicit high-friction flow. |
 | `rollback_supported` | boolean | False until a separate rollback slice is implemented and locally enabled. |
 
-### Planned Schedule Apply Capability
+### Schedule Apply Capability
 
-A future V2.3 `schedule_apply` slice is planned for the uploader's own `alynt_scan_upload` schedule only. It is not implemented in the current released baseline.
+The V2.3 `schedule_apply` slice is implemented locally for the uploader's own `alynt_scan_upload` schedule only, but it is unreleased and disabled by default.
 
-The future slice must keep the status payload additive and redacted:
+The slice keeps the status payload additive and redacted:
 
 - report `apply_supported: true` only when V1 pairing, V2 action opt-in, Sodium verification, a separate local schedule-mutation policy, and safe local schedule detection are all active;
 - keep `rollback_supported: false` until a separate rollback slice exists;
@@ -181,7 +181,7 @@ The future slice must keep the status payload additive and redacted:
 - report only allowlisted cadence labels and support-safe latest action results;
 - never expose raw cron arrays, crontab fragments, option names/values, usernames, shell commands, filesystem paths, WPvivid option blobs, package names, Drime identifiers, credentials, tokens, cookies, nonces, salts, signatures, or arbitrary setting payloads.
 
-Implementation planning is tracked in `docs/V2_3_SCHEDULE_APPLY_IMPLEMENTATION_PLAN.md`.
+Implementation planning and scope are tracked in `docs/V2_3_SCHEDULE_APPLY_IMPLEMENTATION_PLAN.md`.
 
 The schedule capability summary must not include raw cron lines, raw WP-Cron arrays, crontab fragments, usernames, shell commands, local filesystem paths, raw WPvivid option blobs, package names, Drime identifiers, credentials, tokens, cookies, nonces, salts, or arbitrary setting payloads.
 

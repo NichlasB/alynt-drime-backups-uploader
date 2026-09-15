@@ -55,8 +55,14 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions {
 			}
 			$notice = empty( $state['last_error_code'] ) ? 'dashboard_remote_actions_enabled' : 'dashboard_remote_actions_failed';
 		} else {
-			$state  = $this->dashboard_connection->update_shell( $raw );
-			$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_invalid_token';
+			$state = $this->dashboard_connection->update_shell( $raw );
+			if ( 'enable_schedule_mutation' === $action ) {
+				$notice = empty( $state['last_error_code'] ) ? 'dashboard_schedule_apply_enabled' : 'dashboard_schedule_apply_failed';
+			} elseif ( 'disable_schedule_mutation' === $action ) {
+				$notice = 'dashboard_schedule_apply_disabled';
+			} else {
+				$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_invalid_token';
+			}
 		}
 
 		$this->logger->event(
@@ -65,10 +71,11 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions {
 			empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_failed',
 			'Dashboard connection state saved.',
 			array(
-				'connection_status'       => isset( $state['connection_status'] ) ? (string) $state['connection_status'] : '',
-				'status_endpoint_enabled' => ! empty( $state['status_endpoint_enabled'] ),
-				'remote_actions_enabled'  => ! empty( $state['remote_actions_enabled'] ),
-				'last_error_code'         => isset( $state['last_error_code'] ) ? (string) $state['last_error_code'] : '',
+				'connection_status'         => isset( $state['connection_status'] ) ? (string) $state['connection_status'] : '',
+				'status_endpoint_enabled'   => ! empty( $state['status_endpoint_enabled'] ),
+				'remote_actions_enabled'    => ! empty( $state['remote_actions_enabled'] ),
+				'schedule_mutation_enabled' => ! empty( $state['schedule_mutation_enabled'] ),
+				'last_error_code'           => isset( $state['last_error_code'] ) ? (string) $state['last_error_code'] : '',
 			)
 		);
 

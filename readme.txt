@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, staging and production-simulation read-only restore preflights, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, optional redacted diagnostics for support, explicit central-dashboard V2.1 action opt-in for the bounded signed `scan_upload_now` action, preview-only V2.3 schedule capability reporting for the Alynt scan/upload schedule, and signed V2.3 `schedule_preview` support that computes redacted preview evidence without changing schedules. Broad local deletion, server-package local retention, remote retention, failure emails, and V2 remote actions are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, staging and production-simulation read-only restore preflights, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, optional redacted diagnostics for support, explicit central-dashboard V2 action opt-in for bounded signed remote actions, preview-capable V2.3 schedule capability reporting for the Alynt scan/upload schedule, signed non-mutating V2.3 `schedule_preview`, and separately opted-in V2.3 `schedule_apply` for the plugin-owned Alynt scan/upload cadence only. Broad local deletion, server-package local retention, remote retention, failure emails, V2 remote actions, and schedule apply are disabled by default.
 
 == Installation ==
 
@@ -52,7 +52,7 @@ Only after V1 read-only pairing and a separate V2.1 `adb2a` action opt-in. The o
 
 = Can the central dashboard change this site's schedules? =
 
-No. Version 0.5.18 can report preview-only Alynt scan/upload schedule capability evidence to a paired dashboard and can accept a signed `schedule_preview` intent after separate V2 action opt-in. The preview computes redacted before/after schedule evidence only. It does not expose any schedule apply, disable, rollback, settings, credential, backup creation, restore, cleanup, or Drime-token action.
+Only after several opt-ins. Version 0.5.18 remains preview-only, but the unreleased V2.3 schedule-apply slice can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence, requires a fresh matching `schedule_preview`, and still does not expose disable, rollback, WPvivid schedule changes, server-runner schedule changes, settings, credential, backup creation, restore, cleanup, delete, or Drime-token actions.
 
 = How are server-runner packages verified before restore staging? =
 
@@ -123,6 +123,8 @@ No public custom actions or filters are exposed.
 == Changelog ==
 
 = Unreleased =
+* Added guarded V2.3 `schedule_apply` support for the plugin-owned Alynt scan/upload cadence only. It is disabled by default and requires V1 pairing, V2 action opt-in, local schedule-apply opt-in, a fresh matching preview, current schedule revalidation, and redacted action history.
+* Expanded schedule capability reporting so `schedule_apply` is advertised only when the local schedule-apply policy is enabled; existing clients remain preview-only by default.
 
 = 0.5.18 =
 * Added signed V2.3 `schedule_preview` action support for separately opted-in dashboard clients. The client verifies the intent and computes redacted Alynt scan/upload schedule preview evidence without changing schedules.

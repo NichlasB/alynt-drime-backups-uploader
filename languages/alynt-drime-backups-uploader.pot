@@ -1855,3 +1855,138 @@ msgstr ""
 #: includes/trait-uploader-sidecars.php:34
 msgid "A package sidecar is empty and could not be uploaded."
 msgstr ""
+
+#: includes/class-cron.php
+msgid "Every 30 minutes"
+msgstr ""
+
+#: includes/class-cron.php
+msgid "The requested Alynt scan/upload cadence is not supported."
+msgstr ""
+
+#: includes/class-cron.php
+msgid "WordPress scheduling APIs are unavailable."
+msgstr ""
+
+#: includes/class-cron.php
+msgid "WordPress could not persist the requested Alynt scan/upload cadence."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php
+#: includes/class-remote-action-worker.php
+msgid "Schedule apply is not enabled on this client site."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php
+msgid "The schedule apply request is invalid."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php
+msgid "The schedule apply request contains unsupported fields."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "Remote schedule apply action is running on the client site."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "Remote schedule apply could not be completed."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "Schedule apply completed for Alynt scan/upload."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "Remote schedule apply failed without storing unsafe error details."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "The requested schedule is not supported."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "The Alynt scan/upload schedule is not locally manageable."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "The matching schedule preview is unavailable."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "The matching schedule preview fingerprint is unavailable."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "The schedule preview does not match this apply request."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "The matching schedule preview has expired."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "The local schedule changed after the preview was created."
+msgstr ""
+
+#: includes/class-remote-action-worker.php
+msgid "The requested schedule cadence could not be persisted."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Schedule apply"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Enabled for the Alynt scan/upload cadence only. Dashboard schedule apply still requires a fresh signed preview and cannot change WPvivid, server-runner cron, backups, cleanup, restore, or credentials."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Disabled. Schedule previews are available, but the dashboard cannot change this site’s Alynt scan/upload cadence until a local administrator enables schedule apply here."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+#, php-format
+msgid "Current action key ID: %s. Signed scan/upload-now and schedule-preview intents are accepted from the paired dashboard. Schedule apply remains separately controlled below; restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Schedule apply opt-in"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Schedule apply is enabled for Alynt scan/upload cadence changes only."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "The dashboard must preview first, then send a signed apply intent matching that fresh preview. This does not create backups immediately and does not change WPvivid, server-runner cron, Drime credentials, cleanup, delete, or restore behavior."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Schedule apply opt-in confirmation"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Allow the paired dashboard to apply a fresh-previewed Alynt scan/upload cadence change."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "This is narrower than general remote actions. It only changes the future Alynt scan/upload schedule after a fresh preview; rollback, WPvivid schedules, server-runner cron, backup creation, restore, delete, cleanup, settings, and credentials stay unavailable."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Disable Schedule Apply"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php
+msgid "Enable Schedule Apply"
+msgstr ""
+
+msgid "Schedule Apply enabled. The paired dashboard may now request guarded future cadence changes for the Alynt scan/upload schedule after a fresh matching preview."
+msgstr ""
+
+msgid "Schedule Apply disabled. The paired dashboard may still preview the Alynt scan/upload schedule, but it cannot apply cadence changes."
+msgstr ""
+
+msgid "Schedule Apply could not be enabled. Confirm read-only pairing, V2 action opt-in, and the local Schedule Apply confirmation checkbox, then try again."
+msgstr ""

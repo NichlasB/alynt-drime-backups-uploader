@@ -23,11 +23,12 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 	 * @return void
 	 */
 	private function render_dashboard_connection_shell( array $connection ) {
-		$status                 = isset( $connection['connection_status'] ) ? (string) $connection['connection_status'] : Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_DISABLED;
-		$paired_enabled         = Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED === $status && ! empty( $connection['status_endpoint_enabled'] );
-		$remote_actions_enabled = $paired_enabled && ! empty( $connection['remote_actions_enabled'] ) && ! empty( $connection['action_key_id'] );
-		$client_origin          = function_exists( 'home_url' ) ? home_url() : 'https://example.org';
-		$status_endpoint        = ( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() )->status_endpoint_for_origin( $client_origin );
+		$status                    = isset( $connection['connection_status'] ) ? (string) $connection['connection_status'] : Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_DISABLED;
+		$paired_enabled            = Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED === $status && ! empty( $connection['status_endpoint_enabled'] );
+		$remote_actions_enabled    = $paired_enabled && ! empty( $connection['remote_actions_enabled'] ) && ! empty( $connection['action_key_id'] );
+		$schedule_mutation_enabled = $remote_actions_enabled && ! empty( $connection['schedule_mutation_enabled'] );
+		$client_origin             = function_exists( 'home_url' ) ? home_url() : 'https://example.org';
+		$status_endpoint           = ( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() )->status_endpoint_for_origin( $client_origin );
 		?>
 		<h2><?php esc_html_e( 'Central Dashboard', 'alynt-drime-backups-uploader' ); ?></h2>
 		<p><?php esc_html_e( 'Alynt Drime Backups Dashboard pairing is completed here by pasting a dashboard-generated token and explicitly opting in to read-only monitoring.', 'alynt-drime-backups-uploader' ); ?></p>
@@ -84,6 +85,18 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 						<?php endif; ?>
 					</td>
 				</tr>
+				<?php if ( $remote_actions_enabled ) : ?>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Schedule apply', 'alynt-drime-backups-uploader' ); ?></th>
+						<td>
+							<?php if ( $schedule_mutation_enabled ) : ?>
+								<?php esc_html_e( 'Enabled for the Alynt scan/upload cadence only. Dashboard schedule apply still requires a fresh signed preview and cannot change WPvivid, server-runner cron, backups, cleanup, restore, or credentials.', 'alynt-drime-backups-uploader' ); ?>
+							<?php else : ?>
+								<?php esc_html_e( 'Disabled. Schedule previews are available, but the dashboard cannot change this site’s Alynt scan/upload cadence until a local administrator enables schedule apply here.', 'alynt-drime-backups-uploader' ); ?>
+							<?php endif; ?>
+						</td>
+					</tr>
+				<?php endif; ?>
 			</tbody>
 		</table>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="alynt-drime-dashboard-pairing-shell">
@@ -107,7 +120,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 									<?php
 									printf(
 										/* translators: %s: action key identifier. */
-										esc_html__( 'Current action key ID: %s. Only signed scan/upload-now intents from the paired dashboard are accepted; restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable.', 'alynt-drime-backups-uploader' ),
+										esc_html__( 'Current action key ID: %s. Signed scan/upload-now and schedule-preview intents are accepted from the paired dashboard. Schedule apply remains separately controlled below; restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable.', 'alynt-drime-backups-uploader' ),
 										esc_html( (string) $connection['action_key_id'] )
 									);
 									?>
@@ -126,6 +139,26 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 							<?php endif; ?>
 						</td>
 					</tr>
+					<?php if ( $remote_actions_enabled ) : ?>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Schedule apply opt-in', 'alynt-drime-backups-uploader' ); ?></th>
+							<td>
+								<?php if ( $schedule_mutation_enabled ) : ?>
+									<p><?php esc_html_e( 'Schedule apply is enabled for Alynt scan/upload cadence changes only.', 'alynt-drime-backups-uploader' ); ?></p>
+									<p class="description"><?php esc_html_e( 'The dashboard must preview first, then send a signed apply intent matching that fresh preview. This does not create backups immediately and does not change WPvivid, server-runner cron, Drime credentials, cleanup, delete, or restore behavior.', 'alynt-drime-backups-uploader' ); ?></p>
+								<?php else : ?>
+									<fieldset>
+										<legend class="screen-reader-text"><?php esc_html_e( 'Schedule apply opt-in confirmation', 'alynt-drime-backups-uploader' ); ?></legend>
+										<label>
+											<input type="checkbox" name="alynt_drime_backups_dashboard_connection[schedule_mutation_opt_in]" value="1">
+											<?php esc_html_e( 'Allow the paired dashboard to apply a fresh-previewed Alynt scan/upload cadence change.', 'alynt-drime-backups-uploader' ); ?>
+										</label>
+									</fieldset>
+									<p class="description"><?php esc_html_e( 'This is narrower than general remote actions. It only changes the future Alynt scan/upload schedule after a fresh preview; rollback, WPvivid schedules, server-runner cron, backup creation, restore, delete, cleanup, settings, and credentials stay unavailable.', 'alynt-drime-backups-uploader' ); ?></p>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endif; ?>
 				<?php else : ?>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Pairing token', 'alynt-drime-backups-uploader' ); ?></th>
@@ -174,6 +207,11 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 				<?php if ( $paired_enabled && ! $remote_actions_enabled ) : ?>
 					<button type="submit" class="button button-secondary" name="alynt_drime_backups_dashboard_connection[connection_action]" value="complete_remote_action_opt_in"><?php esc_html_e( 'Complete V2 Action Opt-In', 'alynt-drime-backups-uploader' ); ?></button>
 				<?php elseif ( $remote_actions_enabled ) : ?>
+					<?php if ( $schedule_mutation_enabled ) : ?>
+						<button type="submit" class="button" name="alynt_drime_backups_dashboard_connection[connection_action]" value="disable_schedule_mutation"><?php esc_html_e( 'Disable Schedule Apply', 'alynt-drime-backups-uploader' ); ?></button>
+					<?php else : ?>
+						<button type="submit" class="button button-secondary" name="alynt_drime_backups_dashboard_connection[connection_action]" value="enable_schedule_mutation"><?php esc_html_e( 'Enable Schedule Apply', 'alynt-drime-backups-uploader' ); ?></button>
+					<?php endif; ?>
 					<button type="submit" class="button" name="alynt_drime_backups_dashboard_connection[connection_action]" value="disable_remote_actions"><?php esc_html_e( 'Disable V2 Action Opt-In', 'alynt-drime-backups-uploader' ); ?></button>
 				<?php endif; ?>
 				<?php if ( ! $paired_enabled ) : ?>

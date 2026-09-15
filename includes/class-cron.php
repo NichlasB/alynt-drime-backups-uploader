@@ -65,6 +65,11 @@ class Alynt_Drime_Backups_Uploader_Cron {
 			'display'  => __( 'Every 15 minutes', 'alynt-drime-backups-uploader' ),
 		);
 
+		$schedules['thirty_minutes'] = array(
+			'interval' => 30 * MINUTE_IN_SECONDS,
+			'display'  => __( 'Every 30 minutes', 'alynt-drime-backups-uploader' ),
+		);
+
 		return $schedules;
 	}
 
@@ -102,6 +107,85 @@ class Alynt_Drime_Backups_Uploader_Cron {
 	public function clear() {
 		$this->clear_scheduled_hook( self::SCAN_EVENT );
 		$this->clear_scheduled_hook( self::UPLOAD_EVENT );
+	}
+
+	/**
+	 * Applies an allowlisted scan cadence through WordPress scheduling APIs.
+	 *
+	 * @since 0.5.19
+	 *
+	 * @param string $cadence Public cadence label.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	public function apply_scan_cadence( $cadence ) {
+		$recurrence = $this->recurrence_for_scan_cadence( $cadence );
+		$interval   = $this->interval_for_scan_cadence( $cadence );
+
+		if ( '' === $recurrence || $interval <= 0 ) {
+			return new WP_Error( 'schedule_apply_unsupported_cadence', __( 'The requested Alynt scan/upload cadence is not supported.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		if ( ! function_exists( 'wp_clear_scheduled_hook' ) || ! function_exists( 'wp_schedule_event' ) ) {
+			return new WP_Error( 'schedule_apply_unavailable', __( 'WordPress scheduling APIs are unavailable.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		wp_clear_scheduled_hook( self::SCAN_EVENT );
+
+		$scheduled = wp_schedule_event( time() + $interval, $recurrence, self::SCAN_EVENT, array(), true );
+		if ( is_wp_error( $scheduled ) ) {
+			return $scheduled;
+		}
+
+		if ( false === $scheduled ) {
+			return new WP_Error( 'schedule_apply_persist_failed', __( 'WordPress could not persist the requested Alynt scan/upload cadence.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		return array(
+			'cadence'     => sanitize_key( (string) $cadence ),
+			'recurrence'  => $recurrence,
+			'interval'    => $interval,
+			'next_run_at' => function_exists( 'wp_next_scheduled' ) ? wp_next_scheduled( self::SCAN_EVENT ) : 0,
+		);
+	}
+
+	/**
+	 * Maps a public cadence label to a WordPress recurrence key.
+	 *
+	 * @since 0.5.19
+	 *
+	 * @param string $cadence Cadence label.
+	 * @return string
+	 */
+	private function recurrence_for_scan_cadence( $cadence ) {
+		$map = array(
+			'every_15_minutes' => 'fifteen_minutes',
+			'every_30_minutes' => 'thirty_minutes',
+			'hourly'           => 'hourly',
+		);
+
+		$cadence = sanitize_key( (string) $cadence );
+
+		return isset( $map[ $cadence ] ) ? $map[ $cadence ] : '';
+	}
+
+	/**
+	 * Maps a public cadence label to seconds.
+	 *
+	 * @since 0.5.19
+	 *
+	 * @param string $cadence Cadence label.
+	 * @return int
+	 */
+	private function interval_for_scan_cadence( $cadence ) {
+		$map = array(
+			'every_15_minutes' => 15 * MINUTE_IN_SECONDS,
+			'every_30_minutes' => 30 * MINUTE_IN_SECONDS,
+			'hourly'           => HOUR_IN_SECONDS,
+		);
+
+		$cadence = sanitize_key( (string) $cadence );
+
+		return isset( $map[ $cadence ] ) ? absint( $map[ $cadence ] ) : 0;
 	}
 
 	/**

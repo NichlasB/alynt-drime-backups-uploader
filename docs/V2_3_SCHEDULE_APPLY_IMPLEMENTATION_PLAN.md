@@ -1,6 +1,6 @@
 # V2.3 Schedule Apply Uploader Implementation Plan
 
-Status: planning baseline only. This document does not approve implementation, release, deployment, live-site writes, broad client enablement, schedule rollback, backup creation, cleanup/delete actions, restore actions, WPvivid schedule management, server-runner schedule management, arbitrary cron editing, or Drime credential changes.
+Status: uploader-side local implementation is in progress for the first approved scope. This document does not approve release, deployment, live-site writes, broad client enablement, schedule rollback, backup creation, cleanup/delete actions, restore actions, WPvivid schedule management, server-runner schedule management, arbitrary cron editing, or Drime credential changes.
 
 Related artifacts:
 
@@ -13,9 +13,9 @@ Related artifacts:
 
 ## Goal
 
-Plan the uploader-side implementation for a future signed V2.3 `schedule_apply` action.
+Track the uploader-side implementation for a signed V2.3 `schedule_apply` action.
 
-The first apply slice should let a separately opted-in dashboard ask this client to apply exactly one previously previewed cadence change for this plugin's own scan/upload schedule:
+The first apply slice lets a separately opted-in dashboard ask this client to apply exactly one previously previewed cadence change for this plugin's own scan/upload schedule:
 
 ```text
 action_type: schedule_apply
