@@ -281,9 +281,8 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 			return new WP_Error( 'schedule_apply_preview_stale', __( 'The local schedule changed after the preview was created.', 'alynt-drime-backups-uploader' ) );
 		}
 
-		$changed        = $current['cadence'] !== $proposed_cadence;
-		$rollback_until = time() + 86400;
-		$apply_result   = array(
+		$changed      = $current['cadence'] !== $proposed_cadence;
+		$apply_result = array(
 			'schedule_id'          => 'alynt_scan_upload',
 			'label'                => __( 'Alynt scan/upload', 'alynt-drime-backups-uploader' ),
 			'owner'                => 'alynt_uploader',
@@ -295,8 +294,8 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 			'previous_next_run_at' => $current['next_run'] > 0 ? gmdate( 'c', $current['next_run'] ) : '',
 			'applied_next_run_at'  => $current['next_run'] > 0 ? gmdate( 'c', $current['next_run'] ) : '',
 			'changed'              => $changed,
-			'rollback_available'   => true,
-			'rollback_expires_at'  => gmdate( 'c', $rollback_until ),
+			'rollback_available'   => false,
+			'rollback_expires_at'  => '',
 		);
 
 		if ( ! $changed ) {

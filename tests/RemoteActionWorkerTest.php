@@ -203,7 +203,50 @@ class RemoteActionWorkerTest extends TestCase {
 		$this->assertSame( 'every_30_minutes', $latest['schedule_apply']['applied_cadence'] );
 		$this->assertSame( '2026-06-25T17:00:00+00:00', $latest['schedule_apply']['applied_next_run_at'] );
 		$this->assertTrue( $latest['schedule_apply']['changed'] );
-		$this->assertTrue( $latest['schedule_apply']['rollback_available'] );
+		$this->assertFalse( $latest['schedule_apply']['rollback_available'] );
+	}
+
+	public function test_schedule_apply_rejects_stale_preview_after_local_schedule_changes() {
+		$options = $this->options_with_accepted_schedule_apply_action();
+		$this->mock_options( $options );
+
+		Functions\when( 'wp_get_schedule' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 'fifteen_minutes' : false;
+			}
+		);
+		Functions\when( 'wp_get_schedules' )->justReturn(
+			array(
+				'fifteen_minutes' => array(
+					'interval' => 900,
+				),
+			)
+		);
+		Functions\when( 'wp_next_scheduled' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 1782407700 : false;
+			}
+		);
+
+		$cron = $this->createMock( Alynt_Drime_Backups_Uploader_Cron::class );
+		$cron->expects( $this->never() )->method( 'apply_scan_cadence' );
+
+		$worker = new Alynt_Drime_Backups_Uploader_Remote_Action_Worker(
+			$this->plugin_for_rejected_schedule_apply( $cron ),
+			new Alynt_Drime_Backups_Uploader_Remote_Action_Store()
+		);
+
+		$worker->handle( '7c650de7-c7ee-4f90-a5cb-59c4753a2c51' );
+
+		$latest = $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action'];
+		$this->assertSame( 'failed', $latest['state'] );
+		$this->assertSame( 'schedule_apply_preview_stale', $latest['code'] );
+		$this->assertSame( 'schedule_apply', $latest['action_type'] );
+		$this->assertSame( 'alynt_scan_upload', $latest['schedule_apply']['schedule_id'] );
+		$this->assertSame( 'every_30_minutes', $latest['schedule_apply']['proposed_cadence'] );
+		$this->assertSame( '', $latest['schedule_apply']['applied_cadence'] );
+		$this->assertFalse( $latest['schedule_apply']['changed'] );
+		$this->assertFalse( $latest['schedule_apply']['rollback_available'] );
 	}
 
 	/**
@@ -283,6 +326,30 @@ class RemoteActionWorkerTest extends TestCase {
 		$plugin->expects( $this->once() )->method( 'settings' )->willReturn( $settings );
 		$plugin->expects( $this->exactly( 2 ) )->method( 'dashboard_connection' )->willReturn( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() );
 		$plugin->expects( $this->once() )->method( 'cron' )->willReturn( $cron );
+		$plugin->expects( $this->never() )->method( 'cron_health' );
+		$plugin->expects( $this->never() )->method( 'scan_and_queue' );
+
+		return $plugin;
+	}
+
+	/**
+	 * Creates a plugin mock for rejected schedule apply without scan/upload side effects.
+	 *
+	 * @param Alynt_Drime_Backups_Uploader_Cron $cron Cron service.
+	 * @return Alynt_Drime_Backups_Uploader_Plugin
+	 */
+	private function plugin_for_rejected_schedule_apply( Alynt_Drime_Backups_Uploader_Cron $cron ) {
+		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
+		$settings->expects( $this->once() )->method( 'get' )->willReturn(
+			array(
+				'auto_scan_enabled' => true,
+			)
+		);
+
+		$plugin = $this->createMock( Alynt_Drime_Backups_Uploader_Plugin::class );
+		$plugin->expects( $this->once() )->method( 'settings' )->willReturn( $settings );
+		$plugin->expects( $this->exactly( 2 ) )->method( 'dashboard_connection' )->willReturn( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() );
+		$plugin->expects( $this->never() )->method( 'cron' )->willReturn( $cron );
 		$plugin->expects( $this->never() )->method( 'cron_health' );
 		$plugin->expects( $this->never() )->method( 'scan_and_queue' );
 

@@ -211,7 +211,7 @@ import './style.css';
 			return;
 		}
 
-		const button = event.target.querySelector('button[type="submit"]');
+		const button = event.submitter || event.target.querySelector('button[type="submit"]');
 
 		if (!button) {
 			return;

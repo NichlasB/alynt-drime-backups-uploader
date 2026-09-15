@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.19] - 2026-09-15
+
 ### Added
 
 - Added the guarded V2.3 `schedule_apply` client implementation for the plugin-owned `alynt_scan_upload` cadence only. It remains disabled by default, requires V1 pairing, V2 action opt-in, a separate local schedule-apply opt-in, a fresh matching `schedule_preview`, current schedule fingerprint revalidation, and redacted action history.

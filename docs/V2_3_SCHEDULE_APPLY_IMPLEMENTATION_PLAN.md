@@ -1,6 +1,6 @@
 # V2.3 Schedule Apply Uploader Implementation Plan
 
-Status: uploader-side local implementation is in progress for the first approved scope. This document does not approve release, deployment, live-site writes, broad client enablement, schedule rollback, backup creation, cleanup/delete actions, restore actions, WPvivid schedule management, server-runner schedule management, arbitrary cron editing, or Drime credential changes.
+Status: uploader-side local release-candidate implementation is in progress for the first approved scope. This document does not approve release, deployment, live-site writes, broad client enablement, schedule rollback, backup creation, cleanup/delete actions, restore actions, WPvivid schedule management, server-runner schedule management, arbitrary cron editing, or Drime credential changes.
 
 Related artifacts:
 
@@ -34,7 +34,6 @@ Allowed:
 - reference a fresh successful local `schedule_preview` result by preview action ID and preview fingerprint;
 - revalidate current local schedule state before applying;
 - apply only a locally supported cadence label;
-- capture local rollback metadata before mutation;
 - persist a redacted local action/audit result;
 - report redacted latest action evidence through the existing authenticated status payload.
 
@@ -61,7 +60,7 @@ Use only the schedule capability already implemented for preview:
 - supported cadence choices: local allowlist only
 - minimum interval: local allowlist/minimum only
 - disable/pause: unavailable
-- rollback: capture local metadata only; runtime rollback remains a future separately approved slice
+- rollback: unavailable in this slice; rollback metadata and runtime rollback remain future separately approved work
 
 Do not include `alynt_server_runner` until the plugin can prove ownership, safe mutation, and rollback for that schedule. Do not include WPvivid schedules in this slice.
 
@@ -155,7 +154,6 @@ The action-intent endpoint must reject `schedule_apply` unless all checks pass:
 - Preview is fresh and bound to the same site/schedule/proposed cadence/capability version.
 - Current local schedule state still matches the preview baseline.
 - No schedule action lock is active.
-- Rollback metadata can be captured before mutation.
 
 Recommended client result codes:
 
@@ -165,7 +163,6 @@ Recommended client result codes:
 - `schedule_apply_preview_stale`
 - `schedule_apply_unsupported_cadence`
 - `schedule_apply_lock_busy`
-- `schedule_apply_rollback_capture_failed`
 - `schedule_apply_persist_failed`
 - `schedule_apply_succeeded`
 
@@ -178,28 +175,18 @@ Implementation should:
 1. Acquire a schedule-action lock.
 2. Re-read the current schedule state.
 3. Compare it to the preview baseline.
-4. Capture local rollback metadata.
-5. Unschedule/reschedule only the plugin-owned scan/upload event.
-6. Verify the new scheduled cadence/next-run evidence.
-7. Persist a redacted action result.
-8. Release the lock.
+4. Unschedule/reschedule only the plugin-owned scan/upload event.
+5. Verify the new scheduled cadence/next-run evidence.
+6. Persist a redacted action result with rollback unavailable.
+7. Release the lock.
 
-If any step after rollback metadata capture fails, preserve the old schedule where possible and report the exact support-safe failure code. If partial mutation becomes possible, stop implementation and add a stronger recovery design before continuing.
+If any mutation step fails, preserve the old schedule where possible and report the exact support-safe failure code. If partial mutation becomes possible, stop implementation and add a stronger recovery design before continuing.
 
 ## Local Rollback Metadata
 
-Capture local rollback metadata before mutation, but do not implement `schedule_rollback` in this slice.
+Do not capture or expose rollback metadata in this slice. The action result must report rollback unavailable (`rollback_available: false`) and an empty rollback expiry until a separate rollback design and implementation is approved.
 
-Rollback metadata may include:
-
-- schedule ID;
-- previous cadence label;
-- previous next-run timestamp when known;
-- captured-at timestamp;
-- action ID that created the change;
-- bounded expiry timestamp.
-
-Rollback metadata must not include raw cron arrays, raw option blobs, paths, commands, usernames, or arbitrary internal state. It should be sufficient for a later approved rollback slice to validate and restore the previous cadence through local APIs.
+A later approved rollback slice may add bounded local metadata capture, but it must not include raw cron arrays, raw option blobs, paths, commands, usernames, or arbitrary internal state.
 
 ## Status Payload And Action Result Plan
 
@@ -208,7 +195,7 @@ After apply, the status payload should report:
 - `remote_actions.allowed_actions` includes `schedule_apply` only when local mutation policy is enabled.
 - `remote_actions.schedule_management.apply_supported` is true only when apply is actually available.
 - latest action summary may report `action_type: schedule_apply`.
-- latest action result may include a redacted `schedule_apply` object with previous/applied cadence, next-run evidence, rollback availability, and rollback expiry.
+- latest action result may include a redacted `schedule_apply` object with previous/applied cadence, next-run evidence, `rollback_available: false`, and an empty rollback expiry.
 
 The status payload must not include raw cron arrays, raw crontab lines, filesystem paths, option names/values, Drime IDs, package names, credentials, or signatures.
 
@@ -246,7 +233,6 @@ Focused uploader tests should cover:
 - apply without matching preview is rejected;
 - expired preview is rejected;
 - stale local schedule state is rejected;
-- valid apply captures rollback metadata before mutation;
 - valid apply changes only the scan/upload schedule;
 - duplicate idempotency returns the prior apply result without applying twice;
 - failed persistence preserves the prior schedule;
@@ -295,9 +281,9 @@ Before release/deploy, run a targeted ds3 pre-release subset or the full pre-rel
 - `schedule_apply` is limited to `alynt_scan_upload`.
 - Apply requires a fresh matching preview.
 - Client revalidates current local schedule state.
-- Client captures rollback metadata before mutation.
 - Client changes only the scan/upload cadence.
 - Status/action evidence is redacted and support-safe.
+- Status/action evidence reports rollback unavailable.
 - `schedule_rollback` remains impossible.
 - Existing V1 polling, backup-source evidence, V2.1 `scan_upload_now`, and V2.3 `schedule_preview` remain unchanged.
 

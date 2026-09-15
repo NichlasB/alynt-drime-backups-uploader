@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Alynt Drime Backups Uploader 0.5.18\n"
+"Project-Id-Version: Alynt Drime Backups Uploader 0.5.19\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/alynt-drime-backups-uploader\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-13T15:28:11+00:00\n"
+"POT-Creation-Date: 2026-09-15T15:07:15+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: alynt-drime-backups-uploader\n"
@@ -173,6 +173,22 @@ msgstr ""
 msgid "Every 15 minutes"
 msgstr ""
 
+#: includes/class-cron.php:70
+msgid "Every 30 minutes"
+msgstr ""
+
+#: includes/class-cron.php:125
+msgid "The requested Alynt scan/upload cadence is not supported."
+msgstr ""
+
+#: includes/class-cron.php:129
+msgid "WordPress scheduling APIs are unavailable."
+msgstr ""
+
+#: includes/class-cron.php:140
+msgid "WordPress could not persist the requested Alynt scan/upload cadence."
+msgstr ""
+
 #: includes/class-dashboard-action-intents-rest-controller.php:93
 msgid "Remote action request rejected before work was queued."
 msgstr ""
@@ -214,95 +230,95 @@ msgstr ""
 msgid "Remote action request rejected."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:501
+#: includes/class-dashboard-connection.php:542
 msgid "The dashboard pairing token must begin with adb1."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:506
+#: includes/class-dashboard-connection.php:547
 msgid "The dashboard pairing token payload is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:511
+#: includes/class-dashboard-connection.php:552
 msgid "The dashboard pairing token payload could not be decoded."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:516
+#: includes/class-dashboard-connection.php:557
 msgid "The dashboard pairing token payload is not JSON."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:520
+#: includes/class-dashboard-connection.php:561
 msgid "The dashboard pairing token uses an unsupported protocol version."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:525
+#: includes/class-dashboard-connection.php:566
 msgid "The dashboard pairing token does not include a valid enrollment ID."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:530
+#: includes/class-dashboard-connection.php:571
 msgid "The dashboard pairing token does not include a supported dashboard HTTPS origin."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:535
+#: includes/class-dashboard-connection.php:576
 msgid "The dashboard pairing token does not include a supported expected client HTTPS origin."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:540
+#: includes/class-dashboard-connection.php:581
 msgid "The dashboard pairing token secret is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:546
+#: includes/class-dashboard-connection.php:587
 msgid "The dashboard pairing token expiry is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:550
+#: includes/class-dashboard-connection.php:591
 msgid "The dashboard pairing token has expired."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:579
+#: includes/class-dashboard-connection.php:620
 msgid "The dashboard action opt-in token must begin with adb2a."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:584
+#: includes/class-dashboard-connection.php:625
 msgid "The dashboard action opt-in token payload is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:589
+#: includes/class-dashboard-connection.php:630
 msgid "The dashboard action opt-in token payload could not be decoded."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:594
+#: includes/class-dashboard-connection.php:635
 msgid "The dashboard action opt-in token payload is not JSON."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:598
+#: includes/class-dashboard-connection.php:639
 msgid "The dashboard action opt-in token uses an unsupported protocol version."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:602
+#: includes/class-dashboard-connection.php:643
 msgid "The dashboard action opt-in token purpose is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:607
+#: includes/class-dashboard-connection.php:648
 msgid "The dashboard action opt-in token does not include a supported dashboard HTTPS origin."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:612
+#: includes/class-dashboard-connection.php:653
 msgid "The dashboard action opt-in token does not include a supported expected client HTTPS origin."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:621
+#: includes/class-dashboard-connection.php:662
 msgid "The dashboard action opt-in token does not include valid site and key identifiers."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:631
+#: includes/class-dashboard-connection.php:674
 msgid "The dashboard action opt-in token does not grant the supported scan/upload-now action."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:637
+#: includes/class-dashboard-connection.php:680
 msgid "The dashboard action opt-in token expiry is not valid."
 msgstr ""
 
-#: includes/class-dashboard-connection.php:641
+#: includes/class-dashboard-connection.php:684
 msgid "The dashboard action opt-in token has expired."
 msgstr ""
 
@@ -362,36 +378,37 @@ msgstr ""
 msgid "WPvivid"
 msgstr ""
 
-#: includes/class-health-summary.php:289
-#: includes/class-remote-action-worker.php:173
+#: includes/class-health-summary.php:293
+#: includes/class-remote-action-worker.php:205
+#: includes/class-remote-action-worker.php:288
 msgid "Alynt scan/upload"
 msgstr ""
 
-#: includes/class-health-summary.php:890
+#: includes/class-health-summary.php:895
 msgid "This source is configured but has no uploaded backup evidence yet."
 msgstr ""
 
-#: includes/class-health-summary.php:897
+#: includes/class-health-summary.php:902
 msgid "The latest uploaded backup evidence is older than the default freshness window."
 msgstr ""
 
-#: includes/class-health-summary.php:904
+#: includes/class-health-summary.php:909
 msgid "This source has queued backup packages waiting to upload."
 msgstr ""
 
-#: includes/class-health-summary.php:924
+#: includes/class-health-summary.php:929
 msgid "Server outbox path is not configured."
 msgstr ""
 
-#: includes/class-health-summary.php:929
+#: includes/class-health-summary.php:934
 msgid "Server outbox path is not readable by WordPress."
 msgstr ""
 
-#: includes/class-health-summary.php:936
+#: includes/class-health-summary.php:941
 msgid "Server cron attention is needed."
 msgstr ""
 
-#: includes/class-health-summary.php:943
+#: includes/class-health-summary.php:948
 msgid "The old Alynt Drime WPvivid Uploader plugin is active. Disable automatic uploads in one uploader before using the WPvivid source here to avoid duplicate uploads."
 msgstr ""
 
@@ -452,80 +469,141 @@ msgid "The remote action body is not valid JSON."
 msgstr ""
 
 #: includes/class-remote-action-verifier.php:145
-#: includes/class-remote-action-verifier.php:189
+#: includes/class-remote-action-verifier.php:205
+#: includes/class-remote-action-verifier.php:207
 msgid "The remote action body contains unsupported fields."
 msgstr ""
 
-#: includes/class-remote-action-verifier.php:174
+#: includes/class-remote-action-verifier.php:175
 msgid "The remote action intent is not supported by this client site."
 msgstr ""
 
-#: includes/class-remote-action-verifier.php:179
-#: includes/class-remote-action-verifier.php:219
+#: includes/class-remote-action-verifier.php:180
+#: includes/class-remote-action-verifier.php:237
 msgid "The schedule preview request is invalid."
 msgstr ""
 
-#: includes/class-remote-action-verifier.php:205
+#: includes/class-remote-action-verifier.php:191
+#: includes/class-remote-action-worker.php:245
+msgid "Schedule apply is not enabled on this client site."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:195
+#: includes/class-remote-action-verifier.php:273
+msgid "The schedule apply request is invalid."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:223
 msgid "The schedule preview request contains unsupported fields."
 msgstr ""
 
-#: includes/class-remote-action-verifier.php:236
+#: includes/class-remote-action-verifier.php:255
+msgid "The schedule apply request contains unsupported fields."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:290
 msgid "The remote action body could not be encoded."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:80
+#: includes/class-remote-action-worker.php:86
 msgid "Remote scan/upload action is running on the client site."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:89
+#: includes/class-remote-action-worker.php:95
 msgid "Remote scan/upload action finished with scan errors; no unsafe details were stored."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:94
+#: includes/class-remote-action-worker.php:100
 msgid "Remote scan/upload action scanned for eligible packages and found nothing new to queue."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:100
+#: includes/class-remote-action-worker.php:106
 msgid "Remote scan/upload action scanned for eligible packages but could not schedule the upload worker."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:104
+#: includes/class-remote-action-worker.php:110
 msgid "Remote scan/upload action scanned for eligible packages and scheduled the upload worker."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:107
+#: includes/class-remote-action-worker.php:113
 msgid "Remote scan/upload action failed without storing unsafe error details."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:120
+#: includes/class-remote-action-worker.php:126
 msgid "Remote schedule preview action is running on the client site."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:125
+#: includes/class-remote-action-worker.php:131
 msgid "Remote schedule preview could not be completed."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:129
+#: includes/class-remote-action-worker.php:135
 msgid "Schedule preview is ready. No schedule was changed."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:132
+#: includes/class-remote-action-worker.php:138
 msgid "Remote schedule preview failed without storing unsafe error details."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:145
+#: includes/class-remote-action-worker.php:151
+msgid "Remote schedule apply action is running on the client site."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:156
+msgid "Remote schedule apply could not be completed."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:160
+msgid "Schedule apply completed for Alynt scan/upload."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:163
+msgid "Remote schedule apply failed without storing unsafe error details."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:176
+#: includes/class-remote-action-worker.php:236
 msgid "The requested schedule is not supported."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:151
+#: includes/class-remote-action-worker.php:182
+#: includes/class-remote-action-worker.php:241
 msgid "The requested cadence is not supported."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:269
+#: includes/class-remote-action-worker.php:251
+msgid "The Alynt scan/upload schedule is not locally manageable."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:260
+msgid "The matching schedule preview is unavailable."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:264
+msgid "The matching schedule preview fingerprint is unavailable."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:272
+msgid "The schedule preview does not match this apply request."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:277
+msgid "The matching schedule preview has expired."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:281
+msgid "The local schedule changed after the preview was created."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:308
+msgid "The requested schedule cadence could not be persisted."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:463
 msgid "WordPress cron scheduling is not available for the upload worker."
 msgstr ""
 
-#: includes/class-remote-action-worker.php:283
+#: includes/class-remote-action-worker.php:477
 msgid "WordPress could not schedule the upload worker."
 msgstr ""
 
@@ -613,7 +691,7 @@ msgid "Enabled"
 msgstr ""
 
 #: includes/trait-admin-page-cron-health.php:39
-#: includes/trait-admin-page-dashboard-settings.php:195
+#: includes/trait-admin-page-dashboard-settings.php:233
 msgid "Disabled"
 msgstr ""
 
@@ -746,187 +824,231 @@ msgstr ""
 msgid "%1$s (in %2$s)"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:32
+#: includes/trait-admin-page-dashboard-settings.php:33
 msgid "Central Dashboard"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:33
+#: includes/trait-admin-page-dashboard-settings.php:34
 msgid "Alynt Drime Backups Dashboard pairing is completed here by pasting a dashboard-generated token and explicitly opting in to read-only monitoring."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:35
+#: includes/trait-admin-page-dashboard-settings.php:36
 msgid "Central dashboard connection summary"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:38
+#: includes/trait-admin-page-dashboard-settings.php:39
 msgid "Connection status"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:43
+#: includes/trait-admin-page-dashboard-settings.php:44
 msgid "Dashboard origin"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:49
+#: includes/trait-admin-page-dashboard-settings.php:50
 msgid "Expected client origin"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:55
+#: includes/trait-admin-page-dashboard-settings.php:56
 msgid "Pairing token expires"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:60
+#: includes/trait-admin-page-dashboard-settings.php:61
 msgid "Status endpoint"
 msgstr ""
 
 #. translators: %s: status endpoint URL.
-#: includes/trait-admin-page-dashboard-settings.php:66
+#: includes/trait-admin-page-dashboard-settings.php:67
 #, php-format
 msgid "Enabled for authenticated dashboard polling at %s"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:71
+#: includes/trait-admin-page-dashboard-settings.php:72
 msgid "Disabled until pairing is completed with an unexpired dashboard token."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:76
+#: includes/trait-admin-page-dashboard-settings.php:77
 msgid "Remote actions"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:79
+#: includes/trait-admin-page-dashboard-settings.php:80
 msgid "V2 action opt-in completed. The bounded signed scan/upload-now endpoint is enabled for the paired dashboard only."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:81
+#: includes/trait-admin-page-dashboard-settings.php:82
 msgid "V1 read-only monitoring is active. V2 actions require a separate dashboard-generated adb2a token and explicit local opt-in."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:83
+#: includes/trait-admin-page-dashboard-settings.php:84
 msgid "Not available until read-only dashboard pairing is completed."
 msgstr ""
 
+#: includes/trait-admin-page-dashboard-settings.php:90
+msgid "Schedule apply"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:93
+msgid "Enabled for the Alynt scan/upload cadence only. Dashboard schedule apply still requires a fresh signed preview and cannot change WPvivid, server-runner cron, backups, cleanup, restore, or credentials."
+msgstr ""
+
 #: includes/trait-admin-page-dashboard-settings.php:95
+msgid "Disabled. Schedule previews are available, but the dashboard cannot change this site’s Alynt scan/upload cadence until a local administrator enables schedule apply here."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:108
 msgid "Read-only dashboard monitoring"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:97
+#: includes/trait-admin-page-dashboard-settings.php:110
 msgid "This site is already opted in to read-only dashboard monitoring."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:98
+#: includes/trait-admin-page-dashboard-settings.php:111
 msgid "Only the authenticated, fixed, redacted status endpoint is enabled. This does not grant backup, restore, delete, cleanup, settings, credential, Drime token, or command actions."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:102
-#: includes/trait-admin-page-dashboard-settings.php:116
+#: includes/trait-admin-page-dashboard-settings.php:115
+#: includes/trait-admin-page-dashboard-settings.php:129
 msgid "V2 action opt-in token"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:105
+#: includes/trait-admin-page-dashboard-settings.php:118
 msgid "This site has opted in to V2 scan/upload-now capability for the paired dashboard."
 msgstr ""
 
 #. translators: %s: action key identifier.
-#: includes/trait-admin-page-dashboard-settings.php:110
+#: includes/trait-admin-page-dashboard-settings.php:123
 #, php-format
-msgid "Current action key ID: %s. Only signed scan/upload-now intents from the paired dashboard are accepted; restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable."
+msgid "Current action key ID: %s. Signed scan/upload-now and schedule-preview intents are accepted from the paired dashboard. Schedule apply remains separately controlled below; restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:117
+#: includes/trait-admin-page-dashboard-settings.php:130
 msgid "Paste the dashboard-generated adb2a token here."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:118
+#: includes/trait-admin-page-dashboard-settings.php:131
 msgid "Use this only after read-only pairing is active. It stores the dashboard action public key locally and enables the bounded signed scan/upload-now endpoint for the paired dashboard only."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:120
+#: includes/trait-admin-page-dashboard-settings.php:133
 msgid "V2 action opt-in confirmation"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:123
+#: includes/trait-admin-page-dashboard-settings.php:136
 msgid "Opt in to V2 scan/upload-now capability for the paired dashboard."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:131
-#: includes/trait-admin-page-dashboard-settings.php:133
+#: includes/trait-admin-page-dashboard-settings.php:144
+msgid "Schedule apply opt-in"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:147
+msgid "Schedule apply is enabled for Alynt scan/upload cadence changes only."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:148
+msgid "The dashboard must preview first, then send a signed apply intent matching that fresh preview. This does not create backups immediately and does not change WPvivid, server-runner cron, Drime credentials, cleanup, delete, or restore behavior."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:151
+msgid "Schedule apply opt-in confirmation"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:154
+msgid "Allow the paired dashboard to apply a fresh-previewed Alynt scan/upload cadence change."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:157
+msgid "This is narrower than general remote actions. It only changes the future Alynt scan/upload schedule after a fresh preview; rollback, WPvivid schedules, server-runner cron, backup creation, restore, delete, cleanup, settings, and credentials stay unavailable."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:164
+#: includes/trait-admin-page-dashboard-settings.php:166
 msgid "Pairing token"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:134
+#: includes/trait-admin-page-dashboard-settings.php:167
 msgid "Paste the dashboard-generated adb1 token here."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:135
+#: includes/trait-admin-page-dashboard-settings.php:168
 msgid "The token is used once to complete pairing with the dashboard, then discarded. The raw token, one-time secret, and polling secret are not stored."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:139
+#: includes/trait-admin-page-dashboard-settings.php:172
 msgid "Local opt-in intent"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:143
+#: includes/trait-admin-page-dashboard-settings.php:176
 msgid "Opt in to read-only dashboard monitoring for this site."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:145
+#: includes/trait-admin-page-dashboard-settings.php:178
 msgid "This enables only an authenticated, fixed, redacted status endpoint after pairing succeeds. It does not grant backup, restore, delete, cleanup, settings, credential, Drime token, or command actions."
 msgstr ""
 
 #. translators: %s: dashboard origin.
-#: includes/trait-admin-page-dashboard-settings.php:157
+#: includes/trait-admin-page-dashboard-settings.php:190
 #, php-format
 msgid "I confirm this site should pair with %s for read-only monitoring."
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:166
+#: includes/trait-admin-page-dashboard-settings.php:199
 msgid "Prepare Pairing Shell"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:167
+#: includes/trait-admin-page-dashboard-settings.php:200
 msgid "Review Dashboard Token"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:169
+#: includes/trait-admin-page-dashboard-settings.php:202
 msgid "Confirm Dashboard Origin"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:171
+#: includes/trait-admin-page-dashboard-settings.php:204
 msgid "Complete Read-Only Pairing"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:173
+#: includes/trait-admin-page-dashboard-settings.php:206
 msgid "Revoke Dashboard Pairing"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:175
+#: includes/trait-admin-page-dashboard-settings.php:208
 msgid "Complete V2 Action Opt-In"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:177
+#: includes/trait-admin-page-dashboard-settings.php:211
+msgid "Disable Schedule Apply"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:213
+msgid "Enable Schedule Apply"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:215
 msgid "Disable V2 Action Opt-In"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:180
+#: includes/trait-admin-page-dashboard-settings.php:218
 msgid "Keep Dashboard Disabled"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:196
+#: includes/trait-admin-page-dashboard-settings.php:234
 msgid "Ready for pairing shell"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:197
+#: includes/trait-admin-page-dashboard-settings.php:235
 msgid "Dashboard token reviewed"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:198
+#: includes/trait-admin-page-dashboard-settings.php:236
 msgid "Dashboard origin confirmed"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:199
+#: includes/trait-admin-page-dashboard-settings.php:237
 msgid "Paired"
 msgstr ""
 
-#: includes/trait-admin-page-dashboard-settings.php:200
+#: includes/trait-admin-page-dashboard-settings.php:238
 msgid "Revoked"
 msgstr ""
 
@@ -1263,19 +1385,31 @@ msgid "V2 action opt-in could not be completed. Confirm the adb2a token is unexp
 msgstr ""
 
 #: includes/trait-admin-page-notices.php:52
-msgid "Settings were not saved because the selected Drime workspace is not allowed for backup destinations. Choose an allowed non-personal workspace, then save again."
+msgid "Schedule Apply enabled. The paired dashboard may now request guarded future cadence changes for the Alynt scan/upload schedule after a fresh matching preview."
 msgstr ""
 
 #: includes/trait-admin-page-notices.php:53
-msgid "Settings could not be saved. Confirm the site database is writable, then try again."
+msgid "Schedule Apply disabled. The paired dashboard may still preview the Alynt scan/upload schedule, but it cannot apply cadence changes."
 msgstr ""
 
 #: includes/trait-admin-page-notices.php:54
+msgid "Schedule Apply could not be enabled. Confirm read-only pairing, V2 action opt-in, and the local Schedule Apply confirmation checkbox, then try again."
+msgstr ""
+
+#: includes/trait-admin-page-notices.php:55
+msgid "Settings were not saved because the selected Drime workspace is not allowed for backup destinations. Choose an allowed non-personal workspace, then save again."
+msgstr ""
+
+#: includes/trait-admin-page-notices.php:56
+msgid "Settings could not be saved. Confirm the site database is writable, then try again."
+msgstr ""
+
+#: includes/trait-admin-page-notices.php:57
 msgid "The action could not be completed. Review the recent events, adjust the settings, and try again."
 msgstr ""
 
 #. translators: 1: number of failed files, 2: number of files moved to trash.
-#: includes/trait-admin-page-notices.php:73
+#: includes/trait-admin-page-notices.php:76
 #, php-format
 msgid "Remote retention cleanup could not be completed for %1$d candidate(s). %2$d file(s) were moved to trash. Review recent events before trying again."
 msgstr ""
@@ -1854,139 +1988,4 @@ msgstr ""
 
 #: includes/trait-uploader-sidecars.php:34
 msgid "A package sidecar is empty and could not be uploaded."
-msgstr ""
-
-#: includes/class-cron.php
-msgid "Every 30 minutes"
-msgstr ""
-
-#: includes/class-cron.php
-msgid "The requested Alynt scan/upload cadence is not supported."
-msgstr ""
-
-#: includes/class-cron.php
-msgid "WordPress scheduling APIs are unavailable."
-msgstr ""
-
-#: includes/class-cron.php
-msgid "WordPress could not persist the requested Alynt scan/upload cadence."
-msgstr ""
-
-#: includes/class-remote-action-verifier.php
-#: includes/class-remote-action-worker.php
-msgid "Schedule apply is not enabled on this client site."
-msgstr ""
-
-#: includes/class-remote-action-verifier.php
-msgid "The schedule apply request is invalid."
-msgstr ""
-
-#: includes/class-remote-action-verifier.php
-msgid "The schedule apply request contains unsupported fields."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "Remote schedule apply action is running on the client site."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "Remote schedule apply could not be completed."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "Schedule apply completed for Alynt scan/upload."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "Remote schedule apply failed without storing unsafe error details."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "The requested schedule is not supported."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "The Alynt scan/upload schedule is not locally manageable."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "The matching schedule preview is unavailable."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "The matching schedule preview fingerprint is unavailable."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "The schedule preview does not match this apply request."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "The matching schedule preview has expired."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "The local schedule changed after the preview was created."
-msgstr ""
-
-#: includes/class-remote-action-worker.php
-msgid "The requested schedule cadence could not be persisted."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Schedule apply"
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Enabled for the Alynt scan/upload cadence only. Dashboard schedule apply still requires a fresh signed preview and cannot change WPvivid, server-runner cron, backups, cleanup, restore, or credentials."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Disabled. Schedule previews are available, but the dashboard cannot change this site’s Alynt scan/upload cadence until a local administrator enables schedule apply here."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-#, php-format
-msgid "Current action key ID: %s. Signed scan/upload-now and schedule-preview intents are accepted from the paired dashboard. Schedule apply remains separately controlled below; restore, delete, cleanup, settings, credential, and Drime token actions remain unavailable."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Schedule apply opt-in"
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Schedule apply is enabled for Alynt scan/upload cadence changes only."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "The dashboard must preview first, then send a signed apply intent matching that fresh preview. This does not create backups immediately and does not change WPvivid, server-runner cron, Drime credentials, cleanup, delete, or restore behavior."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Schedule apply opt-in confirmation"
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Allow the paired dashboard to apply a fresh-previewed Alynt scan/upload cadence change."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "This is narrower than general remote actions. It only changes the future Alynt scan/upload schedule after a fresh preview; rollback, WPvivid schedules, server-runner cron, backup creation, restore, delete, cleanup, settings, and credentials stay unavailable."
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Disable Schedule Apply"
-msgstr ""
-
-#: includes/trait-admin-page-dashboard-settings.php
-msgid "Enable Schedule Apply"
-msgstr ""
-
-msgid "Schedule Apply enabled. The paired dashboard may now request guarded future cadence changes for the Alynt scan/upload schedule after a fresh matching preview."
-msgstr ""
-
-msgid "Schedule Apply disabled. The paired dashboard may still preview the Alynt scan/upload schedule, but it cannot apply cadence changes."
-msgstr ""
-
-msgid "Schedule Apply could not be enabled. Confirm read-only pairing, V2 action opt-in, and the local Schedule Apply confirmation checkbox, then try again."
 msgstr ""
