@@ -10,9 +10,9 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
-- Current released stable version: `v0.5.11`.
+- Current released stable version: `v0.5.18`.
 - Accepted production baseline: the uploader is production-ready for the validated backup upload, server-runner, WPvivid, status payload, and operator-assisted restore-support scope. Actual-production restore enrollment remains a separate gated project and is not enabled by default.
-- `v0.5.11` is published on GitHub with release asset `alynt-drime-backups-uploader-v0.5.11.zip`; the release asset digest is `sha256:b67a1227dabdad5ba5007c1eddd5fa11bf2aeda1c5094f84ad5d3ba02f0294c4`.
+- `v0.5.18` is the current released baseline. Recent releases through `v0.5.18` added schedule-aware dashboard evidence, preview-only Alynt scan/upload schedule capability reporting, and signed non-mutating `schedule_preview`.
 - `v0.5.10` and `v0.5.11` completed the dashboard/WPvivid schedule-aware status payload work: the authenticated read-only status payload can report redacted WPvivid schedule policy, including WPvivid Pro/addon schedule detection, so central monitoring can use site-specific freshness expectations.
 - `v0.5.9` reduced noisy final failed-upload notifications for transient Drime `429` and `5xx` responses and stopped automatic scans from requeueing signatures already in the failed-upload registry.
 - Production-simulation restore automation and its release-quality corrections were released in `v0.5.1`; GitHub CI passed on PHP 7.4 and 8.3, the generated release asset was audited, and a real WordPress Updates-screen rehearsal upgraded `plugin-tester.local` from `0.4.0` to `0.5.1` while preserving the active plugin state.
@@ -20,9 +20,9 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Automatic local server outbox retention after confirmed upload has been released in `v0.3.2`; feature-stage reviews, local validation, staging retention test, staging cleanup/recovery verification, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Mandatory per-package Drime folders for server/generic-outbox uploads were released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
-- Current release candidate: `v0.5.12`, which adds the disabled-by-default V2.1 signed action-intent endpoint for paired dashboard sites that separately opt in to `scan_upload_now`.
+- Current release candidate: none. The latest released baseline is `v0.5.18`, which adds signed non-mutating V2.3 `schedule_preview` for paired dashboard sites that separately opt in to remote actions.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
-- Real WordPress Plugins-screen and Alynt Plugin Updater rehearsals have passed across the release line, including the validated `v0.5.1` and `v0.5.2` baselines and later live rollout/update releases through `v0.5.11`.
+- Real WordPress Plugins-screen and Alynt Plugin Updater rehearsals have passed across the release line, including the validated `v0.5.1` and `v0.5.2` baselines and later live rollout/update releases through `v0.5.18`.
 
 ## What Is Complete
 ### Plugin Foundation
@@ -130,6 +130,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - No public dashboard REST endpoint is enabled by default.
 - The read-only dashboard status endpoint requires explicit pairing/enrollment, scoped authentication, and redaction enforcement.
 - V2.1 adds a separate, disabled-by-default signed action-intent endpoint for the single bounded `scan_upload_now` request after administrator opt-in.
+- V2.3 adds preview-only Alynt scan/upload schedule capability reporting and a signed non-mutating `schedule_preview` action after administrator opt-in.
 - Separate dashboard plugin preparation is documented historically in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`; the active dashboard implementation now lives in the dashboard repository.
 
 ### Dashboard WPvivid Schedule-Aware Status Payload Slice
@@ -156,6 +157,40 @@ Acceptance:
 - The dashboard can use detected WPvivid schedule policy on every normal polling cycle.
 - The status payload remains safe for authenticated central-dashboard polling.
 - WPvivid Free, WPvivid Pro/addon, incremental schedule, and WP-Cron fallback detection are represented only through redacted scalar policy fields.
+
+### Dashboard V2.3 Schedule Apply Planning Slice
+
+Status: planning baseline only; no code has been implemented.
+
+Goal:
+
+- Plan the first mutating dashboard-requested schedule action while keeping it narrow, disabled by default, and reversible enough for a later rollback slice.
+- Limit the first apply target to this plugin's own `alynt_scan_upload` cadence.
+- Require a fresh successful `schedule_preview` before apply.
+- Revalidate local schedule state on the client before mutation.
+- Capture local rollback metadata before changing the schedule.
+- Keep `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, backup creation, cleanup/delete, restore, arbitrary commands, and Drime credential changes out of scope.
+
+Planning artifact:
+
+- `docs/V2_3_SCHEDULE_APPLY_IMPLEMENTATION_PLAN.md`
+
+Implementation direction:
+
+- Add a separate local schedule-mutation policy after V2 action opt-in; default disabled.
+- Report `apply_supported: true` only when the local policy and safe `alynt_scan_upload` schedule detection are active.
+- Persist short-lived preview fingerprints/evidence from successful `schedule_preview` actions for apply validation.
+- Apply only allowlisted cadence labels through WordPress scheduling APIs.
+- Store only redacted action evidence in status/action history.
+
+Acceptance before coding:
+
+- Confirm clean dashboard and uploader baselines or create restore points.
+- Approve `alynt_scan_upload` as the only managed target.
+- Approve cadence changes only; no disable/pause.
+- Approve no WPvivid or server-runner schedule management.
+- Approve no runtime rollback behavior in this slice.
+- Choose a local test target and later a low-risk live pilot target, if any.
 
 ### Release And Validation Workflows
 
@@ -780,7 +815,7 @@ Acceptance:
 
 ## Genuine Remaining Backlog
 
-No required feature slice remains for the validated `v0.5.11` current-plugin baseline.
+No required backup-upload feature slice remains for the validated `v0.5.18` current-plugin baseline. The V2.3 `schedule_apply` slice is a future dashboard-control extension, not missing backup-upload functionality.
 
 Conditional current-plugin extensions:
 
@@ -788,7 +823,7 @@ Conditional current-plugin extensions:
 2. Additional server archive formats. Start only after a real server or producer requires a format beyond `.tar.gz` and provides validation fixtures.
 3. Actual-production restore enrollment. Treat this as a new high-risk gated operational project for a specific real production target. Production-simulation restore tooling is implemented and rehearsed, but actual-production enrollment remains unavailable until a target is selected, read-only preflight is run, native rollback evidence is verified, and explicit production approvals are granted.
 4. A dedicated third-party producer adapter. Start only after a specific producer is selected and the generic outbox cannot represent its completed packages safely.
-5. Portable runner modularization and deterministic single-file build output. Completed on 2026-07-24 through planning, baseline capture, deterministic generation, all source-splitting batches, build/CI/release integration, automated parity, approved `hbf-staging` read-only parity, feature-stage reviews, clean-checkout GitHub Actions proof, the complete pre-release workflow refresh, final release-package audit, `v0.5.2` publication, and a real `plugin-tester.local` native updater rehearsal. Runner `0.4.8` is produced from 14 focused responsibility/shared-helper modules plus a 104-line bootstrap/dispatch entrypoint. Freshness, repeat-generation, source/generated syntax, exact CLI usage snapshot, config-example compatibility, report-schema/confirmation regression, the 216-test/1,668-assertion suite, PHPCS, the build, deployed single-file parity, and the 73-entry published release ZIP all pass. `v0.5.2` remains the accepted stable baseline for that modularization slice; the current overall plugin baseline is `v0.5.11`. See `docs/PORTABLE_RUNNER_MODULARIZATION_PLAN.md`.
+5. Portable runner modularization and deterministic single-file build output. Completed on 2026-07-24 through planning, baseline capture, deterministic generation, all source-splitting batches, build/CI/release integration, automated parity, approved `hbf-staging` read-only parity, feature-stage reviews, clean-checkout GitHub Actions proof, the complete pre-release workflow refresh, final release-package audit, `v0.5.2` publication, and a real `plugin-tester.local` native updater rehearsal. Runner `0.4.8` is produced from 14 focused responsibility/shared-helper modules plus a 104-line bootstrap/dispatch entrypoint. Freshness, repeat-generation, source/generated syntax, exact CLI usage snapshot, config-example compatibility, report-schema/confirmation regression, the 216-test/1,668-assertion suite, PHPCS, the build, deployed single-file parity, and the 73-entry published release ZIP all pass. `v0.5.2` remains the accepted stable baseline for that modularization slice; the current overall plugin baseline is `v0.5.18`. See `docs/PORTABLE_RUNNER_MODULARIZATION_PLAN.md`.
 
 Separate project:
 

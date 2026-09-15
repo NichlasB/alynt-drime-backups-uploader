@@ -15,7 +15,8 @@ The uploader has the foundation the dashboard needs:
 - Redaction tests that guard the default status payload against secret and path-like fields.
 - Explicit V2.1 action opt-in for one bounded signed action, `scan_upload_now`.
 - A signed action-intent endpoint that remains inert unless V1 pairing and separate V2.1 opt-in are both active.
-- Documentation that keeps restore, deletion, fresh backup creation, cleanup, settings changes, and credential mutation out of the V2.1 action boundary.
+- V2.3 preview-only Alynt scan/upload schedule capability reporting and a signed non-mutating `schedule_preview` action after separate V2 action opt-in.
+- Documentation that keeps restore, deletion, fresh backup creation, cleanup, arbitrary settings changes, and credential mutation out of the V2 action boundary.
 
 No central dashboard UI should be added to this plugin. The dashboard remains a separate project.
 
@@ -90,6 +91,8 @@ When the dashboard project starts, prefer this order:
 
 V2.1 adds the first remote-action slice only after separate local opt-in and only for `scan_upload_now`. Any broader remote action must receive its own design, threat model, tests, and release plan.
 
+V2.3 schedule management has advanced through preview-only reporting and non-mutating `schedule_preview`. The next planned uploader-side slice is `schedule_apply` for the plugin-owned `alynt_scan_upload` cadence only. It must remain disabled by default, require a separate local schedule-mutation policy, require a fresh preview, capture local rollback metadata before mutation, and continue rejecting `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, backup creation, cleanup/delete, restore, arbitrary commands, and Drime credential changes. Planning is tracked in `docs/V2_3_SCHEDULE_APPLY_IMPLEMENTATION_PLAN.md`.
+
 ## Planning Preparation
 
 `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md` records the recommended separate-plugin shape:
@@ -98,8 +101,8 @@ V2.1 adds the first remote-action slice only after separate local opt-in and onl
 - dashboard-owned site registry and status snapshots;
 - explicit site enrollment and pairing;
 - dashboard polling before considering client push;
-- a disabled-by-default V2.1 action endpoint that requires separate opt-in, signed requests, rate limiting, idempotency, and redaction tests;
-- no remote restore, deletion, fresh backup creation, settings changes, local cleanup, or Drime credential changes in version 1 or V2.1.
+- a disabled-by-default V2 action endpoint that requires separate opt-in, signed requests, rate limiting, idempotency, and redaction tests;
+- no remote restore, deletion, fresh backup creation, arbitrary settings changes, local cleanup, or Drime credential changes in version 1, V2.1, V2.3 preview, or the planned `schedule_apply` cadence-only slice.
 
 ## Current Decision
 
