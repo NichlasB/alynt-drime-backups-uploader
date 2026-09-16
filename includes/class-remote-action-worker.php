@@ -299,6 +299,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 		);
 
 		if ( ! $changed ) {
+			$apply_result['rollback_metadata'] = $this->schedule_apply_rollback_metadata( $record, $apply_result, $current['fingerprint'], $current['fingerprint'] );
 			return $apply_result;
 		}
 
@@ -309,8 +310,45 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 
 		$applied_next_run                    = isset( $scheduled['next_run_at'] ) ? absint( $scheduled['next_run_at'] ) : 0;
 		$apply_result['applied_next_run_at'] = $applied_next_run > 0 ? gmdate( 'c', $applied_next_run ) : '';
+		$apply_result['rollback_metadata']   = $this->schedule_apply_rollback_metadata( $record, $apply_result, $current['fingerprint'], $this->schedule_fingerprint( $proposed_cadence, $applied_next_run ) );
 
 		return $apply_result;
+	}
+
+	/**
+	 * Builds support-safe metadata needed for a future rollback readiness flow.
+	 *
+	 * This is intentionally evidence-only in this release: it captures bounded,
+	 * redacted before/after schedule state but does not make rollback executable.
+	 *
+	 * @since 0.5.20
+	 *
+	 * @param array<string,mixed> $record                    Action record.
+	 * @param array<string,mixed> $apply_result              Schedule apply result.
+	 * @param string              $schedule_fingerprint_before Fingerprint before apply.
+	 * @param string              $schedule_fingerprint_after  Fingerprint after apply.
+	 * @return array<string,mixed>
+	 */
+	private function schedule_apply_rollback_metadata( array $record, array $apply_result, $schedule_fingerprint_before, $schedule_fingerprint_after ) {
+		$captured_at = time();
+
+		return array(
+			'captured'                            => true,
+			'available'                           => false,
+			'reason'                              => 'schedule_rollback_runtime_not_implemented',
+			'source_action_id'                    => isset( $record['action_id'] ) ? (string) $record['action_id'] : '',
+			'source_preview_action_id'            => isset( $apply_result['preview_action_id'] ) ? (string) $apply_result['preview_action_id'] : '',
+			'schedule_id'                         => isset( $apply_result['schedule_id'] ) ? (string) $apply_result['schedule_id'] : '',
+			'owner'                               => isset( $apply_result['owner'] ) ? (string) $apply_result['owner'] : '',
+			'previous_cadence'                    => isset( $apply_result['previous_cadence'] ) ? (string) $apply_result['previous_cadence'] : '',
+			'applied_cadence'                     => isset( $apply_result['applied_cadence'] ) ? (string) $apply_result['applied_cadence'] : '',
+			'previous_next_run_at'                => isset( $apply_result['previous_next_run_at'] ) ? (string) $apply_result['previous_next_run_at'] : '',
+			'applied_next_run_at'                 => isset( $apply_result['applied_next_run_at'] ) ? (string) $apply_result['applied_next_run_at'] : '',
+			'current_schedule_fingerprint_before' => (string) $schedule_fingerprint_before,
+			'current_schedule_fingerprint_after'  => (string) $schedule_fingerprint_after,
+			'captured_at'                         => gmdate( 'c', $captured_at ),
+			'expires_at'                          => gmdate( 'c', $captured_at + 3600 ),
+		);
 	}
 
 	/**
@@ -345,8 +383,21 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 		return array(
 			'cadence'     => $current_cadence,
 			'next_run'    => $current_next_run,
-			'fingerprint' => hash( 'sha256', 'alynt_scan_upload|' . $current_cadence . '|' . (string) $current_next_run ),
+			'fingerprint' => $this->schedule_fingerprint( $current_cadence, $current_next_run ),
 		);
+	}
+
+	/**
+	 * Builds a redacted fingerprint for one scan schedule state.
+	 *
+	 * @since 0.5.20
+	 *
+	 * @param string $cadence  Public cadence label.
+	 * @param int    $next_run Next run timestamp.
+	 * @return string
+	 */
+	private function schedule_fingerprint( $cadence, $next_run ) {
+		return hash( 'sha256', 'alynt_scan_upload|' . sanitize_key( (string) $cadence ) . '|' . (string) max( 0, absint( $next_run ) ) );
 	}
 
 	/**

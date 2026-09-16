@@ -204,6 +204,21 @@ class RemoteActionWorkerTest extends TestCase {
 		$this->assertSame( '2026-06-25T17:00:00+00:00', $latest['schedule_apply']['applied_next_run_at'] );
 		$this->assertTrue( $latest['schedule_apply']['changed'] );
 		$this->assertFalse( $latest['schedule_apply']['rollback_available'] );
+		$this->assertArrayHasKey( 'rollback_metadata', $latest['schedule_apply'] );
+		$this->assertTrue( $latest['schedule_apply']['rollback_metadata']['captured'] );
+		$this->assertFalse( $latest['schedule_apply']['rollback_metadata']['available'] );
+		$this->assertSame( 'schedule_rollback_runtime_not_implemented', $latest['schedule_apply']['rollback_metadata']['reason'] );
+		$this->assertSame( '7c650de7-c7ee-4f90-a5cb-59c4753a2c51', $latest['schedule_apply']['rollback_metadata']['source_action_id'] );
+		$this->assertSame( '6b650de7-c7ee-4f90-a5cb-59c4753a2c50', $latest['schedule_apply']['rollback_metadata']['source_preview_action_id'] );
+		$this->assertSame( 'every_15_minutes', $latest['schedule_apply']['rollback_metadata']['previous_cadence'] );
+		$this->assertSame( 'every_30_minutes', $latest['schedule_apply']['rollback_metadata']['applied_cadence'] );
+		$this->assertSame( '2026-06-25T16:45:00+00:00', $latest['schedule_apply']['rollback_metadata']['previous_next_run_at'] );
+		$this->assertSame( '2026-06-25T17:00:00+00:00', $latest['schedule_apply']['rollback_metadata']['applied_next_run_at'] );
+		$this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $latest['schedule_apply']['rollback_metadata']['current_schedule_fingerprint_before'] );
+		$this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $latest['schedule_apply']['rollback_metadata']['current_schedule_fingerprint_after'] );
+		$this->assertNotSame( $latest['schedule_apply']['rollback_metadata']['current_schedule_fingerprint_before'], $latest['schedule_apply']['rollback_metadata']['current_schedule_fingerprint_after'] );
+		$this->assertNotEmpty( $latest['schedule_apply']['rollback_metadata']['captured_at'] );
+		$this->assertNotEmpty( $latest['schedule_apply']['rollback_metadata']['expires_at'] );
 	}
 
 	public function test_schedule_apply_rejects_stale_preview_after_local_schedule_changes() {
@@ -247,6 +262,7 @@ class RemoteActionWorkerTest extends TestCase {
 		$this->assertSame( '', $latest['schedule_apply']['applied_cadence'] );
 		$this->assertFalse( $latest['schedule_apply']['changed'] );
 		$this->assertFalse( $latest['schedule_apply']['rollback_available'] );
+		$this->assertArrayNotHasKey( 'rollback_metadata', $latest['schedule_apply'] );
 	}
 
 	/**

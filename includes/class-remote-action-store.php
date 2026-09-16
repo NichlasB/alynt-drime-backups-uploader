@@ -499,7 +499,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 			return array();
 		}
 
-		return array(
+		$clean = array(
 			'schedule_id'          => isset( $apply['schedule_id'] ) ? sanitize_key( (string) $apply['schedule_id'] ) : '',
 			'label'                => isset( $apply['label'] ) ? $this->safe_summary( (string) $apply['label'] ) : '',
 			'owner'                => isset( $apply['owner'] ) ? sanitize_key( (string) $apply['owner'] ) : '',
@@ -512,8 +512,46 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 			'previous_next_run_at' => isset( $apply['previous_next_run_at'] ) ? sanitize_text_field( (string) $apply['previous_next_run_at'] ) : '',
 			'applied_next_run_at'  => isset( $apply['applied_next_run_at'] ) ? sanitize_text_field( (string) $apply['applied_next_run_at'] ) : '',
 			'changed'              => ! empty( $apply['changed'] ),
-			'rollback_available'   => ! empty( $apply['rollback_available'] ),
+			'rollback_available'   => false,
 			'rollback_expires_at'  => isset( $apply['rollback_expires_at'] ) ? sanitize_text_field( (string) $apply['rollback_expires_at'] ) : '',
+		);
+
+		if ( isset( $apply['rollback_metadata'] ) && is_array( $apply['rollback_metadata'] ) ) {
+			$clean['rollback_metadata'] = $this->safe_schedule_rollback_metadata( $apply['rollback_metadata'] );
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Sanitizes schedule rollback metadata for evidence-only status reporting.
+	 *
+	 * @since 0.5.20
+	 *
+	 * @param array<string,mixed> $metadata Rollback metadata.
+	 * @return array<string,mixed>
+	 */
+	private function safe_schedule_rollback_metadata( array $metadata ) {
+		if ( empty( $metadata ) ) {
+			return array();
+		}
+
+		return array(
+			'captured'                            => ! empty( $metadata['captured'] ),
+			'available'                           => false,
+			'reason'                              => isset( $metadata['reason'] ) ? sanitize_key( (string) $metadata['reason'] ) : '',
+			'source_action_id'                    => isset( $metadata['source_action_id'] ) ? $this->sanitize_uuid( (string) $metadata['source_action_id'] ) : '',
+			'source_preview_action_id'            => isset( $metadata['source_preview_action_id'] ) ? $this->sanitize_uuid( (string) $metadata['source_preview_action_id'] ) : '',
+			'schedule_id'                         => isset( $metadata['schedule_id'] ) ? sanitize_key( (string) $metadata['schedule_id'] ) : '',
+			'owner'                               => isset( $metadata['owner'] ) ? sanitize_key( (string) $metadata['owner'] ) : '',
+			'previous_cadence'                    => isset( $metadata['previous_cadence'] ) ? sanitize_key( (string) $metadata['previous_cadence'] ) : '',
+			'applied_cadence'                     => isset( $metadata['applied_cadence'] ) ? sanitize_key( (string) $metadata['applied_cadence'] ) : '',
+			'previous_next_run_at'                => isset( $metadata['previous_next_run_at'] ) ? sanitize_text_field( (string) $metadata['previous_next_run_at'] ) : '',
+			'applied_next_run_at'                 => isset( $metadata['applied_next_run_at'] ) ? sanitize_text_field( (string) $metadata['applied_next_run_at'] ) : '',
+			'current_schedule_fingerprint_before' => isset( $metadata['current_schedule_fingerprint_before'] ) ? $this->sanitize_hash( (string) $metadata['current_schedule_fingerprint_before'] ) : '',
+			'current_schedule_fingerprint_after'  => isset( $metadata['current_schedule_fingerprint_after'] ) ? $this->sanitize_hash( (string) $metadata['current_schedule_fingerprint_after'] ) : '',
+			'captured_at'                         => isset( $metadata['captured_at'] ) ? sanitize_text_field( (string) $metadata['captured_at'] ) : '',
+			'expires_at'                          => isset( $metadata['expires_at'] ) ? sanitize_text_field( (string) $metadata['expires_at'] ) : '',
 		);
 	}
 

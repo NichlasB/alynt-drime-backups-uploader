@@ -204,7 +204,7 @@ Remaining after release/deploy:
 
 ### Dashboard V2.3 Rollback Metadata Capture / Readiness Slice
 
-Status: planning-only. No runtime rollback behavior is approved.
+Status: locally implemented, not released. No runtime rollback behavior is approved.
 
 Goal:
 
@@ -218,8 +218,8 @@ Planning/scope artifact:
 
 Initial direction:
 
-- Store metadata in the existing bounded remote-action state/audit store if possible.
-- Report only redacted scalar fields such as previous cadence, applied cadence, before/after fingerprints, capture time, expiry time, and an explicit unavailable reason such as `rollback_runtime_not_implemented`.
+- Store metadata in the existing bounded remote-action state/audit store.
+- Report only redacted scalar fields such as previous cadence, applied cadence, before/after fingerprints, capture time, expiry time, source action IDs, and the explicit unavailable reason `schedule_rollback_runtime_not_implemented`.
 - Keep `rollback_available` false until a later approved runtime rollback slice exists.
 - Add tests proving metadata capture does not make `schedule_rollback` dispatchable.
 
