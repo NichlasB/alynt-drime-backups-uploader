@@ -21,7 +21,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Automatic local server outbox retention after confirmed upload has been released in `v0.3.2`; feature-stage reviews, local validation, staging retention test, staging cleanup/recovery verification, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Mandatory per-package Drime folders for server/generic-outbox uploads were released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
-- Current release candidate: none. The latest released baseline is `v0.5.19`, which adds separately opted-in guarded V2.3 `schedule_apply` for paired dashboard sites that separately opt in to remote actions and local Schedule Apply.
+- Current release candidate: `v0.5.20`, which adds evidence-only rollback-readiness metadata for successful guarded V2.3 `schedule_apply` results while keeping `schedule_rollback` unavailable.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
 - Real WordPress Plugins-screen and Alynt Plugin Updater rehearsals have passed across the release line, including the validated `v0.5.1` and `v0.5.2` baselines and later live rollout/update releases through `v0.5.18`.
 
@@ -204,7 +204,7 @@ Remaining after release/deploy:
 
 ### Dashboard V2.3 Rollback Metadata Capture / Readiness Slice
 
-Status: locally implemented, not released. No runtime rollback behavior is approved.
+Status: release candidate in `v0.5.20`. No runtime rollback behavior is approved.
 
 Goal:
 

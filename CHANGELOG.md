@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.20] - 2026-09-17
+
+### Added
+
+- Added evidence-only rollback-readiness metadata for successful guarded V2.3 `schedule_apply` actions, including support-safe previous/applied cadence, next-run timestamps, redacted schedule fingerprints, source action IDs, capture time, and expiry time.
+
+### Changed
+
+- Kept schedule rollback unavailable: rollback metadata is redacted support evidence only, `rollback_available` remains false, and `schedule_rollback` is still not dispatchable.
+
 ## [0.5.19] - 2026-09-15
 
 ### Added

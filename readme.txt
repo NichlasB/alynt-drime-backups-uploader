@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.19
+Stable tag: 0.5.20
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,7 +52,7 @@ Only after V1 read-only pairing and a separate V2.1 `adb2a` action opt-in. The o
 
 = Can the central dashboard change this site's schedules? =
 
-Only after several opt-ins. Version 0.5.19 can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence, requires a fresh matching `schedule_preview`, and still does not expose disable, rollback, WPvivid schedule changes, server-runner schedule changes, settings, credential, backup creation, restore, cleanup, delete, or Drime-token actions.
+Only after several opt-ins. Version 0.5.20 can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence, requires a fresh matching `schedule_preview`, and still does not expose disable, rollback, WPvivid schedule changes, server-runner schedule changes, settings, credential, backup creation, restore, cleanup, delete, or Drime-token actions. Successful apply results may report redacted rollback-readiness metadata for support, but rollback remains unavailable.
 
 = How are server-runner packages verified before restore staging? =
 
@@ -121,6 +121,10 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= 0.5.20 =
+* Added evidence-only rollback-readiness metadata for successful guarded V2.3 `schedule_apply` actions.
+* Kept schedule rollback unavailable: metadata is redacted support evidence only, `rollback_available` remains false, and `schedule_rollback` is still not dispatchable.
 
 = 0.5.19 =
 * Added guarded V2.3 `schedule_apply` support for the plugin-owned Alynt scan/upload cadence only. It is disabled by default and requires V1 pairing, V2 action opt-in, local schedule-apply opt-in, a fresh matching preview, current schedule revalidation, and redacted action history.
