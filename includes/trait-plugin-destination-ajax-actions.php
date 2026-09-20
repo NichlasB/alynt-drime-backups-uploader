@@ -30,7 +30,7 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Destination_Ajax_Actions {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified by verify_ajax_action().
 		$folder_hash = isset( $_POST['folder_hash'] ) ? sanitize_text_field( wp_unslash( $_POST['folder_hash'] ) ) : '';
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified by verify_ajax_action().
-		$page = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 1;
+		$page = isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : 1;
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified by verify_ajax_action().
 		$query  = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
 		$result = $this->folder_browser->list_folders( $folder_hash, $page, $query );
