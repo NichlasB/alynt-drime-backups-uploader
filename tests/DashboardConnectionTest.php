@@ -495,6 +495,36 @@ class DashboardConnectionTest extends TestCase {
 		$this->assertStringNotContainsString( 'private', strtolower( wp_json_encode( $options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ] ) ) );
 	}
 
+	public function test_complete_remote_action_opt_in_stores_rollback_preview_opt_in_when_granted() {
+		$options    = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->complete_remote_action_opt_in_from_token(
+			$this->action_opt_in_token(
+				array(
+					'allowed_actions' => array(
+						Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW,
+						Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
+						Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY,
+						Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW,
+					),
+				)
+			),
+			'https://client.example.com',
+			'11111111-1111-4111-8111-111111111111'
+		);
+
+		if ( ! function_exists( 'sodium_crypto_sign_verify_detached' ) ) {
+			$this->assertSame( 'remote_action_signing_unavailable', $state['last_error_code'] );
+			$this->assertFalse( $state['schedule_rollback_preview_enabled'] );
+			return;
+		}
+
+		$this->assertSame( '', $state['last_error_code'] );
+		$this->assertTrue( $state['schedule_rollback_preview_enabled'] );
+		$this->assertGreaterThan( 0, $state['schedule_rollback_preview_enabled_at'] );
+	}
+
 	public function test_complete_remote_action_opt_in_rejects_site_identity_mismatch() {
 		$options    = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
 		$connection = $this->connection_with_options( $options );

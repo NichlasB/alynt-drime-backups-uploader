@@ -226,6 +226,10 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 		$state['remote_actions_opted_in_at'] = time();
 		$state['last_error_code']            = '';
 
+		$rollback_preview_enabled                      = in_array( self::ACTION_SCHEDULE_ROLLBACK_PREVIEW, $parsed['allowed_actions'], true );
+		$state['schedule_rollback_preview_enabled']    = $rollback_preview_enabled;
+		$state['schedule_rollback_preview_enabled_at'] = $rollback_preview_enabled ? time() : 0;
+
 		update_option( self::OPTION_NAME, $state, false );
 		$this->sync_option_cache( $state );
 
