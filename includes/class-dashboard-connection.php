@@ -20,24 +20,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 0.5.3
  */
 class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
-	const OPTION_NAME             = 'alynt_drime_backups_dashboard_connection';
-	const STATUS_DISABLED         = 'disabled';
-	const STATUS_READY            = 'ready';
-	const STATUS_TOKEN_READY      = 'token_ready';
-	const STATUS_CONFIRMED        = 'confirmed';
-	const STATUS_PAIRED           = 'paired';
-	const STATUS_REVOKED          = 'revoked';
-	const TOKEN_PREFIX            = 'adb1.';
-	const ACTION_TOKEN_PREFIX     = 'adb2a.';
-	const POLLING_AUTH_PREFIX     = 'adb-poll-v1.';
-	const PROTOCOL_VERSION        = 1;
-	const STATUS_SCHEMA_VERSION   = 1;
-	const ACTION_PROTOCOL_VERSION = 2;
-	const ACTION_SCAN_UPLOAD_NOW  = 'scan_upload_now';
-	const ACTION_SCHEDULE_PREVIEW = 'schedule_preview';
-	const ACTION_SCHEDULE_APPLY   = 'schedule_apply';
-	const ACTION_MIN_INTERVAL     = 3600;
-	const ACTION_TOKEN_PURPOSE    = 'remote_action_opt_in';
+	const OPTION_NAME                      = 'alynt_drime_backups_dashboard_connection';
+	const STATUS_DISABLED                  = 'disabled';
+	const STATUS_READY                     = 'ready';
+	const STATUS_TOKEN_READY               = 'token_ready';
+	const STATUS_CONFIRMED                 = 'confirmed';
+	const STATUS_PAIRED                    = 'paired';
+	const STATUS_REVOKED                   = 'revoked';
+	const TOKEN_PREFIX                     = 'adb1.';
+	const ACTION_TOKEN_PREFIX              = 'adb2a.';
+	const POLLING_AUTH_PREFIX              = 'adb-poll-v1.';
+	const PROTOCOL_VERSION                 = 1;
+	const STATUS_SCHEMA_VERSION            = 1;
+	const ACTION_PROTOCOL_VERSION          = 2;
+	const ACTION_SCAN_UPLOAD_NOW           = 'scan_upload_now';
+	const ACTION_SCHEDULE_PREVIEW          = 'schedule_preview';
+	const ACTION_SCHEDULE_APPLY            = 'schedule_apply';
+	const ACTION_SCHEDULE_ROLLBACK_PREVIEW = 'schedule_rollback_preview';
+	const ACTION_MIN_INTERVAL              = 3600;
+	const ACTION_TOKEN_PURPOSE             = 'remote_action_opt_in';
 
 	/**
 	 * Returns default connection state.
@@ -46,26 +47,28 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	 */
 	public static function defaults() {
 		return array(
-			'connection_status'            => self::STATUS_DISABLED,
-			'dashboard_origin'             => '',
-			'expected_client_origin'       => '',
-			'pending_enrollment_id'        => '',
-			'pairing_expires_at'           => '',
-			'dashboard_origin_confirmed'   => false,
-			'dashboard_site_public_id'     => '',
-			'polling_key_id'               => '',
-			'polling_credential_verifier'  => '',
-			'paired_at'                    => 0,
-			'revoked_at'                   => 0,
-			'last_error_code'              => '',
-			'last_authenticated_read_at'   => 0,
-			'status_endpoint_enabled'      => false,
-			'remote_actions_enabled'       => false,
-			'action_key_id'                => '',
-			'action_public_key'            => '',
-			'remote_actions_opted_in_at'   => 0,
-			'schedule_mutation_enabled'    => false,
-			'schedule_mutation_enabled_at' => 0,
+			'connection_status'                    => self::STATUS_DISABLED,
+			'dashboard_origin'                     => '',
+			'expected_client_origin'               => '',
+			'pending_enrollment_id'                => '',
+			'pairing_expires_at'                   => '',
+			'dashboard_origin_confirmed'           => false,
+			'dashboard_site_public_id'             => '',
+			'polling_key_id'                       => '',
+			'polling_credential_verifier'          => '',
+			'paired_at'                            => 0,
+			'revoked_at'                           => 0,
+			'last_error_code'                      => '',
+			'last_authenticated_read_at'           => 0,
+			'status_endpoint_enabled'              => false,
+			'remote_actions_enabled'               => false,
+			'action_key_id'                        => '',
+			'action_public_key'                    => '',
+			'remote_actions_opted_in_at'           => 0,
+			'schedule_mutation_enabled'            => false,
+			'schedule_mutation_enabled_at'         => 0,
+			'schedule_rollback_preview_enabled'    => false,
+			'schedule_rollback_preview_enabled_at' => 0,
 		);
 	}
 
@@ -134,13 +137,15 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			$state['connection_status'] = self::STATUS_REVOKED;
 			$state['revoked_at']        = time();
 		} elseif ( 'disable_remote_actions' === $action ) {
-			$state['remote_actions_enabled']       = false;
-			$state['action_key_id']                = '';
-			$state['action_public_key']            = '';
-			$state['remote_actions_opted_in_at']   = 0;
-			$state['schedule_mutation_enabled']    = false;
-			$state['schedule_mutation_enabled_at'] = 0;
-			$state['last_error_code']              = '';
+			$state['remote_actions_enabled']               = false;
+			$state['action_key_id']                        = '';
+			$state['action_public_key']                    = '';
+			$state['remote_actions_opted_in_at']           = 0;
+			$state['schedule_mutation_enabled']            = false;
+			$state['schedule_mutation_enabled_at']         = 0;
+			$state['schedule_rollback_preview_enabled']    = false;
+			$state['schedule_rollback_preview_enabled_at'] = 0;
+			$state['last_error_code']                      = '';
 		} elseif ( 'enable_schedule_mutation' === $action ) {
 			if ( self::STATUS_PAIRED === $state['connection_status'] && ! empty( $state['remote_actions_enabled'] ) && ! empty( $raw['schedule_mutation_opt_in'] ) ) {
 				$state['schedule_mutation_enabled']    = true;
@@ -150,9 +155,11 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 				$state['last_error_code'] = 'schedule_mutation_opt_in_required';
 			}
 		} elseif ( 'disable_schedule_mutation' === $action ) {
-			$state['schedule_mutation_enabled']    = false;
-			$state['schedule_mutation_enabled_at'] = 0;
-			$state['last_error_code']              = '';
+			$state['schedule_mutation_enabled']            = false;
+			$state['schedule_mutation_enabled_at']         = 0;
+			$state['schedule_rollback_preview_enabled']    = false;
+			$state['schedule_rollback_preview_enabled_at'] = 0;
+			$state['last_error_code']                      = '';
 		} elseif ( 'disable' === $action ) {
 			$state = self::defaults();
 		}
@@ -434,6 +441,9 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			if ( $this->is_schedule_mutation_enabled() ) {
 				$allowed_actions[] = self::ACTION_SCHEDULE_APPLY;
 			}
+			if ( $this->is_schedule_rollback_preview_enabled() ) {
+				$allowed_actions[] = self::ACTION_SCHEDULE_ROLLBACK_PREVIEW;
+			}
 		}
 
 		return array(
@@ -461,6 +471,22 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			&& ! empty( $state['status_endpoint_enabled'] )
 			&& ! empty( $state['remote_actions_enabled'] )
 			&& ! empty( $state['schedule_mutation_enabled'] );
+	}
+
+	/**
+	 * Returns whether non-mutating schedule rollback preview is explicitly enabled.
+	 *
+	 * @since 0.5.21
+	 *
+	 * @return bool
+	 */
+	public function is_schedule_rollback_preview_enabled() {
+		$state = $this->get();
+
+		return self::STATUS_PAIRED === $state['connection_status']
+			&& ! empty( $state['status_endpoint_enabled'] )
+			&& ! empty( $state['remote_actions_enabled'] )
+			&& ! empty( $state['schedule_rollback_preview_enabled'] );
 	}
 
 	/**
@@ -669,8 +695,10 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 		sort( $supported_actions );
 		$apply_supported_actions = array( self::ACTION_SCAN_UPLOAD_NOW, self::ACTION_SCHEDULE_PREVIEW, self::ACTION_SCHEDULE_APPLY );
 		sort( $apply_supported_actions );
+		$rollback_preview_supported_actions = array( self::ACTION_SCAN_UPLOAD_NOW, self::ACTION_SCHEDULE_PREVIEW, self::ACTION_SCHEDULE_APPLY, self::ACTION_SCHEDULE_ROLLBACK_PREVIEW );
+		sort( $rollback_preview_supported_actions );
 		$legacy_actions = array( self::ACTION_SCAN_UPLOAD_NOW );
-		if ( $legacy_actions !== $allowed_actions && $supported_actions !== $allowed_actions && $apply_supported_actions !== $allowed_actions ) {
+		if ( $legacy_actions !== $allowed_actions && $supported_actions !== $allowed_actions && $apply_supported_actions !== $allowed_actions && $rollback_preview_supported_actions !== $allowed_actions ) {
 			return new WP_Error( 'action_opt_in_allowed_actions_invalid', __( 'The dashboard action opt-in token does not grant the supported scan/upload-now action.', 'alynt-drime-backups-uploader' ) );
 		}
 
@@ -731,26 +759,28 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 		}
 
 		return array(
-			'connection_status'            => $status,
-			'dashboard_origin'             => isset( $state['dashboard_origin'] ) ? esc_url_raw( (string) $state['dashboard_origin'] ) : $defaults['dashboard_origin'],
-			'expected_client_origin'       => isset( $state['expected_client_origin'] ) ? esc_url_raw( (string) $state['expected_client_origin'] ) : $defaults['expected_client_origin'],
-			'pending_enrollment_id'        => isset( $state['pending_enrollment_id'] ) ? $this->sanitize_uuid( (string) $state['pending_enrollment_id'] ) : $defaults['pending_enrollment_id'],
-			'pairing_expires_at'           => isset( $state['pairing_expires_at'] ) ? sanitize_text_field( (string) $state['pairing_expires_at'] ) : $defaults['pairing_expires_at'],
-			'dashboard_origin_confirmed'   => self::STATUS_CONFIRMED === $status || ( self::STATUS_PAIRED === $status && ! empty( $state['dashboard_origin_confirmed'] ) ),
-			'dashboard_site_public_id'     => isset( $state['dashboard_site_public_id'] ) ? $this->sanitize_token_identifier( (string) $state['dashboard_site_public_id'] ) : $defaults['dashboard_site_public_id'],
-			'polling_key_id'               => isset( $state['polling_key_id'] ) ? $this->sanitize_token_identifier( (string) $state['polling_key_id'] ) : $defaults['polling_key_id'],
-			'polling_credential_verifier'  => isset( $state['polling_credential_verifier'] ) ? $this->sanitize_hash( (string) $state['polling_credential_verifier'] ) : $defaults['polling_credential_verifier'],
-			'paired_at'                    => isset( $state['paired_at'] ) ? max( 0, absint( $state['paired_at'] ) ) : $defaults['paired_at'],
-			'revoked_at'                   => isset( $state['revoked_at'] ) ? max( 0, absint( $state['revoked_at'] ) ) : $defaults['revoked_at'],
-			'last_error_code'              => isset( $state['last_error_code'] ) ? sanitize_key( (string) $state['last_error_code'] ) : $defaults['last_error_code'],
-			'last_authenticated_read_at'   => isset( $state['last_authenticated_read_at'] ) ? max( 0, absint( $state['last_authenticated_read_at'] ) ) : $defaults['last_authenticated_read_at'],
-			'status_endpoint_enabled'      => self::STATUS_PAIRED === $status && ! empty( $state['status_endpoint_enabled'] ),
-			'remote_actions_enabled'       => self::STATUS_PAIRED === $status && ! empty( $state['remote_actions_enabled'] ),
-			'action_key_id'                => isset( $state['action_key_id'] ) ? $this->sanitize_token_identifier( (string) $state['action_key_id'] ) : $defaults['action_key_id'],
-			'action_public_key'            => isset( $state['action_public_key'] ) ? $this->sanitize_action_public_key( (string) $state['action_public_key'] ) : $defaults['action_public_key'],
-			'remote_actions_opted_in_at'   => isset( $state['remote_actions_opted_in_at'] ) ? max( 0, absint( $state['remote_actions_opted_in_at'] ) ) : $defaults['remote_actions_opted_in_at'],
-			'schedule_mutation_enabled'    => self::STATUS_PAIRED === $status && ! empty( $state['remote_actions_enabled'] ) && ! empty( $state['schedule_mutation_enabled'] ),
-			'schedule_mutation_enabled_at' => isset( $state['schedule_mutation_enabled_at'] ) ? max( 0, absint( $state['schedule_mutation_enabled_at'] ) ) : $defaults['schedule_mutation_enabled_at'],
+			'connection_status'                    => $status,
+			'dashboard_origin'                     => isset( $state['dashboard_origin'] ) ? esc_url_raw( (string) $state['dashboard_origin'] ) : $defaults['dashboard_origin'],
+			'expected_client_origin'               => isset( $state['expected_client_origin'] ) ? esc_url_raw( (string) $state['expected_client_origin'] ) : $defaults['expected_client_origin'],
+			'pending_enrollment_id'                => isset( $state['pending_enrollment_id'] ) ? $this->sanitize_uuid( (string) $state['pending_enrollment_id'] ) : $defaults['pending_enrollment_id'],
+			'pairing_expires_at'                   => isset( $state['pairing_expires_at'] ) ? sanitize_text_field( (string) $state['pairing_expires_at'] ) : $defaults['pairing_expires_at'],
+			'dashboard_origin_confirmed'           => self::STATUS_CONFIRMED === $status || ( self::STATUS_PAIRED === $status && ! empty( $state['dashboard_origin_confirmed'] ) ),
+			'dashboard_site_public_id'             => isset( $state['dashboard_site_public_id'] ) ? $this->sanitize_token_identifier( (string) $state['dashboard_site_public_id'] ) : $defaults['dashboard_site_public_id'],
+			'polling_key_id'                       => isset( $state['polling_key_id'] ) ? $this->sanitize_token_identifier( (string) $state['polling_key_id'] ) : $defaults['polling_key_id'],
+			'polling_credential_verifier'          => isset( $state['polling_credential_verifier'] ) ? $this->sanitize_hash( (string) $state['polling_credential_verifier'] ) : $defaults['polling_credential_verifier'],
+			'paired_at'                            => isset( $state['paired_at'] ) ? max( 0, absint( $state['paired_at'] ) ) : $defaults['paired_at'],
+			'revoked_at'                           => isset( $state['revoked_at'] ) ? max( 0, absint( $state['revoked_at'] ) ) : $defaults['revoked_at'],
+			'last_error_code'                      => isset( $state['last_error_code'] ) ? sanitize_key( (string) $state['last_error_code'] ) : $defaults['last_error_code'],
+			'last_authenticated_read_at'           => isset( $state['last_authenticated_read_at'] ) ? max( 0, absint( $state['last_authenticated_read_at'] ) ) : $defaults['last_authenticated_read_at'],
+			'status_endpoint_enabled'              => self::STATUS_PAIRED === $status && ! empty( $state['status_endpoint_enabled'] ),
+			'remote_actions_enabled'               => self::STATUS_PAIRED === $status && ! empty( $state['remote_actions_enabled'] ),
+			'action_key_id'                        => isset( $state['action_key_id'] ) ? $this->sanitize_token_identifier( (string) $state['action_key_id'] ) : $defaults['action_key_id'],
+			'action_public_key'                    => isset( $state['action_public_key'] ) ? $this->sanitize_action_public_key( (string) $state['action_public_key'] ) : $defaults['action_public_key'],
+			'remote_actions_opted_in_at'           => isset( $state['remote_actions_opted_in_at'] ) ? max( 0, absint( $state['remote_actions_opted_in_at'] ) ) : $defaults['remote_actions_opted_in_at'],
+			'schedule_mutation_enabled'            => self::STATUS_PAIRED === $status && ! empty( $state['remote_actions_enabled'] ) && ! empty( $state['schedule_mutation_enabled'] ),
+			'schedule_mutation_enabled_at'         => isset( $state['schedule_mutation_enabled_at'] ) ? max( 0, absint( $state['schedule_mutation_enabled_at'] ) ) : $defaults['schedule_mutation_enabled_at'],
+			'schedule_rollback_preview_enabled'    => self::STATUS_PAIRED === $status && ! empty( $state['remote_actions_enabled'] ) && ! empty( $state['schedule_rollback_preview_enabled'] ),
+			'schedule_rollback_preview_enabled_at' => isset( $state['schedule_rollback_preview_enabled_at'] ) ? max( 0, absint( $state['schedule_rollback_preview_enabled_at'] ) ) : $defaults['schedule_rollback_preview_enabled_at'],
 		);
 	}
 

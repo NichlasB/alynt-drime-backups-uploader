@@ -265,6 +265,94 @@ class RemoteActionWorkerTest extends TestCase {
 		$this->assertArrayNotHasKey( 'rollback_metadata', $latest['schedule_apply'] );
 	}
 
+	public function test_schedule_rollback_preview_succeeds_without_mutating_cron() {
+		$options = $this->options_with_accepted_schedule_rollback_preview_action();
+		$this->mock_options( $options );
+
+		Functions\when( 'wp_get_schedule' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 'thirty_minutes' : false;
+			}
+		);
+		Functions\when( 'wp_get_schedules' )->justReturn(
+			array(
+				'thirty_minutes' => array(
+					'interval' => 1800,
+				),
+			)
+		);
+		Functions\when( 'wp_next_scheduled' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 1782406800 : false;
+			}
+		);
+
+		$cron = $this->createMock( Alynt_Drime_Backups_Uploader_Cron::class );
+		$cron->expects( $this->never() )->method( 'apply_scan_cadence' );
+
+		$worker = new Alynt_Drime_Backups_Uploader_Remote_Action_Worker(
+			$this->plugin_for_schedule_rollback_preview( $cron ),
+			new Alynt_Drime_Backups_Uploader_Remote_Action_Store()
+		);
+
+		$worker->handle( '8c650de7-c7ee-4f90-a5cb-59c4753a2c52' );
+
+		$latest = $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action'];
+		$this->assertSame( 'succeeded', $latest['state'] );
+		$this->assertSame( 'schedule_rollback_preview_ready', $latest['code'] );
+		$this->assertSame( 'schedule_rollback_preview', $latest['action_type'] );
+		$this->assertSame( '8c650de7-c7ee-4f90-a5cb-59c4753a2c52', $latest['schedule_rollback_preview']['preview_action_id'] );
+		$this->assertSame( '7c650de7-c7ee-4f90-a5cb-59c4753a2c51', $latest['schedule_rollback_preview']['source_apply_action_id'] );
+		$this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $latest['schedule_rollback_preview']['preview_fingerprint'] );
+		$this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $latest['schedule_rollback_preview']['rollback_metadata_fingerprint'] );
+		$this->assertSame( 'every_30_minutes', $latest['schedule_rollback_preview']['current_cadence'] );
+		$this->assertSame( 'every_30_minutes', $latest['schedule_rollback_preview']['applied_cadence'] );
+		$this->assertSame( 'every_15_minutes', $latest['schedule_rollback_preview']['rollback_cadence'] );
+		$this->assertSame( '2026-06-25T17:00:00+00:00', $latest['schedule_rollback_preview']['current_next_run_at'] );
+		$this->assertTrue( $latest['schedule_rollback_preview']['would_change'] );
+		$this->assertFalse( $latest['schedule_rollback_preview']['rollback_apply_supported'] );
+		$this->assertFalse( $latest['schedule_rollback_preview']['rollback_supported'] );
+	}
+
+	public function test_schedule_rollback_preview_rejects_stale_current_schedule() {
+		$options = $this->options_with_accepted_schedule_rollback_preview_action();
+		$this->mock_options( $options );
+
+		Functions\when( 'wp_get_schedule' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 'hourly' : false;
+			}
+		);
+		Functions\when( 'wp_get_schedules' )->justReturn(
+			array(
+				'hourly' => array(
+					'interval' => 3600,
+				),
+			)
+		);
+		Functions\when( 'wp_next_scheduled' )->alias(
+			function ( $hook ) {
+				return Alynt_Drime_Backups_Uploader_Cron::SCAN_EVENT === $hook ? 1782410400 : false;
+			}
+		);
+
+		$cron = $this->createMock( Alynt_Drime_Backups_Uploader_Cron::class );
+		$cron->expects( $this->never() )->method( 'apply_scan_cadence' );
+
+		$worker = new Alynt_Drime_Backups_Uploader_Remote_Action_Worker(
+			$this->plugin_for_schedule_rollback_preview( $cron ),
+			new Alynt_Drime_Backups_Uploader_Remote_Action_Store()
+		);
+
+		$worker->handle( '8c650de7-c7ee-4f90-a5cb-59c4753a2c52' );
+
+		$latest = $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action'];
+		$this->assertSame( 'failed', $latest['state'] );
+		$this->assertSame( 'schedule_rollback_preview_stale', $latest['code'] );
+		$this->assertSame( 'schedule_rollback_preview', $latest['action_type'] );
+		$this->assertSame( '7c650de7-c7ee-4f90-a5cb-59c4753a2c51', $latest['schedule_rollback_preview']['source_apply_action_id'] );
+	}
+
 	/**
 	 * Mocks option storage.
 	 *
@@ -365,6 +453,30 @@ class RemoteActionWorkerTest extends TestCase {
 		$plugin = $this->createMock( Alynt_Drime_Backups_Uploader_Plugin::class );
 		$plugin->expects( $this->once() )->method( 'settings' )->willReturn( $settings );
 		$plugin->expects( $this->exactly( 2 ) )->method( 'dashboard_connection' )->willReturn( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() );
+		$plugin->expects( $this->never() )->method( 'cron' )->willReturn( $cron );
+		$plugin->expects( $this->never() )->method( 'cron_health' );
+		$plugin->expects( $this->never() )->method( 'scan_and_queue' );
+
+		return $plugin;
+	}
+
+	/**
+	 * Creates a plugin mock for schedule rollback preview without cron mutation.
+	 *
+	 * @param Alynt_Drime_Backups_Uploader_Cron $cron Cron service.
+	 * @return Alynt_Drime_Backups_Uploader_Plugin
+	 */
+	private function plugin_for_schedule_rollback_preview( Alynt_Drime_Backups_Uploader_Cron $cron ) {
+		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
+		$settings->method( 'get' )->willReturn(
+			array(
+				'auto_scan_enabled' => true,
+			)
+		);
+
+		$plugin = $this->createMock( Alynt_Drime_Backups_Uploader_Plugin::class );
+		$plugin->method( 'settings' )->willReturn( $settings );
+		$plugin->method( 'dashboard_connection' )->willReturn( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() );
 		$plugin->expects( $this->never() )->method( 'cron' )->willReturn( $cron );
 		$plugin->expects( $this->never() )->method( 'cron_health' );
 		$plugin->expects( $this->never() )->method( 'scan_and_queue' );
@@ -538,6 +650,128 @@ class RemoteActionWorkerTest extends TestCase {
 				),
 				'last_accepted_at' => array(),
 				'latest_action'    => $apply_record,
+			),
+		);
+	}
+
+	/**
+	 * Returns option state with a succeeded apply and accepted rollback preview action.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function options_with_accepted_schedule_rollback_preview_action() {
+		$preview_action_id          = '6b650de7-c7ee-4f90-a5cb-59c4753a2c50';
+		$apply_action_id            = '7c650de7-c7ee-4f90-a5cb-59c4753a2c51';
+		$rollback_preview_action_id = '8c650de7-c7ee-4f90-a5cb-59c4753a2c52';
+		$before_fp                  = hash( 'sha256', 'alynt_scan_upload|every_15_minutes|1782405900' );
+		$after_fp                   = hash( 'sha256', 'alynt_scan_upload|every_30_minutes|1782406800' );
+		$captured_at                = gmdate( 'c', time() );
+		$expires_at                 = gmdate( 'c', time() + 3600 );
+		$rollback_metadata          = array(
+			'captured'                            => true,
+			'available'                           => false,
+			'reason'                              => 'schedule_rollback_runtime_not_implemented',
+			'source_action_id'                    => $apply_action_id,
+			'source_preview_action_id'            => $preview_action_id,
+			'schedule_id'                         => 'alynt_scan_upload',
+			'owner'                               => 'alynt_uploader',
+			'previous_cadence'                    => 'every_15_minutes',
+			'applied_cadence'                     => 'every_30_minutes',
+			'previous_next_run_at'                => '2026-06-25T16:45:00+00:00',
+			'applied_next_run_at'                 => '2026-06-25T17:00:00+00:00',
+			'current_schedule_fingerprint_before' => $before_fp,
+			'current_schedule_fingerprint_after'  => $after_fp,
+			'captured_at'                         => $captured_at,
+			'expires_at'                          => $expires_at,
+		);
+		$rollback_metadata['rollback_metadata_fingerprint'] = hash(
+			'sha256',
+			implode(
+				'|',
+				array(
+					$apply_action_id,
+					$preview_action_id,
+					'alynt_scan_upload',
+					'alynt_uploader',
+					'every_15_minutes',
+					'every_30_minutes',
+					$before_fp,
+					$after_fp,
+					$captured_at,
+					$expires_at,
+				)
+			)
+		);
+		$apply_record = array(
+			'action_id'                => $apply_action_id,
+			'action_type'              => 'schedule_apply',
+			'dashboard_site_public_id' => 'd277c82f-6d75-4d80-93ff-fa842dcdd80b',
+			'idempotency_key'          => 'idem-apply-rollback-preview-source',
+			'request_hash'             => str_repeat( 'e', 64 ),
+			'state'                    => 'succeeded',
+			'code'                     => 'schedule_apply_succeeded',
+			'summary'                  => 'Schedule apply completed for Alynt scan/upload.',
+			'counts'                   => array(),
+			'schedule_apply'           => array(
+				'schedule_id'          => 'alynt_scan_upload',
+				'label'                => 'Alynt scan/upload',
+				'owner'                => 'alynt_uploader',
+				'capability_version'   => 1,
+				'preview_action_id'    => $preview_action_id,
+				'preview_fingerprint'  => str_repeat( 'f', 64 ),
+				'previous_cadence'     => 'every_15_minutes',
+				'applied_cadence'      => 'every_30_minutes',
+				'previous_next_run_at' => '2026-06-25T16:45:00+00:00',
+				'applied_next_run_at'  => '2026-06-25T17:00:00+00:00',
+				'changed'              => true,
+				'rollback_available'   => false,
+				'rollback_metadata'    => $rollback_metadata,
+			),
+			'created_at'               => time(),
+			'updated_at'               => time(),
+			'retry_after'              => 0,
+		);
+		$rollback_preview_record = array(
+			'action_id'                => $rollback_preview_action_id,
+			'action_type'              => 'schedule_rollback_preview',
+			'dashboard_site_public_id' => 'd277c82f-6d75-4d80-93ff-fa842dcdd80b',
+			'idempotency_key'          => 'idem-rollback-preview-1',
+			'request_hash'             => str_repeat( 'a', 64 ),
+			'state'                    => 'accepted',
+			'code'                     => 'action_accepted',
+			'summary'                  => 'Remote schedule rollback preview accepted and queued for local read-only processing.',
+			'counts'                   => array(),
+			'schedule_rollback_preview' => array(
+				'schedule_id'                   => 'alynt_scan_upload',
+				'source_apply_action_id'        => $apply_action_id,
+				'rollback_metadata_fingerprint' => $rollback_metadata['rollback_metadata_fingerprint'],
+				'capability_version'            => 1,
+			),
+			'created_at'               => time(),
+			'updated_at'               => time(),
+			'retry_after'              => 0,
+		);
+
+		return array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(
+				'connection_status'                      => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED,
+				'status_endpoint_enabled'                => true,
+				'remote_actions_enabled'                 => true,
+				'schedule_rollback_preview_enabled'      => true,
+				'schedule_rollback_preview_enabled_at'   => time(),
+			),
+			Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME => array(
+				'records'          => array(
+					$apply_action_id            => $apply_record,
+					$rollback_preview_action_id => $rollback_preview_record,
+				),
+				'idempotency'      => array(),
+				'running_lock'     => array(
+					'action_id'  => '',
+					'expires_at' => 0,
+				),
+				'last_accepted_at' => array(),
+				'latest_action'    => $rollback_preview_record,
 			),
 		);
 	}

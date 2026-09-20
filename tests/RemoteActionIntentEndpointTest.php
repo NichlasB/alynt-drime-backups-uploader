@@ -400,6 +400,114 @@ class RemoteActionIntentEndpointTest extends TestCase {
 		$this->assertSame( 'every_30_minutes', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['schedule_apply']['proposed_cadence'] );
 	}
 
+	public function test_schedule_rollback_preview_requires_local_policy() {
+		if ( ! $this->sodium_supported() ) {
+			$this->markTestSkipped( 'Sodium signing is not available.' );
+		}
+
+		$options   = $this->options_with_remote_actions();
+		$scheduled = array();
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+		Functions\when( 'update_option' )->alias(
+			function ( $name, $value ) use ( &$options ) {
+				$options[ $name ] = $value;
+				return true;
+			}
+		);
+		Functions\when( 'wp_schedule_single_event' )->alias(
+			function () use ( &$scheduled ) {
+				$scheduled[] = true;
+
+				return true;
+			}
+		);
+
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$store      = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+		$verifier   = new Alynt_Drime_Backups_Uploader_Remote_Action_Verifier( $connection );
+		$controller = new Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller( $verifier, $store );
+		$body       = $this->intent_body(
+			array(
+				'action_type'               => 'schedule_rollback_preview',
+				'idempotency_key'           => 'adb-act-rollback-preview-1',
+				'schedule_rollback_preview' => array(
+					'schedule_id'                   => 'alynt_scan_upload',
+					'source_apply_action_id'        => '7c650de7-c7ee-4f90-a5cb-59c4753a2c51',
+					'rollback_metadata_fingerprint' => str_repeat( 'd', 64 ),
+					'capability_version'            => 1,
+				),
+			)
+		);
+
+		$response = $controller->handle_action_intent( $this->signed_request( $verifier, $options['_private_key'], $body ) );
+
+		$this->assertSame( 403, $response['status'] );
+		$this->assertSame( 'rejected', $response['data']['state'] );
+		$this->assertSame( 'schedule_rollback_preview_unavailable', $response['data']['code'] );
+		$this->assertCount( 0, $scheduled );
+	}
+
+	public function test_schedule_rollback_preview_is_accepted_when_local_policy_is_enabled() {
+		if ( ! $this->sodium_supported() ) {
+			$this->markTestSkipped( 'Sodium signing is not available.' );
+		}
+
+		$options   = $this->options_with_remote_actions( false, true );
+		$scheduled = array();
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+		Functions\when( 'update_option' )->alias(
+			function ( $name, $value ) use ( &$options ) {
+				$options[ $name ] = $value;
+				return true;
+			}
+		);
+		Functions\when( 'wp_schedule_single_event' )->alias(
+			function ( $timestamp, $hook, $args = array() ) use ( &$scheduled ) {
+				$scheduled[] = array(
+					'timestamp' => $timestamp,
+					'hook'      => $hook,
+					'args'      => $args,
+				);
+
+				return true;
+			}
+		);
+
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$store      = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+		$verifier   = new Alynt_Drime_Backups_Uploader_Remote_Action_Verifier( $connection );
+		$controller = new Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller( $verifier, $store );
+		$body       = $this->intent_body(
+			array(
+				'action_type'               => 'schedule_rollback_preview',
+				'idempotency_key'           => 'adb-act-rollback-preview-2',
+				'schedule_rollback_preview' => array(
+					'schedule_id'                   => 'alynt_scan_upload',
+					'source_apply_action_id'        => '7c650de7-c7ee-4f90-a5cb-59c4753a2c51',
+					'rollback_metadata_fingerprint' => str_repeat( 'd', 64 ),
+					'capability_version'            => 1,
+				),
+			)
+		);
+
+		$response = $controller->handle_action_intent( $this->signed_request( $verifier, $options['_private_key'], $body ) );
+
+		$this->assertSame( 202, $response['status'] );
+		$this->assertSame( 'accepted', $response['data']['state'] );
+		$this->assertSame( 'action_accepted', $response['data']['code'] );
+		$this->assertCount( 1, $scheduled );
+		$this->assertSame( 'schedule_rollback_preview', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['action_type'] );
+		$this->assertSame( '7c650de7-c7ee-4f90-a5cb-59c4753a2c51', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['schedule_rollback_preview']['source_apply_action_id'] );
+	}
+
 	public function test_schedule_preview_rejects_unknown_cadence_before_work_is_scheduled() {
 		if ( ! $this->sodium_supported() ) {
 			$this->markTestSkipped( 'Sodium signing is not available.' );
@@ -618,7 +726,7 @@ class RemoteActionIntentEndpointTest extends TestCase {
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function options_with_remote_actions( $schedule_mutation_enabled = false ) {
+	private function options_with_remote_actions( $schedule_mutation_enabled = false, $schedule_rollback_preview_enabled = false ) {
 		$key_pair    = sodium_crypto_sign_keypair();
 		$public_key  = $this->base64url_encode( sodium_crypto_sign_publickey( $key_pair ) );
 		$private_key = $this->base64url_encode( sodium_crypto_sign_secretkey( $key_pair ) );
@@ -639,6 +747,8 @@ class RemoteActionIntentEndpointTest extends TestCase {
 				'action_public_key'           => $public_key,
 				'schedule_mutation_enabled'   => (bool) $schedule_mutation_enabled,
 				'schedule_mutation_enabled_at' => $schedule_mutation_enabled ? time() : 0,
+				'schedule_rollback_preview_enabled'    => (bool) $schedule_rollback_preview_enabled,
+				'schedule_rollback_preview_enabled_at' => $schedule_rollback_preview_enabled ? time() : 0,
 			),
 			Alynt_Drime_Backups_Uploader_Settings::OPTION_NAME => array(
 				'site_uuid' => '11111111-1111-4111-8111-111111111111',

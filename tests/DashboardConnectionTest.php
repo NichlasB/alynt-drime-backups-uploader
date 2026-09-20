@@ -58,6 +58,7 @@ class DashboardConnectionTest extends TestCase {
 		$this->assertSame( Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_DISABLED, $defaults['connection_status'] );
 		$this->assertFalse( $defaults['status_endpoint_enabled'] );
 		$this->assertSame( '', $defaults['polling_credential_verifier'] );
+		$this->assertFalse( $defaults['schedule_rollback_preview_enabled'] );
 	}
 
 	public function test_prepare_records_local_intent_without_enabling_endpoint() {
@@ -388,6 +389,28 @@ class DashboardConnectionTest extends TestCase {
 			$summary['allowed_actions']
 		);
 		$this->assertSame( $enabled ? 'ak_test' : '', $summary['key_id'] );
+	}
+
+	public function test_remote_action_summary_reports_rollback_preview_only_after_local_opt_in() {
+		$options = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['remote_actions_enabled']                 = true;
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['action_key_id']                          = 'ak_test';
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['action_public_key']                      = str_repeat( 'A', 43 );
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['schedule_rollback_preview_enabled']     = true;
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['schedule_rollback_preview_enabled_at']  = time();
+
+		$connection = $this->connection_with_options( $options );
+		$summary    = $connection->remote_action_summary();
+		$enabled    = function_exists( 'sodium_crypto_sign_verify_detached' );
+
+		$this->assertSame(
+			$enabled ? array(
+				Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW,
+				Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
+				Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW,
+			) : array(),
+			$summary['allowed_actions']
+		);
 	}
 
 	public function test_parse_action_opt_in_token_returns_safe_public_metadata() {

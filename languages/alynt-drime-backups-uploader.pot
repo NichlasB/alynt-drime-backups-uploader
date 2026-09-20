@@ -222,6 +222,14 @@ msgstr ""
 msgid "Remote schedule preview accepted and queued for local read-only processing."
 msgstr ""
 
+#: includes/class-dashboard-action-intents-rest-controller.php:177
+msgid "Remote schedule rollback preview accepted and queued for local read-only processing."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:181
+msgid "Remote schedule apply accepted and queued for local processing."
+msgstr ""
+
 #: includes/class-dashboard-action-intents-rest-controller.php:176
 msgid "Remote action accepted and queued for local scan/upload processing."
 msgstr ""
@@ -493,12 +501,25 @@ msgstr ""
 msgid "The schedule apply request is invalid."
 msgstr ""
 
+#: includes/class-remote-action-verifier.php:207
+msgid "Schedule rollback preview is not enabled on this client site."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:211
+#: includes/class-remote-action-verifier.php:310
+msgid "The schedule rollback preview request is invalid."
+msgstr ""
+
 #: includes/class-remote-action-verifier.php:223
 msgid "The schedule preview request contains unsupported fields."
 msgstr ""
 
 #: includes/class-remote-action-verifier.php:255
 msgid "The schedule apply request contains unsupported fields."
+msgstr ""
+
+#: includes/class-remote-action-verifier.php:293
+msgid "The schedule rollback preview request contains unsupported fields."
 msgstr ""
 
 #: includes/class-remote-action-verifier.php:290
@@ -561,8 +582,25 @@ msgstr ""
 msgid "Remote schedule apply failed without storing unsafe error details."
 msgstr ""
 
+#: includes/class-remote-action-worker.php:177
+msgid "Remote schedule rollback preview action is running on the client site."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:182
+msgid "Remote schedule rollback preview could not be completed."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:186
+msgid "Schedule rollback preview is ready. No schedule was changed."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:189
+msgid "Remote schedule rollback preview failed without storing unsafe error details."
+msgstr ""
+
 #: includes/class-remote-action-worker.php:176
 #: includes/class-remote-action-worker.php:236
+#: includes/class-remote-action-worker.php:370
 msgid "The requested schedule is not supported."
 msgstr ""
 
@@ -597,6 +635,34 @@ msgstr ""
 
 #: includes/class-remote-action-worker.php:308
 msgid "The requested schedule cadence could not be persisted."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:327
+msgid "Schedule rollback preview is not enabled on this client site."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:345
+msgid "The source schedule apply action is unavailable."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:349
+msgid "The source schedule apply action does not include rollback metadata."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:361
+msgid "The rollback metadata fingerprint does not match the source apply action."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:366
+msgid "The rollback metadata has expired."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:376
+msgid "The rollback cadence evidence is not supported."
+msgstr ""
+
+#: includes/class-remote-action-worker.php:383
+msgid "The local schedule changed after the source apply action."
 msgstr ""
 
 #: includes/class-remote-action-worker.php:463

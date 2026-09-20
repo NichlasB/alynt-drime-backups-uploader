@@ -97,9 +97,10 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 	 * @param int                 $retry_after Retry-after seconds.
 	 * @param array<string,mixed> $schedule_preview Safe schedule preview details.
 	 * @param array<string,mixed> $schedule_apply Safe schedule apply details.
+	 * @param array<string,mixed> $schedule_rollback_preview Safe schedule rollback preview details.
 	 * @return array<string,mixed>
 	 */
-	public function upsert_action( array $intent, $state, $code, $summary, array $counts = array(), $retry_after = 0, array $schedule_preview = array(), array $schedule_apply = array() ) {
+	public function upsert_action( array $intent, $state, $code, $summary, array $counts = array(), $retry_after = 0, array $schedule_preview = array(), array $schedule_apply = array(), array $schedule_rollback_preview = array() ) {
 		$stored     = $this->get();
 		$action_id  = isset( $intent['action_id'] ) ? $this->sanitize_uuid( (string) $intent['action_id'] ) : '';
 		$created_at = isset( $stored['records'][ $action_id ]['created_at'] ) ? absint( $stored['records'][ $action_id ]['created_at'] ) : time();
@@ -109,20 +110,21 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 		}
 
 		$record = array(
-			'action_id'                => $action_id,
-			'action_type'              => isset( $intent['action_type'] ) ? sanitize_key( (string) $intent['action_type'] ) : '',
-			'dashboard_site_public_id' => isset( $intent['dashboard_site_public_id'] ) ? $this->sanitize_identifier( (string) $intent['dashboard_site_public_id'] ) : '',
-			'idempotency_key'          => isset( $intent['idempotency_key'] ) ? $this->sanitize_identifier( (string) $intent['idempotency_key'] ) : '',
-			'request_hash'             => isset( $intent['request_hash'] ) ? $this->sanitize_hash( (string) $intent['request_hash'] ) : '',
-			'state'                    => $this->sanitize_state_key( $state ),
-			'code'                     => sanitize_key( (string) $code ),
-			'summary'                  => $this->safe_summary( $summary ),
-			'counts'                   => $this->safe_counts( $counts ),
-			'schedule_preview'         => $this->safe_schedule_preview( ! empty( $schedule_preview ) ? $schedule_preview : ( isset( $intent['schedule_preview'] ) && is_array( $intent['schedule_preview'] ) ? $intent['schedule_preview'] : array() ) ),
-			'schedule_apply'           => $this->safe_schedule_apply( ! empty( $schedule_apply ) ? $schedule_apply : ( isset( $intent['schedule_apply'] ) && is_array( $intent['schedule_apply'] ) ? $intent['schedule_apply'] : array() ) ),
-			'created_at'               => $created_at,
-			'updated_at'               => time(),
-			'retry_after'              => max( 0, absint( $retry_after ) ),
+			'action_id'                 => $action_id,
+			'action_type'               => isset( $intent['action_type'] ) ? sanitize_key( (string) $intent['action_type'] ) : '',
+			'dashboard_site_public_id'  => isset( $intent['dashboard_site_public_id'] ) ? $this->sanitize_identifier( (string) $intent['dashboard_site_public_id'] ) : '',
+			'idempotency_key'           => isset( $intent['idempotency_key'] ) ? $this->sanitize_identifier( (string) $intent['idempotency_key'] ) : '',
+			'request_hash'              => isset( $intent['request_hash'] ) ? $this->sanitize_hash( (string) $intent['request_hash'] ) : '',
+			'state'                     => $this->sanitize_state_key( $state ),
+			'code'                      => sanitize_key( (string) $code ),
+			'summary'                   => $this->safe_summary( $summary ),
+			'counts'                    => $this->safe_counts( $counts ),
+			'schedule_preview'          => $this->safe_schedule_preview( ! empty( $schedule_preview ) ? $schedule_preview : ( isset( $intent['schedule_preview'] ) && is_array( $intent['schedule_preview'] ) ? $intent['schedule_preview'] : array() ) ),
+			'schedule_apply'            => $this->safe_schedule_apply( ! empty( $schedule_apply ) ? $schedule_apply : ( isset( $intent['schedule_apply'] ) && is_array( $intent['schedule_apply'] ) ? $intent['schedule_apply'] : array() ) ),
+			'schedule_rollback_preview' => $this->safe_schedule_rollback_preview( ! empty( $schedule_rollback_preview ) ? $schedule_rollback_preview : ( isset( $intent['schedule_rollback_preview'] ) && is_array( $intent['schedule_rollback_preview'] ) ? $intent['schedule_rollback_preview'] : array() ) ),
+			'created_at'                => $created_at,
+			'updated_at'                => time(),
+			'retry_after'               => max( 0, absint( $retry_after ) ),
 		);
 
 		$stored['records'][ $action_id ] = $record;
@@ -307,20 +309,21 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 	 */
 	private function sanitize_record( array $record ) {
 		return array(
-			'action_id'                => isset( $record['action_id'] ) ? $this->sanitize_uuid( (string) $record['action_id'] ) : '',
-			'action_type'              => isset( $record['action_type'] ) ? sanitize_key( (string) $record['action_type'] ) : '',
-			'dashboard_site_public_id' => isset( $record['dashboard_site_public_id'] ) ? $this->sanitize_identifier( (string) $record['dashboard_site_public_id'] ) : '',
-			'idempotency_key'          => isset( $record['idempotency_key'] ) ? $this->sanitize_identifier( (string) $record['idempotency_key'] ) : '',
-			'request_hash'             => isset( $record['request_hash'] ) ? $this->sanitize_hash( (string) $record['request_hash'] ) : '',
-			'state'                    => isset( $record['state'] ) ? $this->sanitize_state_key( (string) $record['state'] ) : '',
-			'code'                     => isset( $record['code'] ) ? sanitize_key( (string) $record['code'] ) : '',
-			'summary'                  => isset( $record['summary'] ) ? $this->safe_summary( (string) $record['summary'] ) : '',
-			'counts'                   => isset( $record['counts'] ) && is_array( $record['counts'] ) ? $this->safe_counts( $record['counts'] ) : array(),
-			'schedule_preview'         => isset( $record['schedule_preview'] ) && is_array( $record['schedule_preview'] ) ? $this->safe_schedule_preview( $record['schedule_preview'] ) : array(),
-			'schedule_apply'           => isset( $record['schedule_apply'] ) && is_array( $record['schedule_apply'] ) ? $this->safe_schedule_apply( $record['schedule_apply'] ) : array(),
-			'created_at'               => isset( $record['created_at'] ) ? max( 0, absint( $record['created_at'] ) ) : 0,
-			'updated_at'               => isset( $record['updated_at'] ) ? max( 0, absint( $record['updated_at'] ) ) : 0,
-			'retry_after'              => isset( $record['retry_after'] ) ? max( 0, absint( $record['retry_after'] ) ) : 0,
+			'action_id'                 => isset( $record['action_id'] ) ? $this->sanitize_uuid( (string) $record['action_id'] ) : '',
+			'action_type'               => isset( $record['action_type'] ) ? sanitize_key( (string) $record['action_type'] ) : '',
+			'dashboard_site_public_id'  => isset( $record['dashboard_site_public_id'] ) ? $this->sanitize_identifier( (string) $record['dashboard_site_public_id'] ) : '',
+			'idempotency_key'           => isset( $record['idempotency_key'] ) ? $this->sanitize_identifier( (string) $record['idempotency_key'] ) : '',
+			'request_hash'              => isset( $record['request_hash'] ) ? $this->sanitize_hash( (string) $record['request_hash'] ) : '',
+			'state'                     => isset( $record['state'] ) ? $this->sanitize_state_key( (string) $record['state'] ) : '',
+			'code'                      => isset( $record['code'] ) ? sanitize_key( (string) $record['code'] ) : '',
+			'summary'                   => isset( $record['summary'] ) ? $this->safe_summary( (string) $record['summary'] ) : '',
+			'counts'                    => isset( $record['counts'] ) && is_array( $record['counts'] ) ? $this->safe_counts( $record['counts'] ) : array(),
+			'schedule_preview'          => isset( $record['schedule_preview'] ) && is_array( $record['schedule_preview'] ) ? $this->safe_schedule_preview( $record['schedule_preview'] ) : array(),
+			'schedule_apply'            => isset( $record['schedule_apply'] ) && is_array( $record['schedule_apply'] ) ? $this->safe_schedule_apply( $record['schedule_apply'] ) : array(),
+			'schedule_rollback_preview' => isset( $record['schedule_rollback_preview'] ) && is_array( $record['schedule_rollback_preview'] ) ? $this->safe_schedule_rollback_preview( $record['schedule_rollback_preview'] ) : array(),
+			'created_at'                => isset( $record['created_at'] ) ? max( 0, absint( $record['created_at'] ) ) : 0,
+			'updated_at'                => isset( $record['updated_at'] ) ? max( 0, absint( $record['updated_at'] ) ) : 0,
+			'retry_after'               => isset( $record['retry_after'] ) ? max( 0, absint( $record['retry_after'] ) ) : 0,
 		);
 	}
 
@@ -332,16 +335,17 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 	 */
 	private function summary_from_record( array $record ) {
 		return array(
-			'action_id'        => $record['action_id'],
-			'action_type'      => $record['action_type'],
-			'state'            => $record['state'],
-			'code'             => $record['code'],
-			'summary'          => $record['summary'],
-			'counts'           => $record['counts'],
-			'schedule_preview' => isset( $record['schedule_preview'] ) && is_array( $record['schedule_preview'] ) ? $this->safe_schedule_preview( $record['schedule_preview'] ) : array(),
-			'schedule_apply'   => isset( $record['schedule_apply'] ) && is_array( $record['schedule_apply'] ) ? $this->safe_schedule_apply( $record['schedule_apply'] ) : array(),
-			'updated_at'       => $record['updated_at'],
-			'retry_after'      => $record['retry_after'],
+			'action_id'                 => $record['action_id'],
+			'action_type'               => $record['action_type'],
+			'state'                     => $record['state'],
+			'code'                      => $record['code'],
+			'summary'                   => $record['summary'],
+			'counts'                    => $record['counts'],
+			'schedule_preview'          => isset( $record['schedule_preview'] ) && is_array( $record['schedule_preview'] ) ? $this->safe_schedule_preview( $record['schedule_preview'] ) : array(),
+			'schedule_apply'            => isset( $record['schedule_apply'] ) && is_array( $record['schedule_apply'] ) ? $this->safe_schedule_apply( $record['schedule_apply'] ) : array(),
+			'schedule_rollback_preview' => isset( $record['schedule_rollback_preview'] ) && is_array( $record['schedule_rollback_preview'] ) ? $this->safe_schedule_rollback_preview( $record['schedule_rollback_preview'] ) : array(),
+			'updated_at'                => $record['updated_at'],
+			'retry_after'               => $record['retry_after'],
 		);
 	}
 
@@ -353,16 +357,17 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 	 */
 	private function sanitize_latest_action( array $summary ) {
 		return array(
-			'action_id'        => isset( $summary['action_id'] ) ? $this->sanitize_uuid( (string) $summary['action_id'] ) : '',
-			'action_type'      => isset( $summary['action_type'] ) ? sanitize_key( (string) $summary['action_type'] ) : '',
-			'state'            => isset( $summary['state'] ) ? $this->sanitize_state_key( (string) $summary['state'] ) : '',
-			'code'             => isset( $summary['code'] ) ? sanitize_key( (string) $summary['code'] ) : '',
-			'summary'          => isset( $summary['summary'] ) ? $this->safe_summary( (string) $summary['summary'] ) : '',
-			'counts'           => isset( $summary['counts'] ) && is_array( $summary['counts'] ) ? $this->safe_counts( $summary['counts'] ) : array(),
-			'schedule_preview' => isset( $summary['schedule_preview'] ) && is_array( $summary['schedule_preview'] ) ? $this->safe_schedule_preview( $summary['schedule_preview'] ) : array(),
-			'schedule_apply'   => isset( $summary['schedule_apply'] ) && is_array( $summary['schedule_apply'] ) ? $this->safe_schedule_apply( $summary['schedule_apply'] ) : array(),
-			'updated_at'       => isset( $summary['updated_at'] ) ? max( 0, absint( $summary['updated_at'] ) ) : 0,
-			'retry_after'      => isset( $summary['retry_after'] ) ? max( 0, absint( $summary['retry_after'] ) ) : 0,
+			'action_id'                 => isset( $summary['action_id'] ) ? $this->sanitize_uuid( (string) $summary['action_id'] ) : '',
+			'action_type'               => isset( $summary['action_type'] ) ? sanitize_key( (string) $summary['action_type'] ) : '',
+			'state'                     => isset( $summary['state'] ) ? $this->sanitize_state_key( (string) $summary['state'] ) : '',
+			'code'                      => isset( $summary['code'] ) ? sanitize_key( (string) $summary['code'] ) : '',
+			'summary'                   => isset( $summary['summary'] ) ? $this->safe_summary( (string) $summary['summary'] ) : '',
+			'counts'                    => isset( $summary['counts'] ) && is_array( $summary['counts'] ) ? $this->safe_counts( $summary['counts'] ) : array(),
+			'schedule_preview'          => isset( $summary['schedule_preview'] ) && is_array( $summary['schedule_preview'] ) ? $this->safe_schedule_preview( $summary['schedule_preview'] ) : array(),
+			'schedule_apply'            => isset( $summary['schedule_apply'] ) && is_array( $summary['schedule_apply'] ) ? $this->safe_schedule_apply( $summary['schedule_apply'] ) : array(),
+			'schedule_rollback_preview' => isset( $summary['schedule_rollback_preview'] ) && is_array( $summary['schedule_rollback_preview'] ) ? $this->safe_schedule_rollback_preview( $summary['schedule_rollback_preview'] ) : array(),
+			'updated_at'                => isset( $summary['updated_at'] ) ? max( 0, absint( $summary['updated_at'] ) ) : 0,
+			'retry_after'               => isset( $summary['retry_after'] ) ? max( 0, absint( $summary['retry_after'] ) ) : 0,
 		);
 	}
 
@@ -550,9 +555,61 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 			'applied_next_run_at'                 => isset( $metadata['applied_next_run_at'] ) ? sanitize_text_field( (string) $metadata['applied_next_run_at'] ) : '',
 			'current_schedule_fingerprint_before' => isset( $metadata['current_schedule_fingerprint_before'] ) ? $this->sanitize_hash( (string) $metadata['current_schedule_fingerprint_before'] ) : '',
 			'current_schedule_fingerprint_after'  => isset( $metadata['current_schedule_fingerprint_after'] ) ? $this->sanitize_hash( (string) $metadata['current_schedule_fingerprint_after'] ) : '',
+			'rollback_metadata_fingerprint'       => isset( $metadata['rollback_metadata_fingerprint'] ) ? $this->sanitize_hash( (string) $metadata['rollback_metadata_fingerprint'] ) : '',
 			'captured_at'                         => isset( $metadata['captured_at'] ) ? sanitize_text_field( (string) $metadata['captured_at'] ) : '',
 			'expires_at'                          => isset( $metadata['expires_at'] ) ? sanitize_text_field( (string) $metadata['expires_at'] ) : '',
 		);
+	}
+
+	/**
+	 * Sanitizes schedule rollback preview details for status-safe action history.
+	 *
+	 * @since 0.5.21
+	 *
+	 * @param array<string,mixed> $preview Rollback preview details.
+	 * @return array<string,mixed>
+	 */
+	private function safe_schedule_rollback_preview( array $preview ) {
+		if ( empty( $preview ) ) {
+			return array();
+		}
+
+		$clean = array(
+			'preview_action_id'                     => isset( $preview['preview_action_id'] ) ? $this->sanitize_uuid( (string) $preview['preview_action_id'] ) : '',
+			'preview_fingerprint'                   => isset( $preview['preview_fingerprint'] ) ? $this->sanitize_hash( (string) $preview['preview_fingerprint'] ) : '',
+			'source_apply_action_id'                => isset( $preview['source_apply_action_id'] ) ? $this->sanitize_uuid( (string) $preview['source_apply_action_id'] ) : '',
+			'rollback_metadata_fingerprint'         => isset( $preview['rollback_metadata_fingerprint'] ) ? $this->sanitize_hash( (string) $preview['rollback_metadata_fingerprint'] ) : '',
+			'schedule_id'                           => isset( $preview['schedule_id'] ) ? sanitize_key( (string) $preview['schedule_id'] ) : '',
+			'label'                                 => isset( $preview['label'] ) ? $this->safe_summary( (string) $preview['label'] ) : '',
+			'owner'                                 => isset( $preview['owner'] ) ? sanitize_key( (string) $preview['owner'] ) : '',
+			'capability_version'                    => isset( $preview['capability_version'] ) ? absint( $preview['capability_version'] ) : 0,
+			'current_cadence'                       => isset( $preview['current_cadence'] ) ? sanitize_key( (string) $preview['current_cadence'] ) : '',
+			'applied_cadence'                       => isset( $preview['applied_cadence'] ) ? sanitize_key( (string) $preview['applied_cadence'] ) : '',
+			'rollback_cadence'                      => isset( $preview['rollback_cadence'] ) ? sanitize_key( (string) $preview['rollback_cadence'] ) : '',
+			'current_next_run_at'                   => isset( $preview['current_next_run_at'] ) ? sanitize_text_field( (string) $preview['current_next_run_at'] ) : '',
+			'rollback_next_run_estimate_at'         => isset( $preview['rollback_next_run_estimate_at'] ) ? sanitize_text_field( (string) $preview['rollback_next_run_estimate_at'] ) : '',
+			'current_schedule_fingerprint'          => isset( $preview['current_schedule_fingerprint'] ) ? $this->sanitize_hash( (string) $preview['current_schedule_fingerprint'] ) : '',
+			'expected_current_schedule_fingerprint' => isset( $preview['expected_current_schedule_fingerprint'] ) ? $this->sanitize_hash( (string) $preview['expected_current_schedule_fingerprint'] ) : '',
+			'previous_schedule_fingerprint'         => isset( $preview['previous_schedule_fingerprint'] ) ? $this->sanitize_hash( (string) $preview['previous_schedule_fingerprint'] ) : '',
+			'preview_created_at'                    => isset( $preview['preview_created_at'] ) ? sanitize_text_field( (string) $preview['preview_created_at'] ) : '',
+			'preview_expires_at'                    => isset( $preview['preview_expires_at'] ) ? sanitize_text_field( (string) $preview['preview_expires_at'] ) : '',
+			'would_change'                          => ! empty( $preview['would_change'] ),
+			'rollback_apply_supported'              => false,
+			'rollback_supported'                    => false,
+			'warnings'                              => array(),
+		);
+
+		if ( isset( $preview['warnings'] ) && is_array( $preview['warnings'] ) ) {
+			foreach ( $preview['warnings'] as $warning ) {
+				$warning = sanitize_key( (string) $warning );
+				if ( '' !== $warning ) {
+					$clean['warnings'][] = $warning;
+				}
+			}
+			$clean['warnings'] = array_values( array_unique( $clean['warnings'] ) );
+		}
+
+		return $clean;
 	}
 
 	/**

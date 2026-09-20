@@ -139,7 +139,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			return $this->error( 'action_body_invalid', __( 'The remote action body is not valid JSON.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
-		$allowed = array( 'protocol_version', 'action_id', 'dashboard_site_public_id', 'site_uuid', 'action_type', 'requested_at', 'expires_at', 'idempotency_key', 'schedule_preview', 'schedule_apply' );
+		$allowed = array( 'protocol_version', 'action_id', 'dashboard_site_public_id', 'site_uuid', 'action_type', 'requested_at', 'expires_at', 'idempotency_key', 'schedule_preview', 'schedule_apply', 'schedule_rollback_preview' );
 		$extra   = array_diff( array_keys( $body ), $allowed );
 		if ( ! empty( $extra ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
@@ -160,6 +160,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW,
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW,
 		);
 
 		if (
@@ -201,9 +202,26 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			}
 
 			$parsed['schedule_apply'] = $schedule_apply;
+		} elseif ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW === $parsed['action_type'] ) {
+			if ( ! $this->connection->is_schedule_rollback_preview_enabled() ) {
+				return $this->error( 'schedule_rollback_preview_unavailable', __( 'Schedule rollback preview is not enabled on this client site.', 'alynt-drime-backups-uploader' ), 403 );
+			}
+
+			if ( empty( $body['schedule_rollback_preview'] ) || ! is_array( $body['schedule_rollback_preview'] ) ) {
+				return $this->error( 'action_schedule_rollback_preview_invalid', __( 'The schedule rollback preview request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
+			}
+
+			$schedule_rollback_preview = $this->parse_schedule_rollback_preview( $body['schedule_rollback_preview'] );
+			if ( is_wp_error( $schedule_rollback_preview ) ) {
+				return $schedule_rollback_preview;
+			}
+
+			$parsed['schedule_rollback_preview'] = $schedule_rollback_preview;
 		} elseif ( array_key_exists( 'schedule_preview', $body ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
 		} elseif ( array_key_exists( 'schedule_apply', $body ) ) {
+			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
+		} elseif ( array_key_exists( 'schedule_rollback_preview', $body ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
@@ -271,6 +289,40 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Verifier {
 			|| '' === $parsed['preview_fingerprint']
 		) {
 			return $this->error( 'action_schedule_apply_invalid', __( 'The schedule apply request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		return $parsed;
+	}
+
+	/**
+	 * Parses and validates the bounded schedule rollback preview request.
+	 *
+	 * @since 0.5.21
+	 *
+	 * @param array<string,mixed> $preview Rollback preview request.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	private function parse_schedule_rollback_preview( array $preview ) {
+		$allowed = array( 'schedule_id', 'source_apply_action_id', 'rollback_metadata_fingerprint', 'capability_version' );
+		$extra   = array_diff( array_keys( $preview ), $allowed );
+		if ( ! empty( $extra ) ) {
+			return $this->error( 'action_schedule_rollback_preview_keys_invalid', __( 'The schedule rollback preview request contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		$parsed = array(
+			'schedule_id'                   => isset( $preview['schedule_id'] ) ? sanitize_key( (string) $preview['schedule_id'] ) : '',
+			'source_apply_action_id'        => isset( $preview['source_apply_action_id'] ) ? $this->sanitize_uuid( (string) $preview['source_apply_action_id'] ) : '',
+			'rollback_metadata_fingerprint' => isset( $preview['rollback_metadata_fingerprint'] ) ? $this->sanitize_hash( (string) $preview['rollback_metadata_fingerprint'] ) : '',
+			'capability_version'            => isset( $preview['capability_version'] ) ? absint( $preview['capability_version'] ) : 0,
+		);
+
+		if (
+			'alynt_scan_upload' !== $parsed['schedule_id']
+			|| 1 !== $parsed['capability_version']
+			|| '' === $parsed['source_apply_action_id']
+			|| '' === $parsed['rollback_metadata_fingerprint']
+		) {
+			return $this->error( 'action_schedule_rollback_preview_invalid', __( 'The schedule rollback preview request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
 		return $parsed;

@@ -133,7 +133,7 @@ The V2.1 implementation may report the object with `enabled: false` for paired c
 
 ### Optional Schedule Management Capability
 
-`remote_actions.schedule_management` is additive in schema version `1`. Released versions can report the Alynt scan/upload schedule, accept a signed non-mutating `schedule_preview` action after separate V2 action opt-in, and accept a signed guarded `schedule_apply` request only after a separate local schedule-mutation policy is enabled. The uploader must not accept `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, disable/pause actions, backup creation, cleanup, delete, restore, settings mutation, credential changes, or Drime-token actions.
+`remote_actions.schedule_management` is additive in schema version `1`. Released versions can report the Alynt scan/upload schedule, accept a signed non-mutating `schedule_preview` action after separate V2 action opt-in, and accept a signed guarded `schedule_apply` request only after a separate local schedule-mutation policy is enabled. The local next slice can validate and store a non-mutating `schedule_rollback_preview` only after a separate local rollback-preview policy is enabled; this does not execute rollback. The uploader must not accept `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, disable/pause actions, backup creation, cleanup, delete, restore, settings mutation, credential changes, or Drime-token actions.
 
 The first supported schedule target is:
 
@@ -150,6 +150,7 @@ Capability fields:
 | `enabled` | boolean | True only when remote actions are opted in and the schedule can be safely identified. |
 | `preview_only` | boolean | True when the client can preview but cannot apply schedule changes. Apply-capable clients may report false only after local schedule mutation is separately enabled. |
 | `apply_supported` | boolean | True only for approved, locally enabled `alynt_scan_upload` cadence changes. |
+| `rollback_preview_supported` | boolean | True only when the client has explicit local support for non-mutating rollback preview validation. This does not imply rollback execution. |
 | `rollback_supported` | boolean | False until a separate rollback slice is implemented and locally enabled. |
 | `schedules` | array | Redacted schedule capability records. |
 
@@ -167,6 +168,7 @@ Schedule fields:
 | `minimum_interval_seconds` | int | Minimum supported interval for the schedule. |
 | `can_disable` | boolean | False for this slice. |
 | `requires_high_friction_disable` | boolean | True when disabling would require a later explicit high-friction flow. |
+| `rollback_preview_supported` | boolean | True only when this specific schedule can be non-mutatingly previewed for rollback readiness. |
 | `rollback_supported` | boolean | False until a separate rollback slice is implemented and locally enabled. |
 
 ### Schedule Apply Capability
@@ -179,10 +181,22 @@ The slice keeps the status payload additive and redacted:
 - keep `rollback_supported: false` until a separate rollback slice exists;
 - include `schedule_apply` in `allowed_actions` only when local schedule mutation is explicitly enabled;
 - report only allowlisted cadence labels and support-safe latest action results;
-- after successful apply, optional `schedule_apply.rollback_metadata` may report support-safe evidence such as `captured`, `available: false`, `reason`, source action IDs, previous/applied cadence labels, previous/applied next-run timestamps, redacted before/after schedule fingerprints, `captured_at`, and `expires_at`;
+- after successful apply, optional `schedule_apply.rollback_metadata` may report support-safe evidence such as `captured`, `available: false`, `reason`, source action IDs, previous/applied cadence labels, previous/applied next-run timestamps, redacted before/after schedule fingerprints, `captured_at`, `expires_at`, and `rollback_metadata_fingerprint`;
 - never expose raw cron arrays, crontab fragments, option names/values, usernames, shell commands, filesystem paths, WPvivid option blobs, package names, Drime identifiers, credentials, tokens, cookies, nonces, salts, signatures, or arbitrary setting payloads.
 
 Implementation planning and scope are tracked in `docs/V2_3_SCHEDULE_APPLY_IMPLEMENTATION_PLAN.md`.
+
+### Schedule Rollback Preview Capability
+
+The local `schedule_rollback_preview` slice is non-mutating. It validates one previous successful client-side `schedule_apply` action against client-owned rollback metadata, verifies the metadata fingerprint, checks expiry, and revalidates that the current local schedule fingerprint still matches the post-apply fingerprint. It returns only support-safe readiness evidence and must not call schedule mutation APIs.
+
+Rules:
+
+- `schedule_rollback_preview` may be advertised in `allowed_actions` only when V1 pairing, V2 action opt-in, Sodium verification, and a separate local rollback-preview policy are enabled.
+- `rollback_preview_supported: true` does not permit rollback execution.
+- `rollback_supported` and any future `schedule_rollback` action must remain unavailable until a separate rollback-apply slice is designed, tested, approved, released, and enabled.
+- The request accepts only `schedule_id`, `source_apply_action_id`, `rollback_metadata_fingerprint`, and `capability_version`.
+- No dashboard-provided target cadence, raw cron, WP-Cron array, crontab fragment, option name/value, filesystem path, username, package name, Drime identifier, credential, token, cookie, nonce, salt, signature, shell command, SQL, or arbitrary setting payload may be accepted.
 
 The schedule capability summary must not include raw cron lines, raw WP-Cron arrays, crontab fragments, usernames, shell commands, local filesystem paths, raw WPvivid option blobs, package names, Drime identifiers, credentials, tokens, cookies, nonces, salts, or arbitrary setting payloads.
 

@@ -173,6 +173,14 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 			return __( 'Remote schedule preview accepted and queued for local read-only processing.', 'alynt-drime-backups-uploader' );
 		}
 
+		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW === $action_type ) {
+			return __( 'Remote schedule rollback preview accepted and queued for local read-only processing.', 'alynt-drime-backups-uploader' );
+		}
+
+		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY === $action_type ) {
+			return __( 'Remote schedule apply accepted and queued for local processing.', 'alynt-drime-backups-uploader' );
+		}
+
 		return __( 'Remote action accepted and queued for local scan/upload processing.', 'alynt-drime-backups-uploader' );
 	}
 

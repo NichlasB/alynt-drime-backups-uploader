@@ -83,6 +83,12 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 			return;
 		}
 
+		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW === $action_type ) {
+			$this->handle_schedule_rollback_preview( $record );
+			$this->store->release_lock( $record['action_id'] );
+			return;
+		}
+
 		$this->store->upsert_action( $record, 'running', 'action_running', __( 'Remote scan/upload action is running on the client site.', 'alynt-drime-backups-uploader' ) );
 
 		try {
@@ -161,6 +167,31 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 		} catch ( Exception $exception ) {
 			unset( $exception );
 			$this->store->upsert_action( $record, 'failed', 'schedule_apply_failed', __( 'Remote schedule apply failed without storing unsafe error details.', 'alynt-drime-backups-uploader' ) );
+		}
+	}
+
+	/**
+	 * Builds and stores a read-only schedule rollback preview.
+	 *
+	 * @since 0.5.21
+	 *
+	 * @param array<string,mixed> $record Action record.
+	 * @return void
+	 */
+	private function handle_schedule_rollback_preview( array $record ) {
+		$this->store->upsert_action( $record, 'running', 'schedule_rollback_preview_running', __( 'Remote schedule rollback preview action is running on the client site.', 'alynt-drime-backups-uploader' ) );
+
+		try {
+			$preview = $this->schedule_rollback_preview_from_record( $record );
+			if ( is_wp_error( $preview ) ) {
+				$this->store->upsert_action( $record, 'failed', $preview->get_error_code(), __( 'Remote schedule rollback preview could not be completed.', 'alynt-drime-backups-uploader' ) );
+				return;
+			}
+
+			$this->store->upsert_action( $record, 'succeeded', 'schedule_rollback_preview_ready', __( 'Schedule rollback preview is ready. No schedule was changed.', 'alynt-drime-backups-uploader' ), array(), 0, array(), array(), $preview );
+		} catch ( Exception $exception ) {
+			unset( $exception );
+			$this->store->upsert_action( $record, 'failed', 'schedule_rollback_preview_failed', __( 'Remote schedule rollback preview failed without storing unsafe error details.', 'alynt-drime-backups-uploader' ) );
 		}
 	}
 
@@ -316,6 +347,107 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 	}
 
 	/**
+	 * Validates previous apply metadata and builds a non-mutating rollback preview.
+	 *
+	 * @since 0.5.21
+	 *
+	 * @param array<string,mixed> $record Action record.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	private function schedule_rollback_preview_from_record( array $record ) {
+		if ( ! $this->plugin->dashboard_connection()->is_schedule_rollback_preview_enabled() ) {
+			return new WP_Error( 'schedule_rollback_preview_unavailable', __( 'Schedule rollback preview is not enabled on this client site.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$request = isset( $record['schedule_rollback_preview'] ) && is_array( $record['schedule_rollback_preview'] ) ? $record['schedule_rollback_preview'] : array();
+		if ( 'alynt_scan_upload' !== ( isset( $request['schedule_id'] ) ? sanitize_key( (string) $request['schedule_id'] ) : '' ) ) {
+			return new WP_Error( 'schedule_rollback_preview_schedule_invalid', __( 'The requested schedule is not supported.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$source_apply_action_id        = isset( $request['source_apply_action_id'] ) ? (string) $request['source_apply_action_id'] : '';
+		$rollback_metadata_fingerprint = isset( $request['rollback_metadata_fingerprint'] ) ? (string) $request['rollback_metadata_fingerprint'] : '';
+		$source_record                 = $this->store->record( $source_apply_action_id );
+		$apply                         = isset( $source_record['schedule_apply'] ) && is_array( $source_record['schedule_apply'] ) ? $source_record['schedule_apply'] : array();
+		$metadata                      = isset( $apply['rollback_metadata'] ) && is_array( $apply['rollback_metadata'] ) ? $apply['rollback_metadata'] : array();
+
+		if ( empty( $source_record ) || 'schedule_apply' !== ( isset( $source_record['action_type'] ) ? sanitize_key( (string) $source_record['action_type'] ) : '' ) || 'succeeded' !== ( isset( $source_record['state'] ) ? sanitize_key( (string) $source_record['state'] ) : '' ) ) {
+			return new WP_Error( 'schedule_rollback_preview_source_missing', __( 'The source schedule apply action is unavailable.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		if ( empty( $metadata['captured'] ) || empty( $metadata['source_action_id'] ) || ! hash_equals( (string) $metadata['source_action_id'], $source_apply_action_id ) ) {
+			return new WP_Error( 'schedule_rollback_preview_metadata_missing', __( 'The source schedule apply action does not include rollback metadata.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$computed_metadata_fingerprint = $this->rollback_metadata_fingerprint( $metadata );
+		$stored_metadata_fingerprint   = isset( $metadata['rollback_metadata_fingerprint'] ) ? (string) $metadata['rollback_metadata_fingerprint'] : $computed_metadata_fingerprint;
+		if (
+			'' === $rollback_metadata_fingerprint
+			|| ! hash_equals( $computed_metadata_fingerprint, $rollback_metadata_fingerprint )
+			|| ! hash_equals( $stored_metadata_fingerprint, $rollback_metadata_fingerprint )
+		) {
+			return new WP_Error( 'schedule_rollback_preview_metadata_mismatch', __( 'The rollback metadata fingerprint does not match the source apply action.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$metadata_expires_at = isset( $metadata['expires_at'] ) ? strtotime( (string) $metadata['expires_at'] ) : false;
+		if ( false === $metadata_expires_at || $metadata_expires_at <= time() ) {
+			return new WP_Error( 'schedule_rollback_preview_metadata_expired', __( 'The rollback metadata has expired.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		if ( 'alynt_scan_upload' !== ( isset( $metadata['schedule_id'] ) ? sanitize_key( (string) $metadata['schedule_id'] ) : '' ) ) {
+			return new WP_Error( 'schedule_rollback_preview_schedule_invalid', __( 'The requested schedule is not supported.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$previous_cadence = isset( $metadata['previous_cadence'] ) ? sanitize_key( (string) $metadata['previous_cadence'] ) : '';
+		$applied_cadence  = isset( $metadata['applied_cadence'] ) ? sanitize_key( (string) $metadata['applied_cadence'] ) : '';
+		if ( $this->cadence_seconds( $previous_cadence ) <= 0 || $this->cadence_seconds( $applied_cadence ) <= 0 ) {
+			return new WP_Error( 'schedule_rollback_preview_cadence_invalid', __( 'The rollback cadence evidence is not supported.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$current                      = $this->current_scan_schedule_state();
+		$expected_current_fingerprint = isset( $metadata['current_schedule_fingerprint_after'] ) ? (string) $metadata['current_schedule_fingerprint_after'] : '';
+		if ( '' === $expected_current_fingerprint || ! hash_equals( $expected_current_fingerprint, (string) $current['fingerprint'] ) ) {
+			return new WP_Error( 'schedule_rollback_preview_stale', __( 'The local schedule changed after the source apply action.', 'alynt-drime-backups-uploader' ) );
+		}
+
+		$settings = $this->plugin->settings()->get();
+		$warnings = array();
+		if ( empty( $settings['auto_scan_enabled'] ) ) {
+			$warnings[] = 'auto_scan_disabled';
+		}
+		if ( $current['cadence'] !== $applied_cadence ) {
+			$warnings[] = 'current_cadence_differs_from_applied';
+		}
+
+		$created_at                     = time();
+		$preview                        = array(
+			'preview_action_id'                     => isset( $record['action_id'] ) ? (string) $record['action_id'] : '',
+			'source_apply_action_id'                => $source_apply_action_id,
+			'rollback_metadata_fingerprint'         => $rollback_metadata_fingerprint,
+			'schedule_id'                           => 'alynt_scan_upload',
+			'label'                                 => __( 'Alynt scan/upload', 'alynt-drime-backups-uploader' ),
+			'owner'                                 => 'alynt_uploader',
+			'capability_version'                    => 1,
+			'current_cadence'                       => $current['cadence'],
+			'applied_cadence'                       => $applied_cadence,
+			'rollback_cadence'                      => $previous_cadence,
+			'current_next_run_at'                   => $current['next_run'] > 0 ? gmdate( 'c', $current['next_run'] ) : '',
+			'rollback_next_run_estimate_at'         => gmdate( 'c', $created_at + $this->cadence_seconds( $previous_cadence ) ),
+			'current_schedule_fingerprint'          => $current['fingerprint'],
+			'expected_current_schedule_fingerprint' => $expected_current_fingerprint,
+			'previous_schedule_fingerprint'         => isset( $metadata['current_schedule_fingerprint_before'] ) ? (string) $metadata['current_schedule_fingerprint_before'] : '',
+			'preview_created_at'                    => gmdate( 'c', $created_at ),
+			'preview_expires_at'                    => gmdate( 'c', $created_at + 900 ),
+			'would_change'                          => $current['cadence'] !== $previous_cadence,
+			'rollback_apply_supported'              => false,
+			'rollback_supported'                    => false,
+			'warnings'                              => $warnings,
+		);
+		$preview['preview_fingerprint'] = $this->rollback_preview_fingerprint( $preview );
+
+		return $preview;
+	}
+
+	/**
 	 * Builds support-safe metadata needed for a future rollback readiness flow.
 	 *
 	 * This is intentionally evidence-only in this release: it captures bounded,
@@ -332,7 +464,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 	private function schedule_apply_rollback_metadata( array $record, array $apply_result, $schedule_fingerprint_before, $schedule_fingerprint_after ) {
 		$captured_at = time();
 
-		return array(
+		$metadata = array(
 			'captured'                            => true,
 			'available'                           => false,
 			'reason'                              => 'schedule_rollback_runtime_not_implemented',
@@ -349,6 +481,10 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 			'captured_at'                         => gmdate( 'c', $captured_at ),
 			'expires_at'                          => gmdate( 'c', $captured_at + 3600 ),
 		);
+
+		$metadata['rollback_metadata_fingerprint'] = $this->rollback_metadata_fingerprint( $metadata );
+
+		return $metadata;
 	}
 
 	/**
@@ -419,6 +555,64 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 					isset( $preview['capability_version'] ) ? (string) absint( $preview['capability_version'] ) : '0',
 					isset( $preview['current_cadence'] ) ? (string) $preview['current_cadence'] : '',
 					isset( $preview['proposed_cadence'] ) ? (string) $preview['proposed_cadence'] : '',
+					isset( $preview['current_schedule_fingerprint'] ) ? (string) $preview['current_schedule_fingerprint'] : '',
+					isset( $preview['preview_created_at'] ) ? (string) $preview['preview_created_at'] : '',
+					isset( $preview['preview_expires_at'] ) ? (string) $preview['preview_expires_at'] : '',
+				)
+			)
+		);
+	}
+
+	/**
+	 * Builds a redacted rollback metadata fingerprint.
+	 *
+	 * @since 0.5.21
+	 *
+	 * @param array<string,mixed> $metadata Rollback metadata.
+	 * @return string
+	 */
+	private function rollback_metadata_fingerprint( array $metadata ) {
+		return hash(
+			'sha256',
+			implode(
+				'|',
+				array(
+					isset( $metadata['source_action_id'] ) ? (string) $metadata['source_action_id'] : '',
+					isset( $metadata['source_preview_action_id'] ) ? (string) $metadata['source_preview_action_id'] : '',
+					isset( $metadata['schedule_id'] ) ? (string) $metadata['schedule_id'] : '',
+					isset( $metadata['owner'] ) ? (string) $metadata['owner'] : '',
+					isset( $metadata['previous_cadence'] ) ? (string) $metadata['previous_cadence'] : '',
+					isset( $metadata['applied_cadence'] ) ? (string) $metadata['applied_cadence'] : '',
+					isset( $metadata['current_schedule_fingerprint_before'] ) ? (string) $metadata['current_schedule_fingerprint_before'] : '',
+					isset( $metadata['current_schedule_fingerprint_after'] ) ? (string) $metadata['current_schedule_fingerprint_after'] : '',
+					isset( $metadata['captured_at'] ) ? (string) $metadata['captured_at'] : '',
+					isset( $metadata['expires_at'] ) ? (string) $metadata['expires_at'] : '',
+				)
+			)
+		);
+	}
+
+	/**
+	 * Builds a redacted rollback preview fingerprint.
+	 *
+	 * @since 0.5.21
+	 *
+	 * @param array<string,mixed> $preview Rollback preview details.
+	 * @return string
+	 */
+	private function rollback_preview_fingerprint( array $preview ) {
+		return hash(
+			'sha256',
+			implode(
+				'|',
+				array(
+					isset( $preview['preview_action_id'] ) ? (string) $preview['preview_action_id'] : '',
+					isset( $preview['source_apply_action_id'] ) ? (string) $preview['source_apply_action_id'] : '',
+					isset( $preview['rollback_metadata_fingerprint'] ) ? (string) $preview['rollback_metadata_fingerprint'] : '',
+					isset( $preview['schedule_id'] ) ? (string) $preview['schedule_id'] : '',
+					isset( $preview['capability_version'] ) ? (string) absint( $preview['capability_version'] ) : '0',
+					isset( $preview['current_cadence'] ) ? (string) $preview['current_cadence'] : '',
+					isset( $preview['rollback_cadence'] ) ? (string) $preview['rollback_cadence'] : '',
 					isset( $preview['current_schedule_fingerprint'] ) ? (string) $preview['current_schedule_fingerprint'] : '',
 					isset( $preview['preview_created_at'] ) ? (string) $preview['preview_created_at'] : '',
 					isset( $preview['preview_expires_at'] ) ? (string) $preview['preview_expires_at'] : '',
