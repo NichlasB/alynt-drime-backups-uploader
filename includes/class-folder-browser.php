@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Alynt_Drime_Backups_Uploader_Folder_Browser {
 	use Alynt_Drime_Backups_Uploader_Folder_Browser_Preview;
 	use Alynt_Drime_Backups_Uploader_Folder_Browser_Normalization;
+	use Alynt_Drime_Backups_Uploader_Folder_Browser_Path_Helpers;
 
 	/**
 	 * Settings.

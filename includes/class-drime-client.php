@@ -19,6 +19,7 @@ class Alynt_Drime_Backups_Uploader_Drime_Client {
 	use Alynt_Drime_Backups_Uploader_Drime_Client_Transport;
 	use Alynt_Drime_Backups_Uploader_Drime_Client_Response_Helpers;
 	use Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload;
+	use Alynt_Drime_Backups_Uploader_Drime_Client_Direct_Upload_Response;
 	use Alynt_Drime_Backups_Uploader_Drime_Client_Multipart;
 
 	const BASE_URL                  = 'https://app.drime.cloud/api/v1';
