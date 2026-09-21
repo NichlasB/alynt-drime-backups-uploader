@@ -140,6 +140,8 @@ $alynt_drime_backups_uploader_includes = array(
 	'includes/class-scanner.php',
 	'includes/class-backup-registry.php',
 	'includes/class-queue.php',
+	'includes/trait-drime-client-transport.php',
+	'includes/trait-drime-client-response-helpers.php',
 	'includes/class-drime-client.php',
 	'includes/class-workspace-browser.php',
 	'includes/class-folder-browser.php',
