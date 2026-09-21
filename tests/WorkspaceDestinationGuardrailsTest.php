@@ -86,7 +86,7 @@ class WorkspaceDestinationGuardrailsTest extends TestCase {
 	}
 
 	public function test_upload_path_contains_workspace_guard_before_drime_uploads() {
-		$source = (string) file_get_contents( ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/includes/class-uploader.php' );
+		$source = (string) file_get_contents( ALYNT_DRIME_BACKUPS_UPLOADER_TESTS_PATH . '/includes/trait-uploader-item-preparation.php' );
 
 		$this->assertStringContainsString( 'is_workspace_id_allowed', $source );
 		$this->assertStringContainsString( 'alynt_drime_workspace_not_allowed', $source );
