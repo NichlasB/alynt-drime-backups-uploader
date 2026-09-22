@@ -3,7 +3,7 @@
  * Dashboard connection state transition helpers.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.22
+ * @since   0.5.21
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Handles dashboard connection state transitions and enrollment mutations.
  *
- * @since 0.5.22
+ * @since 0.5.21
  */
 trait Alynt_Drime_Backups_Uploader_Dashboard_Connection_State_Transitions {
 	/**

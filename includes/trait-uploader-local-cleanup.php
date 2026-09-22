@@ -3,7 +3,7 @@
  * Uploader local cleanup helpers.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.22
+ * @since   0.5.21
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Deletes uploaded local packages and safe sidecar files when configured.
  *
- * @since 0.5.22
+ * @since 0.5.21
  */
 trait Alynt_Drime_Backups_Uploader_Uploader_Local_Cleanup {
 	/**

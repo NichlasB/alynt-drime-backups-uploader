@@ -3,7 +3,7 @@
  * Settings site identity helpers.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.22
+ * @since   0.5.21
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Manages local site UUID generation and settings option cache sync.
  *
- * @since 0.5.22
+ * @since 0.5.21
  */
 trait Alynt_Drime_Backups_Uploader_Settings_Site_Identity {
 	/**

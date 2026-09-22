@@ -21,7 +21,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Automatic local server outbox retention after confirmed upload has been released in `v0.3.2`; feature-stage reviews, local validation, staging retention test, staging cleanup/recovery verification, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Mandatory per-package Drime folders for server/generic-outbox uploads were released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
-- Current local development slice after `v0.5.20`: guarded, non-mutating `schedule_rollback_preview` support for explicitly opted-in clients. It validates stored rollback metadata and current schedule fingerprints, returns support-safe readiness evidence only, and keeps `schedule_rollback` unavailable.
+- Current release candidate: `v0.5.21`, which adds guarded, non-mutating `schedule_rollback_preview` support for explicitly opted-in clients. It validates stored rollback metadata and current schedule fingerprints, returns support-safe readiness evidence only, and keeps `schedule_rollback` unavailable.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
 - Real WordPress Plugins-screen and Alynt Plugin Updater rehearsals have passed across the release line, including the validated `v0.5.1` and `v0.5.2` baselines and later live rollout/update releases through `v0.5.18`.
 
@@ -131,7 +131,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - No public dashboard REST endpoint is enabled by default.
 - The read-only dashboard status endpoint requires explicit pairing/enrollment, scoped authentication, and redaction enforcement.
 - V2.1 adds a separate, disabled-by-default signed action-intent endpoint for the single bounded `scan_upload_now` request after administrator opt-in.
-- V2.3 adds preview-only Alynt scan/upload schedule capability reporting, a signed non-mutating `schedule_preview` action after administrator opt-in, separately opted-in guarded `schedule_apply` for the plugin-owned Alynt scan/upload cadence only, rollback-readiness metadata capture, and local development support for separately opted-in non-mutating `schedule_rollback_preview`.
+- V2.3 adds preview-only Alynt scan/upload schedule capability reporting, a signed non-mutating `schedule_preview` action after administrator opt-in, separately opted-in guarded `schedule_apply` for the plugin-owned Alynt scan/upload cadence only, rollback-readiness metadata capture, and release-candidate support for separately opted-in non-mutating `schedule_rollback_preview`.
 - Separate dashboard plugin preparation is documented historically in `docs/CENTRAL_DASHBOARD_PROJECT_PLAN.md`; the active dashboard implementation now lives in the dashboard repository.
 
 ### Dashboard WPvivid Schedule-Aware Status Payload Slice
@@ -225,7 +225,7 @@ Initial direction:
 
 ### Dashboard V2.3 Schedule Rollback Preview Client Slice
 
-Status: implemented locally after `v0.5.20`; not released, not deployed, and not enabled on any client by default.
+Status: release candidate in `v0.5.21`; not released, not deployed, and not enabled on any client by default.
 
 Goal:
 

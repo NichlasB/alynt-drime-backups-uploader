@@ -3,7 +3,7 @@
  * Remote action worker scan/upload helpers.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.22
+ * @since   0.5.21
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Builds scan counts and schedules the upload worker for scan/upload actions.
  *
- * @since 0.5.22
+ * @since 0.5.21
  */
 trait Alynt_Drime_Backups_Uploader_Remote_Action_Worker_Scan_Upload {
 	/**

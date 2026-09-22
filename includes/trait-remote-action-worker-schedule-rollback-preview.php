@@ -3,7 +3,7 @@
  * Remote action worker schedule rollback preview helpers.
  *
  * @package Alynt_Drime_Backups_Uploader
- * @since   0.5.22
+ * @since   0.5.21
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Validates previous apply metadata and builds non-mutating rollback previews.
  *
- * @since 0.5.22
+ * @since 0.5.21
  */
 trait Alynt_Drime_Backups_Uploader_Remote_Action_Worker_Schedule_Rollback_Preview {
 	/**

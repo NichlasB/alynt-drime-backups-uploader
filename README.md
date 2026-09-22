@@ -22,7 +22,7 @@ Companion WordPress plugin that scans completed local backup packages and upload
 - Provides optional server-specific local retention that prunes older uploaded generic outbox/server-runner packages while keeping the newest configured package sets.
 - Sends optional plain-text failed upload notifications through WordPress mail with duplicate suppression.
 - Tracks scheduled-scan cron health so administrators can see whether scans have run from WP-CLI or only from HTTP WP-Cron.
-- Supports explicit central-dashboard V2.1 action opt-in for bounded signed remote actions, including `scan_upload_now`, non-mutating V2.3 `schedule_preview`, and separately opted-in V2.3 `schedule_apply` for the plugin-owned Alynt scan/upload cadence only.
+- Supports explicit central-dashboard V2.1 action opt-in for bounded signed remote actions, including `scan_upload_now`, non-mutating V2.3 `schedule_preview`, separately opted-in V2.3 `schedule_apply` for the plugin-owned Alynt scan/upload cadence only, and separately opted-in non-mutating V2.3 `schedule_rollback_preview` evidence.
 - Provides WP-CLI commands for server-driven scan/upload/status workflows.
 - Includes a standalone PHP CLI server runner that can create `.tar.gz` site packages for the generic outbox, record light consistency metadata, guide non-destructive restore staging, run staging and production-simulation restore workflows behind explicit safety gates, preview old local artifacts, and run operator-approved local cleanup behind an explicit confirmation flag.
 - Stores bounded, redacted diagnostics when diagnostics are explicitly enabled.
@@ -75,7 +75,7 @@ The settings screen controls:
 - Optional failed upload email notifications and recipient list.
 - Maximum retry count.
 - Diagnostics enablement, minimum severity, and retention.
-- Central-dashboard read-only pairing, optional separate V2 action opt-in token, and disabled-by-default local schedule-apply opt-in.
+- Central-dashboard read-only pairing, optional separate V2 action opt-in token, disabled-by-default local schedule-apply opt-in, and disabled-by-default local schedule-rollback-preview opt-in.
 
 See [docs/SETTINGS.md](docs/SETTINGS.md) for the full option schema.
 

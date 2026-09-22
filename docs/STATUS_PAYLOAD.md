@@ -133,7 +133,7 @@ The V2.1 implementation may report the object with `enabled: false` for paired c
 
 ### Optional Schedule Management Capability
 
-`remote_actions.schedule_management` is additive in schema version `1`. Released versions can report the Alynt scan/upload schedule, accept a signed non-mutating `schedule_preview` action after separate V2 action opt-in, and accept a signed guarded `schedule_apply` request only after a separate local schedule-mutation policy is enabled. The local next slice can validate and store a non-mutating `schedule_rollback_preview` only after a separate local rollback-preview policy is enabled; this does not execute rollback. The uploader must not accept `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, disable/pause actions, backup creation, cleanup, delete, restore, settings mutation, credential changes, or Drime-token actions.
+`remote_actions.schedule_management` is additive in schema version `1`. Released versions can report the Alynt scan/upload schedule, accept a signed non-mutating `schedule_preview` action after separate V2 action opt-in, and accept a signed guarded `schedule_apply` request only after a separate local schedule-mutation policy is enabled. Version `0.5.21` can validate and store a non-mutating `schedule_rollback_preview` only after a separate local rollback-preview policy is enabled; this does not execute rollback. The uploader must not accept `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, disable/pause actions, backup creation, cleanup, delete, restore, settings mutation, credential changes, or Drime-token actions.
 
 The first supported schedule target is:
 
