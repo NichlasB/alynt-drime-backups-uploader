@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added the guarded, non-mutating `schedule_rollback_preview` client foundation for explicitly opted-in sites. The preview validates one successful prior `schedule_apply` record, matches rollback metadata fingerprints, checks metadata expiry, verifies the current schedule still matches the post-apply fingerprint, and returns support-safe rollback-readiness evidence without changing schedules.
+
+### Changed
+
+- Kept actual rollback unavailable: `schedule_rollback` remains unsupported, `rollback_supported` remains false, and rollback preview capability is advertised only after separate local rollback-preview opt-in.
+
 ## [0.5.20] - 2026-09-17
 
 ### Added

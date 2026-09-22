@@ -15,7 +15,7 @@ The uploader has the foundation the dashboard needs:
 - Redaction tests that guard the default status payload against secret and path-like fields.
 - Explicit V2.1 action opt-in for one bounded signed action, `scan_upload_now`.
 - A signed action-intent endpoint that remains inert unless V1 pairing and separate V2.1 opt-in are both active.
-- V2.3 Alynt scan/upload schedule capability reporting, signed non-mutating `schedule_preview`, and unreleased disabled-by-default `schedule_apply` for the plugin-owned Alynt scan/upload cadence only.
+- V2.3 Alynt scan/upload schedule capability reporting, signed non-mutating `schedule_preview`, disabled-by-default `schedule_apply` for the plugin-owned Alynt scan/upload cadence only, and local development support for disabled-by-default non-mutating `schedule_rollback_preview`.
 - Documentation that keeps restore, deletion, fresh backup creation, cleanup, arbitrary settings changes, and credential mutation out of the V2 action boundary.
 
 No central dashboard UI should be added to this plugin. The dashboard remains a separate project.
@@ -91,7 +91,7 @@ When the dashboard project starts, prefer this order:
 
 V2.1 adds the first remote-action slice only after separate local opt-in and only for `scan_upload_now`. Any broader remote action must receive its own design, threat model, tests, and release plan.
 
-V2.3 schedule management has advanced through preview reporting, non-mutating `schedule_preview`, and local uploader-side `schedule_apply` implementation for the plugin-owned `alynt_scan_upload` cadence only. Apply remains unreleased, disabled by default, requires a separate local schedule-mutation policy, requires a fresh preview, captures local rollback metadata before mutation, and continues rejecting `schedule_rollback`, WPvivid schedule changes, server-runner schedule changes, backup creation, cleanup/delete, restore, arbitrary commands, and Drime credential changes. Planning and scope are tracked in `docs/V2_3_SCHEDULE_APPLY_IMPLEMENTATION_PLAN.md`.
+V2.3 schedule management has advanced through preview reporting, non-mutating `schedule_preview`, released uploader-side `schedule_apply` for the plugin-owned `alynt_scan_upload` cadence only, rollback metadata capture, and local development support for non-mutating `schedule_rollback_preview`. Apply remains disabled by default, requires a separate local schedule-mutation policy, requires a fresh preview, captures local rollback metadata before mutation, and continues rejecting WPvivid schedule changes, server-runner schedule changes, backup creation, cleanup/delete, restore, arbitrary commands, and Drime credential changes. Rollback preview remains disabled by default, requires a separate local rollback-preview policy, validates stored support-safe rollback metadata, and does not execute rollback. `schedule_rollback` remains unavailable until a separate future design, threat model, test plan, release, and site opt-in approve it. Planning and scope are tracked in `docs/V2_3_SCHEDULE_APPLY_IMPLEMENTATION_PLAN.md` and `docs/STATUS_PAYLOAD.md`.
 
 ## Planning Preparation
 
