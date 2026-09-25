@@ -43,6 +43,7 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	const ACTION_SCHEDULE_APPLY            = 'schedule_apply';
 	const ACTION_SCHEDULE_ROLLBACK_PREVIEW = 'schedule_rollback_preview';
 	const ACTION_MIN_INTERVAL              = 3600;
+	const ACTION_SCHEDULE_MIN_INTERVAL     = 60;
 	const ACTION_TOKEN_PURPOSE             = 'remote_action_opt_in';
 
 	/**

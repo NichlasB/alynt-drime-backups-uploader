@@ -721,6 +721,111 @@ class RemoteActionIntentEndpointTest extends TestCase {
 		$this->assertSame( 'rate_limited', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['state'] );
 	}
 
+	public function test_schedule_preview_uses_shorter_retry_window_than_scan_upload_actions() {
+		if ( ! $this->sodium_supported() ) {
+			$this->markTestSkipped( 'Sodium signing is not available.' );
+		}
+
+		$options = $this->options_with_remote_actions();
+		$options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ] = array(
+			'last_accepted_at' => array(
+				'schedule_preview' => time() - 120,
+			),
+		);
+		$scheduled = array();
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+		Functions\when( 'update_option' )->alias(
+			function ( $name, $value ) use ( &$options ) {
+				$options[ $name ] = $value;
+				return true;
+			}
+		);
+		Functions\when( 'wp_schedule_single_event' )->alias(
+			function () use ( &$scheduled ) {
+				$scheduled[] = true;
+
+				return true;
+			}
+		);
+
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$store      = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+		$verifier   = new Alynt_Drime_Backups_Uploader_Remote_Action_Verifier( $connection );
+		$controller = new Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller( $verifier, $store );
+		$body       = $this->intent_body(
+			array(
+				'action_type'      => 'schedule_preview',
+				'action_id'        => '33333333-3333-4333-8333-333333333333',
+				'idempotency_key'  => 'adb-act-preview-short-rate-1',
+				'schedule_preview' => array(
+					'schedule_id'        => 'alynt_scan_upload',
+					'proposed_cadence'   => 'every_30_minutes',
+					'capability_version' => 1,
+				),
+			)
+		);
+
+		$response = $controller->handle_action_intent( $this->signed_request( $verifier, $options['_private_key'], $body ) );
+
+		$this->assertSame( 202, $response['status'] );
+		$this->assertSame( 'accepted', $response['data']['state'] );
+		$this->assertCount( 1, $scheduled );
+		$this->assertSame( 'schedule_preview', $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action']['action_type'] );
+	}
+
+	public function test_schedule_preview_still_rate_limits_immediate_retries() {
+		if ( ! $this->sodium_supported() ) {
+			$this->markTestSkipped( 'Sodium signing is not available.' );
+		}
+
+		$options = $this->options_with_remote_actions();
+		$options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ] = array(
+			'last_accepted_at' => array(
+				'schedule_preview' => time(),
+			),
+		);
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+		Functions\when( 'update_option' )->alias(
+			function ( $name, $value ) use ( &$options ) {
+				$options[ $name ] = $value;
+				return true;
+			}
+		);
+		Functions\when( 'wp_schedule_single_event' )->justReturn( true );
+
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$store      = new Alynt_Drime_Backups_Uploader_Remote_Action_Store();
+		$verifier   = new Alynt_Drime_Backups_Uploader_Remote_Action_Verifier( $connection );
+		$controller = new Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller( $verifier, $store );
+		$body       = $this->intent_body(
+			array(
+				'action_type'      => 'schedule_preview',
+				'action_id'        => '44444444-4444-4444-8444-444444444444',
+				'idempotency_key'  => 'adb-act-preview-short-rate-2',
+				'schedule_preview' => array(
+					'schedule_id'        => 'alynt_scan_upload',
+					'proposed_cadence'   => 'every_30_minutes',
+					'capability_version' => 1,
+				),
+			)
+		);
+
+		$response = $controller->handle_action_intent( $this->signed_request( $verifier, $options['_private_key'], $body ) );
+
+		$this->assertSame( 429, $response['status'] );
+		$this->assertSame( 'rate_limited', $response['data']['state'] );
+		$this->assertGreaterThan( 0, $response['data']['retry_after'] );
+		$this->assertLessThanOrEqual( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_MIN_INTERVAL, $response['data']['retry_after'] );
+	}
+
 	/**
 	 * Creates options with paired, opted-in V2 remote actions.
 	 *

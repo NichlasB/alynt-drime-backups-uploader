@@ -102,7 +102,7 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 			return $this->response_from_record( $existing, $this->status_for_record( $existing ) );
 		}
 
-		$retry_after = $this->store->retry_after_for_action( $intent['action_type'], Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_MIN_INTERVAL );
+		$retry_after = $this->store->retry_after_for_action( $intent['action_type'], $this->minimum_interval_for_action( $intent['action_type'] ) );
 		if ( $retry_after > 0 ) {
 			$record = $this->store->upsert_action( $intent, 'rate_limited', 'action_rate_limited', __( 'Remote action request rate-limited by the client site.', 'alynt-drime-backups-uploader' ), array(), $retry_after );
 
@@ -125,6 +125,26 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 		}
 
 		return $this->response_from_record( $record, 202 );
+	}
+
+	/**
+	 * Returns the local rate-limit interval for an action type.
+	 *
+	 * @param string $action_type Action type.
+	 * @return int
+	 */
+	private function minimum_interval_for_action( $action_type ) {
+		$schedule_actions = array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW,
+		);
+
+		if ( in_array( $action_type, $schedule_actions, true ) ) {
+			return Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_MIN_INTERVAL;
+		}
+
+		return Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_MIN_INTERVAL;
 	}
 
 	/**
