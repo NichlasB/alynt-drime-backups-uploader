@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.21
+Stable tag: 0.5.22
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,7 +52,7 @@ Only after V1 read-only pairing and a separate V2.1 `adb2a` action opt-in. The o
 
 = Can the central dashboard change this site's schedules? =
 
-Only after several opt-ins. Version 0.5.21 can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence and requires a fresh matching `schedule_preview`. Version 0.5.21 can also accept a signed non-mutating `schedule_rollback_preview` intent only after a separate local rollback-preview opt-in; it validates stored rollback-readiness metadata and reports support-safe evidence without changing schedules. The dashboard still cannot disable schedules, execute rollback, change WPvivid or server-runner schedules, mutate settings or credentials, create backups, restore, clean up, delete, or receive Drime-token actions.
+Only after several opt-ins. Version 0.5.22 can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence and requires a fresh matching `schedule_preview`. Version 0.5.22 can also accept a signed non-mutating `schedule_rollback_preview` intent only after a separate local rollback-preview opt-in; it validates stored rollback-readiness metadata and reports support-safe evidence without changing schedules. The dashboard still cannot disable schedules, execute rollback, change WPvivid or server-runner schedules, mutate settings or credentials, create backups, restore, clean up, delete, or receive Drime-token actions.
 
 = How are server-runner packages verified before restore staging? =
 
@@ -121,6 +121,9 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= 0.5.22 =
+* Fixed schedule-management retry pacing so `schedule_preview`, `schedule_apply`, and `schedule_rollback_preview` can be retried while the 15-minute preview evidence is still fresh. The one-hour throttle still applies to `scan_upload_now`.
 
 = 0.5.21 =
 * Added guarded, non-mutating `schedule_rollback_preview` support for explicitly opted-in clients. The preview validates prior successful `schedule_apply` rollback metadata, metadata fingerprints, expiry, and current schedule state, then reports support-safe readiness evidence without changing schedules.

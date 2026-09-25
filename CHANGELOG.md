@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.22] - 2026-09-25
+
+### Fixed
+
+- Shortened the local retry window for schedule-management actions so a new `schedule_preview`, `schedule_apply`, or `schedule_rollback_preview` can be requested while the 15-minute preview evidence is still fresh. The existing one-hour throttle remains in place for `scan_upload_now`.
+
 ## [0.5.21] - 2026-09-22
 
 ### Added
