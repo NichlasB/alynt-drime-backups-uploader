@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-09-22
+Updated: 2026-09-25
 
 ## Purpose
 
@@ -10,9 +10,9 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
-- Current released stable version: `v0.5.20`.
+- Current released stable version: `v0.5.21`.
 - Accepted production baseline: the uploader is production-ready for the validated backup upload, server-runner, WPvivid, status payload, and operator-assisted restore-support scope. Actual-production restore enrollment remains a separate gated project and is not enabled by default.
-- `v0.5.20` is the current released baseline. Recent releases through `v0.5.18` added schedule-aware dashboard evidence, preview-only Alynt scan/upload schedule capability reporting, and signed non-mutating `schedule_preview`; `v0.5.19` added guarded `schedule_apply` for the plugin-owned `alynt_scan_upload` cadence only; `v0.5.20` added evidence-only rollback-readiness metadata capture for successful guarded `schedule_apply` actions.
+- `v0.5.21` is the current released baseline. Recent releases through `v0.5.18` added schedule-aware dashboard evidence, preview-only Alynt scan/upload schedule capability reporting, and signed non-mutating `schedule_preview`; `v0.5.19` added guarded `schedule_apply` for the plugin-owned `alynt_scan_upload` cadence only; `v0.5.20` added evidence-only rollback-readiness metadata capture for successful guarded `schedule_apply` actions; `v0.5.21` added guarded, non-mutating `schedule_rollback_preview` support for explicitly opted-in clients while keeping it disabled by default.
 - V2.3 `schedule_apply` remains disabled by default on each client. It requires V1 pairing, V2 action opt-in, separate local Schedule Apply opt-in, a fresh matching preview, and local schedule revalidation. Broad client enablement remains a separate per-site approval gate.
 - `v0.5.10` and `v0.5.11` completed the dashboard/WPvivid schedule-aware status payload work: the authenticated read-only status payload can report redacted WPvivid schedule policy, including WPvivid Pro/addon schedule detection, so central monitoring can use site-specific freshness expectations.
 - `v0.5.9` reduced noisy final failed-upload notifications for transient Drime `429` and `5xx` responses and stopped automatic scans from requeueing signatures already in the failed-upload registry.
@@ -21,7 +21,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - Automatic local server outbox retention after confirmed upload has been released in `v0.3.2`; feature-stage reviews, local validation, staging retention test, staging cleanup/recovery verification, GitHub release asset build, and LocalWP Alynt Plugin Updater install rehearsal passed.
 - Mandatory per-package Drime folders for server/generic-outbox uploads were released in `v0.3.1`; real staging package-folder E2E, staging updater rehearsal, and LocalWP Plugins-screen updater rehearsal passed.
 - Development repo: `C:\Development\WordPress\Plugins\alynt-drime-backups-uploader`.
-- Current release candidate: `v0.5.21`, which adds guarded, non-mutating `schedule_rollback_preview` support for explicitly opted-in clients. It validates stored rollback metadata and current schedule fingerprints, returns support-safe readiness evidence only, and keeps `schedule_rollback` unavailable.
+- Current post-release proof gate: `v0.5.21` is released and deployed across the tracked dashboard/client rollout set. Runtime rollback-preview proof still requires a separately approved pilot with fresh, unexpired rollback metadata from a recent successful `schedule_apply`; existing older apply metadata is not reusable because the client expires rollback metadata after one hour. `schedule_rollback` remains unavailable.
 - GitHub release/update flow has been validated with Alynt Plugin Updater.
 - Real WordPress Plugins-screen and Alynt Plugin Updater rehearsals have passed across the release line, including the validated `v0.5.1` and `v0.5.2` baselines and later live rollout/update releases through `v0.5.18`.
 
