@@ -27,6 +27,7 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 		$paired_enabled            = Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED === $status && ! empty( $connection['status_endpoint_enabled'] );
 		$remote_actions_enabled    = $paired_enabled && ! empty( $connection['remote_actions_enabled'] ) && ! empty( $connection['action_key_id'] );
 		$schedule_mutation_enabled = $remote_actions_enabled && ! empty( $connection['schedule_mutation_enabled'] );
+		$cleanup_preview_enabled   = $remote_actions_enabled && ! empty( $connection['cleanup_preview_enabled'] );
 		$client_origin             = function_exists( 'home_url' ) ? home_url() : 'https://example.org';
 		$status_endpoint           = ( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() )->status_endpoint_for_origin( $client_origin );
 		?>
@@ -96,6 +97,16 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 							<?php endif; ?>
 						</td>
 					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Cleanup preview', 'alynt-drime-backups-uploader' ); ?></th>
+						<td>
+							<?php if ( $cleanup_preview_enabled ) : ?>
+								<?php esc_html_e( 'Enabled for read-only cleanup previews of uploader-owned temporary artifacts only. The dashboard can request aggregate evidence, but cannot delete files, alter backups, call Drime cleanup, restore, or change credentials.', 'alynt-drime-backups-uploader' ); ?>
+							<?php else : ?>
+								<?php esc_html_e( 'Disabled. The dashboard cannot request cleanup previews until a local administrator enables this separate read-only policy.', 'alynt-drime-backups-uploader' ); ?>
+							<?php endif; ?>
+						</td>
+					</tr>
 				<?php endif; ?>
 			</tbody>
 		</table>
@@ -159,6 +170,26 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 							</td>
 						</tr>
 					<?php endif; ?>
+					<?php if ( $remote_actions_enabled ) : ?>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Cleanup preview opt-in', 'alynt-drime-backups-uploader' ); ?></th>
+							<td>
+								<?php if ( $cleanup_preview_enabled ) : ?>
+									<p><?php esc_html_e( 'Cleanup preview is enabled for read-only aggregate evidence only.', 'alynt-drime-backups-uploader' ); ?></p>
+									<p class="description"><?php esc_html_e( 'The dashboard may request a signed cleanup preview for uploader-owned temporary artifacts. This does not delete files, remove backup records, change schedules, call Drime cleanup, restore data, or expose paths.', 'alynt-drime-backups-uploader' ); ?></p>
+								<?php else : ?>
+									<fieldset>
+										<legend class="screen-reader-text"><?php esc_html_e( 'Cleanup preview opt-in confirmation', 'alynt-drime-backups-uploader' ); ?></legend>
+										<label>
+											<input type="checkbox" name="alynt_drime_backups_dashboard_connection[cleanup_preview_opt_in]" value="1">
+											<?php esc_html_e( 'Allow the paired dashboard to request read-only cleanup previews for uploader-owned temporary artifacts.', 'alynt-drime-backups-uploader' ); ?>
+										</label>
+									</fieldset>
+									<p class="description"><?php esc_html_e( 'This is narrower than general remote actions. It reports aggregate counts, approximate bytes, age bands, and reason codes only. It does not enable cleanup apply, deletion, backup changes, restore, Drime retention, settings, credentials, or path browsing.', 'alynt-drime-backups-uploader' ); ?></p>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endif; ?>
 				<?php else : ?>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Pairing token', 'alynt-drime-backups-uploader' ); ?></th>
@@ -211,6 +242,11 @@ trait Alynt_Drime_Backups_Uploader_Admin_Page_Dashboard_Settings {
 						<button type="submit" class="button" name="alynt_drime_backups_dashboard_connection[connection_action]" value="disable_schedule_mutation"><?php esc_html_e( 'Disable Schedule Apply', 'alynt-drime-backups-uploader' ); ?></button>
 					<?php else : ?>
 						<button type="submit" class="button button-secondary" name="alynt_drime_backups_dashboard_connection[connection_action]" value="enable_schedule_mutation"><?php esc_html_e( 'Enable Schedule Apply', 'alynt-drime-backups-uploader' ); ?></button>
+					<?php endif; ?>
+					<?php if ( $cleanup_preview_enabled ) : ?>
+						<button type="submit" class="button" name="alynt_drime_backups_dashboard_connection[connection_action]" value="disable_cleanup_preview"><?php esc_html_e( 'Disable Cleanup Preview', 'alynt-drime-backups-uploader' ); ?></button>
+					<?php else : ?>
+						<button type="submit" class="button button-secondary" name="alynt_drime_backups_dashboard_connection[connection_action]" value="enable_cleanup_preview"><?php esc_html_e( 'Enable Cleanup Preview', 'alynt-drime-backups-uploader' ); ?></button>
 					<?php endif; ?>
 					<button type="submit" class="button" name="alynt_drime_backups_dashboard_connection[connection_action]" value="disable_remote_actions"><?php esc_html_e( 'Disable V2 Action Opt-In', 'alynt-drime-backups-uploader' ); ?></button>
 				<?php endif; ?>

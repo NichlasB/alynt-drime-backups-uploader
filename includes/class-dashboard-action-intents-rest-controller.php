@@ -134,13 +134,14 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 	 * @return int
 	 */
 	private function minimum_interval_for_action( $action_type ) {
-		$schedule_actions = array(
+		$short_interval_actions = array(
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY,
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_CLEANUP_PREVIEW,
 		);
 
-		if ( in_array( $action_type, $schedule_actions, true ) ) {
+		if ( in_array( $action_type, $short_interval_actions, true ) ) {
 			return Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_MIN_INTERVAL;
 		}
 
@@ -199,6 +200,10 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 
 		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY === $action_type ) {
 			return __( 'Remote schedule apply accepted and queued for local processing.', 'alynt-drime-backups-uploader' );
+		}
+
+		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_CLEANUP_PREVIEW === $action_type ) {
+			return __( 'Remote cleanup preview accepted and queued for local read-only processing.', 'alynt-drime-backups-uploader' );
 		}
 
 		return __( 'Remote action accepted and queued for local scan/upload processing.', 'alynt-drime-backups-uploader' );

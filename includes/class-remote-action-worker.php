@@ -22,6 +22,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 	use Alynt_Drime_Backups_Uploader_Remote_Action_Worker_Schedule_Rollback_Preview;
 	use Alynt_Drime_Backups_Uploader_Remote_Action_Worker_Schedule_Fingerprints;
 	use Alynt_Drime_Backups_Uploader_Remote_Action_Worker_Schedule_Cadence;
+	use Alynt_Drime_Backups_Uploader_Remote_Action_Worker_Cleanup_Preview;
 	use Alynt_Drime_Backups_Uploader_Remote_Action_Worker_Scan_Upload;
 
 	const EVENT = 'alynt_drime_backups_remote_action_event';
@@ -93,6 +94,12 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 
 		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW === $action_type ) {
 			$this->handle_schedule_rollback_preview( $record );
+			$this->store->release_lock( $record['action_id'] );
+			return;
+		}
+
+		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_CLEANUP_PREVIEW === $action_type ) {
+			$this->handle_cleanup_preview( $record );
 			$this->store->release_lock( $record['action_id'] );
 			return;
 		}

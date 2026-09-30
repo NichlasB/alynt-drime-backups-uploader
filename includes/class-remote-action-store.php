@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 	use Alynt_Drime_Backups_Uploader_Remote_Action_Store_Sanitizers;
 	use Alynt_Drime_Backups_Uploader_Remote_Action_Store_Schedule_Sanitizers;
+	use Alynt_Drime_Backups_Uploader_Remote_Action_Store_Cleanup_Sanitizers;
 
 	const OPTION_NAME     = 'alynt_drime_backups_remote_action_state';
 	const MAX_RECORDS     = 50;
@@ -101,9 +102,10 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 	 * @param array<string,mixed> $schedule_preview Safe schedule preview details.
 	 * @param array<string,mixed> $schedule_apply Safe schedule apply details.
 	 * @param array<string,mixed> $schedule_rollback_preview Safe schedule rollback preview details.
+	 * @param array<string,mixed> $cleanup_preview Safe cleanup preview details.
 	 * @return array<string,mixed>
 	 */
-	public function upsert_action( array $intent, $state, $code, $summary, array $counts = array(), $retry_after = 0, array $schedule_preview = array(), array $schedule_apply = array(), array $schedule_rollback_preview = array() ) {
+	public function upsert_action( array $intent, $state, $code, $summary, array $counts = array(), $retry_after = 0, array $schedule_preview = array(), array $schedule_apply = array(), array $schedule_rollback_preview = array(), array $cleanup_preview = array() ) {
 		$stored     = $this->get();
 		$action_id  = isset( $intent['action_id'] ) ? $this->sanitize_uuid( (string) $intent['action_id'] ) : '';
 		$created_at = isset( $stored['records'][ $action_id ]['created_at'] ) ? absint( $stored['records'][ $action_id ]['created_at'] ) : time();
@@ -125,6 +127,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 			'schedule_preview'          => $this->safe_schedule_preview( ! empty( $schedule_preview ) ? $schedule_preview : ( isset( $intent['schedule_preview'] ) && is_array( $intent['schedule_preview'] ) ? $intent['schedule_preview'] : array() ) ),
 			'schedule_apply'            => $this->safe_schedule_apply( ! empty( $schedule_apply ) ? $schedule_apply : ( isset( $intent['schedule_apply'] ) && is_array( $intent['schedule_apply'] ) ? $intent['schedule_apply'] : array() ) ),
 			'schedule_rollback_preview' => $this->safe_schedule_rollback_preview( ! empty( $schedule_rollback_preview ) ? $schedule_rollback_preview : ( isset( $intent['schedule_rollback_preview'] ) && is_array( $intent['schedule_rollback_preview'] ) ? $intent['schedule_rollback_preview'] : array() ) ),
+			'cleanup_preview'           => $this->safe_cleanup_preview( ! empty( $cleanup_preview ) ? $cleanup_preview : ( isset( $intent['cleanup_preview'] ) && is_array( $intent['cleanup_preview'] ) ? $intent['cleanup_preview'] : array() ) ),
 			'created_at'                => $created_at,
 			'updated_at'                => time(),
 			'retry_after'               => max( 0, absint( $retry_after ) ),

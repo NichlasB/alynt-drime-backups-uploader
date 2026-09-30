@@ -121,24 +121,24 @@ When present, the summary is redacted and capability-only:
 | `protocol_version` | int | Remote-action protocol version. Currently `2`. |
 | `enabled` | boolean | True only when the client has explicitly opted in to V2 actions, has a stored dashboard action public key, and Sodium verification is available. |
 | `key_id` | string | Non-secret dashboard action key ID when enabled; empty when disabled. |
-| `allowed_actions` | array | Allowlisted action types when enabled. Current released actions include `scan_upload_now`, non-mutating `schedule_preview`, and guarded `schedule_apply` only when a separate local schedule-mutation policy is enabled. A future V2.4 cleanup-preview slice may add non-mutating `cleanup_preview` only after separate local cleanup-preview opt-in. |
+| `allowed_actions` | array | Allowlisted action types when enabled. Current released actions include `scan_upload_now`, non-mutating `schedule_preview`, guarded `schedule_apply` only when a separate local schedule-mutation policy is enabled, non-mutating `schedule_rollback_preview` only when a separate local rollback-preview policy is enabled, and non-mutating `cleanup_preview` only when a separate local cleanup-preview policy is enabled. |
 | `sodium_available` | boolean | Whether this PHP runtime can verify Ed25519 signatures. |
 | `min_interval_seconds` | int | Client-side minimum interval between accepted action requests. |
 | `one_running_action_per_site` | boolean | Whether the client enforces a single running remote action at a time. |
 | `schedule_management` | object | Optional V2.3 schedule-management capability summary. Released versions report preview capability, non-mutating `schedule_preview`, and guarded `schedule_apply` only when a separate local schedule-mutation policy is enabled. |
-| `cleanup_management` | object | Planned optional V2.4 cleanup-preview capability summary. Not implemented in the current release line. When later implemented, it must remain preview-only unless a separate `cleanup_apply` slice is approved. |
+| `cleanup_management` | object | Optional V2.4 cleanup-preview capability summary. Preview-only; `cleanup_apply`, Drime cleanup/delete, backup-set deletion, restore, arbitrary filesystem browsing, and dashboard Drime credentials remain unavailable. |
 
 This summary must not include action private keys, raw dashboard tokens, polling secrets, Drime credentials, paths, package names, Drime object IDs, signed URLs, raw client responses, SQL, cookies, nonces, or arbitrary commands.
 
 The V2.1 implementation may report the object with `enabled: false` for paired clients so the dashboard can explain that V2 is understood but not opted in. The action-intent endpoint is registered by the V2.1 plugin but fails closed unless V1 pairing, separate V2 action opt-in, Sodium verification, signature validation, idempotency, rate limiting, and the local action allowlist all pass. The only accepted action is `scan_upload_now`.
 
-### Planned Cleanup Preview Capability
+### Cleanup Preview Capability
 
-`remote_actions.cleanup_management` is planned as an additive schema version `1` object for a future V2.4 cleanup-preview slice. It is not implemented in the current release line.
+`remote_actions.cleanup_management` is an additive schema version `1` object for the V2.4 cleanup-preview slice.
 
-The planned `cleanup_preview` action is non-mutating. It would report support-safe aggregate evidence for uploader-owned temporary artifacts only. It must not delete files, change local registries, change queues, change schedules, call Drime, delete Drime objects, delete backup sets, restore data, browse arbitrary paths, expose raw paths, or change credentials.
+The `cleanup_preview` action is non-mutating. The first implemented category reports support-safe aggregate evidence for uploader-owned temporary bookkeeping only. It must not delete files, change local registries, change queues, change schedules, call Drime, delete Drime objects, delete backup sets, restore data, browse arbitrary paths, expose raw paths, or change credentials.
 
-Planned capability fields:
+Capability fields:
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -147,11 +147,11 @@ Planned capability fields:
 | `enabled` | boolean | True only when V1 pairing, V2 action opt-in, Sodium verification, and separate local cleanup-preview policy are active. |
 | `preview_supported` | boolean | True only when the client can run non-mutating cleanup preview. |
 | `apply_supported` | boolean | False until a separate cleanup-apply slice is implemented and locally enabled. |
-| `supported_categories` | array | Allowlisted category slugs. The first planned category is `uploader_temp_artifacts`. |
+| `supported_categories` | array | Allowlisted category slugs. The first category is `uploader_temp_artifacts`. |
 | `requires_fresh_preview` | boolean | True. Reserved for a future apply design; does not imply apply support now. |
-| `max_preview_age_seconds` | int | Planned maximum age for preview evidence, such as `900`. |
+| `max_preview_age_seconds` | int | Maximum age for preview evidence, currently `900`. |
 
-Planned `cleanup_preview` result fields:
+`cleanup_preview` result fields:
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -163,7 +163,7 @@ Planned `cleanup_preview` result fields:
 | `total_eligible_count` | int | Total eligible item count across categories. |
 | `total_approx_bytes` | int | Approximate total bytes across categories. |
 
-The planned cleanup-preview summary must not include local filesystem paths, filenames, package names, backup IDs, Drime identifiers, credentials, tokens, cookies, nonces, salts, signatures, SQL, command strings, raw request bodies, raw response bodies, raw registry payloads, arbitrary age thresholds, glob patterns, regexes, or delete criteria.
+The cleanup-preview summary must not include local filesystem paths, filenames, package names, backup IDs, Drime identifiers, credentials, tokens, cookies, nonces, salts, signatures, SQL, command strings, raw request bodies, raw response bodies, raw registry payloads, arbitrary age thresholds, glob patterns, regexes, or delete criteria.
 
 Implementation planning and scope are tracked in `docs/V2_4_CLEANUP_PREVIEW_IMPLEMENTATION_PLAN.md`.
 

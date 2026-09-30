@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Alynt_Drime_Backups_Uploader_Health_Summary {
 	use Alynt_Drime_Backups_Uploader_Health_Summary_Backup_Sources;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_Schedule_Capability;
+	use Alynt_Drime_Backups_Uploader_Health_Summary_Cleanup_Capability;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_WPvivid_Schedule_Policy;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_WPvivid_Activity;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_Warnings;
@@ -145,6 +146,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 					}
 				}
 				$remote_actions['schedule_management'] = $this->schedule_management_capability( $settings, ! empty( $remote_actions['enabled'] ) );
+				$remote_actions['cleanup_management']  = $this->cleanup_management_capability( ! empty( $remote_actions['enabled'] ) );
 				$status['remote_actions']              = $remote_actions;
 			}
 		}

@@ -68,6 +68,7 @@ trait Alynt_Drime_Backups_Uploader_Remote_Action_Store_Sanitizers {
 			'schedule_preview'          => isset( $record['schedule_preview'] ) && is_array( $record['schedule_preview'] ) ? $this->safe_schedule_preview( $record['schedule_preview'] ) : array(),
 			'schedule_apply'            => isset( $record['schedule_apply'] ) && is_array( $record['schedule_apply'] ) ? $this->safe_schedule_apply( $record['schedule_apply'] ) : array(),
 			'schedule_rollback_preview' => isset( $record['schedule_rollback_preview'] ) && is_array( $record['schedule_rollback_preview'] ) ? $this->safe_schedule_rollback_preview( $record['schedule_rollback_preview'] ) : array(),
+			'cleanup_preview'           => isset( $record['cleanup_preview'] ) && is_array( $record['cleanup_preview'] ) ? $this->safe_cleanup_preview( $record['cleanup_preview'] ) : array(),
 			'created_at'                => isset( $record['created_at'] ) ? max( 0, absint( $record['created_at'] ) ) : 0,
 			'updated_at'                => isset( $record['updated_at'] ) ? max( 0, absint( $record['updated_at'] ) ) : 0,
 			'retry_after'               => isset( $record['retry_after'] ) ? max( 0, absint( $record['retry_after'] ) ) : 0,
@@ -91,6 +92,7 @@ trait Alynt_Drime_Backups_Uploader_Remote_Action_Store_Sanitizers {
 			'schedule_preview'          => isset( $record['schedule_preview'] ) && is_array( $record['schedule_preview'] ) ? $this->safe_schedule_preview( $record['schedule_preview'] ) : array(),
 			'schedule_apply'            => isset( $record['schedule_apply'] ) && is_array( $record['schedule_apply'] ) ? $this->safe_schedule_apply( $record['schedule_apply'] ) : array(),
 			'schedule_rollback_preview' => isset( $record['schedule_rollback_preview'] ) && is_array( $record['schedule_rollback_preview'] ) ? $this->safe_schedule_rollback_preview( $record['schedule_rollback_preview'] ) : array(),
+			'cleanup_preview'           => isset( $record['cleanup_preview'] ) && is_array( $record['cleanup_preview'] ) ? $this->safe_cleanup_preview( $record['cleanup_preview'] ) : array(),
 			'updated_at'                => $record['updated_at'],
 			'retry_after'               => $record['retry_after'],
 		);
@@ -113,6 +115,7 @@ trait Alynt_Drime_Backups_Uploader_Remote_Action_Store_Sanitizers {
 			'schedule_preview'          => isset( $summary['schedule_preview'] ) && is_array( $summary['schedule_preview'] ) ? $this->safe_schedule_preview( $summary['schedule_preview'] ) : array(),
 			'schedule_apply'            => isset( $summary['schedule_apply'] ) && is_array( $summary['schedule_apply'] ) ? $this->safe_schedule_apply( $summary['schedule_apply'] ) : array(),
 			'schedule_rollback_preview' => isset( $summary['schedule_rollback_preview'] ) && is_array( $summary['schedule_rollback_preview'] ) ? $this->safe_schedule_rollback_preview( $summary['schedule_rollback_preview'] ) : array(),
+			'cleanup_preview'           => isset( $summary['cleanup_preview'] ) && is_array( $summary['cleanup_preview'] ) ? $this->safe_cleanup_preview( $summary['cleanup_preview'] ) : array(),
 			'updated_at'                => isset( $summary['updated_at'] ) ? max( 0, absint( $summary['updated_at'] ) ) : 0,
 			'retry_after'               => isset( $summary['retry_after'] ) ? max( 0, absint( $summary['retry_after'] ) ) : 0,
 		);

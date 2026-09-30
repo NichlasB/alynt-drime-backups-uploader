@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-22T15:00:00+00:00\n"
+"POT-Creation-Date: 2026-09-30T21:07:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: alynt-drime-backups-uploader\n"
@@ -2054,4 +2054,100 @@ msgstr ""
 
 #: includes/trait-uploader-sidecars.php:34
 msgid "A package sidecar is empty and could not be uploaded."
+msgstr ""
+
+#: includes/class-dashboard-action-intents-rest-controller.php:206
+msgid "Remote cleanup preview accepted and queued for local read-only processing."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:101
+msgid "Cleanup preview"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:104
+msgid "Enabled for read-only cleanup previews of uploader-owned temporary artifacts only. The dashboard can request aggregate evidence, but cannot delete files, alter backups, call Drime cleanup, restore, or change credentials."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:106
+msgid "Disabled. The dashboard cannot request cleanup previews until a local administrator enables this separate read-only policy."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:175
+msgid "Cleanup preview opt-in"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:178
+msgid "Cleanup preview is enabled for read-only aggregate evidence only."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:179
+msgid "The dashboard may request a signed cleanup preview for uploader-owned temporary artifacts. This does not delete files, remove backup records, change schedules, call Drime cleanup, restore data, or expose paths."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:182
+msgid "Cleanup preview opt-in confirmation"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:185
+msgid "Allow the paired dashboard to request read-only cleanup previews for uploader-owned temporary artifacts."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:188
+msgid "This is narrower than general remote actions. It reports aggregate counts, approximate bytes, age bands, and reason codes only. It does not enable cleanup apply, deletion, backup changes, restore, Drime retention, settings, credentials, or path browsing."
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:247
+msgid "Disable Cleanup Preview"
+msgstr ""
+
+#: includes/trait-admin-page-dashboard-settings.php:249
+msgid "Enable Cleanup Preview"
+msgstr ""
+
+#: includes/trait-admin-page-notices.php:55
+msgid "Cleanup Preview enabled. The paired dashboard may now request read-only aggregate cleanup evidence for uploader-owned temporary artifacts only."
+msgstr ""
+
+#: includes/trait-admin-page-notices.php:56
+msgid "Cleanup Preview disabled. The paired dashboard can no longer request cleanup preview evidence."
+msgstr ""
+
+#: includes/trait-admin-page-notices.php:57
+msgid "Cleanup Preview could not be enabled. Confirm read-only pairing, V2 action opt-in, and the local Cleanup Preview confirmation checkbox, then try again."
+msgstr ""
+
+#: includes/trait-remote-action-verifier-body-parsing.php:117
+#: includes/trait-remote-action-worker-cleanup-preview.php:55
+msgid "Cleanup preview is not enabled on this client site."
+msgstr ""
+
+#: includes/trait-remote-action-verifier-body-parsing.php:121
+#: includes/trait-remote-action-verifier-body-parsing.php:280
+#: includes/trait-remote-action-worker-cleanup-preview.php:65
+msgid "The cleanup preview request is invalid."
+msgstr ""
+
+#: includes/trait-remote-action-verifier-body-parsing.php:255
+msgid "The cleanup preview request contains unsupported fields."
+msgstr ""
+
+#: includes/trait-remote-action-verifier-body-parsing.php:268
+#: includes/trait-remote-action-worker-cleanup-preview.php:80
+msgid "The cleanup preview category is not supported."
+msgstr ""
+
+#: includes/trait-remote-action-worker-cleanup-preview.php:28
+msgid "Remote cleanup preview action is running on the client site."
+msgstr ""
+
+#: includes/trait-remote-action-worker-cleanup-preview.php:33
+msgid "Remote cleanup preview could not be completed."
+msgstr ""
+
+#: includes/trait-remote-action-worker-cleanup-preview.php:37
+msgid "Cleanup preview is ready. No files or records were changed."
+msgstr ""
+
+#: includes/trait-remote-action-worker-cleanup-preview.php:40
+msgid "Remote cleanup preview failed without storing unsafe error details."
 msgstr ""

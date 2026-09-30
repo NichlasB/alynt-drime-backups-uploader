@@ -60,6 +60,10 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions {
 				$notice = empty( $state['last_error_code'] ) ? 'dashboard_schedule_apply_enabled' : 'dashboard_schedule_apply_failed';
 			} elseif ( 'disable_schedule_mutation' === $action ) {
 				$notice = 'dashboard_schedule_apply_disabled';
+			} elseif ( 'enable_cleanup_preview' === $action ) {
+				$notice = empty( $state['last_error_code'] ) ? 'dashboard_cleanup_preview_enabled' : 'dashboard_cleanup_preview_failed';
+			} elseif ( 'disable_cleanup_preview' === $action ) {
+				$notice = 'dashboard_cleanup_preview_disabled';
 			} else {
 				$notice = empty( $state['last_error_code'] ) ? 'dashboard_connection_saved' : 'dashboard_connection_invalid_token';
 			}
@@ -75,6 +79,7 @@ trait Alynt_Drime_Backups_Uploader_Plugin_Dashboard_Actions {
 				'status_endpoint_enabled'   => ! empty( $state['status_endpoint_enabled'] ),
 				'remote_actions_enabled'    => ! empty( $state['remote_actions_enabled'] ),
 				'schedule_mutation_enabled' => ! empty( $state['schedule_mutation_enabled'] ),
+				'cleanup_preview_enabled'   => ! empty( $state['cleanup_preview_enabled'] ),
 				'last_error_code'           => isset( $state['last_error_code'] ) ? (string) $state['last_error_code'] : '',
 			)
 		);

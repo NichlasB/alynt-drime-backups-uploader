@@ -7,10 +7,12 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added uploader-side V2.4 `cleanup_preview` planning docs and reserved status-payload wording for a future non-mutating cleanup-preview capability.
+- Added the first uploader-side V2.4 `cleanup_preview` runtime foundation: separate local opt-in, capability advertising, signed action-intent validation, aggregate-only stale uploader bookkeeping preview, and redacted status/action-history storage.
 
 ### Security
 
 - Preserved the remote-action boundary: this planning update does not add runtime cleanup controls, cleanup apply, Drime deletion, backup-set deletion, restore behavior, arbitrary filesystem browsing, dashboard Drime credential storage, deployment behavior, or live-site state changes.
+- Kept cleanup preview read-only: it does not delete files, mutate queues/registries/schedules, call Drime, expose paths or package names, or enable cleanup apply.
 
 ## [0.5.22] - 2026-09-25
 

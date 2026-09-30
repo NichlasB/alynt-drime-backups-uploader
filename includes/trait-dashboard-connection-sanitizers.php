@@ -53,6 +53,8 @@ trait Alynt_Drime_Backups_Uploader_Dashboard_Connection_Sanitizers {
 			'schedule_mutation_enabled_at'         => isset( $state['schedule_mutation_enabled_at'] ) ? max( 0, absint( $state['schedule_mutation_enabled_at'] ) ) : $defaults['schedule_mutation_enabled_at'],
 			'schedule_rollback_preview_enabled'    => self::STATUS_PAIRED === $status && ! empty( $state['remote_actions_enabled'] ) && ! empty( $state['schedule_rollback_preview_enabled'] ),
 			'schedule_rollback_preview_enabled_at' => isset( $state['schedule_rollback_preview_enabled_at'] ) ? max( 0, absint( $state['schedule_rollback_preview_enabled_at'] ) ) : $defaults['schedule_rollback_preview_enabled_at'],
+			'cleanup_preview_enabled'              => self::STATUS_PAIRED === $status && ! empty( $state['remote_actions_enabled'] ) && ! empty( $state['cleanup_preview_enabled'] ),
+			'cleanup_preview_enabled_at'           => isset( $state['cleanup_preview_enabled_at'] ) ? max( 0, absint( $state['cleanup_preview_enabled_at'] ) ) : $defaults['cleanup_preview_enabled_at'],
 		);
 	}
 

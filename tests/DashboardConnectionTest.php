@@ -59,6 +59,7 @@ class DashboardConnectionTest extends TestCase {
 		$this->assertFalse( $defaults['status_endpoint_enabled'] );
 		$this->assertSame( '', $defaults['polling_credential_verifier'] );
 		$this->assertFalse( $defaults['schedule_rollback_preview_enabled'] );
+		$this->assertFalse( $defaults['cleanup_preview_enabled'] );
 	}
 
 	public function test_prepare_records_local_intent_without_enabling_endpoint() {
@@ -413,6 +414,28 @@ class DashboardConnectionTest extends TestCase {
 		);
 	}
 
+	public function test_remote_action_summary_reports_cleanup_preview_only_after_local_opt_in() {
+		$options = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['remote_actions_enabled']      = true;
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['action_key_id']               = 'ak_test';
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['action_public_key']           = str_repeat( 'A', 43 );
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['cleanup_preview_enabled']     = true;
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['cleanup_preview_enabled_at']  = time();
+
+		$connection = $this->connection_with_options( $options );
+		$summary    = $connection->remote_action_summary();
+		$enabled    = function_exists( 'sodium_crypto_sign_verify_detached' );
+
+		$this->assertSame(
+			$enabled ? array(
+				Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW,
+				Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
+				Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_CLEANUP_PREVIEW,
+			) : array(),
+			$summary['allowed_actions']
+		);
+	}
+
 	public function test_parse_action_opt_in_token_returns_safe_public_metadata() {
 		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
 		$token      = $this->action_opt_in_token();
@@ -523,6 +546,37 @@ class DashboardConnectionTest extends TestCase {
 		$this->assertSame( '', $state['last_error_code'] );
 		$this->assertTrue( $state['schedule_rollback_preview_enabled'] );
 		$this->assertGreaterThan( 0, $state['schedule_rollback_preview_enabled_at'] );
+	}
+
+	public function test_enable_cleanup_preview_requires_remote_actions_and_local_confirmation() {
+		$options    = $this->paired_options( 'pk_test', str_repeat( 'B', 43 ) );
+		$connection = $this->connection_with_options( $options );
+
+		$state = $connection->update_shell(
+			array(
+				'connection_action' => 'enable_cleanup_preview',
+			)
+		);
+		$this->assertFalse( $state['cleanup_preview_enabled'] );
+
+		$options[ Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME ]['remote_actions_enabled'] = true;
+		$state = $connection->update_shell(
+			array(
+				'connection_action' => 'enable_cleanup_preview',
+			)
+		);
+		$this->assertFalse( $state['cleanup_preview_enabled'] );
+
+		$state = $connection->update_shell(
+			array(
+				'connection_action'      => 'enable_cleanup_preview',
+				'cleanup_preview_opt_in' => '1',
+			)
+		);
+
+		$this->assertTrue( $state['cleanup_preview_enabled'] );
+		$this->assertGreaterThan( 0, $state['cleanup_preview_enabled_at'] );
+		$this->assertTrue( $connection->is_cleanup_preview_enabled() );
 	}
 
 	public function test_complete_remote_action_opt_in_rejects_site_identity_mismatch() {

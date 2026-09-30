@@ -33,7 +33,7 @@ trait Alynt_Drime_Backups_Uploader_Remote_Action_Verifier_Body_Parsing {
 			return $this->error( 'action_body_invalid', __( 'The remote action body is not valid JSON.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
-		$allowed = array( 'protocol_version', 'action_id', 'dashboard_site_public_id', 'site_uuid', 'action_type', 'requested_at', 'expires_at', 'idempotency_key', 'schedule_preview', 'schedule_apply', 'schedule_rollback_preview' );
+		$allowed = array( 'protocol_version', 'action_id', 'dashboard_site_public_id', 'site_uuid', 'action_type', 'requested_at', 'expires_at', 'idempotency_key', 'schedule_preview', 'schedule_apply', 'schedule_rollback_preview', 'cleanup_preview' );
 		$extra   = array_diff( array_keys( $body ), $allowed );
 		if ( ! empty( $extra ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
@@ -55,6 +55,7 @@ trait Alynt_Drime_Backups_Uploader_Remote_Action_Verifier_Body_Parsing {
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY,
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_CLEANUP_PREVIEW,
 		);
 
 		if (
@@ -111,11 +112,28 @@ trait Alynt_Drime_Backups_Uploader_Remote_Action_Verifier_Body_Parsing {
 			}
 
 			$parsed['schedule_rollback_preview'] = $schedule_rollback_preview;
+		} elseif ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_CLEANUP_PREVIEW === $parsed['action_type'] ) {
+			if ( ! $this->connection->is_cleanup_preview_enabled() ) {
+				return $this->error( 'cleanup_preview_opt_in_required', __( 'Cleanup preview is not enabled on this client site.', 'alynt-drime-backups-uploader' ), 403 );
+			}
+
+			if ( empty( $body['cleanup_preview'] ) || ! is_array( $body['cleanup_preview'] ) ) {
+				return $this->error( 'action_cleanup_preview_invalid', __( 'The cleanup preview request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
+			}
+
+			$cleanup_preview = $this->parse_cleanup_preview( $body['cleanup_preview'] );
+			if ( is_wp_error( $cleanup_preview ) ) {
+				return $cleanup_preview;
+			}
+
+			$parsed['cleanup_preview'] = $cleanup_preview;
 		} elseif ( array_key_exists( 'schedule_preview', $body ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
 		} elseif ( array_key_exists( 'schedule_apply', $body ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
 		} elseif ( array_key_exists( 'schedule_rollback_preview', $body ) ) {
+			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
+		} elseif ( array_key_exists( 'cleanup_preview', $body ) ) {
 			return $this->error( 'action_body_keys_invalid', __( 'The remote action body contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
 		}
 
@@ -220,5 +238,52 @@ trait Alynt_Drime_Backups_Uploader_Remote_Action_Verifier_Body_Parsing {
 		}
 
 		return $parsed;
+	}
+
+	/**
+	 * Parses and validates the bounded cleanup preview request.
+	 *
+	 * @since 0.5.23
+	 *
+	 * @param array<string,mixed> $preview Cleanup preview request.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	private function parse_cleanup_preview( array $preview ) {
+		$allowed = array( 'capability_version', 'scope', 'categories' );
+		$extra   = array_diff( array_keys( $preview ), $allowed );
+		if ( ! empty( $extra ) ) {
+			return $this->error( 'cleanup_preview_forbidden_field', __( 'The cleanup preview request contains unsupported fields.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		$scope      = isset( $preview['scope'] ) ? sanitize_key( (string) $preview['scope'] ) : '';
+		$categories = isset( $preview['categories'] ) && is_array( $preview['categories'] ) ? $preview['categories'] : array();
+		$clean      = array();
+
+		foreach ( $categories as $category ) {
+			$category = sanitize_key( (string) $category );
+			if ( '' === $category ) {
+				continue;
+			}
+			if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_CATEGORY_UPLOADER_TEMP !== $category ) {
+				return $this->error( 'cleanup_preview_unknown_category', __( 'The cleanup preview category is not supported.', 'alynt-drime-backups-uploader' ), 400 );
+			}
+			$clean[] = $category;
+		}
+
+		$clean = array_values( array_unique( $clean ) );
+
+		if (
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_CAPABILITY_VERSION !== absint( isset( $preview['capability_version'] ) ? $preview['capability_version'] : 0 )
+			|| Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_SCOPE_SAFE_LOCAL !== $scope
+			|| empty( $clean )
+		) {
+			return $this->error( 'action_cleanup_preview_invalid', __( 'The cleanup preview request is invalid.', 'alynt-drime-backups-uploader' ), 400 );
+		}
+
+		return array(
+			'capability_version' => Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_CAPABILITY_VERSION,
+			'scope'              => Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_SCOPE_SAFE_LOCAL,
+			'categories'         => $clean,
+		);
 	}
 }

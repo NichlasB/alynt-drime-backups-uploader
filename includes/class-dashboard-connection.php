@@ -42,9 +42,14 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 	const ACTION_SCHEDULE_PREVIEW          = 'schedule_preview';
 	const ACTION_SCHEDULE_APPLY            = 'schedule_apply';
 	const ACTION_SCHEDULE_ROLLBACK_PREVIEW = 'schedule_rollback_preview';
+	const ACTION_CLEANUP_PREVIEW           = 'cleanup_preview';
 	const ACTION_MIN_INTERVAL              = 3600;
 	const ACTION_SCHEDULE_MIN_INTERVAL     = 60;
 	const ACTION_TOKEN_PURPOSE             = 'remote_action_opt_in';
+	const CLEANUP_CAPABILITY_VERSION       = 1;
+	const CLEANUP_SCOPE_SAFE_LOCAL         = 'safe_local_uploader_owned';
+	const CLEANUP_CATEGORY_UPLOADER_TEMP   = 'uploader_temp_artifacts';
+	const CLEANUP_PREVIEW_MAX_AGE          = 900;
 
 	/**
 	 * Returns default connection state.
@@ -75,6 +80,8 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			'schedule_mutation_enabled_at'         => 0,
 			'schedule_rollback_preview_enabled'    => false,
 			'schedule_rollback_preview_enabled_at' => 0,
+			'cleanup_preview_enabled'              => false,
+			'cleanup_preview_enabled_at'           => 0,
 		);
 	}
 
@@ -175,6 +182,9 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			if ( $this->is_schedule_rollback_preview_enabled() ) {
 				$allowed_actions[] = self::ACTION_SCHEDULE_ROLLBACK_PREVIEW;
 			}
+			if ( $this->is_cleanup_preview_enabled() ) {
+				$allowed_actions[] = self::ACTION_CLEANUP_PREVIEW;
+			}
 		}
 
 		return array(
@@ -218,6 +228,22 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Connection {
 			&& ! empty( $state['status_endpoint_enabled'] )
 			&& ! empty( $state['remote_actions_enabled'] )
 			&& ! empty( $state['schedule_rollback_preview_enabled'] );
+	}
+
+	/**
+	 * Returns whether non-mutating cleanup preview is explicitly enabled.
+	 *
+	 * @since 0.5.23
+	 *
+	 * @return bool
+	 */
+	public function is_cleanup_preview_enabled() {
+		$state = $this->get();
+
+		return self::STATUS_PAIRED === $state['connection_status']
+			&& ! empty( $state['status_endpoint_enabled'] )
+			&& ! empty( $state['remote_actions_enabled'] )
+			&& ! empty( $state['cleanup_preview_enabled'] );
 	}
 
 	/**

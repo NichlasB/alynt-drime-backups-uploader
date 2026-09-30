@@ -63,6 +63,8 @@ trait Alynt_Drime_Backups_Uploader_Dashboard_Connection_State_Transitions {
 			$state['schedule_mutation_enabled_at']         = 0;
 			$state['schedule_rollback_preview_enabled']    = false;
 			$state['schedule_rollback_preview_enabled_at'] = 0;
+			$state['cleanup_preview_enabled']              = false;
+			$state['cleanup_preview_enabled_at']           = 0;
 			$state['last_error_code']                      = '';
 		} elseif ( 'enable_schedule_mutation' === $action ) {
 			if ( self::STATUS_PAIRED === $state['connection_status'] && ! empty( $state['remote_actions_enabled'] ) && ! empty( $raw['schedule_mutation_opt_in'] ) ) {
@@ -78,6 +80,18 @@ trait Alynt_Drime_Backups_Uploader_Dashboard_Connection_State_Transitions {
 			$state['schedule_rollback_preview_enabled']    = false;
 			$state['schedule_rollback_preview_enabled_at'] = 0;
 			$state['last_error_code']                      = '';
+		} elseif ( 'enable_cleanup_preview' === $action ) {
+			if ( self::STATUS_PAIRED === $state['connection_status'] && ! empty( $state['remote_actions_enabled'] ) && ! empty( $raw['cleanup_preview_opt_in'] ) ) {
+				$state['cleanup_preview_enabled']    = true;
+				$state['cleanup_preview_enabled_at'] = time();
+				$state['last_error_code']            = '';
+			} else {
+				$state['last_error_code'] = 'cleanup_preview_opt_in_required';
+			}
+		} elseif ( 'disable_cleanup_preview' === $action ) {
+			$state['cleanup_preview_enabled']    = false;
+			$state['cleanup_preview_enabled_at'] = 0;
+			$state['last_error_code']            = '';
 		} elseif ( 'disable' === $action ) {
 			$state = self::defaults();
 		}

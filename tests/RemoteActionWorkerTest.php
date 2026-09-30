@@ -353,6 +353,49 @@ class RemoteActionWorkerTest extends TestCase {
 		$this->assertSame( '7c650de7-c7ee-4f90-a5cb-59c4753a2c51', $latest['schedule_rollback_preview']['source_apply_action_id'] );
 	}
 
+	public function test_cleanup_preview_succeeds_without_scanning_or_uploading() {
+		$options = $this->options_with_accepted_cleanup_preview_action();
+		$this->mock_options( $options );
+
+		$queue = $this->createMock( Alynt_Drime_Backups_Uploader_Queue::class );
+		$queue->expects( $this->once() )->method( 'get_active' )->willReturn(
+			array(
+				'local_file'       => '/var/www/private/example-backup.zip',
+				'remote_name'      => 'example-backup.zip',
+				'upload_id'        => 'upload-secret',
+				'signature'        => 'unsafe-signature',
+				'completed_parts'  => array(),
+				'updated_at'       => time() - Alynt_Drime_Backups_Uploader_Uploader::STALE_ACTIVE_UPLOAD_SECONDS - 60,
+			)
+		);
+
+		$worker = new Alynt_Drime_Backups_Uploader_Remote_Action_Worker(
+			$this->plugin_for_cleanup_preview( $queue ),
+			new Alynt_Drime_Backups_Uploader_Remote_Action_Store()
+		);
+
+		$worker->handle( '9c650de7-c7ee-4f90-a5cb-59c4753a2c53' );
+
+		$latest = $options[ Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME ]['latest_action'];
+		$this->assertSame( 'succeeded', $latest['state'] );
+		$this->assertSame( 'cleanup_preview_ready', $latest['code'] );
+		$this->assertSame( 'cleanup_preview', $latest['action_type'] );
+		$this->assertSame( '9c650de7-c7ee-4f90-a5cb-59c4753a2c53', $latest['cleanup_preview']['preview_action_id'] );
+		$this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $latest['cleanup_preview']['preview_fingerprint'] );
+		$this->assertSame( 'safe_local_uploader_owned', $latest['cleanup_preview']['scope'] );
+		$this->assertSame( 1, $latest['cleanup_preview']['total_eligible_count'] );
+		$this->assertSame( 0, $latest['cleanup_preview']['total_approx_bytes'] );
+		$this->assertFalse( $latest['cleanup_preview']['apply_supported'] );
+		$this->assertSame( 'uploader_temp_artifacts', $latest['cleanup_preview']['categories'][0]['category'] );
+		$this->assertSame( 'stale_active_upload_state', $latest['cleanup_preview']['categories'][0]['reason_code'] );
+
+		$safe_json = json_encode( $latest );
+		$this->assertStringNotContainsString( '/var/www', $safe_json );
+		$this->assertStringNotContainsString( 'example-backup.zip', $safe_json );
+		$this->assertStringNotContainsString( 'upload-secret', $safe_json );
+		$this->assertStringNotContainsString( 'unsafe-signature', $safe_json );
+	}
+
 	/**
 	 * Mocks option storage.
 	 *
@@ -478,6 +521,22 @@ class RemoteActionWorkerTest extends TestCase {
 		$plugin->method( 'settings' )->willReturn( $settings );
 		$plugin->method( 'dashboard_connection' )->willReturn( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() );
 		$plugin->expects( $this->never() )->method( 'cron' )->willReturn( $cron );
+		$plugin->expects( $this->never() )->method( 'cron_health' );
+		$plugin->expects( $this->never() )->method( 'scan_and_queue' );
+
+		return $plugin;
+	}
+
+	/**
+	 * Creates a plugin mock for cleanup preview without scan/upload side effects.
+	 *
+	 * @param Alynt_Drime_Backups_Uploader_Queue $queue Queue service.
+	 * @return Alynt_Drime_Backups_Uploader_Plugin
+	 */
+	private function plugin_for_cleanup_preview( Alynt_Drime_Backups_Uploader_Queue $queue ) {
+		$plugin = $this->createMock( Alynt_Drime_Backups_Uploader_Plugin::class );
+		$plugin->expects( $this->once() )->method( 'dashboard_connection' )->willReturn( new Alynt_Drime_Backups_Uploader_Dashboard_Connection() );
+		$plugin->expects( $this->once() )->method( 'queue' )->willReturn( $queue );
 		$plugin->expects( $this->never() )->method( 'cron_health' );
 		$plugin->expects( $this->never() )->method( 'scan_and_queue' );
 
@@ -772,6 +831,56 @@ class RemoteActionWorkerTest extends TestCase {
 				),
 				'last_accepted_at' => array(),
 				'latest_action'    => $rollback_preview_record,
+			),
+		);
+	}
+
+	/**
+	 * Returns option state with one accepted cleanup preview action.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function options_with_accepted_cleanup_preview_action() {
+		$action_id = '9c650de7-c7ee-4f90-a5cb-59c4753a2c53';
+		$record    = array(
+			'action_id'                => $action_id,
+			'action_type'              => 'cleanup_preview',
+			'dashboard_site_public_id' => 'd277c82f-6d75-4d80-93ff-fa842dcdd80b',
+			'idempotency_key'          => 'idem-cleanup-preview-1',
+			'request_hash'             => str_repeat( '9', 64 ),
+			'state'                    => 'accepted',
+			'code'                     => 'action_accepted',
+			'summary'                  => 'Remote cleanup preview accepted and queued for local read-only processing.',
+			'counts'                   => array(),
+			'cleanup_preview'          => array(
+				'capability_version' => 1,
+				'scope'              => 'safe_local_uploader_owned',
+				'categories'         => array( 'uploader_temp_artifacts' ),
+			),
+			'created_at'               => time(),
+			'updated_at'               => time(),
+			'retry_after'              => 0,
+		);
+
+		return array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(
+				'connection_status'           => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED,
+				'status_endpoint_enabled'     => true,
+				'remote_actions_enabled'      => true,
+				'cleanup_preview_enabled'     => true,
+				'cleanup_preview_enabled_at'  => time(),
+			),
+			Alynt_Drime_Backups_Uploader_Remote_Action_Store::OPTION_NAME => array(
+				'records'          => array(
+					$action_id => $record,
+				),
+				'idempotency'      => array(),
+				'running_lock'     => array(
+					'action_id'  => '',
+					'expires_at' => 0,
+				),
+				'last_accepted_at' => array(),
+				'latest_action'    => $record,
 			),
 		);
 	}

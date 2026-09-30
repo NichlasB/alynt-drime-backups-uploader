@@ -1,6 +1,6 @@
 # V2.4 Cleanup Preview Uploader Implementation Plan
 
-Status: uploader-side planning-only slice. This document narrows the first V2.4 cleanup step to a signed, non-mutating `cleanup_preview` action. It does not approve implementation, release, deployment, live-site enablement, `cleanup_apply`, Drime retention/delete, backup-set deletion, restore behavior, arbitrary filesystem browsing, or dashboard-side Drime credential storage.
+Status: first uploader-side runtime slice implemented locally for review. This document narrows the first V2.4 cleanup step to a signed, non-mutating `cleanup_preview` action. It does not approve release, deployment, live-site enablement, `cleanup_apply`, Drime retention/delete, backup-set deletion, restore behavior, arbitrary filesystem browsing, or dashboard-side Drime credential storage.
 
 Related artifacts:
 
@@ -30,7 +30,7 @@ The preview must not delete files, mutate registries, change queues, change sche
 
 ## Boundary
 
-Allowed in a later implementation slice:
+Allowed in this first implementation slice:
 
 - advertise `remote_actions.cleanup_management` only after V1 pairing, V2 action opt-in, Sodium support, and a separate local cleanup-preview policy are active;
 - accept a signed `cleanup_preview` intent only after the normal V2 action-intent validation path passes;
@@ -54,13 +54,13 @@ Not allowed:
 
 ## First Preview Scope
 
-Initial scope should be intentionally narrower than all local cleanup features that already exist.
+Initial scope is intentionally narrower than all local cleanup features that already exist.
 
 Recommended first category:
 
 | Category | Description | Initial behavior |
 | --- | --- | --- |
-| `uploader_temp_artifacts` | Uploader-owned temporary/staging artifacts that are safe to summarize without paths. | Preview only; aggregate counts/bytes/age bands. |
+| `uploader_temp_artifacts` | Uploader-owned temporary/staging artifacts that are safe to summarize without paths. | Preview only; aggregate counts/bytes/age bands. First implementation reports stale active upload bookkeeping as aggregate evidence. |
 
 Potential later category after separate proof:
 
@@ -72,7 +72,7 @@ Do not include server-runner local package cleanup, restore staging cleanup, WPv
 
 ## Capability Reporting Plan
 
-The status payload may later add `remote_actions.cleanup_management` as an optional schema-1 additive object.
+The status payload adds `remote_actions.cleanup_management` as an optional schema-1 additive object.
 
 Report cleanup preview support only when all local conditions are true:
 
@@ -101,7 +101,7 @@ Recommended preview-capable values:
 }
 ```
 
-If cleanup preview is not locally enabled, omit `cleanup_management` or report it unavailable without adding `cleanup_preview` to `allowed_actions`.
+If cleanup preview is not locally enabled, report `cleanup_management` unavailable without adding `cleanup_preview` to `allowed_actions`.
 
 Do not report `apply_supported: true` until a future `cleanup_apply` slice is separately planned, implemented, tested, released, and explicitly enabled.
 
@@ -212,7 +212,7 @@ The status payload must not include paths, filenames, package names, backup IDs,
 
 ## Test Plan
 
-Focused unit/integration tests for a later implementation:
+Focused unit/integration tests for this implementation:
 
 - cleanup preview disabled by default;
 - V2 disabled rejects `cleanup_preview`;
@@ -230,7 +230,7 @@ Focused unit/integration tests for a later implementation:
 
 ## Workflow Gates
 
-Before implementation:
+Before release/deployment:
 
 1. Update dashboard and uploader protocol/status docs.
 2. Recommend or create a restore point before edit-heavy work.
@@ -248,10 +248,10 @@ Before any future `cleanup_apply`:
 - add high-friction confirmation UX;
 - prove stale preview rejection and non-overbroad cleanup.
 
-## Acceptance Criteria For This Planning Slice
+## Acceptance Criteria For This Implementation Slice
 
 - A dedicated uploader-side `cleanup_preview` implementation plan exists.
 - The plan limits the first remote cleanup step to non-mutating preview only.
 - `cleanup_apply`, Drime retention/delete, backup-set deletion, restore, arbitrary filesystem browsing, and dashboard Drime credentials remain unavailable.
-- Status payload updates are planned as additive schema-1 fields.
-- No runtime code, release, deploy, push, live-site change, database change, or cleanup behavior is introduced by this planning slice.
+- Status payload updates are additive schema-1 fields.
+- Runtime code remains preview-only: no release, deploy, push, live-site change, database change, or cleanup behavior is introduced by this local implementation slice.
