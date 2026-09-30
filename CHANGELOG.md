@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added uploader-side V2.4 `cleanup_preview` planning docs and reserved status-payload wording for a future non-mutating cleanup-preview capability.
+
+### Security
+
+- Preserved the remote-action boundary: this planning update does not add runtime cleanup controls, cleanup apply, Drime deletion, backup-set deletion, restore behavior, arbitrary filesystem browsing, dashboard Drime credential storage, deployment behavior, or live-site state changes.
+
 ## [0.5.22] - 2026-09-25
 
 ### Fixed
