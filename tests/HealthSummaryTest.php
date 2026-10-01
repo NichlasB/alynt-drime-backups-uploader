@@ -177,6 +177,61 @@ class HealthSummaryTest extends TestCase {
 		rmdir( $outbox );
 	}
 
+	public function test_status_includes_dashboard_compatible_cleanup_preview_capability() {
+		if ( ! function_exists( 'sodium_crypto_sign_verify_detached' ) ) {
+			$this->markTestSkipped( 'Sodium is required for enabled remote-action capability.' );
+		}
+
+		$options = array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(
+				'connection_status'                  => Alynt_Drime_Backups_Uploader_Dashboard_Connection::STATUS_PAIRED,
+				'status_endpoint_enabled'            => true,
+				'remote_actions_enabled'             => true,
+				'action_key_id'                      => 'ak_test_123',
+				'action_public_key'                  => str_repeat( 'A', 44 ),
+				'dashboard_site_public_id'           => '22222222-2222-4222-8222-222222222222',
+				'expected_client_origin'             => 'https://example.com',
+				'remote_actions_opted_in_at'         => time(),
+				'cleanup_preview_enabled'            => true,
+				'cleanup_preview_enabled_at'         => time(),
+			),
+		);
+
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = array() ) use ( &$options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+
+		$outbox     = $this->create_outbox();
+		$connection = new Alynt_Drime_Backups_Uploader_Dashboard_Connection();
+		$summary    = $this->summary( $outbox, null, null, null, '/var/www/example/wp-content/uploads/wpvividbackups', $connection );
+		$status     = $summary->status( 1234567890 );
+
+		$this->assertContains( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_CLEANUP_PREVIEW, $status['remote_actions']['allowed_actions'] );
+		$this->assertArrayHasKey( 'cleanup_management', $status['remote_actions'] );
+		$this->assertArrayNotHasKey( 'supported_scope', $status['remote_actions']['cleanup_management'] );
+
+		$capability = $status['remote_actions']['cleanup_management'];
+		$this->assertSame( 2, $capability['protocol_version'] );
+		$this->assertSame( 1, $capability['capability_version'] );
+		$this->assertTrue( $capability['enabled'] );
+		$this->assertTrue( $capability['preview_supported'] );
+		$this->assertFalse( $capability['apply_supported'] );
+		$this->assertSame( 'safe_local_uploader_owned', $capability['scope'] );
+		$this->assertSame( array( 'uploader_temp_artifacts' ), $capability['supported_categories'] );
+		$this->assertFalse( $capability['paths_exposed'] );
+		$this->assertFalse( $capability['remote_cleanup_available'] );
+		$this->assertFalse( $capability['cleanup_apply_available'] );
+		$this->assertFalse( $capability['drime_cleanup_available'] );
+		$this->assertFalse( $capability['backup_deletion_available'] );
+		$this->assertFalse( $capability['restore_actions_available'] );
+		$this->assertFalse( $capability['credential_actions_allowed'] );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
 	public function test_status_includes_latest_redacted_remote_action_summary_when_available() {
 		$options = array(
 			Alynt_Drime_Backups_Uploader_Dashboard_Connection::OPTION_NAME => array(

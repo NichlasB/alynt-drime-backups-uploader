@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.24] - 2026-10-01
+
+### Fixed
+
+- Fixed V2.4 cleanup-preview capability reporting to emit the dashboard protocol field `remote_actions.cleanup_management.scope`, allowing the paired dashboard to recognize preview-only cleanup support after explicit client opt-in.
+
 ## [0.5.23] - 2026-10-01
 
 ### Added

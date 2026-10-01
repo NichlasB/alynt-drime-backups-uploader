@@ -38,7 +38,7 @@ trait Alynt_Drime_Backups_Uploader_Health_Summary_Cleanup_Capability {
 			'supported_categories'       => $enabled ? array( Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_CATEGORY_UPLOADER_TEMP ) : array(),
 			'requires_fresh_preview'     => true,
 			'max_preview_age_seconds'    => Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_PREVIEW_MAX_AGE,
-			'supported_scope'            => Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_SCOPE_SAFE_LOCAL,
+			'scope'                      => Alynt_Drime_Backups_Uploader_Dashboard_Connection::CLEANUP_SCOPE_SAFE_LOCAL,
 			'paths_exposed'              => false,
 			'remote_cleanup_available'   => false,
 			'cleanup_apply_available'    => false,

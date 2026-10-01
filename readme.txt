@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.23
+Stable tag: 0.5.24
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,11 +52,11 @@ Only after V1 read-only pairing and a separate V2.1 `adb2a` action opt-in. The o
 
 = Can the central dashboard change this site's schedules? =
 
-Only after several opt-ins. Version 0.5.23 can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence and requires a fresh matching `schedule_preview`. Version 0.5.23 can also accept a signed non-mutating `schedule_rollback_preview` intent only after a separate local rollback-preview opt-in; it validates stored rollback-readiness metadata and reports support-safe evidence without changing schedules. The dashboard still cannot disable schedules, execute rollback, change WPvivid or server-runner schedules, mutate settings or credentials, create backups, restore, clean up, delete, or receive Drime-token actions.
+Only after several opt-ins. Version 0.5.24 can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence and requires a fresh matching `schedule_preview`. Version 0.5.24 can also accept a signed non-mutating `schedule_rollback_preview` intent only after a separate local rollback-preview opt-in; it validates stored rollback-readiness metadata and reports support-safe evidence without changing schedules. The dashboard still cannot disable schedules, execute rollback, change WPvivid or server-runner schedules, mutate settings or credentials, create backups, restore, clean up, delete, or receive Drime-token actions.
 
 = Can the central dashboard preview cleanup? =
 
-Only after V1 read-only pairing, separate V2 action opt-in, and a separate local cleanup-preview opt-in. Version 0.5.23 can accept a signed non-mutating `cleanup_preview` intent for aggregate uploader-owned temporary bookkeeping evidence only. It does not delete files, mutate queues or registries, call Drime, delete Drime objects, delete backup sets, restore data, browse arbitrary paths, expose paths or package names, change schedules, or change credentials. Cleanup apply remains unavailable.
+Only after V1 read-only pairing, separate V2 action opt-in, and a separate local cleanup-preview opt-in. Version 0.5.24 can accept a signed non-mutating `cleanup_preview` intent for aggregate uploader-owned temporary bookkeeping evidence only. It does not delete files, mutate queues or registries, call Drime, delete Drime objects, delete backup sets, restore data, browse arbitrary paths, expose paths or package names, change schedules, or change credentials. Cleanup apply remains unavailable.
 
 = How are server-runner packages verified before restore staging? =
 
@@ -125,6 +125,9 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= 0.5.24 =
+* Fixed cleanup-preview capability reporting to use the dashboard protocol `scope` field so opted-in clients can be recognized as preview-supported.
 
 = 0.5.23 =
 * Added uploader-side V2.4 `cleanup_preview` planning docs and status-payload wording for the non-mutating cleanup-preview capability.
