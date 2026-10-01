@@ -4,7 +4,7 @@ Tags: backup, wpvivid, drime
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.22
+Stable tag: 0.5.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Upload completed backup packages to Drime.
 
 Alynt Drime Backups Uploader is a companion plugin that scans completed local backup packages, queues stable backup files, and uploads them to Drime.
 
-The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, staging and production-simulation read-only restore preflights, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, optional redacted diagnostics for support, explicit central-dashboard V2 action opt-in for bounded signed remote actions, preview-capable V2.3 schedule capability reporting for the Alynt scan/upload schedule, signed non-mutating V2.3 `schedule_preview`, separately opted-in V2.3 `schedule_apply` for the plugin-owned Alynt scan/upload cadence only, and separately opted-in non-mutating V2.3 `schedule_rollback_preview` evidence. Broad local deletion, server-package local retention, remote retention, failure emails, V2 remote actions, schedule apply, and rollback preview are disabled by default.
+The plugin includes Drime destination settings with workspace selection guardrails, folder browsing and read-only destination preview, per-source Drime relative paths, WPvivid path detection, generic server-outbox scanning with per-package Drime folders and sidecar uploads, guided single-line server setup commands, server-runner local package inventory, package-level remote-index sidecars, folder catalog snapshot sidecars, light consistency metadata, cleanup-preview output, operator-confirmed local cleanup execution, uploaded server-package local retention, staging and production-simulation read-only restore preflights, server-cron review commands, direct and configurable multipart upload support, duplicate handling, retry tracking, active-upload recovery, manual remote-retention cleanup, optional failed-upload email notifications, scheduled-scan cron health tracking, optional redacted diagnostics for support, explicit central-dashboard V2 action opt-in for bounded signed remote actions, preview-capable V2.3 schedule capability reporting for the Alynt scan/upload schedule, signed non-mutating V2.3 `schedule_preview`, separately opted-in V2.3 `schedule_apply` for the plugin-owned Alynt scan/upload cadence only, separately opted-in non-mutating V2.3 `schedule_rollback_preview` evidence, and separately opted-in non-mutating V2.4 `cleanup_preview` support for aggregate uploader-owned temporary bookkeeping evidence. Broad local deletion, server-package local retention, remote retention, failure emails, V2 remote actions, schedule apply, rollback preview, and cleanup preview are disabled by default.
 
 == Installation ==
 
@@ -52,7 +52,11 @@ Only after V1 read-only pairing and a separate V2.1 `adb2a` action opt-in. The o
 
 = Can the central dashboard change this site's schedules? =
 
-Only after several opt-ins. Version 0.5.22 can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence and requires a fresh matching `schedule_preview`. Version 0.5.22 can also accept a signed non-mutating `schedule_rollback_preview` intent only after a separate local rollback-preview opt-in; it validates stored rollback-readiness metadata and reports support-safe evidence without changing schedules. The dashboard still cannot disable schedules, execute rollback, change WPvivid or server-runner schedules, mutate settings or credentials, create backups, restore, clean up, delete, or receive Drime-token actions.
+Only after several opt-ins. Version 0.5.23 can accept a signed `schedule_apply` intent only after V1 pairing, separate V2 action opt-in, and a separate local schedule-apply opt-in. Apply is limited to the plugin-owned Alynt scan/upload cadence and requires a fresh matching `schedule_preview`. Version 0.5.23 can also accept a signed non-mutating `schedule_rollback_preview` intent only after a separate local rollback-preview opt-in; it validates stored rollback-readiness metadata and reports support-safe evidence without changing schedules. The dashboard still cannot disable schedules, execute rollback, change WPvivid or server-runner schedules, mutate settings or credentials, create backups, restore, clean up, delete, or receive Drime-token actions.
+
+= Can the central dashboard preview cleanup? =
+
+Only after V1 read-only pairing, separate V2 action opt-in, and a separate local cleanup-preview opt-in. Version 0.5.23 can accept a signed non-mutating `cleanup_preview` intent for aggregate uploader-owned temporary bookkeeping evidence only. It does not delete files, mutate queues or registries, call Drime, delete Drime objects, delete backup sets, restore data, browse arbitrary paths, expose paths or package names, change schedules, or change credentials. Cleanup apply remains unavailable.
 
 = How are server-runner packages verified before restore staging? =
 
@@ -121,6 +125,11 @@ Load Drime Workspaces retrieves allowed non-personal workspaces available to the
 No public custom actions or filters are exposed.
 
 == Changelog ==
+
+= 0.5.23 =
+* Added uploader-side V2.4 `cleanup_preview` planning docs and status-payload wording for the non-mutating cleanup-preview capability.
+* Added the first uploader-side V2.4 `cleanup_preview` runtime foundation: separate local opt-in, capability advertising, signed action-intent validation, aggregate-only stale uploader bookkeeping preview, and redacted status/action-history storage.
+* Preserved the cleanup boundary: no cleanup apply, Drime deletion, backup-set deletion, restore behavior, arbitrary filesystem browsing, dashboard Drime credential storage, deployment behavior, or live-site state changes were added.
 
 = 0.5.22 =
 * Fixed schedule-management retry pacing so `schedule_preview`, `schedule_apply`, and `schedule_rollback_preview` can be retried while the 15-minute preview evidence is still fresh. The one-hour throttle still applies to `scan_upload_now`.

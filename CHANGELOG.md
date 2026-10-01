@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.23] - 2026-10-01
+
 ### Added
 
 - Added uploader-side V2.4 `cleanup_preview` planning docs and reserved status-payload wording for a future non-mutating cleanup-preview capability.
