@@ -229,6 +229,7 @@ Safe dashboard fields:
 - Package count.
 - Missing sidecar warnings.
 - Last verification status.
+- Optional support-safe `restore_readiness` summaries using source labels, opaque candidate references, allowlisted component/checksum/manifest/sidecar states, age seconds, and warning codes.
 
 Unsafe dashboard fields for the first version:
 
@@ -237,6 +238,7 @@ Unsafe dashboard fields for the first version:
 - Local server absolute paths unless path mode is explicitly authorized.
 - Database names, table names, salts, cookies, or package contents.
 - Remote delete, restore, or credential mutation controls.
+- Raw `restore_readiness` source material such as filenames, package names, backup IDs, Drime object IDs, signed URLs, sidecar bodies, registry payloads, SQL, commands, or arbitrary restore targets.
 
 ## Release Gate
 

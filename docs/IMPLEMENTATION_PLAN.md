@@ -15,6 +15,7 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 - `v0.5.21` is the current released baseline. Recent releases through `v0.5.18` added schedule-aware dashboard evidence, preview-only Alynt scan/upload schedule capability reporting, and signed non-mutating `schedule_preview`; `v0.5.19` added guarded `schedule_apply` for the plugin-owned `alynt_scan_upload` cadence only; `v0.5.20` added evidence-only rollback-readiness metadata capture for successful guarded `schedule_apply` actions; `v0.5.21` added guarded, non-mutating `schedule_rollback_preview` support for explicitly opted-in clients while keeping it disabled by default.
 - V2.3 `schedule_apply` remains disabled by default on each client. It requires V1 pairing, V2 action opt-in, separate local Schedule Apply opt-in, a fresh matching preview, and local schedule revalidation. Broad client enablement remains a separate per-site approval gate.
 - V2.4 cleanup-preview planning and first uploader-side runtime scope are tracked in `docs/V2_4_CLEANUP_PREVIEW_IMPLEMENTATION_PLAN.md`. The first cleanup step is a signed, non-mutating `cleanup_preview` action for aggregate evidence about uploader-owned temporary bookkeeping only, gated by separate local opt-in. `cleanup_apply`, Drime retention/delete, backup-set deletion, restore, arbitrary filesystem browsing, and dashboard Drime credential storage remain unavailable until later protocol/threat-model and approval gates.
+- V2.6 restore-readiness producer planning is tracked in `docs/V2_6_RESTORE_READINESS_PRODUCER_DESIGN.md`. The planned first uploader-side step is optional status-payload evidence only, matching the already released dashboard-side consumer shape and keeping restore staging, package download/unpack/import/overwrite, restore execution, Drime mutation, arbitrary filesystem browsing, dashboard Drime credentials, raw paths, filenames, package names, backup IDs, object IDs, signed URLs, SQL, commands, and package internals out of scope.
 - `v0.5.10` and `v0.5.11` completed the dashboard/WPvivid schedule-aware status payload work: the authenticated read-only status payload can report redacted WPvivid schedule policy, including WPvivid Pro/addon schedule detection, so central monitoring can use site-specific freshness expectations.
 - `v0.5.9` reduced noisy final failed-upload notifications for transient Drime `429` and `5xx` responses and stopped automatic scans from requeueing signatures already in the failed-upload registry.
 - Production-simulation restore automation and its release-quality corrections were released in `v0.5.1`; GitHub CI passed on PHP 7.4 and 8.3, the generated release asset was audited, and a real WordPress Updates-screen rehearsal upgraded `plugin-tester.local` from `0.4.0` to `0.5.1` while preserving the active plugin state.
@@ -259,6 +260,29 @@ Validation on 2026-09-22:
 - Feature Security Review: passed; the rollback-preview request is allowlisted, sanitized, signed through the existing action-intent endpoint, gated behind local policy, and stores only sanitized support-safe evidence.
 - Targeted tests passed: `RemoteActionWorkerTest`, `RemoteActionIntentEndpointTest`, `RemoteActionStoreTest`, `DashboardConnectionTest`, and `HealthSummaryTest`.
 - Full validation passed: `npm.cmd test` (290 tests, 2408 assertions, 4 skipped), `npm.cmd run lint`, `npm.cmd run build`, and `git diff --check origin/master..HEAD`.
+
+### Dashboard V2.6 Restore Readiness Producer Design Slice
+
+Status: design-only; not implemented, not released, not deployed, and not enabled on any client.
+
+Goal:
+
+- Produce optional support-safe `restore_readiness` status evidence that the separate dashboard can display through its released dashboard-side consumer.
+- Keep the evidence read-only, additive under status schema version `1`, and absent when no valid candidate evidence exists.
+- Summarize only allowlisted source-level states for `server` and `wpvivid` candidates.
+- Keep restore staging, package download, unpacking, import, overwrite, restore execution, Drime mutation, arbitrary filesystem browsing, dashboard Drime credentials, raw paths, filenames, package names, backup IDs, Drime object IDs, signed URLs, SQL, commands, package internals, and production data changes out of scope.
+
+Design artifact:
+
+- `docs/V2_6_RESTORE_READINESS_PRODUCER_DESIGN.md`
+
+Recommended first implementation direction:
+
+- Build the status-payload producer only.
+- Reuse local uploader-owned registry/source/sidecar evidence without calling Drime from the dashboard or exposing local path mode.
+- Generate opaque candidate references that cannot be reversed into filenames, package names, paths, Drime IDs, or backup IDs.
+- Add redaction and status-payload tests before release planning.
+- Run applicable ds2 feature workflows and focused validation before any release gate.
 
 ### Release And Validation Workflows
 

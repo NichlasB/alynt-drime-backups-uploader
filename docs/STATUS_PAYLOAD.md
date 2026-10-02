@@ -43,6 +43,7 @@ Current default fields:
 | `last_scheduled_scan_at` | int | Timestamp for the last scheduled scan. |
 | `last_wp_cli_scan_at` | int | Timestamp for the last WP-CLI scan evidence. |
 | `backup_sources` | object | Optional per-source backup freshness and local remote-inventory evidence for dashboard observability. |
+| `restore_readiness` | object | Optional read-only restore-readiness evidence for dashboard display. Additive, support-safe, and absent unless implemented evidence exists. |
 | `remote_actions` | object | Optional V2 remote-action capability summary. Additive, redacted, and disabled by default unless the client has explicitly opted in to V2 actions. |
 
 ## Optional Backup Source Summaries
@@ -109,6 +110,39 @@ Fields:
 | `policy_window_seconds` | int | Recommended WPvivid dashboard freshness window. |
 
 When multiple supported local WPvivid schedules are detected, the summary uses the least frequent cadence (the largest interval). Unknown or remote-only schedules should report `detected: false` rather than guessing.
+
+## Optional Restore Readiness Evidence
+
+`restore_readiness` is additive in schema version `1`. It is status-payload evidence only and does not create or imply a restore action type.
+
+When implemented, the uploader may report support-safe source-level evidence that helps the dashboard answer whether the latest known backup candidate appears plausible, incomplete, stale, incompatible, or unknown. The dashboard must treat this as operational evidence, not as a restore guarantee.
+
+Top-level fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `schema_version` | int | Restore-readiness evidence shape version. Initially `1`. |
+| `generated_at` | string | ISO-8601 UTC timestamp when the summary was generated. |
+| `overall_state` | string | `not_reported`, `evidence_available`, `incomplete`, `stale`, `incompatible`, or `unknown`. |
+| `candidates` | array | Up to one support-safe candidate per source for this slice. Initial supported sources are `server` and `wpvivid`. |
+
+Candidate fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `source` | string | `server` or `wpvivid`. |
+| `candidate_ref` | string | Opaque client-generated reference using only letters, numbers, underscores, and hyphens. It must not be a filename, package name, path fragment, backup ID, Drime object ID, or signed URL. |
+| `latest_backup_finished_at` | string | ISO-8601 UTC timestamp for the latest relevant backup candidate when known. |
+| `component_state` | string | `complete`, `partial`, `missing`, or `unknown`. |
+| `checksum_state` | string | `verified`, `failed`, `not_reported`, or `unknown`. |
+| `manifest_state` | string | `compatible`, `incompatible`, `not_reported`, or `unknown`. |
+| `sidecar_state` | string | `present`, `missing`, `not_reported`, or `unknown`. |
+| `age_seconds` | int | Age of the candidate evidence when known. |
+| `warnings` | array | Support-safe warning codes only, such as `restore_evidence_incomplete`, `checksum_not_reported`, or `sidecar_missing`. |
+
+The producer design is tracked in `docs/V2_6_RESTORE_READINESS_PRODUCER_DESIGN.md`.
+
+This summary must not include raw paths, filenames, package names, backup IDs, Drime object IDs, signed URLs, Drime credentials, dashboard credentials, salts, cookies, nonces, SQL, commands, package internals, raw sidecar payloads, raw registry payloads, or arbitrary restore targets. Missing or uncertain evidence must be reported as `unknown`, `not_reported`, `incomplete`, or omitted rather than ready.
 
 ## Optional Remote Action Capability Summary
 
