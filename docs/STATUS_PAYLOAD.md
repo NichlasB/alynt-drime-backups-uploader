@@ -115,7 +115,7 @@ When multiple supported local WPvivid schedules are detected, the summary uses t
 
 `restore_readiness` is additive in schema version `1`. It is status-payload evidence only and does not create or imply a restore action type.
 
-When implemented, the uploader may report support-safe source-level evidence that helps the dashboard answer whether the latest known backup candidate appears plausible, incomplete, stale, incompatible, or unknown. The dashboard must treat this as operational evidence, not as a restore guarantee.
+The uploader may report support-safe source-level evidence that helps the dashboard answer whether the latest known backup candidate appears plausible, incomplete, stale, incompatible, or unknown. The dashboard must treat this as operational evidence, not as a restore guarantee.
 
 Top-level fields:
 

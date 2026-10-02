@@ -161,6 +161,7 @@ $alynt_drime_backups_uploader_includes = array(
 	'includes/trait-health-summary-backup-sources.php',
 	'includes/trait-health-summary-schedule-capability.php',
 	'includes/trait-health-summary-cleanup-capability.php',
+	'includes/trait-health-summary-restore-readiness.php',
 	'includes/trait-health-summary-wpvivid-schedule-policy.php',
 	'includes/trait-health-summary-wpvivid-activity.php',
 	'includes/trait-health-summary-warnings.php',

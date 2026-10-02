@@ -1,6 +1,6 @@
 # V2.6 Restore Readiness Producer Design
 
-Status: planning-only design record. This document does not approve implementation, release, deployment, live enablement, restore preparation runtime actions, restore execution, backup deletion, Drime mutation, arbitrary filesystem browsing, dashboard-side Drime credentials, or production data changes.
+Status: first status-payload producer slice implemented locally for review. This document does not approve release, deployment, live enablement, restore preparation runtime actions, restore execution, backup deletion, Drime mutation, arbitrary filesystem browsing, dashboard-side Drime credentials, or production data changes.
 
 Related artifacts:
 
@@ -39,7 +39,7 @@ Out of scope:
 
 ## Payload Shape
 
-When implemented, the uploader may include:
+The uploader may include:
 
 ```json
 {
@@ -135,9 +135,18 @@ Do not include human-readable paths, names, IDs, SQL, commands, or remote object
 - No restore action is advertised or accepted.
 - No raw paths, filenames, package names, backup IDs, Drime object IDs, signed URLs, SQL, commands, credentials, or package internals appear in the payload.
 
+## Local Implementation Status
+
+The first local implementation adds a focused health-summary producer that reports optional `restore_readiness` only when uploaded source evidence exists:
+
+- server/generic-outbox candidates can report complete/verified/compatible/present only when uploaded registry evidence includes support-safe manifest, SHA-256 checksum, and remote sidecar inventory evidence;
+- WPvivid candidates remain conservative and report incomplete/not-reported evidence until a later WPvivid-specific proof model exists;
+- candidate references are opaque hashes and do not expose filenames, package names, paths, Drime object IDs, backup IDs, or signed URLs;
+- the field remains absent when no valid uploaded source candidate exists.
+
 ## Approval Gate
 
-Before code implementation, confirm this design boundary and choose the first implementation target:
+Before release or deployment, confirm this implementation boundary:
 
 - status-payload producer only;
 - no admin UI beyond existing status display;

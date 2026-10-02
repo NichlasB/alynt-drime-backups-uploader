@@ -411,6 +411,94 @@ class HealthSummaryTest extends TestCase {
 		rmdir( $outbox );
 	}
 
+	public function test_status_includes_support_safe_restore_readiness_evidence() {
+		$outbox = $this->create_outbox();
+		$now    = time();
+
+		$summary = $this->summary(
+			$outbox,
+			array(
+				'sig-server-uploaded' => array(
+					'producer_key'       => 'generic_outbox',
+					'created_at'         => $now - 400,
+					'uploaded_at'        => $now - 120,
+					'remote_status'      => 'uploaded',
+					'path'               => '/var/backups/should-not-leak.tar.gz',
+					'package_id'         => 'pkg-secret',
+					'backup_set_id'      => 'set-secret',
+					'remote_name'        => 'should-not-leak.tar.gz',
+					'file_entry_id'      => 987654,
+					'workspace_id'       => 123456,
+					'checksum_algorithm' => 'sha256',
+					'checksum_value'     => str_repeat( 'a', 64 ),
+					'metadata'           => array(
+						'generic_outbox' => array(
+							'manifest'       => array(
+								'package_id' => 'pkg-secret',
+							),
+							'remote_catalog' => array(
+								'package_count' => 1,
+							),
+						),
+					),
+				),
+				'sig-wpvivid'         => array(
+					'producer_key'  => 'wpvivid',
+					'created_at'    => $now - 700,
+					'uploaded_at'   => $now - 60,
+					'remote_status' => 'uploaded',
+					'wpvivid'       => array(
+						'backup_id' => 'wpvivid-secret',
+					),
+				),
+			),
+			array(),
+			array()
+		);
+		$status  = $summary->status();
+
+		$this->assertArrayHasKey( 'restore_readiness', $status );
+		$this->assert_restore_readiness_matches_dashboard_contract( $status['restore_readiness'] );
+		$this->assertSame( 'incomplete', $status['restore_readiness']['overall_state'] );
+		$this->assertCount( 2, $status['restore_readiness']['candidates'] );
+
+		$server = $status['restore_readiness']['candidates'][0];
+		$this->assertSame( 'server', $server['source'] );
+		$this->assertMatchesRegularExpression( '/^server-[a-f0-9]{24}$/', $server['candidate_ref'] );
+		$this->assertSame( gmdate( 'c', $now - 400 ), $server['latest_backup_finished_at'] );
+		$this->assertSame( 'complete', $server['component_state'] );
+		$this->assertSame( 'verified', $server['checksum_state'] );
+		$this->assertSame( 'compatible', $server['manifest_state'] );
+		$this->assertSame( 'present', $server['sidecar_state'] );
+		$this->assertSame( array(), $server['warnings'] );
+
+		$wpvivid = $status['restore_readiness']['candidates'][1];
+		$this->assertSame( 'wpvivid', $wpvivid['source'] );
+		$this->assertMatchesRegularExpression( '/^wpvivid-[a-f0-9]{24}$/', $wpvivid['candidate_ref'] );
+		$this->assertSame( gmdate( 'c', $now - 700 ), $wpvivid['latest_backup_finished_at'] );
+		$this->assertSame( 'unknown', $wpvivid['component_state'] );
+		$this->assertSame( 'not_reported', $wpvivid['checksum_state'] );
+		$this->assertSame( 'not_reported', $wpvivid['manifest_state'] );
+		$this->assertSame( 'not_reported', $wpvivid['sidecar_state'] );
+		$this->assertContains( 'restore_evidence_incomplete', $wpvivid['warnings'] );
+		$this->assertContains( 'checksum_not_reported', $wpvivid['warnings'] );
+		$this->assertContains( 'manifest_not_reported', $wpvivid['warnings'] );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
+	public function test_restore_readiness_is_absent_without_uploaded_source_evidence() {
+		$outbox  = $this->create_outbox();
+		$summary = $this->summary( $outbox, array(), array(), array() );
+		$status  = $summary->status();
+
+		$this->assertArrayNotHasKey( 'restore_readiness', $status );
+		$this->assert_status_payload_contains_no_sensitive_keys( $status );
+
+		rmdir( $outbox );
+	}
+
 	/**
 	 * WPvivid source activity evidence is redacted and distinct from upload proof.
 	 *
@@ -766,6 +854,38 @@ class HealthSummaryTest extends TestCase {
 			'last_wp_cli_scan_at',
 			'backup_sources',
 		);
+	}
+
+	/**
+	 * Asserts that restore-readiness evidence remains compatible with the dashboard allowlist.
+	 *
+	 * @param array<string,mixed> $readiness Restore-readiness evidence.
+	 * @return void
+	 */
+	private function assert_restore_readiness_matches_dashboard_contract( array $readiness ) {
+		$this->assertSame( array( 'schema_version', 'generated_at', 'overall_state', 'candidates' ), array_keys( $readiness ) );
+		$this->assertSame( 1, $readiness['schema_version'] );
+		$this->assertIsString( $readiness['generated_at'] );
+		$this->assertContains( $readiness['overall_state'], array( 'not_reported', 'evidence_available', 'incomplete', 'stale', 'incompatible', 'unknown' ) );
+		$this->assertIsArray( $readiness['candidates'] );
+
+		foreach ( $readiness['candidates'] as $candidate ) {
+			$this->assertSame( array( 'source', 'candidate_ref', 'latest_backup_finished_at', 'component_state', 'checksum_state', 'manifest_state', 'sidecar_state', 'age_seconds', 'warnings' ), array_keys( $candidate ) );
+			$this->assertContains( $candidate['source'], array( 'server', 'wpvivid' ) );
+			$this->assertMatchesRegularExpression( '/^[a-z0-9_-]{1,80}$/', $candidate['candidate_ref'] );
+			$this->assertIsString( $candidate['latest_backup_finished_at'] );
+			$this->assertContains( $candidate['component_state'], array( 'complete', 'partial', 'missing', 'unknown' ) );
+			$this->assertContains( $candidate['checksum_state'], array( 'verified', 'failed', 'not_reported', 'unknown' ) );
+			$this->assertContains( $candidate['manifest_state'], array( 'compatible', 'incompatible', 'not_reported', 'unknown' ) );
+			$this->assertContains( $candidate['sidecar_state'], array( 'present', 'missing', 'not_reported', 'unknown' ) );
+			$this->assertIsInt( $candidate['age_seconds'] );
+			$this->assertGreaterThanOrEqual( 0, $candidate['age_seconds'] );
+			$this->assertIsArray( $candidate['warnings'] );
+
+			foreach ( $candidate['warnings'] as $warning ) {
+				$this->assertMatchesRegularExpression( '/^[a-z0-9_-]+$/', $warning );
+			}
+		}
 	}
 
 	/**

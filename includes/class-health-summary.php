@@ -19,6 +19,7 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	use Alynt_Drime_Backups_Uploader_Health_Summary_Backup_Sources;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_Schedule_Capability;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_Cleanup_Capability;
+	use Alynt_Drime_Backups_Uploader_Health_Summary_Restore_Readiness;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_WPvivid_Schedule_Policy;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_WPvivid_Activity;
 	use Alynt_Drime_Backups_Uploader_Health_Summary_Warnings;
@@ -134,6 +135,11 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 			'last_wp_cli_scan_at'         => isset( $cron_state['last_wp_cli_scan_at'] ) ? absint( $cron_state['last_wp_cli_scan_at'] ) : 0,
 			'backup_sources'              => $this->backup_sources( $settings, $queued, $uploaded, $failed ),
 		);
+
+		$restore_readiness = $this->restore_readiness( $uploaded );
+		if ( ! empty( $restore_readiness ) ) {
+			$status['restore_readiness'] = $restore_readiness;
+		}
 
 		if ( $this->dashboard_connection ) {
 			$remote_actions = $this->dashboard_connection->remote_action_summary();
