@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.25] - 2026-10-02
+
+### Added
+
+- Added additive, redacted `restore_readiness` evidence to the central-dashboard status payload so the dashboard can summarize whether uploaded server-runner and WPvivid evidence looks ready for future restore-preparation workflows.
+
+### Security
+
+- Preserved the read-only restore boundary: this release does not add restore execution, staging, downloading, unpacking, importing, credential changes, Drime mutation, path browsing, or dashboard Drime credential storage.
+
 ## [0.5.24] - 2026-10-01
 
 ### Fixed
