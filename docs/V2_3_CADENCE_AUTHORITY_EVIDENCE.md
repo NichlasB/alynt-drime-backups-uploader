@@ -23,3 +23,7 @@ Dashboard companion verification passed: 299 tests / 1423 assertions / two exist
 Unit/model proof does not prove HTTPS authentication, real opt-in, signed source provenance, real worker effects, crash recovery or production activation. These remain separate runtime gates.
 
 Recommended next gated slice: **V2.3 Cadence Authority Guarded Scan Callback Integration**, local-only source plus disposable-fixture proof; real authority activation, production dispatch and rollback execution remain disabled. Review ownership and the start/side-effect/completion boundary before wiring any real worker.
+
+## Publication Receipt
+
+Implementation commit `97c6c04a93274630b8de3adb736737b4b5a27c0f` is pushed to `origin/master`. Exact-commit [Quality run 38456976342](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/38456976342) passed PHP 7.4, PHP 8.3 and Node build/audit; each PHP job executed the final **388 tests / 3015 assertions**, with no skips. Companion dashboard implementation `c3270b53b7729c983567fd825b74e51963101ccc` passed [CI 38456988852](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/38456988852), both PHP versions executing 299 tests / 1430 assertions. Platform-enabled CI tests account for the difference from local Windows assertion/skip totals. Both worktrees were clean and synced at verification; this receipt changes documentation only. Approved evidence milestone is complete; guarded runtime integration remains the next gate, with no release or deployment.
