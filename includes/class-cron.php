@@ -27,14 +27,23 @@ class Alynt_Drime_Backups_Uploader_Cron {
 	private $plugin;
 
 	/**
+	 * Explicit dormant dispatcher; production construction leaves this null.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Cadence_Authority_Scan_Dispatcher|null
+	 */
+	private $authority_dispatcher;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Alynt_Drime_Backups_Uploader_Plugin $plugin Plugin.
+	 * @param Alynt_Drime_Backups_Uploader_Plugin                                 $plugin Plugin.
+	 * @param Alynt_Drime_Backups_Uploader_Cadence_Authority_Scan_Dispatcher|null $authority_dispatcher Explicit guarded callback integration.
 	 *
 	 * @since 0.1.0
 	 */
-	public function __construct( Alynt_Drime_Backups_Uploader_Plugin $plugin ) {
-		$this->plugin = $plugin;
+	public function __construct( Alynt_Drime_Backups_Uploader_Plugin $plugin, ?Alynt_Drime_Backups_Uploader_Cadence_Authority_Scan_Dispatcher $authority_dispatcher = null ) {
+		$this->plugin               = $plugin;
+		$this->authority_dispatcher = $authority_dispatcher;
 	}
 
 	/**
@@ -234,14 +243,32 @@ class Alynt_Drime_Backups_Uploader_Cron {
 	 * @since 0.1.0
 	 */
 	public function scan() {
+		if ( null !== $this->authority_dispatcher ) {
+			$this->authority_dispatcher->run(
+				function () {
+					return $this->perform_scan();
+				}
+			);
+			return; // A guarded failure must not fall back to the legacy callback.
+		}
+		$this->perform_scan();
+	}
+
+	/**
+	 * Existing scheduled callback body, returning its result only to the guard.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function perform_scan() {
 		$runner = $this->plugin->cron_health()->record_scheduled_scan();
 		if ( ! $this->plugin->cron_health()->last_record_persisted() ) {
 			$this->plugin->logger()->event( 'cron', 'warning', 'cron_health_save_failed', 'Scheduled scan ran, but cron health evidence could not be saved.' );
 		}
 
 		$this->plugin->logger()->event( 'cron', 'info', 'scan_started', 'Scheduled scan started.', array( 'runner' => $runner ) );
-		$this->plugin->scan_and_queue();
+		$result = $this->plugin->scan_and_queue();
 		$this->plugin->logger()->event( 'cron', 'info', 'scan_finished', 'Scheduled scan finished.', array( 'runner' => $runner ) );
+		return $result;
 	}
 
 	/**

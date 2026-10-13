@@ -129,4 +129,11 @@ class CadenceAuthorityEvidenceTest extends TestCase {
 		$s['schema_version'] = 3; $this->replace_state( $s ); $this->assert_inspection_error( 'unavailable' );
 		$this->backend->rows = array(); $this->assert_inspection_error( 'unavailable' ); $this->assertInstanceOf( WP_Error::class, $this->producer->status() );
 	}
+	public function test_guarded_scan_due_advancement_makes_prior_native_rollback_evidence_stale() {
+		$this->now += 900; $this->assertIsArray( $this->inspection() );
+		$dispatcher = new Alynt_Drime_Backups_Uploader_Cadence_Authority_Scan_Dispatcher( $this->model, function () { return array( 'binding' => $this->producer->enrollment_binding(), 'scan_enabled' => true ); }, true, function () { return $this->now; }, function () { return $this->preview_id; } );
+		$this->assertIsArray( $dispatcher->run( function () { return array( 'errors' => array(), 'candidates' => array(), 'queued' => 0 ); } ) );
+		$this->assertSame( 1, $this->model->snapshot()['schedule_revision'] ); $this->assertSame( 'every_15_minutes', $this->model->snapshot()['authority']['cadence'] );
+		$this->assertSame( $this->now + 900, $this->model->snapshot()['authority']['next_due_at'] ); $this->assert_inspection_error( 'source_stale' );
+	}
 }

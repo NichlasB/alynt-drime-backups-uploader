@@ -180,6 +180,7 @@ $alynt_drime_backups_uploader_includes = array(
 	'includes/trait-cadence-authority-evidence-context.php',
 	'includes/trait-cadence-authority-evidence-inspection.php',
 	'includes/class-cadence-authority-evidence.php',
+	'includes/class-cadence-authority-scan-dispatcher.php',
 	'includes/class-schedule-safety-cron-cas.php',
 	'includes/trait-remote-action-worker-schedule-handlers.php',
 	'includes/trait-remote-action-worker-schedule-preview.php',
