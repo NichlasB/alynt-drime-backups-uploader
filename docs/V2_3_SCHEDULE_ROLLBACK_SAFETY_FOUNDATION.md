@@ -58,6 +58,16 @@ Initial focused tests failed on false acceptance/lock persistence and the stored
 
 ## Exact Next Gate
 
+### Development Dependency Audit Remediation
+
+Uploader prerequisite commit `d196267` passed PHP 7.4/8.3 CI tests and coding standards, but its Node dependency audit failed on the existing `nodemon -> chokidar 3 -> braces` and `concurrently -> shell-quote` development dependency chains. The user approved remediation on 2026-10-13. The [braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) reports no published patched version, so a forced nodemon downgrade or an unsupported Chokidar override is not used. The [shell-quote advisory](https://github.com/advisories/GHSA-pqg4-j6r4-53mv) is addressed by the patched dependency shipped with concurrently 9.2.5.
+
+The remediation selects `concurrently ^9.2.5` (with patched `shell-quote 1.12.0`) and replaces nodemon with direct `chokidar ^4.0.3` plus `scripts/watch-deploy.mjs`. The explicit `deploy:watch`/`dev:all` commands remain available. The new watcher retains an initial run, PHP/JS/CSS/HTML filtering, ignored directories, and two-second debounce; it serializes commands and lets an active command finish when stopped. The audit threshold remains unchanged. Node tests exercise real file events with an injected harmless runner, never `deploy.sh`.
+
+Local remediation checks: `npm audit --audit-level=high` reports zero vulnerabilities; `npm run test:dev-tools` passes; build and deterministic runner checks pass with generated runtime artifacts unchanged. A clean lockfile install and exact pushed-commit CI provide the final verification. This removes the dependency gate only; atomic rollback storage, journals, and core cron coordination remain unimplemented and gated.
+
+### Storage And Integration Approval
+
 Recommended next slice: **V2.3 Rollback Atomic Storage and Cron Coordination**, beginning with a reviewable storage contract and then separately authorized local implementation/integration proof. Prefer a conditional-update approach confined to client-owned state; do not introduce a new table or option without explicit storage approval. The design must define durable per-source claims, revision/enrollment binding, bounded but protected unresolved journals, recovery phases, and cache invalidation, and must address core cron writers rather than relying on the current action lock.
 
 Preferred storage proposal for that approval: one dedicated, non-autoloaded client-local option, `alynt_drime_backups_schedule_safety_state`, with a versioned internal schema. Keep it separate from ordinary action history so older history sanitizers and pruning cannot erase unresolved recovery evidence. Use conditional database updates against the expected stored value for claims/transitions, with enrollment/revision binding and explicit cache invalidation. Bound completed records; fail closed at capacity rather than evict unresolved journals. Disabling/re-pairing invalidates executable claims while preserving unresolved recovery evidence for inspection. No table migration is proposed. Exact journal fields, lifetime, uninstall preservation, failure semantics, and compatibility with older plugin builds must be reviewed before the first storage write.

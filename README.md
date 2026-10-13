@@ -52,6 +52,8 @@ Run `npm run build` after editing files in `assets/src/admin/` or `server-runner
 
 GitHub Actions runs the reusable quality workflow on PHP 7.4 and 8.3, then verifies the Node build, generated assets, generated-runner freshness, and dependency audit. Release packaging depends on that quality workflow passing and validates that the installable ZIP contains the generated runner but excludes modular runner source.
 
+Development tooling requires Node.js 18 or later. `npm run deploy:watch` explicitly starts the local deployment script once, then watches PHP/JS/CSS/HTML changes with a two-second delay. It ignores hidden paths, `node_modules`, `bower_components`, `coverage`, and `scripts`. Commands run serially; changes during an active deployment queue one follow-up rather than interrupting it. Stopping the watcher lets an active command finish. `npm run dev:all` retains the combined asset-build/deployment workflow. Use these deployment commands only for an approved configured target. `npm run test:dev-tools` verifies the watcher with harmless temporary fixtures and never invokes `deploy.sh`.
+
 ## Updates
 
 The plugin includes `GitHub Plugin URI: NichlasB/alynt-drime-backups-uploader` for Alynt Plugin Updater compatibility. Release builds should be distributed from public GitHub releases using an attached WordPress-installable zip asset.

@@ -72,6 +72,9 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
+      - name: Verify development watcher
+        run: npm run test:dev-tools
+
       - name: Build production assets
         run: npm run build
 

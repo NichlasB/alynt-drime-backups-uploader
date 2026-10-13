@@ -16,6 +16,8 @@ The user approved the local-only foundation on 2026-10-13. `docs/V2_3_SCHEDULE_R
 
 The full foundation is not complete: the existing option store cannot establish atomic source claims or protected recovery journals, and it does not coordinate core cron writers. The next gate is **V2.3 Rollback Atomic Storage and Cron Coordination**, requiring a reviewed storage contract and a separately confirmed isolated WordPress/database proof scope. No runtime rollback, new schema/option, site change, release, or deployment is approved by this record.
 
+The approved development-dependency remediation replaces the vulnerable nodemon watcher chain with Chokidar 4 and a tested serialized watcher, and updates concurrently within its 9.x line. It retains the explicit development commands and existing audit threshold; local audit reports zero vulnerabilities. This tooling work does not advance rollback execution or authorize the pending storage/integration gate.
+
 ### Released Baseline
 
 - Current released stable version: `v0.5.21`.

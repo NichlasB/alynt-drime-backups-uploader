@@ -13,17 +13,18 @@
     "lint:runner": "node scripts/lint-runner.mjs",
     "dev": "node scripts/build-runner.mjs && node scripts/build.mjs --watch",
     "deploy": "bash deploy.sh",
-    "deploy:watch": "nodemon --watch . --ext php,js,css,html --ignore node_modules/ --ignore .git/ --ignore scripts/ --delay 2 --exec \"bash deploy.sh\"",
+    "deploy:watch": "node scripts/watch-deploy.mjs",
     "dev:all": "concurrently --names \"build,deploy\" --prefix-colors \"cyan,magenta\" \"npm run dev\" \"npm run deploy:watch\"",
     "lint": "php ./vendor/bin/phpcs --standard=.phpcs.xml",
     "lint:fix": "php ./vendor/bin/phpcbf --standard=.phpcs.xml",
     "test": "php ./vendor/bin/phpunit",
+    "test:dev-tools": "node --test tests/node/*.test.mjs",
     "test:coverage": "php ./vendor/bin/phpunit --coverage-html=coverage/",
     "pot": "wp i18n make-pot . languages/alynt-drime-backups-uploader.pot"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0",
-    "esbuild": "^0.28.1",
-    "nodemon": "^3.1.0"
+    "chokidar": "^4.0.3",
+    "concurrently": "^9.2.5",
+    "esbuild": "^0.28.1"
   }
 }
