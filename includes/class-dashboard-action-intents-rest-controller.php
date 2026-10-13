@@ -115,7 +115,10 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 			return $this->response_from_record( $record, 409 );
 		}
 
-		$record    = $this->store->upsert_action( $intent, 'accepted', 'action_accepted', $this->accepted_summary( $intent['action_type'] ) );
+		$record = $this->store->upsert_action( $intent, 'accepted', 'action_accepted', $this->accepted_summary( $intent['action_type'] ) );
+		if ( empty( $record ) ) {
+			return $this->response_from_record( $record, 500 );
+		}
 		$scheduled = $this->schedule_worker( $record['action_id'] );
 
 		if ( is_wp_error( $scheduled ) ) {
@@ -217,6 +220,10 @@ class Alynt_Drime_Backups_Uploader_Dashboard_Action_Intents_REST_Controller {
 	 * @return array<string,mixed>|WP_REST_Response
 	 */
 	private function response_from_record( array $record, $status ) {
+		if ( empty( $record ) ) {
+			return $this->response( 'rejected', 'action_state_store_failed', __( 'Remote action state could not be saved. No successful outcome is confirmed.', 'alynt-drime-backups-uploader' ), 500 );
+		}
+
 		return $this->response(
 			isset( $record['state'] ) ? (string) $record['state'] : 'rejected',
 			isset( $record['code'] ) ? (string) $record['code'] : 'action_rejected',

@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-09-25
+Updated: 2026-10-13
 
 ## Purpose
 
@@ -9,6 +9,14 @@ This document tracks the current implementation state and future roadmap for the
 The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete and is not the focus of this plan except for migration/coexistence notes.
 
 ## Current Stable Baseline
+
+### V2.3 Schedule Rollback Safety Foundation (Local Only)
+
+The user approved the local-only foundation on 2026-10-13. `docs/V2_3_SCHEDULE_ROLLBACK_SAFETY_FOUNDATION.md` records implemented prerequisites: failed/mismatched action-state writes no longer grant lock/acceptance, the controller does not queue work without stored acceptance, and the worker rejects reserved/unknown action types before work. Rollback execution remains rejected and unadvertised.
+
+The full foundation is not complete: the existing option store cannot establish atomic source claims or protected recovery journals, and it does not coordinate core cron writers. The next gate is **V2.3 Rollback Atomic Storage and Cron Coordination**, requiring a reviewed storage contract and a separately confirmed isolated WordPress/database proof scope. No runtime rollback, new schema/option, site change, release, or deployment is approved by this record.
+
+### Released Baseline
 
 - Current released stable version: `v0.5.21`.
 - Accepted production baseline: the uploader is production-ready for the validated backup upload, server-runner, WPvivid, status payload, and operator-assisted restore-support scope. Actual-production restore enrollment remains a separate gated project and is not enabled by default.

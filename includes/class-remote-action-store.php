@@ -148,9 +148,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 		$stored['latest_action'] = $this->summary_from_record( $record );
 		$stored                  = $this->prune( $stored );
 
-		$this->persist( $stored );
-
-		return $record;
+		return $this->persist( $stored ) ? $record : array();
 	}
 
 	/**
@@ -209,9 +207,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 			'expires_at' => time() + self::LOCK_TTL,
 		);
 
-		$this->persist( $state );
-
-		return true;
+		return $this->persist( $state );
 	}
 
 	/**
@@ -279,7 +275,7 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 	 * Persists state and clears option cache.
 	 *
 	 * @param array<string,mixed> $state State.
-	 * @return void
+	 * @return bool Whether the expected state can be read back.
 	 */
 	private function persist( array $state ) {
 		update_option( self::OPTION_NAME, $state, false );
@@ -287,8 +283,9 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Store {
 		if ( function_exists( 'wp_cache_delete' ) ) {
 			wp_cache_delete( self::OPTION_NAME, 'options' );
 		}
-		if ( function_exists( 'wp_cache_set' ) ) {
-			wp_cache_set( self::OPTION_NAME, $state, 'options' );
-		}
+		// Never manufacture a successful write in cache after update_option fails.
+		// False can also mean unchanged; verify through the option API in both cases.
+		// This readback is not an atomic claim or a cross-writer schedule lock.
+		return get_option( self::OPTION_NAME, array() ) === $state;
 	}
 }

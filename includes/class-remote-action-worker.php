@@ -73,12 +73,23 @@ class Alynt_Drime_Backups_Uploader_Remote_Action_Worker {
 			return;
 		}
 
+		$action_type = isset( $record['action_type'] ) ? sanitize_key( (string) $record['action_type'] ) : '';
+		$allowed     = array(
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCAN_UPLOAD_NOW,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_APPLY,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_ROLLBACK_PREVIEW,
+			Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_CLEANUP_PREVIEW,
+		);
+		if ( ! in_array( $action_type, $allowed, true ) ) {
+			$this->store->upsert_action( $record, 'unsupported', 'action_unsupported', __( 'The stored remote action type is not supported.', 'alynt-drime-backups-uploader' ) );
+			return;
+		}
+
 		if ( ! $this->store->acquire_lock( $record['action_id'] ) ) {
 			$this->store->upsert_action( $record, 'busy', 'action_already_running', __( 'Another remote action is already running on this client site.', 'alynt-drime-backups-uploader' ), array(), Alynt_Drime_Backups_Uploader_Remote_Action_Store::LOCK_TTL );
 			return;
 		}
-
-		$action_type = isset( $record['action_type'] ) ? sanitize_key( (string) $record['action_type'] ) : '';
 
 		if ( Alynt_Drime_Backups_Uploader_Dashboard_Connection::ACTION_SCHEDULE_PREVIEW === $action_type ) {
 			$this->handle_schedule_preview( $record );
