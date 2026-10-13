@@ -23,13 +23,13 @@ class Alynt_Drime_Backups_Uploader_Schedule_Safety_Store {
 	 *
 	 * @var Alynt_Drime_Backups_Uploader_Schedule_Safety_Option_CAS
 	 */
-	private $backend;
+	protected $backend;
 	/**
 	 * UTC seconds clock.
 	 *
 	 * @var callable
 	 */
-	private $clock;
+	protected $clock;
 
 	/**
 	 * No option is created by construction or plugin loading.
@@ -107,6 +107,10 @@ class Alynt_Drime_Backups_Uploader_Schedule_Safety_Store {
 					}
 					return $record; // Exact duplicate is an observation, never a new lease.
 				}
+				$allowed = $this->can_reserve( $state );
+				if ( is_wp_error( $allowed ) ) {
+					return $allowed;
+				}
 				$now      = call_user_func( $this->clock );
 				$deadline = min( $evidence['metadata_expires_at'], $evidence['preview_expires_at'], $evidence['preview_created_at'] + 900, $evidence['intent_expires_at'] );
 				if ( $deadline <= $now || $evidence['metadata_captured_at'] > $evidence['preview_created_at'] || $evidence['preview_created_at'] > $now
@@ -148,7 +152,7 @@ class Alynt_Drime_Backups_Uploader_Schedule_Safety_Store {
 	 *
 	 * @return array|WP_Error
 	 */
-	private function load() {
+	protected function load() {
 		$row = $this->backend->read( Alynt_Drime_Backups_Uploader_Schedule_Safety_Option_CAS::STATE_OPTION );
 		if ( is_wp_error( $row ) ) {
 			return $row;
@@ -164,13 +168,24 @@ class Alynt_Drime_Backups_Uploader_Schedule_Safety_Store {
 	}
 
 	/**
+	 * Recheck subclass reservation policy inside every conditional mutation.
+	 *
+	 * @param array $state Validated state.
+	 * @return true|WP_Error
+	 */
+	protected function can_reserve( array $state ) {
+		unset( $state );
+		return true;
+	}
+
+	/**
 	 * Bounded conditional mutation. Caller failure never overwrites invalid state.
 	 *
 	 * @param string   $binding Expected enrollment.
 	 * @param callable $change Pure bounded state transformation.
 	 * @return mixed|WP_Error
 	 */
-	private function update( $binding, $change ) {
+	protected function update( $binding, $change ) {
 		for ( $attempt = 0; $attempt < 3; $attempt++ ) {
 			$loaded = $this->load();
 			if ( is_wp_error( $loaded ) ) {
@@ -203,7 +218,7 @@ class Alynt_Drime_Backups_Uploader_Schedule_Safety_Store {
 	 * @param string $code Stable suffix.
 	 * @return WP_Error
 	 */
-	private function error( $code ) {
+	protected function error( $code ) {
 		return new WP_Error( 'schedule_safety_' . $code, 'Schedule safety operation is unavailable.' );
 	}
 }

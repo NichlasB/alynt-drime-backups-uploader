@@ -17,6 +17,11 @@ foreach ( array( 'class-schedule-safety-option-cas', 'trait-schedule-safety-stat
 require_once $repository . '/tests/Support/ScheduleSafetyFixture.php';
 require_once __DIR__ . '/schedule-coordination-local-proof.php';
 $coordination = isset( $argv[2] ) && in_array( $argv[2], array( '--coordination', '--cron-child' ), true );
+$authority = isset( $argv[2] ) && in_array( $argv[2], array( '--authority', '--authority-child' ), true );
+if ( $authority ) {
+	foreach ( array( 'trait-cadence-authority-validation', 'trait-cadence-authority-mutations', 'trait-cadence-authority-dispatch', 'class-cadence-authority-store' ) as $part ) require_once $repository . '/includes/' . $part . '.php';
+	require_once __DIR__ . '/cadence-authority-local-proof.php';
+}
 if ( $coordination ) {
 	require_once ABSPATH . WPINC . '/pomo/translations.php';
 	require_once ABSPATH . WPINC . '/l10n.php';
@@ -54,13 +59,16 @@ class Alynt_Safety_Proof_Barrier_CAS extends Alynt_Drime_Backups_Uploader_Schedu
 		return $row;
 	}
 }
-if ( isset( $argv[2] ) && in_array( $argv[2], array( '--claim-child', '--cron-child' ), true ) ) {
+if ( isset( $argv[2] ) && in_array( $argv[2], array( '--claim-child', '--cron-child', '--authority-child' ), true ) ) {
 	$table = isset( $argv[3] ) ? $argv[3] : '';
 	alynt_safety_proof_check( preg_match( '/^wp_alynt_safety_probe_[a-f0-9]{12}$/D', $table ), 'Unexpected child table.' );
 	$wpdb->options = $table;
 	$now = (int) $argv[5];
 	alynt_safety_proof_check( in_array( $argv[4], array( '1', '2' ), true ), 'Unexpected child actor.' );
-	if ( $coordination ) {
+	if ( $authority ) {
+		$model = new Alynt_Drime_Backups_Uploader_Cadence_Authority_Store( new Alynt_Safety_Proof_Barrier_CAS( $wpdb, $argv[4], 'authority_' ), function () use ( $now ) { return $now; } );
+		$result = $model->claim_dispatch( $binding, (int) $argv[6], $argv[7], sprintf( '77777777-7777-4777-8777-%012d', (int) $argv[4] ), str_repeat( 'f', 64 ) );
+	} elseif ( $coordination ) {
 		$prototype = new Alynt_Drime_Backups_Uploader_Test_Cron_Writer_Prototype( new Alynt_Safety_Proof_Barrier_CAS( $wpdb, $argv[4], 'cron_' ) );
 		alynt_coordination_proof_filters( $prototype, true );
 		try { $result = wp_schedule_event( $now + 3600, 'hourly', 'alynt_coordination_fixture_child_' . $argv[4], array(), true ); }
@@ -158,6 +166,7 @@ try {
 	alynt_safety_proof_check( $before === get_option( 'cron' ), 'Core writer counterexample missing.' ); $receipt['unguarded_core_overwrite_observed'] = true;
 	$receipt['persistent_object_cache_active'] = (bool) wp_using_ext_object_cache();
 	if ( $coordination ) alynt_coordination_local_proof( $backend, $site_root, $table, $children, $receipt );
+	if ( $authority ) alynt_cadence_authority_local_proof( $backend, $site_root, $table, $children, $receipt, $binding, $now, $store );
 } catch ( Throwable $error ) { $receipt['failed'] = true; $receipt['reason'] = $error->getMessage(); }
 finally {
 	foreach ( $children as $child ) if ( is_resource( $child['process'] ) ) { proc_terminate( $child['process'] ); proc_close( $child['process'] ); }
