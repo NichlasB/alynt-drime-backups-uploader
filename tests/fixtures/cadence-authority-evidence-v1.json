@@ -1,0 +1,41 @@
+{
+  "status": {
+    "contract_version": 1,
+    "mode": "client_owned_v1",
+    "site_uuid": "11111111-1111-4111-8111-111111111111",
+    "key_id": "ak_fixture",
+    "authority_revision": 1,
+    "current_cadence": "every_15_minutes",
+    "next_due_at": 1800000900,
+    "authority_fingerprint": "0eddd1190d26c5bf02a420c377dcae87de76d9f46787dfc38f74b7469b28cbe8",
+    "model_enabled": true,
+    "pending": "none",
+    "observed_at": 1800000000,
+    "expires_at": 1800000300,
+    "dispatch_supported": false,
+    "execution_supported": false
+  },
+  "preview": {
+    "contract_version": 1,
+    "mode": "client_owned_v1",
+    "kind": "model_change_preview",
+    "site_uuid": "11111111-1111-4111-8111-111111111111",
+    "key_id": "ak_fixture",
+    "source_change_action_id": "11111111-1111-4111-8111-000000000001",
+    "preview_action_id": "44444444-4444-4444-8444-444444444444",
+    "authority_revision": 1,
+    "authority_fingerprint": "0eddd1190d26c5bf02a420c377dcae87de76d9f46787dfc38f74b7469b28cbe8",
+    "current_cadence": "every_15_minutes",
+    "rollback_cadence": "every_30_minutes",
+    "source_created_at": 1800000000,
+    "source_expires_at": 1800003600,
+    "preview_created_at": 1800000000,
+    "preview_expires_at": 1800000300,
+    "intent_expires_at": 1800000300,
+    "safety_checks_passed": true,
+    "eligible": false,
+    "dispatch_supported": false,
+    "execution_supported": false,
+    "preview_fingerprint": "bcb64cc7648de705cc6ddbf22bffe7ffb358f7bb0515af0e02dace5b1e06a92a"
+  }
+}

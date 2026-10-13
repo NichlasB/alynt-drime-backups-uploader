@@ -1,0 +1,25 @@
+# V2.3 Cadence Authority Evidence and Eligibility Integration
+
+Approved 2026-10-13, local repositories only, dispatch and rollback execution disabled. Companion normative contract/threat review: dashboard `docs/V2_3_CADENCE_AUTHORITY_EVIDENCE.md`, `docs/PROTOCOL_V2.md`, `docs/THREAT_MODEL_V2.md`. Baselines: uploader `b48ff5e`, dashboard `eb5b15d`.
+
+## Implementation Boundary
+
+The new evidence service reads a strict schema-2 model and current client-local pairing context. Domain-separated binding includes site UUID, origins, enrollment ID/time and polling/action key context. No request can supply a trusted binding, record, cadence or model snapshot. Native model commits stamp `authority_evidence_version: 1` in the same CAS as authority/journal completion. The field is optional only on succeeded native records; reservations cannot supply it, schema-1 migration cannot accept or add it, and existing legacy records remain unmarked. Older strict readers fail closed. No option/table or real migration is created by this slice.
+
+Optional `cadence_authority` status is a redacted, five-minute model observation with contract version/mode, site UUID, public action-key ID, revision/cadence/due/fingerprint, model enabled/pending state, and false dispatch/execution support. It never exports credentials, enrollment binding, journals, leases or raw cron.
+
+Explicit `inspect()` checks native succeeded source, current pairing and existing rollback-preview local opt-in, enabled model, no pending work, unconsumed source, current revision/fingerprint/cadence, one-hour source lifetime, distinct inspection/source IDs and a five-minute candidate intent. It derives rollback cadence locally and clamps preview expiry to source, fifteen-minute preview and intent limits. It re-reads state/context before returning a canonical consistency hash. `safety_checks_passed: true` never changes `eligible: false`. The source is a **model change**, not proof of an authenticated remote Schedule Apply. This method does not verify signatures, reserve/consume a source or authorize execution. Future mutation must revalidate atomically after authenticated request intent.
+
+The Health Summary's optional seventh constructor dependency is not supplied by `Plugin::init()`. Default production behavior performs no authority read and emits no extension. Existing routes/actions/settings/opt-ins/lifecycle/cron scheduling are unchanged. The dashboard strictly validates the optional namespace against persisted UUID/action-key context; it adds no authority controls or dispatch consumer.
+
+## Evidence And Limits
+
+Both repositories carry identical synthetic `tests/fixtures/cadence-authority-evidence-v1.json` public projections. Producer tests compare actual deterministic output to the fixture; consumer tests enforce its strict shape and canonical hash. Pairing/rotation/revocation, exact expiry, stale/consumed source, pending state, unknown schema/provenance, changed observations, dormant Health Summary and persisted dashboard key binding have focused regressions. No LocalWP/live site, database, credential, schedule, backup, restore, cleanup, Drime action, release or deployment is used here.
+
+Executed local verification: full PHPUnit 386 tests / 2955 assertions / four existing skips, followed by the final 33-case / 166-assertion evidence rerun including two last test-only guards added during the full run. Combined authority/health regressions previously passed 73 tests / 780 assertions. PHPCS passed across 126 files. Build, runner verification/syntax, three watcher tests, npm audit (zero vulnerabilities), Composer audit (using the companion dashboard's available phar) and `git diff --check` passed. Generated artifacts are unchanged. Existing PHPCS PHPCompatibility deprecation remains visible; no new skips, weakened assertions or audit exceptions. Shared fixture SHA256 matches the dashboard: `e09d2d5cb96c504aad157572cd187a055f32c02e6be1fcebe4d046fd8789a870`.
+
+Dashboard companion verification passed: 299 tests / 1423 assertions / two existing skips, PHPCS 138 files, structure/build and dependency audits. The final pushed uploader tree contains 388 tests and must pass exact-commit PHP 7.4/8.3 plus Node CI. Toolkit restore-point check passed against the clean source baseline before changes; no external archive or site/database backup was created. Versions remain unchanged; no release/package is justified for dormant foundation code.
+
+Unit/model proof does not prove HTTPS authentication, real opt-in, signed source provenance, real worker effects, crash recovery or production activation. These remain separate runtime gates.
+
+Recommended next gated slice: **V2.3 Cadence Authority Guarded Scan Callback Integration**, local-only source plus disposable-fixture proof; real authority activation, production dispatch and rollback execution remain disabled. Review ownership and the start/side-effect/completion boundary before wiring any real worker.

@@ -55,6 +55,8 @@ The model consumes **internally trusted future evidence**, not authenticated leg
 
 Preferred next gated slice: **V2.3 Cadence Authority Evidence and Eligibility Integration**, local-only with dispatch/rollback still disabled. Begin by reviewing additive protocol/threat-model candidates and shared uploader/dashboard fixtures, then implement the versioned read-only evidence/eligibility boundary without creating production authority, changing existing action semantics or wiring the scan callback. This needs separate approval because it touches protocol/trust boundaries beyond the dormant internal store.
 
+Follow-up: that slice was approved and implemented locally; see `docs/V2_3_CADENCE_AUTHORITY_EVIDENCE.md`. It adds strict native commit provenance, read-only local-context producer/inspection and a dormant Health Summary injection seam; the dashboard consumes only the separate allowlisted namespace. It does not activate authority or turn model changes into authenticated remote Schedule Apply results. Dispatch and rollback execution remain disabled. The next meaningful gate is local-only **V2.3 Cadence Authority Guarded Scan Callback Integration** and disposable-fixture crash-boundary proof, not routine maintenance or deployment.
+
 Guarded scan callback integration, initialization/migration on a real opted-in site, lifecycle/settings wiring, missed-wakeup visibility, full runtime crash-boundary proof, release/package, live deployment and schedule/rollback pilot remain later approvals. A future consumer must distinguish model ownership from permission to run real work and preserve the default legacy path until explicitly opted in. Keep production scheduling unchanged throughout this milestone.
 
 ## Final Repository Verification

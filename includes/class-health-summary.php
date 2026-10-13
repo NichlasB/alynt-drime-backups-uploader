@@ -73,22 +73,31 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 	private $remote_action_store;
 
 	/**
+	 * Explicit dormant producer.
+	 *
+	 * @var Alynt_Drime_Backups_Uploader_Cadence_Authority_Evidence|null
+	 */
+	private $cadence_authority_evidence;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Alynt_Drime_Backups_Uploader_Settings                  $settings Settings.
-	 * @param Alynt_Drime_Backups_Uploader_Queue                     $queue Queue.
-	 * @param Alynt_Drime_Backups_Uploader_Backup_Registry           $registry Registry.
-	 * @param Alynt_Drime_Backups_Uploader_Cron_Health               $cron_health Cron health.
-	 * @param Alynt_Drime_Backups_Uploader_Dashboard_Connection|null $dashboard_connection Dashboard connection.
-	 * @param Alynt_Drime_Backups_Uploader_Remote_Action_Store|null  $remote_action_store Remote action store.
+	 * @param Alynt_Drime_Backups_Uploader_Settings                        $settings Settings.
+	 * @param Alynt_Drime_Backups_Uploader_Queue                           $queue Queue.
+	 * @param Alynt_Drime_Backups_Uploader_Backup_Registry                 $registry Registry.
+	 * @param Alynt_Drime_Backups_Uploader_Cron_Health                     $cron_health Cron health.
+	 * @param Alynt_Drime_Backups_Uploader_Dashboard_Connection|null       $dashboard_connection Dashboard connection.
+	 * @param Alynt_Drime_Backups_Uploader_Remote_Action_Store|null        $remote_action_store Remote action store.
+	 * @param Alynt_Drime_Backups_Uploader_Cadence_Authority_Evidence|null $cadence_authority_evidence Explicit read-only producer; production factory leaves null.
 	 */
-	public function __construct( Alynt_Drime_Backups_Uploader_Settings $settings, Alynt_Drime_Backups_Uploader_Queue $queue, Alynt_Drime_Backups_Uploader_Backup_Registry $registry, Alynt_Drime_Backups_Uploader_Cron_Health $cron_health, $dashboard_connection = null, $remote_action_store = null ) {
-		$this->settings             = $settings;
-		$this->queue                = $queue;
-		$this->registry             = $registry;
-		$this->cron_health          = $cron_health;
-		$this->dashboard_connection = $dashboard_connection instanceof Alynt_Drime_Backups_Uploader_Dashboard_Connection ? $dashboard_connection : null;
-		$this->remote_action_store  = $remote_action_store instanceof Alynt_Drime_Backups_Uploader_Remote_Action_Store ? $remote_action_store : null;
+	public function __construct( Alynt_Drime_Backups_Uploader_Settings $settings, Alynt_Drime_Backups_Uploader_Queue $queue, Alynt_Drime_Backups_Uploader_Backup_Registry $registry, Alynt_Drime_Backups_Uploader_Cron_Health $cron_health, $dashboard_connection = null, $remote_action_store = null, $cadence_authority_evidence = null ) {
+		$this->settings                   = $settings;
+		$this->queue                      = $queue;
+		$this->registry                   = $registry;
+		$this->cron_health                = $cron_health;
+		$this->dashboard_connection       = $dashboard_connection instanceof Alynt_Drime_Backups_Uploader_Dashboard_Connection ? $dashboard_connection : null;
+		$this->remote_action_store        = $remote_action_store instanceof Alynt_Drime_Backups_Uploader_Remote_Action_Store ? $remote_action_store : null;
+		$this->cadence_authority_evidence = $cadence_authority_evidence instanceof Alynt_Drime_Backups_Uploader_Cadence_Authority_Evidence ? $cadence_authority_evidence : null;
 	}
 
 	/**
@@ -154,6 +163,13 @@ class Alynt_Drime_Backups_Uploader_Health_Summary {
 				$remote_actions['schedule_management'] = $this->schedule_management_capability( $settings, ! empty( $remote_actions['enabled'] ) );
 				$remote_actions['cleanup_management']  = $this->cleanup_management_capability( ! empty( $remote_actions['enabled'] ) );
 				$status['remote_actions']              = $remote_actions;
+			}
+		}
+
+		if ( $this->cadence_authority_evidence ) {
+			$authority = $this->cadence_authority_evidence->status();
+			if ( ! is_wp_error( $authority ) && $authority['site_uuid'] === $status['site_uuid'] ) {
+				$status['cadence_authority'] = $authority;
 			}
 		}
 

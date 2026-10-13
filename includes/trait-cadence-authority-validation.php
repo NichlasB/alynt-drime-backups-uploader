@@ -9,8 +9,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/** Validates schema 2 while retaining the unchanged schema-1 journal contract. */
+/** Validates schema 2 and explicitly tagged native model evidence. */
 trait Alynt_Drime_Backups_Uploader_Cadence_Authority_Validation {
+	/**
+	 * Native provenance is written by model commit, never inferred during migration.
+	 *
+	 * @param array $record Stored journal.
+	 * @return bool
+	 */
+	protected function valid_record( array $record ) {
+		if ( array_key_exists( 'authority_evidence_version', $record ) ) {
+			if ( 1 !== $record['authority_evidence_version'] || ! isset( $record['phase'], $record['completed_at'], $record['lease_deadline'] )
+				|| 'succeeded' !== $record['phase'] || $record['completed_at'] >= $record['lease_deadline'] ) {
+				return false;
+			}
+			unset( $record['authority_evidence_version'] );
+		}
+		return parent::valid_record( $record );
+	}
+
 	/**
 	 * Validate the complete model state.
 	 *

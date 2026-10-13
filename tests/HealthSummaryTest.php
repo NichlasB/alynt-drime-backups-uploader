@@ -10,6 +10,24 @@ use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
 
 class HealthSummaryTest extends TestCase {
+	public function test_authority_extension_requires_explicit_injection_and_never_changes_remote_actions() {
+		$outbox = $this->create_outbox();
+		$legacy = $this->summary( $outbox )->status();
+		$this->assertArrayNotHasKey( 'cadence_authority', $legacy );
+		$fixture = json_decode( file_get_contents( __DIR__ . '/fixtures/cadence-authority-evidence-v1.json' ), true );
+		$authority = $fixture['status']; $authority['site_uuid'] = $legacy['site_uuid'];
+		$producer = $this->createMock( Alynt_Drime_Backups_Uploader_Cadence_Authority_Evidence::class );
+		$producer->expects( $this->once() )->method( 'status' )->willReturn( $authority );
+		$status = $this->summary( $outbox, null, null, null, '/var/www/example/wp-content/uploads/wpvividbackups', null, null, $producer )->status();
+		$this->assertSame( $authority, $status['cadence_authority'] );
+		unset( $status['cadence_authority'] ); $this->assertSame( $legacy, $status );
+	}
+	public function test_failed_authority_observation_is_omitted_without_changing_legacy_status() {
+		$outbox = $this->create_outbox(); $legacy = $this->summary( $outbox )->status();
+		$producer = $this->createMock( Alynt_Drime_Backups_Uploader_Cadence_Authority_Evidence::class );
+		$producer->method( 'status' )->willReturn( new WP_Error( 'authority_evidence_unavailable', 'Unavailable.' ) );
+		$this->assertSame( $legacy, $this->summary( $outbox, null, null, null, '/var/www/example/wp-content/uploads/wpvividbackups', null, null, $producer )->status() );
+	}
 	protected function setUp(): void {
 		parent::setUp();
 		Monkey\setUp();
@@ -761,7 +779,7 @@ class HealthSummaryTest extends TestCase {
 	 *
 	 * @return Alynt_Drime_Backups_Uploader_Health_Summary
 	 */
-	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null, $wpvivid_path = '/var/www/example/wp-content/uploads/wpvividbackups', $dashboard_connection = null, $remote_action_store = null ) {
+	private function summary( $outbox_path, ?array $uploaded = null, ?array $failed = null, ?array $queued = null, $wpvivid_path = '/var/www/example/wp-content/uploads/wpvividbackups', $dashboard_connection = null, $remote_action_store = null, $cadence_authority_evidence = null ) {
 		$settings = $this->createMock( Alynt_Drime_Backups_Uploader_Settings::class );
 		$settings->method( 'site_uuid' )->willReturn( '12345678-1234-4234-9234-123456789abc' );
 		$settings->method( 'get' )->willReturn(
@@ -808,7 +826,7 @@ class HealthSummaryTest extends TestCase {
 		);
 		$cron_health->method( 'is_wp_cron_disabled' )->willReturn( true );
 
-		return new Alynt_Drime_Backups_Uploader_Health_Summary( $settings, $queue, $registry, $cron_health, $dashboard_connection, $remote_action_store );
+		return new Alynt_Drime_Backups_Uploader_Health_Summary( $settings, $queue, $registry, $cron_health, $dashboard_connection, $remote_action_store, $cadence_authority_evidence );
 	}
 
 	/**

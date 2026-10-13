@@ -85,9 +85,10 @@ trait Alynt_Drime_Backups_Uploader_Cadence_Authority_Mutations {
 								$other['completed_at'] = $now;
 					}
 				} unset( $other );
-				$record['phase']            = 'succeeded';
-				$record['completed_at']     = $now;
-				$state['claims'][ $source ] = $record;
+				$record['phase']                      = 'succeeded';
+				$record['completed_at']               = $now;
+				$record['authority_evidence_version'] = 1;
+				$state['claims'][ $source ]           = $record;
 				return array(
 					'changed'  => true,
 					'observed' => false,

@@ -53,6 +53,9 @@ class Alynt_Drime_Backups_Uploader_Cadence_Authority_Store extends Alynt_Drime_B
 					return $this->error( 'invalid_state' );
 				}
 				foreach ( $state['claims'] as $record ) {
+					if ( array_key_exists( 'authority_evidence_version', $record ) ) {
+						return $this->error( 'invalid_state' );
+					}
 					if ( ! in_array( $record['phase'], array( 'succeeded', 'failed_closed' ), true ) ) {
 						return $this->error( 'migration_recovery_pending' );
 					}
