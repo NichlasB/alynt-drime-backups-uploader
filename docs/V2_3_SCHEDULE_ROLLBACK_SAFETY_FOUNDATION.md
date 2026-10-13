@@ -1,10 +1,10 @@
 # V2.3 Schedule Rollback Safety Foundation
 
-Status: local-only foundation approved on 2026-10-13; bounded persistence and worker rejection prerequisites implemented. The complete foundation is **not yet proven**. Atomic claims, recovery journals, schedule revision binding, and coordination with WordPress cron remain blocked on storage design and isolated integration approval. No rollback execution, client opt-in, release, deployment, or site changes are included.
+Status: local-only foundation approved on 2026-10-13; bounded persistence and worker rejection prerequisites implemented. The subsequently approved atomic-storage slice adds dormant claims, journals and revision binding with isolated Plugin Tester database evidence, recorded in `docs/V2_3_ATOMIC_STORAGE_PROOF.md`. The complete foundation is **not yet proven**: shared WordPress cron writer coordination remains blocked by a reproduced core overwrite. No rollback execution, client opt-in, release, deployment, or live-site changes are included.
 
 Dashboard design authority: companion dashboard `docs/V2_3_SCHEDULE_ROLLBACK_RUNTIME_DESIGN.md`, committed as `643c2c8`. Clean source baselines before this slice: uploader `afaf5d8` and dashboard `643c2c8`; these Git commits provide source recovery points. No website/database backup was created or required for these repository-only changes.
 
-## Implemented Prerequisites
+## Initial Implemented Prerequisites
 
 1. `Remote_Action_Store::persist()` clears the option cache and compares the expected state with an option API readback. It no longer inserts a fabricated successful state into cache after a failed write. `update_option()` returning false may mean unchanged; readback determines whether the expected state exists.
 2. Action upsert returns an empty record when the readback does not match. Lock acquisition returns false on failed/mismatched persistence. This is failure detection, not an atomic lock or proof of database durability.
@@ -56,7 +56,7 @@ Executed local evidence on 2026-10-13:
 
 Initial focused tests failed on false acceptance/lock persistence and the stored-worker boundary before fixes. The first full run also exposed cache-function fixture leakage; isolated test processes resolved it without removing assertions, adding skips, or changing unrelated runtime code. The final complete run above supersedes that intermediate result. Exact pushed-commit CI is verified separately after these local checks.
 
-## Exact Next Gate
+## Historical Follow-Up Approval And Contract
 
 ### Development Dependency Audit Remediation
 
@@ -85,3 +85,9 @@ Candidate storage contract for review:
 - No endpoint, capability flag, opt-in, action request, schedule write, or production integration consumes this proposed store until later approval. Integration testing may exercise the primitive with synthetic records on the confirmed isolated target only.
 
 Before that slice can claim completion, approve its storage contract and confirm an isolated WordPress target and database-write scope for persistence, concurrency, crash/restart, and unrelated-event-preservation tests. Existing website/pilot approvals do not apply. Keep `schedule_rollback` unadvertised, rejected by REST and worker, with no dashboard execution controls throughout.
+
+## Approved Atomic-Storage Follow-Up
+
+The user approved the above dedicated-option contract and isolated `plugin-tester local-only` proof on 2026-10-13. That approval supersedes the pending storage/integration approval statements in the historical sections above, not their runtime deferral. `docs/V2_3_ATOMIC_STORAGE_PROOF.md` records the implemented classes, unit/database evidence and the observed unguarded core overwrite. The initial prerequisite validation above remains historical; it must not be read as the latest full-suite total or as integration evidence.
+
+Exact next gate: **V2.3 Shared WP-Cron Writer Coordination Design/Prototype**, separately scoped local-only work because coordination could affect core and unrelated plugins rather than only client-owned state. Keep execution disabled until shared-writer behavior and recovery at every runtime write boundary are proven.

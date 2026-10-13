@@ -14,9 +14,17 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 The user approved the local-only foundation on 2026-10-13. `docs/V2_3_SCHEDULE_ROLLBACK_SAFETY_FOUNDATION.md` records implemented prerequisites: failed/mismatched action-state writes no longer grant lock/acceptance, the controller does not queue work without stored acceptance, and the worker rejects reserved/unknown action types before work. Rollback execution remains rejected and unadvertised.
 
-The full foundation is not complete: the existing option store cannot establish atomic source claims or protected recovery journals, and it does not coordinate core cron writers. The next gate is **V2.3 Rollback Atomic Storage and Cron Coordination**, requiring a reviewed storage contract and a separately confirmed isolated WordPress/database proof scope. No runtime rollback, new schema/option, site change, release, or deployment is approved by this record.
+The full foundation is not complete. The approved follow-up below adds a separate dormant atomic store and isolated database proof, but shared WordPress cron writers remain uncoordinated. The next gate is **V2.3 Shared WP-Cron Writer Coordination Design/Prototype**. No runtime rollback, live-site change, release, or deployment is approved by this record.
 
 The approved development-dependency remediation replaces the vulnerable nodemon watcher chain with Chokidar 4 and a tested serialized watcher, and updates concurrently within its 9.x line. It retains the explicit development commands and existing audit threshold; local audit reports zero vulnerabilities. This tooling work does not advance rollback execution or authorize the pending storage/integration gate.
+
+### V2.3 Atomic Safety Storage And Cron Coordination (Approved Local Slice)
+
+Approved on 2026-10-13 for repository implementation and isolated `plugin-tester local-only` database/concurrency proof. Implement a dormant, bounded client-local safety store using the approved dedicated non-autoloaded option, conditional updates, enrollment/revision binding, single-use claims, protected unresolved journals, and explicit phases. Add a dormant compare-and-swap cron replacement guard that permits only the owned scan-event delta and preserves unrelated events. Test stale concurrent writers and crash/recovery state without enabling rollback or registering production hooks.
+
+Implemented locally with rollback execution still rejected and no production hooks or automatic option creation. The isolated Plugin Tester proof demonstrated one winner between two PHP processes, cache-independent state reads, failed-write closure, journal reconstruction/expiry protection, scoped cron CAS, and cleanup with actual site cron/state unchanged. It also reproduced core `_set_cron_array()` overwriting a successful guarded replacement. See `docs/V2_3_ATOMIC_STORAGE_PROOF.md` for the contract, exact evidence and remaining limits. This is a storage milestone, not complete schedule writer coordination or runtime approval.
+
+Recommended next gated slice: **V2.3 Shared WP-Cron Writer Coordination Design/Prototype**, local-only and execution-disabled. Any candidate must cover core and unrelated-plugin writers or explicitly demonstrate why runtime execution remains deferred; global cron interception is not part of the completed client-owned storage scope. No live target, real backup action, new remote opt-in/control, release, or deployment is included.
 
 ### Released Baseline
 
