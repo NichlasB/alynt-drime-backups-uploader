@@ -15,6 +15,13 @@ require_once ABSPATH . WPINC . '/cron.php';
 $repository = dirname( __DIR__, 2 );
 foreach ( array( 'class-schedule-safety-option-cas', 'trait-schedule-safety-state-validation', 'trait-schedule-safety-state-transitions', 'class-schedule-safety-store', 'class-schedule-safety-cron-cas' ) as $part ) require_once $repository . '/includes/' . $part . '.php';
 require_once $repository . '/tests/Support/ScheduleSafetyFixture.php';
+require_once __DIR__ . '/schedule-coordination-local-proof.php';
+$coordination = isset( $argv[2] ) && in_array( $argv[2], array( '--coordination', '--cron-child' ), true );
+if ( $coordination ) {
+	require_once ABSPATH . WPINC . '/pomo/translations.php';
+	require_once ABSPATH . WPINC . '/l10n.php';
+	require_once $repository . '/tests/Support/ScheduleSafetyCronWriterPrototype.php';
+}
 
 function alynt_safety_proof_check( $condition, $label ) { if ( ! $condition ) throw new RuntimeException( $label ); }
 $actual_options = $wpdb->options;
@@ -29,15 +36,17 @@ class Alynt_Safety_Proof_Barrier_CAS extends Alynt_Drime_Backups_Uploader_Schedu
 	private $first = true;
 	private $proof_database;
 	private $actor;
-	public function __construct( $database, $actor ) { parent::__construct( $database ); $this->proof_database = $database; $this->actor = $actor; }
+	private $phase;
+	public function __construct( $database, $actor, $phase = '' ) { parent::__construct( $database ); $this->proof_database = $database; $this->actor = $actor; $this->phase = $phase; }
 	public function read( $name ) {
 		$row = parent::read( $name );
 		if ( $this->first ) {
 			$this->first = false;
 			$db = $this->proof_database;
-			$db->insert( $db->options, array( 'option_name' => 'probe_ready_' . $this->actor, 'option_value' => 'ready', 'autoload' => 'no' ) );
+			$db->insert( $db->options, array( 'option_name' => 'probe_' . $this->phase . 'ready_' . $this->actor, 'option_value' => 'ready', 'autoload' => 'no' ) );
 			$limit = microtime( true ) + 15;
-			while ( 'go' !== $db->get_var( "SELECT option_value FROM {$db->options} WHERE option_name='probe_go'" ) ) {
+			$go = 'probe_' . $this->phase . 'go';
+			while ( 'go' !== $db->get_var( $db->prepare( "SELECT option_value FROM {$db->options} WHERE option_name=%s", $go ) ) ) {
 				if ( microtime( true ) >= $limit ) exit( 1 );
 				usleep( 20000 );
 			}
@@ -45,15 +54,22 @@ class Alynt_Safety_Proof_Barrier_CAS extends Alynt_Drime_Backups_Uploader_Schedu
 		return $row;
 	}
 }
-if ( isset( $argv[2] ) && '--claim-child' === $argv[2] ) {
+if ( isset( $argv[2] ) && in_array( $argv[2], array( '--claim-child', '--cron-child' ), true ) ) {
 	$table = isset( $argv[3] ) ? $argv[3] : '';
 	alynt_safety_proof_check( preg_match( '/^wp_alynt_safety_probe_[a-f0-9]{12}$/D', $table ), 'Unexpected child table.' );
 	$wpdb->options = $table;
 	$now = (int) $argv[5];
 	alynt_safety_proof_check( in_array( $argv[4], array( '1', '2' ), true ), 'Unexpected child actor.' );
-	$store = new Alynt_Drime_Backups_Uploader_Schedule_Safety_Store( new Alynt_Safety_Proof_Barrier_CAS( $wpdb, $argv[4] ), function () use ( $now ) { return $now; } );
-	$result = $store->claim( $binding, $source, Alynt_Drime_Backups_Uploader_Test_Safety_Fixture::evidence( $now, (int) $argv[4] ) );
-	echo json_encode( array( 'won' => is_array( $result ), 'code' => is_wp_error( $result ) ? $result->get_error_code() : 'claimed' ) ) . "\n";
+	if ( $coordination ) {
+		$prototype = new Alynt_Drime_Backups_Uploader_Test_Cron_Writer_Prototype( new Alynt_Safety_Proof_Barrier_CAS( $wpdb, $argv[4], 'cron_' ) );
+		alynt_coordination_proof_filters( $prototype, true );
+		try { $result = wp_schedule_event( $now + 3600, 'hourly', 'alynt_coordination_fixture_child_' . $argv[4], array(), true ); }
+		finally { alynt_coordination_proof_filters( $prototype, false ); }
+	} else {
+		$store = new Alynt_Drime_Backups_Uploader_Schedule_Safety_Store( new Alynt_Safety_Proof_Barrier_CAS( $wpdb, $argv[4] ), function () use ( $now ) { return $now; } );
+		$result = $store->claim( $binding, $source, Alynt_Drime_Backups_Uploader_Test_Safety_Fixture::evidence( $now, (int) $argv[4] ) );
+	}
+	echo json_encode( array( 'won' => $coordination ? true === $result : is_array( $result ), 'code' => is_wp_error( $result ) ? $result->get_error_code() : 'stored' ) ) . "\n";
 	exit;
 }
 
@@ -141,6 +157,7 @@ try {
 	alynt_safety_proof_check( true === _set_cron_array( $before, true ), 'Core overwrite fixture failed.' );
 	alynt_safety_proof_check( $before === get_option( 'cron' ), 'Core writer counterexample missing.' ); $receipt['unguarded_core_overwrite_observed'] = true;
 	$receipt['persistent_object_cache_active'] = (bool) wp_using_ext_object_cache();
+	if ( $coordination ) alynt_coordination_local_proof( $backend, $site_root, $table, $children, $receipt );
 } catch ( Throwable $error ) { $receipt['failed'] = true; $receipt['reason'] = $error->getMessage(); }
 finally {
 	foreach ( $children as $child ) if ( is_resource( $child['process'] ) ) { proc_terminate( $child['process'] ); proc_close( $child['process'] ); }
