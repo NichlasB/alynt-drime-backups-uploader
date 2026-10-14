@@ -18,6 +18,12 @@ foreach ( array( 'class-schedule-safety-option-cas', 'trait-schedule-safety-stat
 require_once $repo . '/tests/Support/ScheduleSafetyFixture.php';
 require_once __DIR__ . '/lifecycle-proof-processes.php';
 require_once __DIR__ . '/lifecycle-proof-cases.php';
+$ledger_mode = isset( $argv[2] ) && in_array( $argv[2], array( '--ledger', '--ledger-child' ), true );
+if ( $ledger_mode ) {
+	foreach ( array( 'trait-consent-ledger-validation', 'trait-consent-ledger-commands', 'trait-consent-ledger-migration', 'trait-consent-ledger-api-boundary', 'class-cadence-consent-ledger' ) as $part ) require_once $repo . '/includes/' . $part . '.php';
+	require_once __DIR__ . '/consent-ledger-proof-processes.php';
+	require_once __DIR__ . '/consent-ledger-proof-cases.php';
+}
 
 function alynt_lifecycle_check( $ok, $message ) { if ( ! $ok ) throw new RuntimeException( $message ); }
 function alynt_lifecycle_error( $result, $code ) { return is_wp_error( $result ) && $code === $result->get_error_code(); }
@@ -36,21 +42,25 @@ $actual = $wpdb->options;
 alynt_lifecycle_check( preg_match( '/^[A-Za-z0-9_]+$/D', $actual ), 'Invalid actual options identifier.' );
 alynt_lifecycle_check( 'http://plugin-tester.local' === $wpdb->get_var( "SELECT option_value FROM {$actual} WHERE option_name='siteurl'" ), 'Wrong WordPress target.' );
 alynt_lifecycle_check( ! wp_using_ext_object_cache(), 'Persistent cache isolation needs separate approval/proof.' );
-if ( isset( $argv[2] ) && '--child' === $argv[2] ) {
+if ( isset( $argv[2] ) && in_array( $argv[2], array( '--child', '--ledger-child' ), true ) ) {
 	alynt_lifecycle_check( count( $argv ) === 9, 'Invalid child arguments.' );
 	$table = $argv[3]; $token = $argv[4]; alynt_lifecycle_owned( $table, $token ); $wpdb->options = $table;
-	alynt_lifecycle_child( $argv[5], $argv[6], (int) $argv[7], $argv[8] ); exit;
+	if ( $ledger_mode ) alynt_ledger_child( $argv[5], $argv[6], (int) $argv[7], $argv[8] );
+	else alynt_lifecycle_child( $argv[5], $argv[6], (int) $argv[7], $argv[8] );
+	exit;
 }
-alynt_lifecycle_check( count( $argv ) === 2, 'Proof accepts only the approved root.' );
+alynt_lifecycle_check( $ledger_mode ? count( $argv ) === 3 && '--ledger' === $argv[2] : count( $argv ) === 2, 'Proof accepts only the approved root and an explicit ledger selector.' );
 $table = 'wp_alynt_lifecycle_probe_' . bin2hex( random_bytes( 6 ) ); $token = bin2hex( random_bytes( 12 ) );
-$before = alynt_lifecycle_actual_digest( $actual ); $created = false; $children = array(); $receipt = array();
+$before = alynt_lifecycle_actual_digest( $actual ); $created = false; $children = array(); $receipt = $ledger_mode ? array( 'proof_kind' => 'consent_ledger' ) : array();
+if ( $ledger_mode ) $receipt['fixture_table'] = $table;
 try {
 	alynt_lifecycle_check( 0 === (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=%s', $table ) ), 'Fixture table already exists.' );
 	alynt_lifecycle_check( false !== $wpdb->query( "CREATE TABLE {$table} LIKE {$actual}" ), 'Fixture creation failed.' ); $created = true;
 	alynt_lifecycle_check( 1 === $wpdb->insert( $table, array( 'option_name' => 'probe_owner', 'option_value' => $token, 'autoload' => 'no' ) ), 'Owner marker creation failed.' );
 	alynt_lifecycle_owned( $table, $token ); $wpdb->options = $table;
 	foreach ( array( 'alloptions', 'notoptions', Alynt_Drime_Backups_Uploader_Schedule_Safety_Option_CAS::STATE_OPTION ) as $key ) wp_cache_delete( $key, 'options' );
-	alynt_lifecycle_cases( $root, $table, $token, $children, $receipt );
+	if ( $ledger_mode ) alynt_ledger_cases( $root, $table, $token, $children, $receipt );
+	else alynt_lifecycle_cases( $root, $table, $token, $children, $receipt );
 } catch ( Throwable $error ) {
 	$receipt['failed'] = true;
 	$receipt['reason'] = $error instanceof RuntimeException ? $error->getMessage() : 'Unexpected internal proof failure; no acknowledgement assumed.';

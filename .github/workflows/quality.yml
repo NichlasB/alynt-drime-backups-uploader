@@ -53,6 +53,10 @@ jobs:
           php -l scripts/tests/lifecycle-local-proof.php
           php -l scripts/tests/lifecycle-proof-processes.php
           php -l scripts/tests/lifecycle-proof-cases.php
+          php -l scripts/tests/consent-ledger-proof-processes.php
+          php -l scripts/tests/consent-ledger-proof-cases.php
+          php -l scripts/tests/consent-ledger-proof-races.php
+          php -l scripts/tests/consent-ledger-proof-edges.php
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
