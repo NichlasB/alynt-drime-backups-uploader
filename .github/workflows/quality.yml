@@ -57,6 +57,11 @@ jobs:
           php -l scripts/tests/consent-ledger-proof-cases.php
           php -l scripts/tests/consent-ledger-proof-races.php
           php -l scripts/tests/consent-ledger-proof-edges.php
+          php -l scripts/tests/closed-provenance-proof-processes.php
+          php -l scripts/tests/closed-provenance-proof-cases.php
+          php -l scripts/tests/closed-provenance-proof-races.php
+          php -l scripts/tests/closed-provenance-proof-edges.php
+          php -l scripts/tests/closed-provenance-proof-requests.php
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
