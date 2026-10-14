@@ -7,6 +7,7 @@ if ( false === $root || false === $approved || $root !== $approved ) {
 }
 define( 'SHORTINIT', true ); define( 'DISABLE_WP_CRON', true );
 require $root . '/wp-load.php';
+require_once __DIR__ . '/lifecycle-proof-safety.php';
 $sites = json_decode( file_get_contents( 'C:/Users/Captain/AppData/Roaming/Local/sites.json' ), true ); $metadata = null;
 foreach ( is_array( $sites ) ? $sites : array() as $site ) if ( isset( $site['domain'], $site['path'] ) && 'plugin-tester.local' === $site['domain'] && realpath( $site['path'] . '/app/public' ) === $approved ) $metadata = $site;
 $port = $metadata['services']['mariadb']['ports']['MYSQL'][0] ?? null;
@@ -32,19 +33,6 @@ if ( $provenance_mode ) {
 	require_once __DIR__ . '/closed-provenance-proof-cases.php';
 }
 
-function alynt_lifecycle_check( $ok, $message ) { if ( ! $ok ) throw new RuntimeException( $message ); }
-function alynt_lifecycle_error( $result, $code ) { return is_wp_error( $result ) && $code === $result->get_error_code(); }
-function alynt_lifecycle_actual_digest( $table ) {
-	global $wpdb;
-	$rows = $wpdb->get_results( "SELECT option_name,SHA2(option_value,256) AS digest,autoload FROM {$table} ORDER BY option_name", ARRAY_A );
-	alynt_lifecycle_check( '' === $wpdb->last_error && is_array( $rows ), 'Actual-option digest read failed.' );
-	return hash( 'sha256', wp_json_encode( $rows ) ); // Never emit option values or names.
-}
-function alynt_lifecycle_owned( $table, $token ) {
-	global $wpdb;
-	alynt_lifecycle_check( 1 === preg_match( '/^wp_alynt_lifecycle_probe_[a-f0-9]{12}$/D', $table ) && preg_match( '/^[a-f0-9]{24}$/D', $token ), 'Invalid fixture identity.' );
-	alynt_lifecycle_check( $token === $wpdb->get_var( "SELECT option_value FROM {$table} WHERE option_name='probe_owner'" ), 'Fixture ownership missing.' );
-}
 $actual = $wpdb->options;
 alynt_lifecycle_check( preg_match( '/^[A-Za-z0-9_]+$/D', $actual ), 'Invalid actual options identifier.' );
 alynt_lifecycle_check( 'http://plugin-tester.local' === $wpdb->get_var( "SELECT option_value FROM {$actual} WHERE option_name='siteurl'" ), 'Wrong WordPress target.' );

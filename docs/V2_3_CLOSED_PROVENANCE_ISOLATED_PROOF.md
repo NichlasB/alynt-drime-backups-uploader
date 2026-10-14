@@ -47,6 +47,8 @@ The approved isolated closed-provenance storage/request-port milestone advances 
 
 ## Publication Receipt
 
+Subsequent approved real-core auth boundary proof: `V2_3_WORDPRESS_AUTHENTICATED_REQUEST_PROOF.md` records genuine WordPress cookie/session/capability/nonce checks with separate owned users/usermeta/options and no grant/activation/rollback. Mock-port limitations above describe this original isolated-provenance slice. Neither follow-up installs an HTTP handler or enables authenticated successor permission.
+
 Uploader proof `2227d39d922a4b722702299af06437eef8231b45` is committed/pushed to `origin/master`; exact-commit [Quality 38622184174](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/38622184174) passed PHP 7.4/8.3, each **921 tests / 6461 assertions**, no skips, plus full PHPCS, portable runner/proof syntax, Node/dev-tool/build/generated-output checks and audit. Dashboard milestone `f03e93317965e04aafc00a37a4a74af679bef589` passed [CI 38622195212](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/38622195212), both PHP versions **299 / 1430**, no skips, plus lint/structure/build/audits. Both repositories were clean/synced. Existing nonblocking uploader ubuntu-latest migration notices remain; CI policy is unchanged.
 
 The approved isolated storage/request-port milestone is complete, not real WordPress authorization, authenticated grants or active-feature clearance. Actual users/options/cron/activation remained untouched, all owned fixtures were removed, and production wiring/versions/activation/rollback remain unchanged. Receipt-only follow-ups need their own final exact-head CI verification before handoff.

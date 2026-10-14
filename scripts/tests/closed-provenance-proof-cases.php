@@ -1,16 +1,6 @@
 <?php
 /** Schema-5 SQL/process proof on the parent-owned empty table, with untouched actual users. */
 if ( ! defined( 'SHORTINIT' ) || ! SHORTINIT ) exit( 1 );
-function alynt_provenance_users_digest() {
-	global $wpdb; $digests = array();
-	foreach ( array( array( $wpdb->users, 'ID', 'ID,user_login,user_pass,user_nicename,user_email,user_url,user_registered,user_activation_key,user_status,display_name' ), array( $wpdb->usermeta, 'umeta_id', 'umeta_id,user_id,meta_key,meta_value' ) ) as $spec ) {
-		list( $table, $order, $columns ) = $spec; alynt_lifecycle_check( 1 === preg_match( '/^[A-Za-z0-9_]+$/D', $table ), 'Invalid actual user table identifier.' );
-		$rows = $wpdb->get_col( "SELECT SHA2(JSON_ARRAY({$columns}),256) FROM {$table} ORDER BY {$order}" );
-		alynt_lifecycle_check( '' === $wpdb->last_error && is_array( $rows ), 'Actual-user digest read failed.' );
-		$digests[] = hash( 'sha256', wp_json_encode( $rows ) ); // Never emit private fields or row hashes.
-	}
-	return $digests;
-}
 function alynt_provenance_closed_check( $s, $old ) {
 	alynt_lifecycle_check( is_array( $s ) && 5 === $s['schema_version'] && ! $s['lifecycle']['consent'] && 'disabled' === $s['lifecycle']['phase'] && ! $s['authority']['enabled'] && null === $s['provenance']['authenticated_grant'] && array() === $s['provenance']['authenticated_receipts'] && 'closed_migration_fixture_v1' === $s['provenance']['source'], 'Migration admitted consent or authenticated provenance.' );
 	foreach ( array( 'generation', 'schedule_revision' ) as $key ) alynt_lifecycle_check( $old[$key] + 1 === $s[$key], 'Migration counter did not advance once.' );

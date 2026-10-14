@@ -62,6 +62,15 @@ jobs:
           php -l scripts/tests/closed-provenance-proof-races.php
           php -l scripts/tests/closed-provenance-proof-edges.php
           php -l scripts/tests/closed-provenance-proof-requests.php
+          php -l scripts/tests/lifecycle-proof-safety.php
+          php -l scripts/tests/consent-auth-local-proof.php
+          php -l scripts/tests/consent-auth-proof-storage.php
+          php -l scripts/tests/consent-auth-proof-core.php
+          php -l scripts/tests/consent-auth-proof-ports.php
+          php -l scripts/tests/consent-auth-proof-cases.php
+          php -l scripts/tests/consent-auth-proof-denials.php
+          php -l scripts/tests/consent-auth-proof-guards.php
+          php -l scripts/tests/consent-auth-proof-receipts.php
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
