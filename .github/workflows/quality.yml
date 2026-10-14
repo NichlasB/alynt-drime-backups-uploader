@@ -47,8 +47,12 @@ jobs:
       - name: Run PHP coding standards
         run: php vendor/bin/phpcs
 
-      - name: Run portable runner syntax checks
-        run: npm run lint:runner
+      - name: Run portable runner and lifecycle proof syntax checks
+        run: |
+          npm run lint:runner
+          php -l scripts/tests/lifecycle-local-proof.php
+          php -l scripts/tests/lifecycle-proof-processes.php
+          php -l scripts/tests/lifecycle-proof-cases.php
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
