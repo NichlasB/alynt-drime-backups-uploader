@@ -24,6 +24,19 @@ enabled; no release/deploy is included. In-memory results do not certify genuine
 WordPress authentication or physical transaction/cache behavior. Validation and
 publication receipts are recorded only after actual success.
 
+Publication completed: foundation `eeb6f4b6b165351e368a50179918af3a9fec2136` passed
+[Quality 39072819784](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39072819784),
+PHP 7.4/8.3 each 1121 / 9351 without skips, plus style/syntax/Node/build/audits;
+dashboard plan `771ff381d76ad8e4d9b8775ea5c5a6fc8c576eb1` passed
+[CI 39072823321](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39072823321),
+each PHP job 299 / 1430 without skips. Both repositories were clean/synced. The
+safe-local contract/provenance item is complete and reaches **Plugin Tester
+local-only V2.3 Closed-Writer Admission Isolated Storage and Authenticated Request
+Proof**, requiring separately approved owned disposable users/storage and cleanup
+audit. Keep existing users/actual options/cron, grants, production wiring,
+activation and rollback untouched/disabled. Receipt-only follow-up needs final
+exact-head CI before handoff; no dormant-only release.
+
 ### V2.3 Schedule Rollback Safety Foundation (Local Only)
 
 The user approved the local-only foundation on 2026-10-13. `docs/V2_3_SCHEDULE_ROLLBACK_SAFETY_FOUNDATION.md` records implemented prerequisites: failed/mismatched action-state writes no longer grant lock/acceptance, the controller does not queue work without stored acceptance, and the worker rejects reserved/unknown action types before work. Rollback execution remains rejected and unadvertised.

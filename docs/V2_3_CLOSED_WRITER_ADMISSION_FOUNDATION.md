@@ -165,3 +165,26 @@ proof, with independent cleanup/preservation audit, before claiming the new brid
 durable or authenticated. Keep actual users/options/cron, production wiring,
 grants, activation and rollback untouched/disabled. No maintenance-only release is
 warranted.
+
+## Publication receipt
+
+Implementation `eeb6f4b6b165351e368a50179918af3a9fec2136` is committed/pushed to
+`origin/master`. Exact-commit [Quality 39072819784](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39072819784)
+passed PHP 7.4 and 8.3, each **1121 tests / 9351 assertions**, no skips, plus full
+PHPCS, runner/developer-proof syntax checks and the Node build/developer-tool/
+deterministic-asset/audit job. This is the complete final suite, including all
+105 new in-memory tests; it closes the earlier local full-selection/final-focused
+distinction. Only the existing nonblocking ubuntu-latest migration annotation
+remains; no workflow or test policy was weakened.
+
+Dashboard plan commit `771ff381d76ad8e4d9b8775ea5c5a6fc8c576eb1` passed exact-commit
+[CI 39072823321](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39072823321),
+PHP 7.4/8.3 each **299 / 1430**, no skips, plus lint/structure/build/strict Composer
+and dependency audits. Both repositories were clean/synced after these pushes.
+The approved repository foundation and its implementation publication gates are
+complete. Versions, actual site/database/users/options/cron, production wiring,
+real grants/domains, activation and rollback remain unchanged/disabled; no release
+or deployment was performed. The exact next meaningful approval is the integrated
+Plugin Tester proof named above, not generic cleanup or a dormant package. This
+receipt-only follow-up needs final exact-head CI verification before handoff;
+no recursive receipt commit or site access is needed.
