@@ -10,6 +10,20 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed-Writer Admission Contract and Provenance Safety Foundation
+
+Approved on 2026-10-17 for local repository implementation, in-memory fixtures,
+validation, commit/push and exact-head CI. The default-off/test-loaded contract
+uses a separate fixture domain, a finite strictly reconstructed schema-6 origin,
+closed-only schema-7 proposals, immutable short-lived intent and one-shot
+simulated transaction admission. Existing schema-6 validators and request adapters
+are unchanged. Evidence and limits live in
+`docs/V2_3_CLOSED_WRITER_ADMISSION_FOUNDATION.md`. No real authenticated provenance,
+actual users/options/SQL/cron, grants, production wiring, activation or rollback is
+enabled; no release/deploy is included. In-memory results do not certify genuine
+WordPress authentication or physical transaction/cache behavior. Validation and
+publication receipts are recorded only after actual success.
+
 ### V2.3 Schedule Rollback Safety Foundation (Local Only)
 
 The user approved the local-only foundation on 2026-10-13. `docs/V2_3_SCHEDULE_ROLLBACK_SAFETY_FOUNDATION.md` records implemented prerequisites: failed/mismatched action-state writes no longer grant lock/acceptance, the controller does not queue work without stored acceptance, and the worker rejects reserved/unknown action types before work. Rollback execution remains rejected and unadvertised.
