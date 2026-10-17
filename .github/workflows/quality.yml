@@ -71,6 +71,7 @@ jobs:
           php -l scripts/tests/consent-auth-proof-denials.php
           php -l scripts/tests/consent-auth-proof-guards.php
           php -l scripts/tests/consent-auth-proof-receipts.php
+          for file in scripts/tests/closed-writer-*.php; do php -l "$file" || exit 1; done
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
