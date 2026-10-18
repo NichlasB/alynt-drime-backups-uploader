@@ -108,7 +108,7 @@ it is supplementary, not a fuzzing completeness or storage proof claim.
 
 ## Canonical source-scoped feature reviews
 
-`FEATURE_LIGHT_REVIEW_PROMPT.md` was read and applied to this foundation, its three
+`FEATURE_LIGHT_REVIEW_PROMPT.md` was read and applied to this foundation, its four
 test classes/helper and directly reused pure provenance/codec and dormant request
 boundary. Feature scope: exact-row/coherence/private binding and single-transaction
 simulation. Risk areas: Other (private data, resource bounds, lifetime protocol),
@@ -167,10 +167,18 @@ Executed verification:
 | Source baseline/diff/dormancy and document links | Existing owner/core guard/model, bootstrap, schema/request contracts, versions and generated files unchanged; no native/API/SQL calls in new definitions. |
 
 The supplementary local full-suite run was launched at the 34-new-test checkpoint,
-before four additional boundary methods were added. It is not substituted for
-the final suite: exact pushed-head Quality CI must run the complete current suite
-on PHP 7.4/8.3, and its result is verified and linked in the final handoff. Neither
-successful local models nor CI establish native authentication/storage integration.
+before four additional boundary methods were added: **1365 tests / 11497 assertions**,
+four existing Windows skips, passed in 11:03.952. It is not substituted for final
+current-suite coverage. Implementation commit
+`2aea0f2129927226780633c2be441889cff04d3b` passed
+[exact-head Quality CI](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39132961696):
+PHP 7.4/8.3 each **1369 tests / 11664 assertions**, no skips, plus Node build/audit.
+The companion dashboard plan receipt is `7d67804b25a70c0ac579a2ffcc6c7af55390c055`;
+its [exact-head CI](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39133190741)
+passed PHP 7.4/8.3. This docs-only receipt corrects the final test-class count above;
+its own pushed-head CI is separately verified in the handoff, not inferred from
+the implementation run. Neither successful local models nor CI establish native
+authentication/storage integration.
 
 Implementation-plan progress: bounded raw observation and single-use session
 contracts now have executable non-authorizing controls. Physical raw observation,
