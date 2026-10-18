@@ -138,7 +138,7 @@ No UI/UX applies; full pre-release and final whole-plugin security are not repla
 | 05 Database | Terminal source-scoped No updates needed after inventory below. No new installed schema/migration/option or runtime writer. Genuine fixture proof establishes read profile/refusal/cleanup, not transaction/commit correctness. Historical whole-plugin Database Review unchanged. |
 | 06 Performance | Terminal No updates needed: two fixed ten-row indexed sweeps, at most six-MiB aggregate per frame plus bounded parser representations; native metadata/auth overhead, no production eager loading or retry. Ten-second monotonic acceptance budget and native connect/read timeouts do not guarantee blocking IO finishes within ten seconds. No load/memory-platform claim. |
 | 07 Edge Cases | Missing/oversized/metadata/collation/index/profile, malformed/stale/domain, revoked/mutated core session and wrong-site/reference cases mapped to 07A. Two sweeps cannot establish atomicity/ABA resistance, and no such handling/claim is added. |
-| 07A Adversarial | Baseline new 7 / 65 and related 41 / 468, no skips. Strong narrow pure/API assertions plus genuine native/private positive and independent state audit. Eight final assertion-killed/restored native controls below. No removed/weakened/skipped tests or artificial active grant. Full exact-head CI required for final Clean status. |
+| 07A Adversarial | Final status Clean, source-scoped. Baseline new 7 / 65 and related 41 / 468, no skips. Strong narrow pure/API assertions plus genuine native/private positive and independent state audit. Eight final assertion-killed/restored native controls below. No removed/weakened/skipped tests or artificial active grant. Both exact implementation-head full PHP suites pass; receipts below. |
 | Feature Security (final focused) | No outstanding source-scoped issue: exact request/nonce domain, fresh core auth on both sides, twenty bounded fixed raw reads, full tuple/closed-codec refusal, no public raw bytes/write handle, compiled SQL and finally cleanup. Not a whole-plugin security or active-permission approval. |
 
 **H1 (proof-only harness defect, fixed):** the server read-only denial test first
@@ -226,3 +226,24 @@ Keep actual application state, snapshot/queue effects, production wiring, grants
 activation, cancellation and rollback execution untouched/disabled. Approve that
 explicit write scope before implementation; full pre-release remains required for
 a later coherent release candidate before any packaging/publication.
+
+## Exact-head publication receipts
+
+Implementation head `22cddc09f6fa40d404adcfd8d5aeb5d4fa6c58fd` passes
+[Quality 39154906017](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39154906017):
+PHP 7.4 and 8.3 each **1433 tests / 12805 assertions**, no skipped, risky,
+incomplete or failing tests; Node/dev-tests/build/audit/generated-asset verification
+and new native proof-helper syntax checks pass. CI does not execute LocalWP SQL;
+the genuine owned proof totals above are separate executed local evidence.
+
+Dashboard documentation head `fdc4398414f7cdb06c9e5691901caf5f71640849` passes
+[CI 39154916875](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39154916875):
+both PHP versions **299 / 1430**, no skips, plus lint/structure/build/manifest/audits.
+Local Windows skips remain disclosed; GitHub's Ubuntu-label migration annotation
+is informational, not a test warning.
+
+Toolkit receives only a source-scoped checklist addendum; historical whole-plugin
+readiness/version rows are unchanged. Zero configured toolkit workflows is CI N/A,
+not a passing-CI claim. This receipt-only uploader follow-up is independently pushed
+and its own final exact-head CI checked at handoff; implementation-head CI is not
+substituted for it. No source/tests/native operations follow these receipts.
