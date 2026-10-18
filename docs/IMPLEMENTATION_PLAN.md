@@ -10,6 +10,27 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Scan-Effect Fencing and Cache-Publication Contract Safety Foundation
+
+Approved R3 repository-only, dormant/test-loaded **in-memory only**. The
+[owning source-scoped record](V2_3_SCAN_EFFECT_CACHE_CONTRACT_FOUNDATION.md)
+covers uploader excluded base `7679bfbfaed2c7e5c947cf42cfe8c0670d6fdbc3`.
+Two bounded pure contracts model exact owned registration, independently prepared
+snapshot/queue effects, serialized ordering against closure, stale-target refusal,
+unknown outcomes and terminal/barrier accounting; separate fixed-scope post-commit
+cache observations never certify convergence or permission. All support flags remain
+false; no owner/provider/write handle or production caller is introduced.
+
+Implementation-plan progress: the open cache/effective-stop item now has a tested
+non-authorizing protocol foundation, not native/runtime proof. Canonical focused
+reviews, counterfactual controls, validation and exact-head CI are owned by the
+record. Application state, readers/cache calls/storage/fixtures/wiring, schemas,
+grants/activation/rollback and versions stay unchanged; no package/release/deploy.
+**Recommended next gated slice: local-only V2.3 Native Scan-Effect Storage and
+Participant Integration Design**, design-only fixed-row codecs/caps/lock order,
+exact CAS/receipt bounds, producer preparation/persistence separation and complete
+writer participation before any new native sink or actual worker approval.
+
 ### V2.3 Cache Convergence and Effective Scan-Stop Admission Integration Design
 
 Approved R3 local-only **design-only**, owned by companion dashboard
