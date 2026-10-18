@@ -145,6 +145,11 @@ required for the next coherent RC before packaging/publishing.
 
 ## Progress, next gate and publication
 
+Subsequent approved [Owned Proof](V2_3_REGISTRATION_CONSTRUCTION_OWNED_PROOF.md)
+now supplies genuine WordPress core constructor/eligibility evidence on disposable
+Plugin Tester tables; this foundation's original API-double results stay labeled
+as such. No authoritative reader, native transaction or production wiring added.
+
 Implementation-plan progress: fixed construction and full eligibility are now
 executable dormant code with positive and guard-removal evidence, not generic
 maintenance. Actual WordPress auth/nonce/UUID semantics, authoritative protected

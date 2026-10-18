@@ -10,6 +10,22 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed Registration Construction and Eligibility Owned Proof
+
+Approved R3 **Plugin Tester local-only**, owned disposable users/storage/cleanup.
+The [owning proof](V2_3_REGISTRATION_CONSTRUCTION_OWNED_PROOF.md) records genuine
+WordPress 7.1.2/PHP 8.5.1 **851 / 10** and unchanged guard **266 / 11**, three
+assertion-killed/restored controls, all **77** application checksums unchanged and
+every fixture removed. Public surface remains unavailable; runtime source unchanged.
+Exact local target, proof layers, canonical source-scoped reviews and QA are there.
+
+Implementation-plan progress: real core constructor semantics and captured owned
+frame eligibility now proved, not an authorizing reader or native transaction.
+**Recommended next gated slice: Plugin Tester local-only V2.3 Fixed Registration
+Native Reader and Guarded Construction Integration**, private fixed all-ten reads
+after auth, separately approved owned-fixture proof. Keep application state,
+production wiring, grants/activation, ledger writes/execution/rollback untouched.
+
 ### V2.3 Closed Registration Fixed Request Construction and Eligibility Foundation
 
 Approved R3 **repository-only/dormant**, new pure/isolated API tests only. The
