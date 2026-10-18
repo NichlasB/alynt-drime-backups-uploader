@@ -344,6 +344,30 @@ Commit/push and exact-head CI publication receipts follow only after those runs
 complete. Toolkit has no configured GitHub workflows or existing commit statuses;
 its publication/synchronization is verified without claiming a toolkit CI pass.
 
+### Verified publication receipt
+
+Uploader source/review commit `fc89f8042fd5c14619d26b044f31b9900b5abf53` was
+pushed to `origin/master`; exact-commit [Quality 39128484439](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39128484439)
+passed PHP 7.4/8.3, each **1318 tests / 11103 assertions**, no skips, plus PHPCS,
+runner/proof syntax, Node development tests/build/audit and generated-asset gates.
+Dashboard `78ed14a8b99a026915b602565d23aea53f07b91b` was pushed to
+`origin/master`; [CI 39128488111](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39128488111)
+passed PHP 7.4/8.3, each **299 / 1430**, no skips, plus all configured lint,
+structure/build/Composer/npm validation/audit checks. These runs tested the named
+commits; no historical run was substituted.
+
+Toolkit source-scoped evidence commit `bc7f5faf5ab6822698872b819cdbba0a4119585f`
+was pushed/synced on `main`; GitHub API confirmed zero workflows, zero statuses
+and zero check runs. Both plugin branches match their remote default `master`;
+toolkit `main` matches its default. All three working trees were clean/synced.
+Only source-scoped evidence was registered; historical whole-plugin rows remain
+unchanged. No runtime, wiring, actual WordPress/database/user state, grant,
+activation, rollback, version, package, release, tag or deployment changed.
+
+This receipt-only follow-up contains no executable changes. Its final exact-head
+CI is required before handoff and will be reported there without recursively
+committing another receipt. No additional implementation milestone is opened.
+
 ## Proof limits and next gate
 
 These tests prove deterministic first-party parsing, consistency, decision
