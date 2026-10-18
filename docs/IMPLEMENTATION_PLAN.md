@@ -10,6 +10,27 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed Registration and Reserved Intent Native Integration Design
+
+Approved R3 **repository-only/design-only**, owned by companion dashboard
+`docs/V2_3_CLOSED_REGISTRATION_RESERVED_INTENT_DESIGN.md`. Excluded dashboard
+`262315397f98926c059e1fb591a6b574203f9ad7`, uploader
+`f010f40c06a29d80fdf2a92c1d41aa62f4d6f250`. New proposed closed-proof schema-2
+domain, trusted once-reserved identities, exact actor/context/purpose provenance,
+own pending reservation and separately authorized all-ten historical observation
+defined; schema-1 synthetic scheduled data/checkpoint remains unchanged. Unknown
+ack cannot cause replay, remint, cancellation or fabricated durable state. No
+registration/effect permission is inferred from schema-8/null grant or a receipt.
+
+Implementation-plan progress: the next registration/reservation/recovery trust
+boundary is concrete, not implemented. No runtime/schema/version/site/SQL/fixture/
+user/options/cron, production wiring, grant/activation/cancellation/rollback or
+package/release/deploy change; owning design records QA/CI and proof limits.
+**Recommended next gated slice: local-only V2.3 Closed Registration and Reserved
+Intent Contract Safety Foundation**, dormant test-loaded in-memory codec/bounded
+plans/lookup and adversarial tests only. Actual UUID/auth construction, storage,
+fixtures and execution remain disabled; new contract implementation needs approval.
+
 ### V2.3 Closed Scan-Effect Ledger Transaction Foundation and Owned Failure Proof
 
 Approved R3 **Plugin Tester local-only**, continuing confirmed owned three-table
