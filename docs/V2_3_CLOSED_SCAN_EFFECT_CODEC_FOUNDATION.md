@@ -83,7 +83,7 @@ without an intermediate approval request. These are not whole-plugin reviews.
 | 04 WP Best Practices | No deprecated calls, hooks, queries, options/transients writes, meta, AJAX/REST, assets or public paths added. Prefixes, ABSPATH, PHP 7.4 preserved. | Mechanical WPCS fixes applied; full lint passes 183 files. Existing PHPCompatibility functionWhitelist configuration deprecation is disclosed, not suppressed. No WordPress API shim offered as runtime proof. |
 | 06 Performance | No queries, network, cache, assets, background processing or eager production loading. Byte, node, depth, role/count and proposal caps bound work. Nested dedup at most 64 proposals against bounded 128-record maps. | No updates needed. See resource limits below; no unnecessary caching, dependency, optimization benchmark or native memory claim. |
 | 07 Edge Cases | F1 requeue without failed-record provenance; F2 root enrollment relocation; capacity, malformed encoding, pending/terminal ambiguity, duplicate/path/WPvivid and stale tuple cases. | F1/F2 fixed; all mapped to permanent pure regressions in 07A. Real concurrency, WordPress variations/permissions, service/file/deletion/browser behavior are outside this pure boundary, not verified. |
-| 07A Adversarial Test-Suite | Baseline 18 tests / 225 assertions after F1, no skips. Narrow pure layer; no mocks of these units. Four added high-value limit/state/resource groups plus F2 regression. No same-layer redundancy justified removal. | Final 23 / 259; related 103 / 1231, no skips. Nine bounded assertion-killed/restored controls below. Full pushed-head PHP matrix required before final Clean/checklist completion. No tests/assertions removed, weakened or skipped; no artificial active/success grant added. |
+| 07A Adversarial Test-Suite | Baseline 18 tests / 225 assertions after F1, no skips. Narrow pure layer; no mocks of these units. Four added high-value limit/state/resource groups plus F2 regression. No same-layer redundancy justified removal. | Final status Clean, source-scoped: 23 / 259; related 103 / 1231, no skips. Nine bounded assertion-killed/restored controls below. Full pushed-head PHP matrix passes, receipts below. No tests/assertions removed, weakened or skipped; no artificial active/success grant added. |
 | Feature Security (final focused gate) | Strict types/keys/encoding/caps instead of lossy sanitation; no request ingress/output/SQL/file effect/authorization handle. Closed data cannot authorize an operation. | No outstanding source-scoped issue after F1/F2. Both defects have permanent regression coverage; actual authentication/nonces/storage remain separate runtime handoffs. This is not prompt 13 or whole-plugin release security. |
 
 ### Confirmed defects and red-to-green evidence
@@ -162,8 +162,9 @@ php vendor/bin/phpunit --do-not-cache-result --filter 'ClosedScanEffectLedgerTes
 ```
 
 Full uploader suites run on exact pushed-head Quality CI (PHP 7.4/8.3), not claimed
-from the local filtered run. Publication receipts appended after success. Final
-07A status stays pending full verification until then. No package/release/deploy.
+from the local filtered run. Both passed; source-scoped 07A final status **Clean**,
+without a genuine WordPress/native or whole-plugin readiness inference.
+No package/release/deploy.
 
 No actual readers, cache calls, storage/fixture/site/user/database operations,
 production wiring, credentials, grants, activation, cancellation or rollback.
@@ -193,3 +194,22 @@ untouched/disabled. This gate is not approval for scan effects or an active gran
 Full canonical pre-release remains reserved for the next coherent release
 candidate, before packaging/publishing any plugin containing this work. Historical
 whole-plugin readiness rows are not refreshed by these source-scoped reviews.
+
+## Exact pushed-head CI receipts
+
+Implementation head `83ccb4ff2f849edac0ef722c2c1e17b190833b19` passes
+[Quality 39151344560](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39151344560):
+PHP 7.4 and 8.3 each **1426 tests / 12740 assertions**, no skips, failures, warnings,
+risky or incomplete tests; Node/build/audit and generated-asset verification pass.
+GitHub's Ubuntu-label migration advisory is informational, not a test warning.
+
+Dashboard companion documentation head
+`e867c6d256938d4c20a2f4885904fc9c566c1f34` passes
+[CI 39151352030](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39151352030):
+PHP 7.4 and 8.3 each **299 / 1430**, no skips, plus lint/structure/build/manifest/
+audits. The two local Windows skips are not hidden by these Linux results.
+
+The toolkit checklist receives a source-scoped addendum only; zero configured
+toolkit workflows means CI N/A, not passing. This receipt-only follow-up is pushed
+and its own final exact-head CI independently checked at handoff; it does not use
+an earlier-head result as a substitute. No source/test changes follow these receipts.
