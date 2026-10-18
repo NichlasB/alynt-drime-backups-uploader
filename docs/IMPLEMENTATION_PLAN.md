@@ -10,6 +10,28 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed Scan-Effect Ledger and Fixed Target Codec Safety Foundation
+
+Approved R3 repository-only, dormant/test-loaded **in-memory only**. The
+[owning source-scoped record](V2_3_CLOSED_SCAN_EFFECT_CODEC_FOUNDATION.md) covers
+excluded uploader base `a73f558969af5c397862b03ae38cbb00fbab4fd7`. Fixed ten-row
+tuple manifest, closed-only ledger/receipt/reserve grammar and two producer snapshot
+plus four queue typed byte deltas are implemented without readers or write handles.
+Untouched spans survive; schema-8/null grant, original parser/settings codec and
+native two-row owners remain unchanged. F1 failed-record requeue and F2 enrollment
+context binding fixed with red-to-green regressions. New pure tests **23 / 259**,
+related **103 / 1231**, nine assertion-killed/restored controls; canonical focused
+review and exact-head CI receipts belong to the record. No real native proof.
+
+Implementation-plan progress: the fixed manifest/ledger/codec item advances from
+design to bounded non-authorizing data foundation. No actual reader/cache/storage/
+fixture/site/database operation, production wiring, grant/activation/cancellation/
+rollback, version, package/release/deploy change. **Recommended next gated slice:
+Plugin Tester local-only V2.3 Fixed Scan-Effect Manifest and Closed Target Observation
+Proof**: dormant fixed native read-only observer plus owned disposable ten-row
+fixtures/cleanup, after exact target/scope confirmation; existing application state
+and actual effect execution remain untouched. Stop at that native/fixture gate.
+
 ### V2.3 Native Scan-Effect Storage and Participant Integration Design
 
 Approved R3 repository-only **design-only**, owned by companion dashboard
