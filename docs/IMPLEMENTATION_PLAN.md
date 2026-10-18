@@ -10,6 +10,38 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Native Paired Disable Completion and Locked Receipt Resolution Proof
+
+Approved R3 Plugin Tester local-only milestone; disposable safety **and settings**
+fixture writes/cleanup only. [Owning source-scoped record](V2_3_NATIVE_PAIRED_COMPLETION_PROOF.md)
+uses excluded uploader base `0f42ad4ef8fa14141f14105440c25733322d5af8`.
+The dormant owner privately mints and consumes a continuation only after confirmed
+closed begin, readback, renewed auth and close. Original IDs/deadlines remain;
+one native pair transaction locks safety/settings in order, compares post-begin
+tuples and performs binary exact CAS/readback/acknowledged commit. Separately
+authenticated receipt resolution locks both rows before interpreting absence,
+performs no writes and distinguishes historical completion from current bytes.
+No public execution API, registration or production loading changes.
+
+Genuine owned proof **335 checks / 11 groups**, including successful pair/receipt,
+half-pair rollback, owned disconnect, real in-flight/settings barrier contention,
+revocation before reads/after commit, exact CAS and original budget. Six unique
+mutants assertion-killed/restored; all fixtures removed and **77 application-table
+checksums unchanged**. Existing closed begin **169 / 12**, observer **122 / eight**
+and core guard **266 / eleven** rerun. Targeted **259 / 2457**, no skips; WPCS 176
+files/build/runner/audits pass. Exact final-head full CI is required and recorded
+in the owning report; targeted tests do not substitute for it. Missing COMMIT-ack
+is explicitly protocol simulation, not genuine wire-loss/crash durability proof.
+
+Implementation-plan progress: native paired storage and locked resolution now
+have owned physical evidence; cache convergence and effective scan-stop/lifecycle
+admission remain gated. Existing application state/users/options/cron, wiring,
+grants, activation and schedule rollback remain untouched/disabled. No release,
+package or deploy. **Recommended next gated slice: local-only V2.3 Cache
+Convergence and Effective Scan-Stop Lifecycle Admission Integration Design**,
+mapping caches/all writers/producers/consumers/unknown-command and old-binary
+boundaries before any runtime integration approval.
+
 ### V2.3 Native Closed-Begin Transaction Foundation and Owned Failure Proof
 
 Approved R3 Plugin Tester local-only milestone, with runtime writes restricted

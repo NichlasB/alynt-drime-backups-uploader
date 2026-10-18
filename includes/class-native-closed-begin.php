@@ -1,6 +1,6 @@
 <?php
 /**
- * Dormant fixed native safety-row begin, with no public execution entry point.
+ * Dormant fixed native closed writer, with no public execution entry point.
  *
  * @package Alynt_Drime_Backups_Uploader
  */
@@ -12,6 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/class-real-closed-writer-native-observer.php';
 require_once __DIR__ . '/trait-native-closed-begin-storage.php';
 require_once __DIR__ . '/trait-native-closed-begin-session.php';
+require_once __DIR__ . '/trait-native-paired-completion.php';
+require_once __DIR__ . '/trait-native-receipt-resolution.php';
 
 /** Test-loaded only; private visibility is not a hostile same-process sandbox. */
 final class Alynt_Drime_Backups_Uploader_Native_Closed_Begin {
@@ -19,6 +21,8 @@ final class Alynt_Drime_Backups_Uploader_Native_Closed_Begin {
 	use Alynt_Drime_Backups_Uploader_Native_Observer_Session;
 	use Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Storage;
 	use Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session;
+	use Alynt_Drime_Backups_Uploader_Native_Paired_Completion;
+	use Alynt_Drime_Backups_Uploader_Native_Receipt_Resolution;
 	use Alynt_Drime_Backups_Uploader_Closed_Writer_Contract_Privacy;
 
 	/**
@@ -64,11 +68,17 @@ final class Alynt_Drime_Backups_Uploader_Native_Closed_Begin {
 	 */
 	private $protected_reads = 0;
 	/**
-	 * Private safety-update attempts only.
+	 * Private UPDATE attempts in the current owned transaction.
 	 *
 	 * @var int
 	 */
 	private $writes = 0;
+	/**
+	 * Private single-use facts minted only after confirmed begin and fresh auth.
+	 *
+	 * @var array|null
+	 */
+	private $continuation;
 
 	/** Zero IO, no providers or handles accepted. */
 	private function __construct() {}
@@ -145,7 +155,13 @@ final class Alynt_Drime_Backups_Uploader_Native_Closed_Begin {
 				return false; // Acknowledged commit remains historical fact, never replay.
 			}
 			$this->finish();
-			return 'committed' === $this->phase && $this->budget( $e );
+			if ( 'committed' !== $this->phase || ! $this->budget( $e ) ) {
+				return false;
+			}
+			$a['value']         = $raw;
+			$a['octets']        = (string) strlen( $raw );
+			$this->continuation = compact( 'frame', 'e', 'a', 'b', 'auth', 'before', 'cookie', 'actor', 'f', 'action' );
+			return true;
 		} catch ( Throwable $error ) {
 			return false;
 		} finally {
