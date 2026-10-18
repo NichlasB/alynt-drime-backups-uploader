@@ -1,7 +1,7 @@
 <?php
 /** Native full-core worker, isolated before core bootstrap; not a site endpoint. */
 if ( 'cli' !== PHP_SAPI || ! in_array( count( $argv ), array( 5, 6 ), true ) ) exit( 1 );
-$proof = $argv[5] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation' ), true ) ) exit( 1 );
+$proof = $argv[5] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation', 'native-scan-ledger' ), true ) ) exit( 1 );
 $root = realpath( $argv[1] );
 if ( ! $root || $root !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || ! ctype_digit( $argv[2] ) || ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[3] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[4] ) ) exit( 1 );
 require __DIR__ . '/fixed-core-proof-storage.php';
@@ -54,6 +54,7 @@ try {
         require __DIR__ . '/native-observer-proof-fixtures.php';
         if ( 'native-observation' === $proof ) { require __DIR__ . '/native-observer-proof-cases.php'; alynt_native_cases(); }
         elseif ( 'native-scan-observation' === $proof ) { require __DIR__ . '/native-scan-proof-fixtures.php'; require __DIR__ . '/native-scan-proof-cases.php'; alynt_scan_cases(); }
+        elseif ( 'native-scan-ledger' === $proof ) { require __DIR__ . '/native-scan-proof-fixtures.php'; require __DIR__ . '/native-scan-ledger-fixtures.php'; require __DIR__ . '/native-scan-ledger-cases.php'; alynt_scan_ledger_cases(); }
         elseif ( 'native-closed-begin' === $proof ) { require __DIR__ . '/native-closed-begin-proof-fixtures.php'; require __DIR__ . '/native-closed-begin-proof-cases.php'; alynt_native_begin_cases(); }
         else { require __DIR__ . '/native-paired-proof-fixtures.php'; require __DIR__ . '/native-paired-proof-cases.php'; alynt_native_pair_cases(); }
     }

@@ -10,6 +10,30 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed Scan-Effect Ledger Transaction Foundation and Owned Failure Proof
+
+Approved R3 **Plugin Tester local-only**, continuing confirmed owned three-table
+fixtures; native writes confined to the ledger row. The
+[owning source-scoped record](V2_3_NATIVE_SCAN_LEDGER_TRANSACTION_PROOF.md) covers
+excluded uploader `c86cea98e5a0e2f9f5bbc1396b4e08b7f7591a2f`. Separate strict
+nonce/full-frame intent, dormant one-shot private owner, all-ten ordered locks,
+exact ledger-only CAS/full readback and acknowledged commit/rollback-or-poison.
+Conservative successor increments only closed ledger revision, retaining all
+history/reserves; no actual registration, new identities or consent. F1 encoding
+and F2 exact request-bound regressions fixed; pure/API **7 / 60**, related
+**44 / 500**; genuine **740 / 13**,
+guard **266 / 11**, observer **245 / 11**, ten killed/restored controls. All
+**77 application-table checksums unchanged**, every owned fixture removed.
+
+Implementation-plan progress: native transaction/ledger checkpoint boundary now
+proved, not effect execution/physical scan-stop. Owning record holds focused
+canonical reviews, exact QA/CI and limits. No application/snapshot/queue/wiring/
+grant/activation/cancellation/rollback or release/package/deploy change.
+**Recommended next gated slice: local-only V2.3 Closed Registration and Reserved
+Intent Native Integration Design**, design-only trusted identities, closed
+registration/reservation provenance and unknown-outcome protocol; no storage/site
+operations or execution. Explicit approval for this new trust contract required.
+
 ### V2.3 Fixed Scan-Effect Manifest and Closed Target Observation Proof
 
 Approved R3 **Plugin Tester local-only**, with exact target and three owned
