@@ -10,6 +10,29 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Cache Convergence and Effective Scan-Stop Admission Integration Design
+
+Approved R3 local-only **design-only**, owned by companion dashboard
+`docs/V2_3_CACHE_CONVERGENCE_SCAN_STOP_ADMISSION_DESIGN.md`. Excluded source
+baselines: uploader `b253a60b94b9baa0fc0c38920c633b01b3907b79`, dashboard
+`3ab57b6fe74ca64eb185d813555a4ca28b036e2a`. Actual first-party cache/settings/
+connection writers, scan entry points, producer snapshot writes, queue sinks,
+independent upload effects and lifecycle boundaries are mapped. Prefer raw
+authority, fixed-key post-commit cache hygiene and a future durable registration/
+serialized effect-commit fence. Cached equality is not durable confirmation;
+closed storage, closed ingress, draining and verified quiescence are different.
+Legacy manual scan semantics and upload policy remain unchanged; no authority
+fallback or stale whole-option resurrection is acceptable at future integration.
+
+Implementation-plan progress: the next cache/effective-stop decision is designed,
+not implemented or physically proved. No uploader source/tests/schema/version,
+application state, actual reader/cache/SQL/fixture operation, production wiring,
+grant/activation/rollback, package/release/deploy changes. **Recommended next gated
+slice: local-only V2.3 Scan-Effect Fencing and Post-Commit Cache-Publication Contract
+Safety Foundation**, dormant test-loaded in-memory protocol/observation model only.
+Keep all results non-authorizing and actual reader/cache/storage/fixture/wiring
+operations disabled; native multi-row effect and real worker proof remain separate.
+
 ### V2.3 Native Paired Disable Completion and Locked Receipt Resolution Proof
 
 Approved R3 Plugin Tester local-only milestone; disposable safety **and settings**
