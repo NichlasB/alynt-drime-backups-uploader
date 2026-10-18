@@ -67,7 +67,15 @@ trait Alynt_Drime_Backups_Uploader_Closed_Registration_Data {
 	 * @return bool
 	 */
 	private static function keys( $value, $keys ) {
-		return is_array( $value ) && array_keys( $value ) === $keys;
+		if ( ! is_array( $value ) || count( $value ) !== count( $keys ) || array_keys( $value ) !== $keys ) {
+			return false;
+		}
+		foreach ( $keys as $key ) {
+			if ( null !== ReflectionReference::fromArrayElement( $value, $key ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**

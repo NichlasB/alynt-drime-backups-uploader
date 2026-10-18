@@ -96,7 +96,7 @@ Issues found: 2 design/edge-case gaps; issues fixed: 2; manual decisions: 0.
   revision that could not subsequently reserve. Fixed by two-transition headroom;
   max-7 positive through both transitions / max-6 registration negative.
 - Style fixes applied only to the new files; no old tests or source rewritten.
-- Four runtime files measure 134 / 147 / 196 / 142 total lines, with cohesive
+- Four runtime files measure 134 / 155 / 196 / 142 total lines, with cohesive
   facade/data/record/transition responsibilities. No debugging, stale paths,
   duplicated framework or unnecessary additional splits identified.
   FEATURE_BLOAT_AND_STRUCTURE_REVIEW_PROMPT.md is not needed for this boundary.
@@ -106,8 +106,17 @@ Issues found: 2 design/edge-case gaps; issues fixed: 2; manual decisions: 0.
 
 ### Final FEATURE_SECURITY_REVIEW_PROMPT.md
 
-Final source-scoped review after fixes, lint, targeted regression and restored
-controls: **no outstanding source security finding**. Strict ordered fields and
+ISSUE: **Low, fixed** — reservation inputs could contain PHP alias references
+that disappeared when building the hash input; this violated the strict plain-data
+contract even though it conferred no authentication/storage/execution permission.
+File: `includes/trait-closed-registration-data.php`, exact-map helper. Fixed by
+rejecting referenced elements at every exact-map boundary, before extracting
+reservation command/actor/dependency/before/replacement. Regression disposition:
+permanent RED/GREEN test for all five aliased fields, pure-unit layer; no missing
+coverage handoff to 07A. Full new/related regression and lint rerun after the fix.
+
+Final source-scoped review rerun after that fix and validation:
+**no outstanding source security finding**. Strict ordered fields and
 types, domain/version/genesis/actor/identity/receipt binding, failed-JSON refusal,
 duplicate/canonical JSON checks, UTF-8/byte/node/depth caps, reference/object/float
 rejection, overflow-before-arithmetic and fixed snapshot grammar examined.
@@ -122,12 +131,13 @@ Canonical checklist evidence is a separate source-scoped addendum only.
 ## Non-vacuity and executed validation
 
 - Initial RED: required positive test fails when the contract does not exist.
-- New GREEN: `php vendor/bin/phpunit --do-not-cache-result --filter ClosedRegistration`:
-  **10 tests / 168 assertions**, no skips.
+- Final new GREEN: `php vendor/bin/phpunit --do-not-cache-result --filter ClosedRegistration`:
+  **11 tests / 178 assertions**, no skips, including the reservation-reference fix.
 - Five temporary controls each produced an assertion failure and were immediately
   restored: duplicate identity guard removal; expiry guard removal; missing receipt
   falsely classified as present; effect receipt refusal removed; always-false
-  registration. Restored full new suite **10 / 168**, no source mutation retained.
+  registration. Restored original suite **10 / 168**, no source mutation retained;
+  subsequent reference-shape RED/GREEN raises the final suite to **11 / 178**.
   These are pure behavioral controls, not native/core/physical transaction proof.
 - New positives include changed and no-change snapshot candidates, exact historical
   receipt consistency after mutation expiry, all-false support flags, untouched
@@ -136,7 +146,7 @@ Canonical checklist evidence is a separate source-scoped addendum only.
   actor/purpose, malformed/duplicate/escaped JSON, corrupted receipts, references,
   objects without callbacks, invalid UTF-8, byte/node/depth/overflow and replay.
 - `php vendor/bin/phpunit --do-not-cache-result --filter 'ClosedRegistration|ScanLedgerCheckpoint|ClosedScanEffectLedgerTest|ScanEffectManifestTest|ScanEffectFenceContractTest|ScanTargetCodecTest|ScanObservationContractTest|ScanNativeObserverBoundaryTest|RealClosedWriter|NativeClosedBeginBoundary|NativePairedBoundary'`:
-  **156 tests / 2083 assertions**, no skips. Existing API tests are isolated/stubbed,
+  **157 tests / 2093 assertions**, no skips. Existing API tests are isolated/stubbed,
   not newly executed genuine WordPress authentication or native proof.
 - Uploader `npm run lint`: **196 files**, passes; old PHPCS/PHPCompatibility
   functionWhitelist dependency-config deprecation remains. New files individually
@@ -171,4 +181,20 @@ cancellation and rollback disabled; genuine Plugin Tester proof needs a separate
 confirmed target/fixture scope. This is a new authentication/eligibility boundary,
 not permission to turn the pure actor/digest labels into trusted authority.
 
-Publication and exact-head CI results are recorded after execution; no release.
+Publication receipts (2026-10-18):
+
+- Initial implementation `e48ed259f95d36af64f1189420d0acccf8ef8cd0`:
+  [Quality 39161145324](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39161145324)
+  success. This is BEFORE the reservation-reference correction, not proof of its
+  final head. The correction and updated evidence are separately pushed and their
+  final exact-head PHP 7.4/8.3 plus Node CI is verified at handoff.
+- Initial companion dashboard `ea505b7d08f6ec1c58b25e90c0cc53d77800c72c`:
+  [CI 39161151822](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39161151822)
+  success, PHP 7.4/8.3 each **299 / 1430**, no skips; subsequent count-only docs
+  receive independent final exact-head verification at handoff.
+- Toolkit initial source-scoped addendum `f2b0e73aba8da8c58ab9528679dc6e1cf13e5f79`:
+  no configured workflows/check runs (verified API total zero), CI N/A, not green
+  tests. Updated source-scoped evidence remains separate from historical rows.
+
+No tag, package, release or deployment. Exact final heads/runs are reported at
+handoff rather than attributing earlier CI to later code or documentation.

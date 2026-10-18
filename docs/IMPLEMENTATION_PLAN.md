@@ -20,7 +20,8 @@ identity/receipt binding, bounded register -> own WPvivid intent -> historical
 candidate lookup implemented without storage/authentication or production loading.
 Reconstructable retained dependency digest and two-transition revision headroom
 refine the design; one pending operation only, no terminal/history promotion.
-New **10 / 168**, related **156 / 2083**, five assertion-killed/restored controls;
+New **11 / 178**, related **157 / 2093**, five assertion-killed/restored controls;
+reservation-reference RED/GREEN fix rejects aliases before hash normalization;
 focused canonical Feature Light/final Security source-scoped, owning record has QA.
 
 Implementation-plan progress: executable closed data contracts, not authenticated

@@ -52,6 +52,15 @@ class ClosedRegistrationGrammarTest extends TestCase {
         foreach ( array( 'registration_receipt', 'reservation_receipt' ) as $slot ) $this->assertLessThanOrEqual( 1024, strlen( json_encode( $o[$slot] ) ) );
         $s['ledger_revision'] = PHP_INT_MAX - 6; $p['command']['expected_ledger_revision'] = $s['ledger_revision']; $p['command']['context_digest'] = $c::registration_context( $scope, $p ); $this->assertFalse( $c::register( json_encode( $s ), $scope, $p, PHP_INT_MAX - 300 ) );
     }
+    public function test_reservation_aliases_are_refused_before_hashing_can_erase_reference_shape() {
+        $c = $this->registration_class(); $raw = $this->registered();
+        foreach ( array( 'command', 'actor_id', 'dependency_digest', 'before', 'replacement' ) as $key ) {
+            $p = $this->reserve_proposal( $raw ); $alias = $p[$key]; $p[$key] =& $alias;
+            $this->assertFalse( $c::reserve( $raw, $this->rscope(), $p, 120 ), $key );
+            $this->assertFalse( $c::reservation_context( $this->rproposal()['command']['context_digest'], $p ), $key );
+            unset( $alias, $p );
+        }
+    }
     public function test_dormant_public_api_has_no_writer_nonce_auth_or_execution_surface() {
         $reflection = new ReflectionClass( $this->registration_class() ); $names = array();
         foreach ( $reflection->getMethods( ReflectionMethod::IS_PUBLIC ) as $method ) { $this->assertTrue( $method->isStatic() ); $names[] = $method->getName(); }
