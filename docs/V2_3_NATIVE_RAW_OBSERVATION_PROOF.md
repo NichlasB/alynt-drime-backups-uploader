@@ -201,8 +201,18 @@ a coherent candidate containing this work is packaged/published.
   within the approved dormant boundary. Source-scoped 03/04/07 inventories and
   07A inspection terminate with **No updates needed** after the completed feature
   fixes/controls; historical whole-plugin checklist rows are not refreshed.
-- Exact pushed-head CI: pending publication; record and verify it independently
-  rather than inferring it from targeted or prior-head results.
+- Implementation commit `170dadd5f9753589cf60104a5e9fcfbf218dc3e7` was pushed and
+  passed [exact-head Quality 39136635955](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39136635955):
+  PHP 7.4/8.3 each **1373 tests / 11692 assertions**, no skips; Node build/audit and
+  all three commit-attached checks succeeded. CI only syntax-checks the native
+  proof scripts; genuine WordPress/native SQL evidence is the local proof above.
+- Companion `75c48ca9b185b44b69931d59a35a2c76a99f2086` passed
+  [exact-head CI 39136635214](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39136635214):
+  PHP 7.4/8.3 each **299 / 1430**, no skips, all configured gates green.
+- Toolkit evidence `6ef00fa7da83ded34889ceb1a3b8a4a89a6d6429` was pushed/synced;
+  GitHub reports zero workflows, check runs and statuses, not a toolkit CI pass.
+  The final receipt-only heads require their own exact-head check, reported in
+  the handoff rather than creating an indefinitely recursive evidence commit.
 
 Restore-point Option A/check verified clean uploader master at the exact base,
 checkpoint eligible, using the existing external archive; no new backup, archive,
