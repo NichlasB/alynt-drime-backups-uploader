@@ -30,7 +30,7 @@ class RegistrationConstructionTest extends TestCase {
     }
     public function test_all_ten_dependency_tuples_change_the_private_context_and_scope_changes_refuse() {
         $f = $this->registrationFrame(); mt_srand( 53 ); $first = $this->privateRegistration( $f ); $this->assertIsArray( $first );
-        foreach ( array_keys( $f['rows'] ) as $role ) { $this->registrationOwner = Alynt_Drime_Backups_Uploader_Registration_Request_Owner::create(); $changed = $f; $changed['rows'][$role]['autoload'] = 'off'; mt_srand( 53 ); $r = $this->privateRegistration( $changed ); $this->assertIsArray( $r, $role ); $this->assertNotSame( $first['proposal']['command']['context_digest'], $r['proposal']['command']['context_digest'], $role ); }
+        foreach ( array_keys( $f['rows'] ) as $role ) { $this->registrationOwner = Alynt_Drime_Backups_Uploader_Registration_Request_Owner::create(); $changed = $f; $changed['rows'][$role]['autoload'] = 'off'; mt_srand( 53 ); $r = $this->privateRegistration( $changed ); $this->assertIsArray( $r, $role ); $this->assertNotSame( $first['proposal']['dependency_digest'], $r['proposal']['dependency_digest'], $role . '/clock-independent' ); $this->assertNotSame( $first['proposal']['command']['context_digest'], $r['proposal']['command']['context_digest'], $role ); }
         foreach ( array( 'blog_id' => 2, 'prefix' => 'other_', 'database' => 'other' ) as $key => $value ) { $this->registrationOwner = Alynt_Drime_Backups_Uploader_Registration_Request_Owner::create(); $bad = $f; $bad[$key] = $value; $this->assertFalse( $this->privateRegistration( $bad ), $key ); }
     }
     public function test_denied_authorization_and_post_nonce_revocation_cannot_construct() {

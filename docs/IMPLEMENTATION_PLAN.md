@@ -19,7 +19,7 @@ uploader `20f78f94b795dc6537d1c5bb464b29da27d78dcd`, dashboard
 fixed guarded owner, complete schema-8/settings/schema-2/all-ten eligibility and
 private once-attempted registration construction implemented. No public reader,
 blueprint export or continuation; actual core semantics still need genuine proof.
-New **10 / 251**, related **250 / 2926**, four restored assertion-killed controls;
+New **10 / 261**, related **250 / 2936**, four restored assertion-killed controls;
 canonical Feature Light/final Security source-scoped, owning record has QA/limits.
 
 Implementation-plan progress: executable trusted construction/eligibility boundary,

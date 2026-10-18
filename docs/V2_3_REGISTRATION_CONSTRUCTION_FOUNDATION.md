@@ -75,7 +75,7 @@ existing external September 20 archive; no archive/backup/restore/branch created
 
 Initial positive RED: missing fixed owner fails before implementation.
 Final new `php vendor/bin/phpunit --do-not-cache-result --filter 'RegistrationConstructionTest|RegistrationRequestContractTest'`:
-**10 tests / 251 assertions**, no skips. Private positive blueprint construction
+**10 tests / 261 assertions**, no skips. Private positive blueprint construction
 must pass; an always-unavailable PRIVATE implementation cannot satisfy the suite.
 Public unavailable is intentional, not an artificial auth/storage success path.
 
@@ -83,13 +83,15 @@ Four temporary controls were each ASSERTION-killed and restored: initial auth gu
 removed (identity PRNG position changes before denied auth); full schema-8 validator
 removed (bad grant/chain candidate admitted); post-nonce fresh auth removed (actor
 revocation admitted); private builder always false (positive fails). Final restored
-new suite **10 / 251**. The API-double PRNG discriminator is test-only, not a claim
+new suite **10 / 261** (including later clock-independent dependency assertions).
+The API-double PRNG discriminator is test-only, not a claim
 about genuine WordPress random generation. A first control attempt hit PHPUnit
 child-result closure serialization instead of reporting the assertion; not counted.
 New fixture teardown releases its own memory graph before child-result reporting;
 the corrected behavioral rerun produced the failures above, without test weakening.
 
-Additional positives/negatives cover all ten changed tuple bindings, exact scope,
+Additional positives/negatives cover all ten changed tuple bindings with direct
+dependency-digest assertions independent of UTC rollover, exact scope,
 valid-but-pending schema-8 rejection, actual retained-history/genesis collisions,
 unchanged input frames, original actor and three guards, no nonce before admission,
 separate purpose/actions and every normalized field, exact 4096/4097 encoded body,
@@ -100,7 +102,7 @@ call occurred in these exercised paths (traps record even caught attempts).
 Executed QA on 2026-10-18:
 
 - `php vendor/bin/phpunit --do-not-cache-result --filter 'RegistrationConstructionTest|RegistrationRequestContractTest|ClosedRegistration|FixedCoreRequest|ScanLedgerCheckpoint|ClosedScanEffectLedgerTest|ScanEffectManifestTest|ScanEffectFenceContractTest|ScanTargetCodecTest|ScanObservationContractTest|ScanNativeObserverBoundaryTest|RealClosedWriter|NativeClosedBeginBoundary|NativePairedBoundary'`:
-  **250 tests / 2926 assertions**, no skips; isolated API checks, not genuine WP.
+  **250 tests / 2936 assertions**, no skips; isolated API checks, not genuine WP.
 - Uploader `npm run lint`: **200 files**, clean; existing dependency-config PHPCS/
   PHPCompatibility functionWhitelist deprecation banner remains. New syntax PHP 7.4.
 - `npm run build`, `npm run verify:runner`, `npm run lint:runner`,
@@ -120,7 +122,9 @@ Executed QA on 2026-10-18:
 FEATURE_LIGHT_REVIEW_PROMPT.md: feature scope fixed dormant request/eligibility;
 seven new PHP files and directly reused guard/grammar/model/load boundaries reviewed.
 Risk areas: Other (future authentication/context/data trust); no live/UI/remote/DB
-implementation. Issues found/fixed: one test-support failure-reporting gap above;
+implementation. Issues found/fixed: two test-support gaps: failure reporting above
+and context-only assertions could be confounded by UTC rollover; direct independent
+dependency assertions now protect every tuple. No test weakened. Additional
 mechanical WPCS corrections and bounded-count-before-key traversal completed.
 Manual decisions: zero. Four source files 169 / 148 / 100 / 116 total lines;
 cohesive protocol/owner/eligibility/construction, no stale diagnostics, generic
