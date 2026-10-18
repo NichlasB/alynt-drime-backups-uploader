@@ -145,11 +145,19 @@ and moderate npm audit pass. Exact dashboard head
 [CI 39165073375](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39165073375)
 success, PHP 7.4/8.3 each **299 / 1430**, no skips.
 
-Full uploader suite and final exact pushed-head CI are verified at handoff. The
-genuine proof above runs locally, not in GitHub Actions. No normal tests weakened,
-skipped or deleted. New proof script syntax runs in both CI PHP versions; source
-remains PHP 7.4 compatible. Toolkit `3aded79d17345d6bf35fbdb30e878c09d7d121a0`
-is pushed; GitHub reports zero workflows/check-runs, CI N/A rather than green.
+Full Windows uploader PHPUnit: **1461 tests / 13250 assertions**, four existing
+environment-dependent skips, no failures (11m10s). No tests were changed to create
+those skips. Source commit `58945e0fdb75818f8b6a6ecb4cff1242d9746050`:
+[CI 39165315584](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39165315584)
+success, PHP 7.4/8.3 each **1461 / 13304**, no skips, plus syntax/build/audit gates.
+This receipt-only record update's exact-head CI is checked separately at handoff;
+the named run proves its source commit, not an unexecuted later revision.
+
+The genuine proof above runs locally, not in GitHub Actions. No normal tests
+weakened, skipped or deleted. New proof script syntax runs in both CI PHP versions;
+source remains PHP 7.4 compatible. Toolkit
+`3aded79d17345d6bf35fbdb30e878c09d7d121a0` is pushed; GitHub reports zero
+workflows/check-runs/status contexts, CI N/A rather than green.
 
 ## Implementation-plan progress and next approval boundary
 
