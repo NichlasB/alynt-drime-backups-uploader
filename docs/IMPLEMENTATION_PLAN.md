@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-10-13
+Updated: 2026-10-18
 
 ## Purpose
 
@@ -9,6 +9,23 @@ This document tracks the current implementation state and future roadmap for the
 The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete and is not the focus of this plan except for migration/coexistence notes.
 
 ## Current Stable Baseline
+
+### V2.3 Fixed Raw Observation and Native-Session Admission Contract Foundation
+
+Approved repository-only dormant implementation after the dashboard's raw/native
+integration design. [Owning evidence](V2_3_RAW_OBSERVATION_CONTRACT_FOUNDATION.md)
+records strict bounded JSON/exact rows, private raw/scope/session binding separate
+from context v1, and a non-authorizing single-transaction lifecycle simulation.
+Positive/negative decisions and mutation controls are in-memory only. The fixed
+request owner, bootstrap, existing state/schema/nonce contracts and versions stay
+unchanged; every public request remains unavailable. No native reader/connection,
+SQL, fixture storage, application changes, grants, activation or rollback.
+
+Implementation-plan progress: the raw/lifetime contract foundation advances the
+open V2.3 item; physical observation and session ownership now require the next
+gated **Plugin Tester local-only Fixed Native Raw Observation and Session-Ownership
+Implementation/Proof**, with separately confirmed owned fixture creation/cleanup.
+No paired writer or production wiring is included in that next recommendation.
 
 ### V2.3 Closed-Writer Admission Contract and Provenance Safety Foundation
 

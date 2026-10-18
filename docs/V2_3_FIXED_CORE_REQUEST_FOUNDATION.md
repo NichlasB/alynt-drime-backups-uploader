@@ -1,5 +1,13 @@
 # V2.3 Fixed Genuine-Core Closed-Writer Request Construction Safety Foundation
 
+Current follow-up (2026-10-18): the separately approved dormant
+[Raw Observation Contract Foundation](V2_3_RAW_OBSERVATION_CONTRACT_FOUNDATION.md)
+adds non-authorizing exact-row/private-binding and simulated session contracts.
+This request owner and every public response remain unchanged/unavailable; no
+reader, native connection, SQL, fixture or production wiring is added. Its owning
+record names the next confirmed owned-fixture native observation/session proof
+gate; historical next-gate recommendations below are superseded, not erased.
+
 Current follow-up (2026-10-18): the separately approved native cache compatibility
 fix resolves the strict-false mismatch below using only strict false/null support.
 [Fixed Core Guard Proof](V2_3_FIXED_CORE_GUARD_PROOF.md) now records **266 genuine-
