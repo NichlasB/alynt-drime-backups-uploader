@@ -146,6 +146,23 @@ verified by the exact pushed-head CI, not inferred from the targeted local run.
 Existing genuine guard/observer/closed-begin reruns and exact CI receipts are
 recorded below only after execution.
 
+Executed regression modes: native closed-begin **169 / 12 groups**, planning
+observer **122 / eight**, original genuine core guard **266 / eleven**; all pass
+with all three owned tables removed and all 77 application checksums unchanged.
+These remain distinct evidence layers, not automatic production admission.
+
+Final canonical helper TOTAL counts, same explicit base: owner 255; paired trait
+157; receipt trait 162; supervisor 60; worker 76; pair cases 54; pair failures 107;
+pair fixtures 57; API tests 37. No changed PHP file exceeds 300. No speculative
+split, dependency addition or compatibility-floor change.
+
+Final restored runtime SHA-256: owner
+`79C73A601AA3C50E6264DA9463EAF31D3DB2B26F3BAA0005ADE34EDF5F203566`;
+paired trait `F28245BE886A675478B7415EA6A52A6118AEDE4DE39DD38B5F5828B56CEF98F0`;
+receipt trait `A11E2EAFBF901003EAC66ACA6719C15ED2EEBABA1E5A5B9CC41E45D7BE310CE2`.
+Shared session/storage sources and the production loader/public request owner
+have zero delta from the review base after mutation restoration.
+
 ## Canonical source-scoped review checkpoint
 
 Actual canonical toolkit prompts were read and applied in order. This record
@@ -194,5 +211,22 @@ keep actual application state, wiring, grants, activation and rollback disabled.
 
 ## Publication receipts
 
-Source commits and exact final-head CI/status are recorded after successful
-publication. Earlier-head results do not substitute for the final verified heads.
+Implementation `7ad2dab2b5f8d33790070db24041f13d2d8f590d` is pushed on master.
+Its exact-head [Quality 39143520897](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39143520897)
+passes PHP 7.4 and 8.3, each **1380 tests / 11808 assertions**, no skips,
+plus WPCS/proof syntax/Node/build/runner/audit. Source-scoped 07A Phase 2 status
+is **Clean** on this evidence; local targeted checks alone were not used to claim
+full-suite completion. No new test skips, exclusions or weakened assertions.
+
+Companion dashboard `3ab57b6fe74ca64eb185d813555a4ca28b036e2a` is pushed on
+master; exact-head [CI 39143529323](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39143529323)
+passes both PHP jobs, each **299 / 1430**, no skips. Its local two existing Windows
+skips remain an explicit separate environment limitation.
+
+The final uploader receipt-only head is independently verified after this record
+is pushed; no earlier-head CI substitutes for it. Toolkit receives only the
+source-scoped addendum, preserving historical whole-plugin rows; it has zero
+configured workflows/check runs, not a green CI claim. Final clean/synced heads
+and exact receipt-head CI are reported in the handoff without an endless
+self-referential documentation/CI commit cycle. Existing ubuntu-latest migration
+annotations are informational; no unrelated CI/dependency upgrade is performed.
