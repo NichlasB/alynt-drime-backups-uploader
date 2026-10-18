@@ -44,10 +44,15 @@ can obtain an admission handle from these outputs. Schema-8 receipt domains name
 candidate data roles, not independently authenticated historical events.
 
 The new model uses only the existing contract's **pure typed layout validator**
-and projection's plain-data, strict schema-6 source/reconstruction and canonical
+and projection's strict schema-6 source/reconstruction and canonical
 consistency helpers. It does not call fixture request parsing/actions, fixture
 schema-7 construction, admission callbacks, or fixture continuations. Its new hash
-namespace includes `real_closed_data_version: 1`. Original schema-6 digest and
+namespace includes `real_closed_data_version: 1`. Its own plain-data guard also
+bounds traversal before JSON encoding: 65536 combined nodes, 128 KiB total string
+bytes and depths 0..15, shared across the whole input. Exact encoded state/record
+byte limits still apply afterward. Broad, deeply nested, recursive or oversized
+data cannot trigger serialization callbacks or unbounded traversal/allocation.
+Original schema-6 digest and
 complete frozen legacy data are preserved, never promoted or rewritten.
 
 The parser accepts canonical primitive arrays only, at most 1 MiB, 4096 combined
@@ -76,7 +81,7 @@ Test-first codec selection failed 33/33 before the files existed; initial model
 selection failed 2/2 for the absent data definition. These were missing-feature
 checks, not a claim of an existing production regression. After implementation,
 the focused `php vendor/bin/phpunit --do-not-cache-result --filter
-'RealClosedWriter|SerializedSettings'` passed **98 tests / 1089 assertions**, no
+'RealClosedWriter|SerializedSettings'` passed **99 tests / 1103 assertions**, no
 skips. One negative-test sentinel originally equaled the existing binding and was
 corrected; no existing tests or acceptance thresholds were weakened.
 
@@ -91,7 +96,7 @@ maximal clocks/counters and exact parser byte/depth/node boundaries. An explicit
 These scoped source/test reviews are not a full pre-release/security suite or an
 independent real authentication, SQL, cache, lifecycle or concurrency proof.
 
-PHP syntax passed all 14 new PHP files. New runtime files are 46..204 lines and
+PHP syntax passed all 14 new PHP files. New runtime files are 46..247 lines and
 the test helper is 36 lines, within the 300/150 structure limits. Full uploader
 PHPCS passed **161 files** with the existing nonfatal PHPCompatibility
 `functionWhitelist` deprecation. Build, deterministic runner verification, runner
@@ -99,7 +104,22 @@ syntax and all three Node development-tool tests passed. Strict Composer validat
 and Composer/npm (`--audit-level=moderate`) audits passed with no vulnerabilities.
 Dashboard full PHPUnit passed **299 / 1423**, two existing Windows skips; PHPCS
 passed 138 files, and structure/build/strict Composer validation and both audits
-passed. The uploader full suite and publication results remain pending.
+passed. The final focused selection includes the traversal guard; exact-head
+full-suite CI is required before completion.
+
+## Initial publication evidence
+
+Implementation `08420f74ef04fb7f9c76624f0b0821ced599c493` is pushed to
+`origin/master`; [Quality 39123850277](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39123850277)
+passed PHP 7.4/8.3, each **1219 tests / 10440 assertions**, no skips, plus PHPCS,
+runner/proof syntax, Node build/audit/development tests and generated-asset checks.
+Dashboard plan commit `9a63c40f6074f811a576f8033049e0f051533782` passed
+[CI 39123856687](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39123856687),
+each PHP job **299 / 1430**, no skips, with all build/structure/lint/audit gates.
+These counts precede the final additional traversal-budget test; the final
+focused selection above includes it. Final exact-head CI is required for the
+traversal guard and verification-record follow-up before handoff; no recursive
+receipt commit or site operation is necessary.
 
 ## Next explicit gate
 

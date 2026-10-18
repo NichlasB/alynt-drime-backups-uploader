@@ -33,4 +33,11 @@ class RealClosedWriterIsolationTest extends TestCase {
 			$bad = $r; $bad[$key] = $value; $this->assertFalse( Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data::receipt( $bad, $this->site ) );
 		}
 	}
+	public function test_broad_and_oversized_data_are_bounded_before_hashing_or_source_projection() {
+		foreach ( array( array_fill( 0, 65536, null ), array( str_repeat( 'x', 131073 ) ) ) as $bad ) {
+			$this->assertFalse( Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data::plain( $bad ) ); $this->assertFalse( Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data::hash( $bad ) );
+			$bad['schema_version'] = 6; $this->assertFalse( Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Model::supported( $bad, $this->site ) );
+		}
+		$this->assertTrue( Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data::plain( array( str_repeat( 'x', 131072 ) ) ) );
+	}
 }

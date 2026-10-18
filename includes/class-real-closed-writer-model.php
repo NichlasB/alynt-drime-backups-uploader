@@ -25,6 +25,9 @@ final class Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Model {
 	 * @return bool
 	 */
 	public static function supported( array $s, $site ) {
+		if ( ! Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data::plain( $s ) ) {
+			return false;
+		}
 		return 6 === ( $s['schema_version'] ?? null ) ? Alynt_Drime_Backups_Uploader_Closed_Writer_Admission_Projection::source( $s, $site ) : self::valid( $s, $site );
 	}
 

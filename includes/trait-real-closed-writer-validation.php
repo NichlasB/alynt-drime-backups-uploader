@@ -19,7 +19,7 @@ trait Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Validation {
 	 * @return bool
 	 */
 	public static function valid( array $s, $site ) {
-		if ( ! Alynt_Drime_Backups_Uploader_Closed_Writer_Admission_Projection::plain( $s ) || ! self::keys( $s, array( 'schema_version', 'generation', 'enrollment_binding', 'schedule_revision', 'claims', 'authority', 'dispatch', 'lifecycle', 'legacy_writer', 'writer' ) ) || 8 !== $s['schema_version'] || ! is_array( $s['writer'] ) || ! is_array( $s['lifecycle'] ) || ! is_array( $s['legacy_writer'] ) ) {
+		if ( ! Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data::plain( $s ) || ! self::keys( $s, array( 'schema_version', 'generation', 'enrollment_binding', 'schedule_revision', 'claims', 'authority', 'dispatch', 'lifecycle', 'legacy_writer', 'writer' ) ) || 8 !== $s['schema_version'] || ! is_array( $s['writer'] ) || ! is_array( $s['lifecycle'] ) || ! is_array( $s['legacy_writer'] ) ) {
 			return false;
 		}
 		$w = $s['writer'];

@@ -16,6 +16,49 @@ final class Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data {
 	const INTERNAL = 'internal_closed_writer_v1';
 
 	/**
+	 * Bound array traversal before encoding; no serialization callbacks.
+	 *
+	 * @param mixed $value Private candidate data.
+	 * @return bool
+	 */
+	public static function plain( $value ) {
+		$nodes = 65536;
+		$bytes = 131072;
+		return self::bounded( $value, 0, $nodes, $bytes );
+	}
+
+	/**
+	 * Shared key/value and string-byte budgets, independent of array breadth.
+	 * JSON byte/depth validation remains mandatory after this cheap guard.
+	 *
+	 * @param mixed $value Candidate.
+	 * @param int   $depth Depth.
+	 * @param int   $nodes Remaining node budget.
+	 * @param int   $bytes Remaining string bytes.
+	 * @return bool
+	 */
+	private static function bounded( $value, $depth, &$nodes, &$bytes ) {
+		if ( $depth > 15 || --$nodes < 0 || is_object( $value ) || is_resource( $value ) || is_float( $value ) ) {
+			return false;
+		}
+		if ( is_array( $value ) ) {
+			if ( count( $value ) > intdiv( $nodes, 2 ) ) {
+				return false;
+			}
+			foreach ( $value as $key => $child ) {
+				if ( ! self::bounded( $key, $depth + 1, $nodes, $bytes ) || ! self::bounded( $child, $depth + 1, $nodes, $bytes ) ) {
+					return false;
+				}
+			}
+		}
+		if ( is_string( $value ) ) {
+			$bytes -= strlen( $value );
+			return $bytes >= 0 && 1 === preg_match( '//u', $value );
+		}
+		return true;
+	}
+
+	/**
 	 * Exact field set, independent of map order.
 	 *
 	 * @param array $value Map.
@@ -43,7 +86,7 @@ final class Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data {
 	 * @return string|false
 	 */
 	public static function hash( array $value ) {
-		if ( ! Alynt_Drime_Backups_Uploader_Closed_Writer_Admission_Projection::plain( $value ) ) {
+		if ( ! self::plain( $value ) ) {
 			return false;
 		}
 		return Alynt_Drime_Backups_Uploader_Closed_Writer_Admission_Projection::hash(
@@ -64,7 +107,7 @@ final class Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data {
 	 * @return array|false
 	 */
 	public static function record( $purpose, array $e, $now, $reserved = null ) {
-		if ( ! Alynt_Drime_Backups_Uploader_Closed_Writer_Admission_Projection::plain( $e ) || ! is_int( $e['expected_generation'] ?? null ) || $e['expected_generation'] < 0 || $e['expected_generation'] >= PHP_INT_MAX || ! is_int( $now ) || ! in_array( $purpose, array( 'upgrade_closed', 'begin_disable', 'abandon_closed', 'complete_disable' ), true ) ) {
+		if ( ! self::plain( $e ) || ! is_int( $e['expected_generation'] ?? null ) || $e['expected_generation'] < 0 || $e['expected_generation'] >= PHP_INT_MAX || ! is_int( $now ) || ! in_array( $purpose, array( 'upgrade_closed', 'begin_disable', 'abandon_closed', 'complete_disable' ), true ) ) {
 			return false;
 		}
 		$domain = 'complete_disable' === $purpose ? self::INTERNAL : self::AUTH;
@@ -93,7 +136,7 @@ final class Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Data {
 	 * @return bool
 	 */
 	public static function receipt( $r, $site ) {
-		if ( ! is_array( $r ) || ! Alynt_Drime_Backups_Uploader_Closed_Writer_Admission_Projection::plain( $r ) || ! self::keys( $r, array( 'domain', 'purpose', 'command', 'request_digest', 'result_generation', 'committed_at', 'completion_id' ) ) || ! is_array( $r['command'] ) ) {
+		if ( ! is_array( $r ) || ! self::plain( $r ) || ! self::keys( $r, array( 'domain', 'purpose', 'command', 'request_digest', 'result_generation', 'committed_at', 'completion_id' ) ) || ! is_array( $r['command'] ) ) {
 			return false;
 		}
 		$e = $r['command'];
