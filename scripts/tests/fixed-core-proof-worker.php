@@ -1,7 +1,7 @@
 <?php
 /** Native full-core worker, isolated before core bootstrap; not a site endpoint. */
 if ( 'cli' !== PHP_SAPI || ! in_array( count( $argv ), array( 5, 6 ), true ) ) exit( 1 );
-$proof = $argv[5] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation' ), true ) ) exit( 1 );
+$proof = $argv[5] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin' ), true ) ) exit( 1 );
 $root = realpath( $argv[1] );
 if ( ! $root || $root !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || ! ctype_digit( $argv[2] ) || ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[3] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[4] ) ) exit( 1 );
 require __DIR__ . '/fixed-core-proof-storage.php';
@@ -50,7 +50,11 @@ try {
     require __DIR__ . '/fixed-core-proof-fixtures.php'; require __DIR__ . '/fixed-core-proof-cases.php'; require __DIR__ . '/fixed-core-proof-denials.php';
     alynt_core_seed();
     if ( 'guard' === $proof ) { alynt_core_cases(); alynt_core_denials(); }
-    else { require __DIR__ . '/native-observer-proof-fixtures.php'; require __DIR__ . '/native-observer-proof-cases.php'; alynt_native_cases(); }
+    else {
+        require __DIR__ . '/native-observer-proof-fixtures.php';
+        if ( 'native-observation' === $proof ) { require __DIR__ . '/native-observer-proof-cases.php'; alynt_native_cases(); }
+        else { require __DIR__ . '/native-closed-begin-proof-fixtures.php'; require __DIR__ . '/native-closed-begin-proof-cases.php'; alynt_native_begin_cases(); }
+    }
     alynt_core_check( 0 === $GLOBALS['alynt_core_proof']['protected_reads'] && 0 === $GLOBALS['alynt_core_proof']['denied_io'] && array() === headers_list(), 'Protected IO or browser headers escaped.' );
     foreach ( get_included_files() as $file ) alynt_core_check( 0 !== strpos( str_replace( '\\', '/', $file ), str_replace( '\\', '/', WP_CONTENT_DIR ) . '/' ), 'Site content code was loaded.' );
     $receipt = array( 'passed' => true, 'proof_mode' => $proof, 'wordpress_version' => $wp_version, 'php_version' => PHP_VERSION, 'native_cache_flag_type' => $native_cache_flag_type, 'native_full_core' => true, 'site_plugins_and_themes_loaded' => false, 'checks' => $GLOBALS['alynt_core_proof']['checks'], 'cases' => $GLOBALS['alynt_core_proof']['cases'], 'protected_option_api_reads' => 0, 'public_storage_dispatch_execution' => false, 'browser_headers_emitted' => false );

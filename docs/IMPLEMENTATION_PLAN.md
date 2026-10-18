@@ -10,6 +10,40 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Native Closed-Begin Transaction Foundation and Owned Failure Proof
+
+Approved R3 Plugin Tester local-only milestone, with runtime writes restricted
+to disposable owned safety rows. [Owning source-scoped proof/review record](V2_3_NATIVE_CLOSED_BEGIN_PROOF.md)
+uses explicit uploader base `d24d738e7090fbecb9088288c23fa53abcf77719`.
+The dormant fixed owner has no public execution API; it uses a fresh privately
+owned native session, schema/metadata revalidation under locks, safety-first then
+settings locking, exact tuple comparison and safety-only binary CAS. One original
+deadline/UUID, one attempt, acknowledged commit/readback/close, confirmed rollback
+or poisoned unknown outcome; no automatic replay or public admission.
+
+Genuine owned proof passes **169 checks / 12 groups**, with a positive committed
+closed begin, real row locks/timeout, post-update rollback, exact CAS negatives,
+owned disconnect and post-commit revocation. Lost COMMIT acknowledgement remains
+explicitly simulated, not a real wire-loss proof. Eight final-source mutants
+are assertion-killed and restored. The transitive legacy-validator WordPress-hook
+finding has genuine RED/GREEN coverage: preparation now runs before BEGIN/final
+authorization, and exact already-validated tuples are compared under locks.
+All final fixtures are removed; all **77 application-table checksums unchanged**.
+Unchanged native observation **122 / eight** and core guard **266 / eleven** rerun.
+Targeted tests pass **256 / 2390**, no skips. Full/CI publication receipts are
+recorded in the owning report after execution, not inferred here.
+
+Implementation-plan progress: native closed-begin ownership/storage moves from
+design to physical safety-row proof. Settings writes, paired completion, locked
+receipt resolution, cache convergence and effective scan stop remain gated.
+No existing application state/users/options/cron, production wiring, grants,
+activation, schedule rollback, release/package/deploy or live changes.
+**Recommended next gated slice: Plugin Tester local-only V2.3 Fixed Native Paired
+Disable Completion and Locked Receipt Resolution Foundation/Owned Atomicity
+Proof**, with explicit owned safety **and settings** row write/cleanup approval
+and a private one-use continuation; keep actual application state/wiring/execution
+disabled. The present safety-row-only approval does not cover that next boundary.
+
 ### V2.3 Fixed Native Raw Observation and Session-Ownership Proof
 
 Approved R3 Plugin Tester local-only milestone with owned disposable auth/options
