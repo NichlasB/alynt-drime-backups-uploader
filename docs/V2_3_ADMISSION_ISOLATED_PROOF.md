@@ -145,3 +145,24 @@ Windows skips, in **12:34.169**. This includes the complete unchanged 105-test
 admission foundation; the separate native/core harness is not counted as PHPUnit
 tests. Final staged source/ownership/whitespace review passed. Exact-head CI and
 publication results follow only after their successful execution.
+
+## Publication receipt
+
+Proof `7578a4d8b0360105658967e15aa2a2e5c016a233` is committed/pushed to
+`origin/master`. Exact-commit [Quality 39119232692](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39119232692)
+passed PHP 7.4/8.3, each **1121 tests / 9351 assertions**, no skips, plus full
+PHPCS, runner/developer-proof syntax and Node build/developer-tool/deterministic
+asset/audit gates. The logs confirm syntax coverage of all nine new proof files
+on both PHP versions; actual-core/SQL execution remains the separately approved
+local proof, not a CI action.
+
+Dashboard plan `907a409b7358a13e54bd8dbec5ee006ac864add9` passed exact-commit
+[CI 39119242469](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39119242469),
+PHP 7.4/8.3 each **299 / 1430**, no skips, with all other quality/build/audit jobs
+green. Both repositories were clean/synced after publication. This completes the
+approved integrated fixture admission/storage proof and its publication gates;
+the exact next decision remains the local-only trusted real-domain construction
+and provenance integration design above. Actual site state, grants, wiring,
+activation, rollback and versions stay unchanged; no release/deploy occurred.
+This receipt-only follow-up requires final exact-head CI before handoff; no
+recursive receipt commit or additional site proof is needed.
