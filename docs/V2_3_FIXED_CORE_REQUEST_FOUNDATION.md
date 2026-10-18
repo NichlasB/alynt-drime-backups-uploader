@@ -140,8 +140,8 @@ Full uploader PHPCS passed **164 files** (existing nonfatal PHPCompatibility
 `functionWhitelist` deprecation); the final three runtime files were also checked
 after the scoped review changes. Dashboard full PHPUnit passed **299 / 1423** with
 two existing Windows skips, PHPCS passed 138 files, and structure/build/strict
-Composer validation/zero-advisory Composer/npm audits passed. The uploader full
-suite and publication results will be recorded only after successful execution.
+Composer validation/zero-advisory Composer/npm audits passed. Exact-commit full
+suite/publication results are recorded below after successful execution.
 This is not a full pre-release/security suite, genuine-core
 authentication proof, native SQL/cache proof, or production acceptance.
 
@@ -159,3 +159,27 @@ semantics, actor/scope changes, expiry and restoration, keeping actual users/opt
 cron untouched and storage admission, grants, production wiring, activation and
 rollback disabled. Current unit shims cannot replace that proof; a raw observation
 provider and native transactional backend remain later explicit integration gates.
+Fixture creation/cleanup requires explicit approval for those owned disposable
+rows/tables only; no actual site users, options, cron, settings/safety state or
+application-writer changes are part of the proposed proof.
+
+## Publication receipt
+
+Implementation `b988fdcee6989213310c0352e153ee85c428325d` is committed/pushed to
+`origin/master`; exact-commit [Quality 39125400334](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39125400334)
+passed PHP 7.4/8.3, each **1289 tests / 10924 assertions**, no skips, plus full
+PHPCS, runner/proof syntax, Node development tests/build/audit and generated-asset
+checks. Dashboard `65a9f07a2e1ca3a3c38bce009cc4a63bcff955ae` passed
+[CI 39125407792](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39125407792),
+each PHP job **299 / 1430**, no skips, with strict Composer validation/audit,
+npm audit, build, structure and PHPCS green. Both repos were clean/synced after
+publication. No older CI was substituted for this implementation.
+
+The approved repo-only R3 foundation and source milestone are complete, not genuine
+WordPress admission or production readiness. Final scoped source/ownership/privacy/
+whitespace review found only these uploader definitions/tests/evidence and three
+dashboard plan/design documents. Existing contracts/versions/bootstrap and all
+actual site/database/user/session/role/cache/cron state are untouched. There is no
+package, release, tag, deployment, grant, activation or rollback. Final exact-head
+CI is required for this verification-only follow-up before handoff; no recursive
+receipt commit or additional implementation is warranted at this gate.
