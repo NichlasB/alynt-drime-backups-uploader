@@ -10,6 +10,24 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Native Scan-Effect Storage and Participant Integration Design
+
+Approved R3 repository-only **design-only**, owned by companion dashboard
+`docs/V2_3_NATIVE_SCAN_EFFECT_STORAGE_PARTICIPANT_DESIGN.md`. Excluded bases:
+uploader `63cfeefd988f37923527410f08d32e7d99d06276`, dashboard
+`12792bdc8fd3974916a609a100f3ba426a2c574f`. Proposed fixed ten-row manifest and
+global lock order, separate closed ledger/reserved receipts, bounded exact
+snapshot/queue byte deltas and all-writer participation include upload progress/
+registry, not just scan entry points. Missing rows/capacity/unsupported profiles
+refuse rather than repair. Existing two-row owner/schema-8 null grant stay unchanged.
+
+Implementation-plan progress: physical ownership, capacity, ordering and participant
+obligations now have a concrete design; no native runtime proof or active consent.
+No source/tests/schema/version, actual reader/cache/storage/fixture/site/wiring,
+grant/activation/rollback or package/release/deploy change. **Recommended next gated
+slice: local-only V2.3 Closed Scan-Effect Ledger and Fixed Target Codec Safety
+Foundation**, dormant/test-loaded in-memory only; keep real operations disabled.
+
 ### V2.3 Scan-Effect Fencing and Cache-Publication Contract Safety Foundation
 
 Approved R3 repository-only, dormant/test-loaded **in-memory only**. The
