@@ -1,5 +1,13 @@
 # V2.3 Fixed Genuine-Core Closed-Writer Request Construction Safety Foundation
 
+Genuine-core runtime follow-up (2026-10-18):
+[Fixed Core Guard Proof](V2_3_FIXED_CORE_GUARD_PROOF.md) is **blocked** at its native
+positive frame control: WordPress's built-in cache getter can return unset null,
+while the dormant predicate requires literal false. All 77 application table
+checksums were preserved and owned fixtures removed. No guard workaround/fix,
+production wiring or runtime acceptance is claimed; this supersedes the next-gate
+recommendation below with the narrowly scoped compatibility-fix/proof-rerun gate.
+
 Canonical source-scoped checkpoint (2026-10-18): see
 [V2.3 Closed-Writer Source Review](V2_3_CLOSED_WRITER_SOURCE_REVIEW.md).
 It covers this foundation together with the schema-8/serialized-target foundation,
