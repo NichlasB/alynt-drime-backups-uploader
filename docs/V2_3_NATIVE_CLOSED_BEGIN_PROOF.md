@@ -219,8 +219,30 @@ Restored final runtime SHA-256 fingerprints:
 
 ## Verification and publication receipts
 
-Pending final local/full-suite and exact pushed-head CI receipts. Do not treat
-this section or the source-scoped checklist as whole-plugin release readiness.
+Implementation pushed on uploader `master` as
+`1d0bae360fef5db9a73934704ae4dd9a025f3a66`; exact-head
+[Quality 39139673150](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39139673150)
+succeeds: PHP 7.4 and 8.3 each **1377 tests / 11741 assertions**, no skips,
+plus full WPCS/proof syntax and Node build/runner/audit. Dashboard planning
+`4a2319d5023a43045c936b19bb34ebbbf1b0d411` passes exact-head
+[CI 39139685042](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39139685042),
+both PHP jobs **299 / 1430**, no skips, plus manifest/audits/build/structure/lint.
+These results do not substitute for final receipt-only heads: those are checked
+independently at handoff, without an endless self-referential receipt cycle.
+No whole-plugin release readiness is inferred from the source-scoped checklist.
+
+Final independent Windows full suite (`php vendor/bin/phpunit
+--do-not-cache-result`) finishes successfully: **1377 tests / 11687 assertions**,
+four pre-existing unrelated Windows skips, **14:39.154**, 88 MB. This is not
+no-skip platform coverage; the CI jobs above each have no skips. The interrupted
+earlier run is not counted as completed verification. No assertions/skips were
+weakened or added to pass this milestone.
+
+The final dashboard receipt head `aeda4ae610fba6ecc1db5bfa3d7ba4d6c23c5455`
+independently passes
+[CI 39140126874](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39140126874).
+Toolkit source-scoped checklist evidence is published separately on `main`;
+its API reports zero configured workflows, not a passing CI result.
 
 Targeted regression: `php vendor/bin/phpunit --do-not-cache-result --filter
 'NativeClosedBeginBoundary|NativeObserverBoundary|RawObservationContract|ClosedWriter(JsonContract|SessionContract|ContractBoundary)|FixedCoreRequest|RealClosedWriter|SerializedSettings'`

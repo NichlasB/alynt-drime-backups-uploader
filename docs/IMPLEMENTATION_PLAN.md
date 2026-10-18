@@ -30,8 +30,12 @@ finding has genuine RED/GREEN coverage: preparation now runs before BEGIN/final
 authorization, and exact already-validated tuples are compared under locks.
 All final fixtures are removed; all **77 application-table checksums unchanged**.
 Unchanged native observation **122 / eight** and core guard **266 / eleven** rerun.
-Targeted tests pass **256 / 2390**, no skips. Full/CI publication receipts are
-recorded in the owning report after execution, not inferred here.
+Targeted tests pass **256 / 2390**, no skips. Final local full suite passes
+**1377 / 11687**, four pre-existing Windows skips; exact implementation-head
+[Quality 39139673150](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39139673150)
+at `1d0bae360fef5db9a73934704ae4dd9a025f3a66` passes PHP 7.4/8.3 each
+**1377 / 11741**, no skips, plus WPCS/syntax/Node/build/audit. Final receipt-only
+heads are verified independently at handoff; the owning record preserves limits.
 
 Implementation-plan progress: native closed-begin ownership/storage moves from
 design to physical safety-row proof. Settings writes, paired completion, locked
