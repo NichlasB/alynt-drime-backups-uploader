@@ -10,6 +10,32 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Fixed Native Raw Observation and Session-Ownership Proof
+
+Approved R3 Plugin Tester local-only milestone with owned disposable auth/options
+fixtures. [Owning proof/review record](V2_3_NATIVE_RAW_OBSERVATION_PROOF.md) covers
+the complete source boundary from `e95edd01961ceb8b09bed2bf7bf48b1331a398b4`.
+The dormant fixed observer now checks genuine core authorization between passive
+native idle fences, owns/closes a separate read-only loopback MariaDB session,
+and reads bounded exact safety/settings tuples twice. Public results remain
+unavailable; the existing request owner, model/contracts, versions and production
+loader are unchanged. This planning observation is not receipt resolution/admission.
+
+Native proof passes 122 checks / eight groups; the unchanged guard-only mode passes
+266 / eleven. Genuine WordPress 7.1.2/PHP 8.5.1/MariaDB 10.6.23, owned users/tables
+only; all fixtures removed and independent checksums preserve 77 application
+tables. Synthetic schema-6/8 genesis is not authenticated provenance. Combined
+targeted tests pass 252 / 2341 without skips; final full/CI receipts are in the
+owning record after execution. No paired writes, actual application changes,
+production wiring, grants, activation, rollback or release/deploy.
+
+Implementation-plan progress: the physical planning-reader/session-ownership gap
+advances; native transaction/locking admission remains gated. **Recommended next
+gated slice: Plugin Tester local-only V2.3 Fixed Native Closed-Begin Transaction
+Safety Foundation and Owned Failure Proof**. The existing wider design is the
+basis; this needs separate owned native safety-row write/cleanup approval. Paired
+target writes, application state, production wiring and execution remain disabled.
+
 ### V2.3 Fixed Raw Observation and Native-Session Admission Contract Foundation
 
 Approved repository-only dormant implementation after the dashboard's raw/native

@@ -1,6 +1,7 @@
 <?php
 /** Confirmed Plugin Tester supervisor. Owns only three fresh disposable tables. */
-if ( 'cli' !== PHP_SAPI || count( $argv ) !== 3 ) exit( 1 );
+if ( 'cli' !== PHP_SAPI || ! in_array( count( $argv ), array( 3, 4 ), true ) ) exit( 1 );
+$proof = $argv[3] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation' ), true ) ) exit( 1 );
 $root = realpath( $argv[1] ); $approved = realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' );
 if ( ! $root || $root !== $approved || ! ctype_digit( $argv[2] ) || '' === (string) getenv( 'MYSQL_PWD' ) ) exit( 1 );
 $sites = json_decode( file_get_contents( 'C:/Users/Captain/AppData/Roaming/Local/sites.json' ), true ); $site = null;
@@ -12,7 +13,7 @@ $db = new mysqli( '127.0.0.1', 'root', getenv( 'MYSQL_PWD' ), 'local', (int) $ar
 require __DIR__ . '/fixed-core-proof-storage.php';
 alynt_core_check( 'http://plugin-tester.local' === $db->query( "SELECT option_value FROM wp_options WHERE option_name='siteurl'" )->fetch_row()[0], 'Wrong local origin.' );
 $prefix = 'wp_alynt_core_probe_' . bin2hex( random_bytes( 6 ) ) . '_'; $marker = bin2hex( random_bytes( 12 ) );
-$created = array(); $process = null; $pipes = array(); $receipt = array( 'proof_kind' => 'fixed_genuine_core_request_guard_only', 'fixture_prefix' => $prefix );
+$created = array(); $process = null; $pipes = array(); $receipt = array( 'proof_kind' => 'guard' === $proof ? 'fixed_genuine_core_request_guard_only' : 'fixed_native_read_only_planning_observation', 'fixture_prefix' => $prefix );
 $before = alynt_core_actual_digest( $db );
 try {
     foreach ( array( 'options', 'users', 'usermeta' ) as $suffix ) {
@@ -23,6 +24,7 @@ try {
     $insert = $db->prepare( "INSERT INTO {$prefix}options(option_name,option_value,autoload) VALUES(?,?,'no')" );
     foreach ( array( 'probe_owner' => $marker, 'siteurl' => 'http://plugin-tester.local', 'home' => 'http://plugin-tester.local', 'active_plugins' => 'a:0:{}', 'template' => 'alynt-core-proof-no-theme', 'stylesheet' => 'alynt-core-proof-no-theme', 'blogname' => 'Disposable guard proof', 'WPLANG' => '' ) as $name => $value ) { $insert->bind_param( 'ss', $name, $value ); $insert->execute(); }
     $command = array( PHP_BINARY, '-d', 'extension_dir=' . ini_get( 'extension_dir' ), '-d', 'extension=mysqli', '-d', 'display_errors=0', '-d', 'log_errors=0', __DIR__ . '/fixed-core-proof-worker.php', $root, $argv[2], $prefix, $marker );
+    $command[] = $proof;
     $process = proc_open( $command, array( 0 => array( 'pipe', 'r' ), 1 => array( 'pipe', 'w' ), 2 => array( 'pipe', 'w' ) ), $pipes );
     alynt_core_check( is_resource( $process ), 'Worker start failed.' ); fclose( $pipes[0] );
     stream_set_blocking( $pipes[1], false ); stream_set_blocking( $pipes[2], false ); $out = ''; $err = ''; $end = microtime( true ) + 90; $status = null;

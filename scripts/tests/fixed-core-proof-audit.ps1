@@ -1,4 +1,4 @@
-param([string]$WordPressRoot = 'C:/Users/Captain/Local Sites/plugin-tester/app/public')
+param([string]$WordPressRoot = 'C:/Users/Captain/Local Sites/plugin-tester/app/public', [ValidateSet('guard','native-observation')][string]$Proof = 'guard')
 $ErrorActionPreference = 'Stop'
 # Explicit local-only operator entry point, never a CI/database task.
 $approvedRoot = [IO.Path]::GetFullPath('C:/Users/Captain/Local Sites/plugin-tester/app/public')
@@ -21,9 +21,33 @@ if ($actualPrefix -ne 'wp_') { throw 'This proof supports only the inspected Plu
 $priorPassword = $env:MYSQL_PWD
 if ([string]::IsNullOrEmpty($priorPassword)) { throw 'Set MYSQL_PWD from the confirmed local secret source before running this proof.' }
 function Invoke-GuardAuditSql([string]$Sql) {
-    $rows = @(& $mysql[0].FullName -h 127.0.0.1 -P $port -u root -D local -N -B -r --connect-timeout=5 -e $Sql 2>&1)
-    if ($LASTEXITCODE -ne 0) { throw 'Independent MySQL inspection failed; raw diagnostics withheld.' }
-    return $rows
+    # Capture both streams to completion. Fast repeated Windows native pipeline
+    # invocations intermittently yielded no rows despite an exit code of zero.
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = $mysql[0].FullName
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.RedirectStandardInput = $true
+    # Only the metadata-validated integer is interpolated in process arguments;
+    # SQL travels through stdin, not shell parsing or command-line quoting.
+    $start.Arguments = "-h 127.0.0.1 -P $port -u root -D local -N -B -r --connect-timeout=5"
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    try {
+        if (-not $process.Start()) { throw 'Independent MySQL inspection could not start.' }
+        $stdout = $process.StandardOutput.ReadToEndAsync()
+        $stderr = $process.StandardError.ReadToEndAsync()
+        $process.StandardInput.WriteLine($Sql + ';')
+        $process.StandardInput.Close()
+        if (-not $process.WaitForExit(30000)) { $process.Kill(); $process.WaitForExit(); throw 'Independent MySQL inspection timed out.' }
+        $text = $stdout.GetAwaiter().GetResult()
+        $errorText = $stderr.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0 -or $errorText.Length -ne 0) { throw 'Independent MySQL inspection failed; raw diagnostics withheld.' }
+        if ($text.Length -eq 0) { return @() }
+        return $text.TrimEnd("`r","`n") -split "`r?`n"
+    } finally { $process.Dispose() }
 }
 function Get-GuardAuditSnapshot {
     $tables = @(Invoke-GuardAuditSql 'SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() ORDER BY table_name')
@@ -31,9 +55,16 @@ function Get-GuardAuditSnapshot {
     $state = @{}
     foreach ($table in $tables) {
         if ($table -cnotmatch '^[A-Za-z0-9_]+$') { throw 'Unsafe table identifier.' }
-        $row = @(Invoke-GuardAuditSql "CHECKSUM TABLE $table EXTENDED")
-        if ($row.Count -ne 1 -or $row[0] -notmatch '\t([0-9]+)$') { throw 'Application checksum unavailable.' }
-        $state[$table] = $Matches[1]
+    }
+    # One server statement keeps the same full inventory gate without 77 rapid
+    # client launches. Every returned table/value is still strictly reconciled.
+    $rows = @(Invoke-GuardAuditSql ('CHECKSUM TABLE ' + ($tables -join ',') + ' EXTENDED'))
+    if ($rows.Count -ne $tables.Count) { throw 'Incomplete application checksum inventory; proof not admitted.' }
+    foreach ($row in $rows) {
+        if ($row -cnotmatch '^local\.([A-Za-z0-9_]+)\t([0-9]+)$') { throw 'Application checksum unavailable; proof not admitted.' }
+        $table = $Matches[1]; $checksum = $Matches[2]
+        if ($table -cnotin $tables -or $state.ContainsKey($table)) { throw 'Unknown or duplicate application checksum row.' }
+        $state[$table] = $checksum
     }
     return $state
 }
@@ -43,7 +74,7 @@ try {
     $before = Get-GuardAuditSnapshot
     if (@($before.Keys | Where-Object { $_ -cmatch '^wp_alynt_core_probe_' }).Count -ne 0) { throw 'Pre-existing guard fixtures need independent review; not deleting them.' }
     $phpArgs = @('-d', ('extension_dir=' + $php[0].DirectoryName + '/ext'), '-d', 'extension=mysqli', '-d', 'display_errors=0', '-d', 'log_errors=0')
-    $output = @(& $php[0].FullName @phpArgs ($PSScriptRoot + '/fixed-core-local-proof.php') $approvedRoot $port 2>&1)
+    $output = @(& $php[0].FullName @phpArgs ($PSScriptRoot + '/fixed-core-local-proof.php') $approvedRoot $port $Proof 2>&1)
     $proofExit = $LASTEXITCODE
     $after = Get-GuardAuditSnapshot
     $same = $before.Count -eq $after.Count
