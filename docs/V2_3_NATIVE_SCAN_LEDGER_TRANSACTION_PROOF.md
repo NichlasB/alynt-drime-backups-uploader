@@ -246,3 +246,26 @@ nonce/provenance, closed registration/reservation transitions and unknown-outcom
 resolution before extending this revision-only owner. Design-only: no storage or
 site operations, effect execution, production wiring, grants, activation,
 cancellation or rollback. Obtain explicit approval for that new trust contract.
+
+## Exact-head publication receipts
+
+Implementation `1a117a4673eb30268a6539a9f45a5422435e12b8` passes
+[Quality 39157696961](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39157696961):
+PHP 7.4 and 8.3 each **1440 tests / 12865 assertions**, no skipped, risky,
+incomplete or failing tests. Full coding standards, proof-helper syntax, Node/dev
+tests, build, generated-asset checks and audit pass. Source-scoped **07A final
+status: Clean**. F2 affected checks and final focused Feature Security rerun after
+the fix/validation leave no unresolved source-scoped finding. CI does not execute
+the separately completed LocalWP native proof and does not expand its limits.
+
+Dashboard `262315397f98926c059e1fb591a6b574203f9ad7` passes
+[CI 39157704975](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39157704975):
+both PHP versions **299 / 1430**, no skips, plus standards/structure/build/manifest/
+audits. Local Windows skips remain disclosed. GitHub's Ubuntu-label migration
+annotation is informational, not a test warning.
+
+Toolkit receives only a source-scoped checklist addendum; historical whole-plugin
+version/readiness rows remain unchanged. Its zero configured workflows/check runs
+means CI N/A, not green. This uploader receipt-only follow-up is separately pushed
+and its own exact-head CI checked before handoff; earlier-head CI is not substituted.
+No additional source/test/native/site operations follow this receipt update.
