@@ -1,5 +1,13 @@
 # V2.3 Fixed Genuine-Core Closed-Writer Request Construction Safety Foundation
 
+Canonical source-scoped checkpoint (2026-10-18): see
+[V2.3 Closed-Writer Source Review](V2_3_CLOSED_WRITER_SOURCE_REVIEW.md).
+It covers this foundation together with the schema-8/serialized-target foundation,
+not just this record's publication tail. Non-vacuous private-decision/ordering
+tests and child-result cleanup strengthen the original unit evidence without
+changing the owner, exposing a success path or certifying actual WordPress auth.
+The checkpoint is not a full pre-release suite or permission for the next proof.
+
 Approved 2026-10-18, repo-only, through validation/commit/push/exact-head CI.
 Uploader recovery checkpoint `f60b81c123d2d9f5a472515655d5645b217304ce` and dashboard
 checkpoint `ed6db353ee7b7904a3a839da025dae66421200a1` were clean/synced. Toolkit

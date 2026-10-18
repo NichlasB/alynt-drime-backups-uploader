@@ -10,7 +10,13 @@ function alynt_test_fixed_core_request_shims() {
 		public $prefix = 'wp_'; public $base_prefix = 'wp_'; public $options = 'wp_options'; public $users = 'wp_users'; public $usermeta = 'wp_usermeta';
 		public function get_blog_prefix( $blog ) { alynt_test_core_call( 'prefix', array( $blog ) ); return $this->prefix; }
 		public function query( $sql ) { alynt_test_core_call( 'query' ); throw new RuntimeException( 'No storage is supported.' ); }
+		public function __call( $name, $args ) { alynt_test_core_call( 'protected_io', array( $name ) ); throw new RuntimeException( 'No database method is supported.' ); }
 	}
+	// These traps record attempted IO even when the owner catches the exception.
+	function get_option( $name, $default = false ) { alynt_test_core_call( 'protected_io', array( 'get_option', $name ) ); throw new RuntimeException( 'No options reader is supported.' ); }
+	function update_option( $name, $value, $autoload = null ) { alynt_test_core_call( 'protected_io', array( 'update_option', $name ) ); throw new RuntimeException( 'No options writer is supported.' ); }
+	function add_option( $name, $value = '', $deprecated = '', $autoload = 'yes' ) { alynt_test_core_call( 'protected_io', array( 'add_option', $name ) ); throw new RuntimeException( 'No options writer is supported.' ); }
+	function delete_option( $name ) { alynt_test_core_call( 'protected_io', array( 'delete_option', $name ) ); throw new RuntimeException( 'No options writer is supported.' ); }
 	class WP_Roles {
 		public $use_db = true; public $role_key = 'wp_user_roles'; public $allowed; private $site;
 		public function __construct( $site = null ) { alynt_test_core_call( 'roles', array( $site ) ); $this->site = $site; $s = $GLOBALS['alynt_core_request_test']; $this->allowed = $s['role_cache'] ?? $s['role_now']; }

@@ -1,5 +1,12 @@
 # V2.3 Real-Domain Closed Provenance and Serialized-Target Safety Foundation
 
+Canonical source-scoped checkpoint (2026-10-18): see
+[V2.3 Closed-Writer Source Review](V2_3_CLOSED_WRITER_SOURCE_REVIEW.md).
+It reviews this foundation together with fixed request construction, using the
+pre-foundation Git boundary. Added traversal accept/reject controls do not change
+runtime limits, schema, provenance or the non-admitting candidate contract.
+Historical foundation evidence below is not refreshed into release clearance.
+
 Approved 2026-10-18: local repository implementation, in-memory fixtures only,
 through validation, commit, push and exact-head CI. The canonical design is
 dashboard `docs/V2_3_TRUSTED_REAL_DOMAIN_CONSTRUCTION_DESIGN.md`. Clean source
