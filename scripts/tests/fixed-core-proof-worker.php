@@ -38,6 +38,7 @@ try {
     require ABSPATH . 'wp-settings.php'; // No actual wp-config, plugin, theme, credential or session is imported.
     $wpdb->suppress_errors( true );
     alynt_core_check( ! SHORTINIT && ! defined( 'WP_CLI' ) && 'wpdb' === get_class( $wpdb ) && ! is_multisite() && ! wp_using_ext_object_cache(), 'Unsupported native core environment.' );
+    $native_cache_flag_type = gettype( wp_using_ext_object_cache() ); // Observe untouched native state; never normalize it for this proof.
     alynt_core_check( $wpdb->prefix === $argv[3] && $wpdb->base_prefix === $argv[3] && $wpdb->get_blog_prefix( get_current_blog_id() ) === $argv[3], 'Native fixture prefix mismatch.' );
     alynt_core_check( $argv[4] === $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name='probe_owner'" ), 'Owned fixture marker mismatch.' );
     foreach ( array( 'wp_verify_nonce', 'wp_validate_auth_cookie', 'user_can' ) as $function ) {
@@ -49,7 +50,7 @@ try {
     alynt_core_seed(); alynt_core_cases(); alynt_core_denials();
     alynt_core_check( 0 === $GLOBALS['alynt_core_proof']['protected_reads'] && 0 === $GLOBALS['alynt_core_proof']['denied_io'] && array() === headers_list(), 'Protected IO or browser headers escaped.' );
     foreach ( get_included_files() as $file ) alynt_core_check( 0 !== strpos( str_replace( '\\', '/', $file ), str_replace( '\\', '/', WP_CONTENT_DIR ) . '/' ), 'Site content code was loaded.' );
-    $receipt = array( 'passed' => true, 'wordpress_version' => $wp_version, 'php_version' => PHP_VERSION, 'native_full_core' => true, 'site_plugins_and_themes_loaded' => false, 'checks' => $GLOBALS['alynt_core_proof']['checks'], 'cases' => $GLOBALS['alynt_core_proof']['cases'], 'protected_reads' => 0, 'public_storage_dispatch_execution' => false, 'browser_headers_emitted' => false );
+    $receipt = array( 'passed' => true, 'wordpress_version' => $wp_version, 'php_version' => PHP_VERSION, 'native_cache_flag_type' => $native_cache_flag_type, 'native_full_core' => true, 'site_plugins_and_themes_loaded' => false, 'checks' => $GLOBALS['alynt_core_proof']['checks'], 'cases' => $GLOBALS['alynt_core_proof']['cases'], 'protected_reads' => 0, 'public_storage_dispatch_execution' => false, 'browser_headers_emitted' => false );
 } catch ( Throwable $error ) {
     $receipt['failed'] = true; $receipt['failure'] = $error instanceof RuntimeException ? $error->getMessage() : 'Unexpected core proof failure; private diagnostics withheld.';
     $receipt['failure_location'] = array( basename( $error->getFile() ), $error->getLine() );

@@ -18,6 +18,22 @@ class FixedCoreRequestDecisionTest extends TestCase {
 	private function decision( $frame, $e = null, $action = 'unit-action' ) {
 		return $this->inspect_private( 'guard', array( $frame, 'unit-nonce', $action, $e ) );
 	}
+	/** @dataProvider native_cache_flags */
+	public function test_only_native_unset_or_false_cache_flags_allow_guard_inspection( $flag, $supported ) {
+		$this->assertTrue( $this->decision( $this->inspect_private( 'frame' ) ), 'Each case needs an independent working control.' );
+		$GLOBALS['alynt_core_request_test']['external_cache'] = $flag;
+		$frame = $this->inspect_private( 'frame' );
+		if ( $supported ) { $this->assertIsArray( $frame ); $this->assertTrue( $this->decision( $frame ) ); }
+		else $this->assertFalse( $frame, 'Unknown falsey values must not become native-cache authority.' );
+		$this->unavailable( $this->issue() );
+		$this->assertCount( 0, $this->calls( 'protected_io' ) );
+	}
+	public static function native_cache_flags() { return array(
+		'false' => array( false, true ), 'native unset null' => array( null, true ), 'external true' => array( true, false ),
+		'integer zero' => array( 0, false ), 'integer one' => array( 1, false ), 'empty string' => array( '', false ),
+		'string zero' => array( '0', false ), 'string false' => array( 'false', false ), 'empty array' => array( array(), false ),
+		'object' => array( new stdClass(), false ), 'float zero' => array( 0.0, false )
+	); }
 	/** @dataProvider initial_denials */
 	public function test_each_initial_guard_has_an_independent_negative_decision( $key, $value ) {
 		$frame = $this->inspect_private( 'frame' );
@@ -44,6 +60,8 @@ class FixedCoreRequestDecisionTest extends TestCase {
 			if ( 'blog' === $change ) $s['blog'] = 2;
 			if ( 'table' === $change ) $GLOBALS['wpdb']->options = 'other_options';
 			if ( 'method' === $change ) $_SERVER['REQUEST_METHOD'] = 'GET';
+			if ( 'cache_true' === $change ) $s['external_cache'] = true;
+			if ( 'cache_zero' === $change ) $s['external_cache'] = 0;
 			if ( 'clock' === $change ) {
 				$p = new ReflectionProperty( $this->owner, 'last_clock' ); if ( PHP_VERSION_ID < 80100 ) $p->setAccessible( true ); $p->setValue( $this->owner, time() + 100 );
 			}
@@ -53,7 +71,7 @@ class FixedCoreRequestDecisionTest extends TestCase {
 		$this->assertSame( $roles, $GLOBALS['wp_roles'] );
 		$this->assertCount( 0, $this->calls( 'protected_io' ) );
 	}
-	public static function after_nonce_denials() { return array_map( function ( $v ) { return array( $v ); }, array( 'session', 'user', 'role', 'filter', 'actor', 'cookie', 'blog', 'table', 'method', 'clock' ) ); }
+	public static function after_nonce_denials() { return array_map( function ( $v ) { return array( $v ); }, array( 'session', 'user', 'role', 'filter', 'actor', 'cookie', 'blog', 'table', 'method', 'clock', 'cache_true', 'cache_zero' ) ); }
 	public function test_nonce_domains_have_distinct_accept_and_reject_controls() {
 		$frame = $this->inspect_private( 'frame' );
 		$e = Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Request_Contract::parse( $this->command_form() )['envelope'];

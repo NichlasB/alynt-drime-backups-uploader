@@ -1,6 +1,94 @@
 # V2.3 Fixed Genuine-Core Closed-Writer Request Guard Proof
 
-## Status and approved boundary — 2026-10-18
+## Approved cache compatibility fix and completed guard proof — 2026-10-18
+
+**Current status: passed for the approved isolated genuine-core guard scope.**
+This supersedes the historical blocked attempt below, not its evidence or limits.
+The user approved the local-only Native Cache-Flag Compatibility Fix and Guard-
+Proof Rerun, including validation/commit/push/exact-head CI. The already confirmed
+Plugin Tester target and owned disposable fixture scope were reused unchanged.
+Recovery baseline: uploader `53bf2978297d5dadd1d7280f69c84e118d819158`, dashboard
+`7c83b4270b9c0b8fa431ec68533a4e234523c9b9`; both clean/synced before work.
+Toolkit restore-point Option A/check verified the uploader committed baseline.
+
+The only runtime change is the dormant frame predicate's strict whitelist of
+`false` and `null`. True, integers, strings, arrays, objects and floating zero
+remain unsupported; database/object-cache drop-ins and every other frame/auth
+guard remain unchanged. Nothing normalizes the core cache flag. The final native
+receipt explicitly reports untouched cache flag type **NULL**.
+
+G1 regression disposition is now **new red-to-green regression test**. Eleven
+cache-state cases failed against the old predicate only for native unset null
+(11 tests / 65 assertions / one meaningful failure). After the fix, the related
+selection passes **210 tests / 1832 assertions**, no skips: **13 additional cases
+/ 80 assertions** over the prior 197 / 1752. Two cases test post-nonce external/
+unknown-cache changes. A temporary loose-falsy predicate produced **six assertion
+failures** across 23 tests / 128 assertions, including five unsupported falsey
+types and post-nonce integer-zero admission. The strict predicate was restored
+before all final validation and native proof runs; no mutation is published.
+
+The genuine WordPress **7.1.2 / PHP 8.5.1** worker passed **266 checks in eleven
+groups**, including the previously unreached positive Boolean control, real nonce
+domain cross-product, both-side authentication/capability ordering for issuance
+and all four consumption purposes, malformed/stale/changed intent, actual nonce
+expiry, cookie/user/session/capability denials, warm-cache raw fixture revocations,
+post-nonce authority/context loss, role-view restoration and refusal of owner
+serialization. All public responses remain exactly unavailable, no handles or
+browser headers; protected application reads and storage/dispatch/execution zero.
+
+Independent audit: all **77 application table** inventory/checksums matched;
+parent actual options/users/usermeta digests matched. Three exact owned tables
+were previewed (**31 options, 3 users, 9 usermeta rows**), removed and verified
+absent. No genuine application user/option/cron/settings/safety row changed.
+One intervening attempt aborted with checksum preflight unavailable **before any
+fixture creation**. A separate read-only sweep found all 77 checksums available;
+one bounded rerun then passed the full proof and both audits. The cause of that
+transient preflight failure was not established; it was not suppressed, retried
+inside the harness or reclassified as a passing attempt.
+
+### Focused canonical reviews and validation
+
+Feature Light reviewed **13 source/test files**: the three changed PHP files
+(core-guard trait, decision test, native worker) and ten directly affected owner/
+contract/unit-support/proof files. No additional non-security defect remains.
+The existing architecture is preserved; no new settings/hooks/routes/dependencies
+or user-visible text. Conditional Bloat/Structure is unnecessary: the changed
+files remain cohesive and under existing limits; no meaningful split/cleanup
+need was found. Backend-only: no UI/UX workflow applies.
+
+Final Feature Security ran after the fix, mutation restoration, targeted checks
+and genuine-core proof: no additional security defect found in this explicit
+source scope; G1 is a compatibility defect, not an observed authorization bypass.
+Strict type/unknown-state refusal, existing nonce/capability/cookie and drop-in
+guards, private request lifetime and redacted unavailable public response remain
+intact. No new security regression handoff is needed. This is not a new numbered
+DS3/07A whole-suite review or full-plugin security/release clearance.
+
+Local uploader checks passed: final targeted **210 / 1832**, PHPCS **164 files**
+(existing nonfatal third-party functionWhitelist deprecation), build, deterministic
+runner verification/syntax, **3 Node tests**, strict Composer validation and zero-
+advisory Composer/npm audits. Complete portable PHP suite and final publication
+status are required on the exact pushed head, not inferred from previous runs.
+No full local uploader-suite rerun is claimed. Companion dashboard/toolkit evidence
+and exact-head CI results are recorded at publication/handoff.
+
+Implementation-plan progress: the native cache mismatch and genuine-core guard
+proof gate are resolved. This proves isolated genuine-core guard semantics, **not**
+actual-site HTTP routing, minimum-version WordPress runtime acceptance, native
+connection identity, protected raw observation, physical transactions, durable
+admission/cache coherence, effective scan stopping, production activation or
+rollback. All previous broader proof limits still apply. No package/release/deploy.
+
+Recommended next gated slice: **local-only V2.3 Authoritative Raw Observation and
+Native Backend Admission Integration Design**. Design the trusted raw observation,
+same-connection/transaction ownership, protected-read ordering, private admission
+lifetime, failure/unknown-commit handling and later owned-fixture acceptance matrix
+before implementing a reader/backend. Design-only: no SQL/site operations, writers,
+production wiring, grants, activation or rollback. Do not replace this meaningful
+design gate with maintenance churn or a dormant package. Full pre-release remains
+required on the next coherent release candidate before packaging/publishing.
+
+## Historical blocked attempt and original approved boundary — 2026-10-18
 
 **Blocked: genuine native-core positive frame control fails.** This is not a
 completed authentication proof. No authorization guard was changed to force a

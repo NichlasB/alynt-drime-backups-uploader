@@ -1,5 +1,13 @@
 # V2.3 Fixed Genuine-Core Closed-Writer Request Construction Safety Foundation
 
+Current follow-up (2026-10-18): the separately approved native cache compatibility
+fix resolves the strict-false mismatch below using only strict false/null support.
+[Fixed Core Guard Proof](V2_3_FIXED_CORE_GUARD_PROOF.md) now records **266 genuine-
+core checks passed**, 13 added regression cases, red-to-green/loose-falsy rejection,
+77-table preservation and owned fixture cleanup. The guard remains dormant and
+every public response unavailable. Next gate is the design-only Authoritative Raw
+Observation and Native Backend Admission Integration Design, not activation.
+
 Genuine-core runtime follow-up (2026-10-18):
 [Fixed Core Guard Proof](V2_3_FIXED_CORE_GUARD_PROOF.md) is **blocked** at its native
 positive frame control: WordPress's built-in cache getter can return unset null,

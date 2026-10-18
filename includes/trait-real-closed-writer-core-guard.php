@@ -32,7 +32,9 @@ trait Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Core_Guard {
 	 */
 	private function frame() {
 		global $wpdb;
-		if ( ! $this->dependencies() || false !== is_multisite() || false !== wp_using_ext_object_cache() || ! empty( $GLOBALS['switched'] ) || ! empty( $GLOBALS['_wp_switched_stack'] ) || ! empty( $GLOBALS['wp_user_roles'] ) || ( defined( 'SHORTINIT' ) && SHORTINIT ) || ( defined( 'WP_CLI' ) && WP_CLI ) || file_exists( WP_CONTENT_DIR . '/db.php' ) || file_exists( WP_CONTENT_DIR . '/object-cache.php' ) || ! $wpdb instanceof wpdb || 'wpdb' !== get_class( $wpdb ) ) {
+		// Native built-in cache can leave the core flag unset (null).
+		// Accept only those two native states, never other falsey values.
+		if ( ! $this->dependencies() || false !== is_multisite() || ! in_array( wp_using_ext_object_cache(), array( false, null ), true ) || ! empty( $GLOBALS['switched'] ) || ! empty( $GLOBALS['_wp_switched_stack'] ) || ! empty( $GLOBALS['wp_user_roles'] ) || ( defined( 'SHORTINIT' ) && SHORTINIT ) || ( defined( 'WP_CLI' ) && WP_CLI ) || file_exists( WP_CONTENT_DIR . '/db.php' ) || file_exists( WP_CONTENT_DIR . '/object-cache.php' ) || ! $wpdb instanceof wpdb || 'wpdb' !== get_class( $wpdb ) ) {
 			return false;
 		}
 		foreach ( array(
