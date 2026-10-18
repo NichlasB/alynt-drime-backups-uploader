@@ -1,7 +1,7 @@
 <?php
 /** Confirmed Plugin Tester supervisor. Owns only three fresh disposable tables. */
 if ( 'cli' !== PHP_SAPI || ! in_array( count( $argv ), array( 3, 4 ), true ) ) exit( 1 );
-$proof = $argv[3] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation', 'native-scan-ledger', 'registration-construction' ), true ) ) exit( 1 );
+$proof = $argv[3] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation', 'native-scan-ledger', 'registration-construction', 'registration-native-reader' ), true ) ) exit( 1 );
 $root = realpath( $argv[1] ); $approved = realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' );
 if ( ! $root || $root !== $approved || ! ctype_digit( $argv[2] ) || '' === (string) getenv( 'MYSQL_PWD' ) ) exit( 1 );
 $sites = json_decode( file_get_contents( 'C:/Users/Captain/AppData/Roaming/Local/sites.json' ), true ); $site = null;
@@ -13,7 +13,7 @@ $db = new mysqli( '127.0.0.1', 'root', getenv( 'MYSQL_PWD' ), 'local', (int) $ar
 require __DIR__ . '/fixed-core-proof-storage.php';
 alynt_core_check( 'http://plugin-tester.local' === $db->query( "SELECT option_value FROM wp_options WHERE option_name='siteurl'" )->fetch_row()[0], 'Wrong local origin.' );
 $prefix = 'wp_alynt_core_probe_' . bin2hex( random_bytes( 6 ) ) . '_'; $marker = bin2hex( random_bytes( 12 ) );
-$created = array(); $process = null; $pipes = array(); $receipt = array( 'proof_kind' => array( 'guard' => 'fixed_genuine_core_request_guard_only', 'native-observation' => 'fixed_native_read_only_planning_observation', 'native-closed-begin' => 'fixed_native_owned_safety_row_closed_begin', 'native-paired-completion' => 'fixed_native_owned_pair_and_locked_resolution', 'native-scan-observation' => 'fixed_native_ten_row_closed_codec_observation', 'native-scan-ledger' => 'fixed_native_closed_ledger_only_checkpoint', 'registration-construction' => 'genuine_core_private_registration_captured_owned_frame_only' )[$proof], 'fixture_prefix' => $prefix );
+$created = array(); $process = null; $pipes = array(); $receipt = array( 'proof_kind' => array( 'guard' => 'fixed_genuine_core_request_guard_only', 'native-observation' => 'fixed_native_read_only_planning_observation', 'native-closed-begin' => 'fixed_native_owned_safety_row_closed_begin', 'native-paired-completion' => 'fixed_native_owned_pair_and_locked_resolution', 'native-scan-observation' => 'fixed_native_ten_row_closed_codec_observation', 'native-scan-ledger' => 'fixed_native_closed_ledger_only_checkpoint', 'registration-construction' => 'genuine_core_private_registration_captured_owned_frame_only', 'registration-native-reader' => 'genuine_core_fixed_read_only_registration_capture_and_construction' )[$proof], 'fixture_prefix' => $prefix );
 $before = alynt_core_actual_digest( $db );
 try {
     foreach ( array( 'options', 'users', 'usermeta' ) as $suffix ) {

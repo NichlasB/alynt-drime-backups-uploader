@@ -1,4 +1,4 @@
-param([string]$WordPressRoot = 'C:/Users/Captain/Local Sites/plugin-tester/app/public', [ValidateSet('guard','native-observation','native-closed-begin','native-paired-completion','native-scan-observation','native-scan-ledger','registration-construction')][string]$Proof = 'guard')
+param([string]$WordPressRoot = 'C:/Users/Captain/Local Sites/plugin-tester/app/public', [ValidateSet('guard','native-observation','native-closed-begin','native-paired-completion','native-scan-observation','native-scan-ledger','registration-construction','registration-native-reader')][string]$Proof = 'guard')
 $ErrorActionPreference = 'Stop'
 # Explicit local-only operator entry point, never a CI/database task.
 $approvedRoot = [IO.Path]::GetFullPath('C:/Users/Captain/Local Sites/plugin-tester/app/public')

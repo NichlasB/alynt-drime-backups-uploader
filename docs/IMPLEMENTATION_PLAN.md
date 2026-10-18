@@ -10,6 +10,23 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Fixed Registration Native Reader and Guarded Construction Integration
+
+Approved R3 **Plugin Tester local-only**, owned disposable fixtures/cleanup.
+The [owning record](V2_3_REGISTRATION_NATIVE_READER_PROOF.md) covers dormant private
+twenty-read capture -> existing complete eligibility/UUID/nonce construction.
+Genuine **700 / 11**, constructor **851 / 10**, core guard **266 / 11**; all **77**
+application checksums unchanged and every fixture removed. F1 physical auth-session
+adoption and F2 hidden bulk-autoload reads fixed with actual-core RED/GREEN; three
+restored assertion-killed controls. Public endpoints/writes/execution stay disabled.
+
+Implementation-plan progress: native read-to-construction boundary now executable,
+not a snapshot/current-storage guarantee or ledger admission. **Recommended next
+gated slice: local-only V2.3 Closed Registration Native Admission and Locked
+Revalidation Design**, design-only trusted command handoff/all-ten locked checks/
+ledger-only receipt and unknown-outcome protocol. New write-admission trust contract
+requires approval; actual writes, production wiring and execution remain disabled.
+
 ### V2.3 Closed Registration Construction and Eligibility Owned Proof
 
 Approved R3 **Plugin Tester local-only**, owned disposable users/storage/cleanup.
