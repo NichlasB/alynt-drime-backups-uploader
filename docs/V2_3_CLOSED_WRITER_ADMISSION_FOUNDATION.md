@@ -1,5 +1,12 @@
 # V2.3 Closed-Writer Admission Contract and Provenance Safety Foundation
 
+Follow-up 2026-10-18: the separately approved Plugin Tester integrated proof is
+recorded in [V2_3_ADMISSION_ISOLATED_PROOF.md](V2_3_ADMISSION_ISOLATED_PROOF.md).
+Genuine-core authentication and owned native persistence exercise this unchanged
+fixture lane; they do not promote its source/receipts into real permission.
+Historical next-step and validation statements below describe this foundation's
+original scope. Real-domain construction and production integration remain gated.
+
 Approved 2026-10-17: local repository implementation, in-memory fixtures only,
 validation, commit, push and exact-head CI. Approval-covered R3 request/storage
 interpretation; no site, LocalWP, database, users/options/cron, authenticated
