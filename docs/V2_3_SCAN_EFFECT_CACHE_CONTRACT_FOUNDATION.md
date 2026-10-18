@@ -175,3 +175,25 @@ progress coexistence before approving any additional native rows or actual sinks
 Keep that slice design-only, with no SQL/fixture/cache/API operation, production
 wiring, grants, activation or rollback. Real native/cache/worker proof remains a
 separate explicit approval after the physical contract is reviewed.
+
+### Exact source-head CI and final focused outcome
+
+Uploader implementation `9f2407d0e3e34cec245e0d4d6ac23b36063b6b7a` passes
+[Quality 39146621883](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39146621883):
+PHP 7.4 and 8.3 each **1403 tests / 12481 assertions**, no skips, and Node build/
+runner/audit checks. Thus 07A's source-scoped Phase 2 terminal status is **Clean**:
+23 new tests / 673 assertions, eight assertion-killed/restored controls, targeted
+and full-suite verification complete. No local full-uploader execution is claimed;
+the exact pushed-head full matrix provides that regression layer, not runtime proof.
+The final Feature Security gate has no remaining confirmed in-scope defect.
+
+Companion dashboard plan head `12792bdc8fd3974916a609a100f3ba426a2c574f` passes
+[CI 39146644262](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39146644262):
+PHP 7.4/8.3 each **299 / 1430**, no skips. Local dashboard full suite **299 / 1423**
+retains two existing Windows skips; lint **138 files**, structure/build, strict
+manifest and both audits pass, no generated diff. Neither result proves the models
+in WordPress. CI's informational Ubuntu image-migration notice is not hidden or
+represented as a test failure. Toolkit's source-scoped checklist addendum preserves
+all historical whole-plugin rows; toolkit has zero configured CI workflows, not a
+passing CI claim. This receipt-only uploader follow-up is independently pushed and
+verified at its final exact head before handoff; earlier CI is not substituted.
