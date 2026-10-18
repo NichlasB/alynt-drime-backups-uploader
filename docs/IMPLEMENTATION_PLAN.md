@@ -10,6 +10,27 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed Registration and Reserved Intent Contract Safety Foundation
+
+Approved R3 **repository-only, in-memory new tests only**. The
+[owning record](V2_3_CLOSED_REGISTRATION_CONTRACT_FOUNDATION.md) covers excluded
+uploader `1c0dc5b80ffcfbc9b556c57d73d2d3cfa18348cb`, dashboard
+`156e762f20f119f02a83866684c9835ddfcfefd1`. Dormant schema-2 strict codec, context/
+identity/receipt binding, bounded register -> own WPvivid intent -> historical
+candidate lookup implemented without storage/authentication or production loading.
+Reconstructable retained dependency digest and two-transition revision headroom
+refine the design; one pending operation only, no terminal/history promotion.
+New **10 / 168**, related **156 / 2083**, five assertion-killed/restored controls;
+focused canonical Feature Light/final Security source-scoped, owning record has QA.
+
+Implementation-plan progress: executable closed data contracts, not authenticated
+admission/native transactions or maintenance-only churn. No site/users/options/
+cron/schema installation, source version, grants/wiring/activation/execution/
+cancellation/rollback, package/release/deploy. **Recommended next gated slice:
+local-only V2.3 Closed Registration Fixed Request Construction and Eligibility
+Safety Foundation**, dormant trusted construction/complete eligibility; new
+authentication boundary needs approval, storage writes and wiring still disabled.
+
 ### V2.3 Closed Registration and Reserved Intent Native Integration Design
 
 Approved R3 **repository-only/design-only**, owned by companion dashboard
