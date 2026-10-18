@@ -10,6 +10,26 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed Registration Fixed Request Construction and Eligibility Foundation
+
+Approved R3 **repository-only/dormant**, new pure/isolated API tests only. The
+[owning record](V2_3_REGISTRATION_CONSTRUCTION_FOUNDATION.md) covers excluded
+uploader `20f78f94b795dc6537d1c5bb464b29da27d78dcd`, dashboard
+`1aa763a4af95ff7292541744fd92991cd2ba3e80`. Strict four-purpose nonce grammar,
+fixed guarded owner, complete schema-8/settings/schema-2/all-ten eligibility and
+private once-attempted registration construction implemented. No public reader,
+blueprint export or continuation; actual core semantics still need genuine proof.
+New **10 / 251**, related **250 / 2926**, four restored assertion-killed controls;
+canonical Feature Light/final Security source-scoped, owning record has QA/limits.
+
+Implementation-plan progress: executable trusted construction/eligibility boundary,
+not native transaction, apply or active authority. No actual site/options/users/
+cron, existing source/version, grants/wiring/activation/effects/cancellation/
+rollback, package/release/deploy changes. **Recommended next gated slice: Plugin
+Tester local-only V2.3 Closed Registration Construction and Eligibility Owned
+Proof**, genuine core/isolated-frame proof with separately confirmed exact target
+and owned disposable fixtures/cleanup; existing application state untouched.
+
 ### V2.3 Closed Registration and Reserved Intent Contract Safety Foundation
 
 Approved R3 **repository-only, in-memory new tests only**. The
