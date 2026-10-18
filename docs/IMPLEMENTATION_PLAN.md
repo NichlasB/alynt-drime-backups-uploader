@@ -10,6 +10,28 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Fixed Scan-Effect Manifest and Closed Target Observation Proof
+
+Approved R3 **Plugin Tester local-only**, with exact target and three owned
+disposable tables/users/roles/session fixtures plus cleanup confirmed. The
+[owning source-scoped record](V2_3_NATIVE_SCAN_OBSERVATION_PROOF.md) covers excluded
+uploader `08a47072e934b28f0fae0eb996e6648d1b3270df`. Separate read-intent nonce,
+fresh genuine-core guards, private server-read-only session and fixed twenty-read
+manifest/codec observation implemented dormant/test-loaded; public unavailable.
+Genuine proof **245 / 11 groups**, guard **266 / 11** and prior observer **122 / 8**
+rerun; eight valid assertion-killed/restored controls, each green after restoration.
+All fixtures removed, **77 application-table checksums unchanged**. New pure/API
+tests **7 / 65**, related **41 / 468**, no skips; final CI owned by the record.
+
+Implementation-plan progress: fixed-row/closed-codec work now has genuine native
+observation evidence, not atomicity/commit/scan-stop admission. Existing application
+state, shared guards/native owners/parsers, production wiring, grants, activation,
+cancellation and rollback remain untouched/disabled; no package/release/deploy.
+**Recommended next gated slice: Plugin Tester local-only V2.3 Closed Scan-Effect
+Ledger Transaction Foundation and Owned Failure Proof**, fixed all-ten lock order,
+closed bounded successor/exact CAS/readback/commit with writes limited to the owned
+ledger fixture. No actual application, snapshot or queue writes; separate approval.
+
 ### V2.3 Closed Scan-Effect Ledger and Fixed Target Codec Safety Foundation
 
 Approved R3 repository-only, dormant/test-loaded **in-memory only**. The
