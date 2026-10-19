@@ -1,5 +1,24 @@
 # V2.3 Closed Registration Native Admission and Owned Ledger Commit Proof
 
+## Successor lifecycle design — 2026-10-19
+
+The approved **repository-only design**, owned by dashboard
+`docs/V2_3_REGISTRATION_ADMISSION_OBSERVATION_LIFECYCLE_DESIGN.md`, covers exact
+single-owner original provenance retained before DML, independent read issuance,
+uncertain outcomes, one-shot/loss/expiry and proof requirements. Excluded coherent
+baselines: uploader `ca20a8b639d18e966ec17eaecda99b672f014e05`, dashboard
+`f436bd83dc9d817331dd41f321549d04a984389f`. This checkpoint changes docs only:
+no WordPress/SQL/fixtures/source/tests/wiring/versions, grants, activation or
+rollback. The historical native proof below is not an actual uncertain-admission
+to-observation integration proof. Admission false does not establish no write;
+observation's separately constructed synthetic origin cannot close that gap.
+
+Recommended next gated slice: **local-only V2.3 Admission-Origin Lifecycle DATA
+Safety Foundation**, bounded in-memory one-shot state/retention/loss contracts and
+non-vacuous controls, no auth/storage/native execution. Fresh approval required.
+
+## Historical owned native admission proof
+
 2026-10-19; approved R3 **Plugin Tester local-only**, exact disposable fixture
 creation/testing/cleanup confirmed. Native admission writes confined to the owned
 ledger fixture. Excluded review bases: uploader
