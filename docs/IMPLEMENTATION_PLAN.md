@@ -10,6 +10,26 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Registration Observation Private Handoff and Barrier Result Foundation
+
+Approved R3 repository-only/dormant, new tests in-memory only. The
+[owning record](V2_3_REGISTRATION_OBSERVATION_HANDOFF_FOUNDATION.md) covers excluded
+uploader `d6318fa547f77754976a0fe813b9d251a28d1576`, dashboard
+`91c51c41bfac0a1739a5081525ca062d5e655826`. Private one-shot stage/claim/finish,
+bounded original forms/origin/clocks/identity labels and pending-aware complete
+ten-row candidate validation implemented. New **23 / 1045**, related
+**322 / 5388**, no skips; **11** assertion-killed/exactly restored controls.
+Canonical source-scoped Light/Bloat/final Security, not release or physical proof.
+
+Implementation-plan progress: observation DATA handoff/result subset executable,
+not guarded owner integration or native receipt barrier. Existing source/tests,
+application state, production wiring/grants/activation/effects/rollback unchanged.
+**Recommended next gated slice: local-only V2.3 Guarded Observation Private
+Handoff Integration Safety Foundation**, fixed same-owner construction-to-handoff
+path with isolated API tests only, preserving construction-only cleanup; no actual
+WordPress/native/storage operations or native certification. Separate explicit
+integration approval required; genuine native/owned proof follows later.
+
 ### V2.3 Registration Observation Native Barrier and Private Handoff Design
 
 Approved R3 repository-only/design-only, owned by dashboard
