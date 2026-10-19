@@ -15,6 +15,8 @@ require_once __DIR__ . '/trait-registration-admission-transaction.php';
 require_once __DIR__ . '/trait-native-observer-session.php';
 require_once __DIR__ . '/trait-native-options-metadata.php';
 require_once __DIR__ . '/trait-native-closed-begin-session.php';
+require_once __DIR__ . '/trait-registration-native-outcome-capture.php';
+require_once __DIR__ . '/trait-registration-native-outcome-session.php';
 
 /** Explicit owned-proof reflection only; production never loads this class. */
 final class Alynt_Drime_Backups_Uploader_Registration_Native_Admission {
@@ -25,7 +27,13 @@ final class Alynt_Drime_Backups_Uploader_Registration_Native_Admission {
 	use Alynt_Drime_Backups_Uploader_Registration_Admission_Transaction;
 	use Alynt_Drime_Backups_Uploader_Native_Observer_Session;
 	use Alynt_Drime_Backups_Uploader_Native_Options_Metadata;
-	use Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session;
+	use Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Capture;
+	use Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session, Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Session {
+		Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Session::open_writer insteadof Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session;
+		Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Session::finish insteadof Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session;
+		Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session::open_writer as private open_writer_without_outcome;
+		Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session::finish as private finish_without_outcome;
+	}
 	use Alynt_Drime_Backups_Uploader_Closed_Writer_Contract_Privacy;
 
 	/**
@@ -204,6 +212,7 @@ final class Alynt_Drime_Backups_Uploader_Registration_Native_Admission {
 			return false;
 		} finally {
 			$this->finish();
+			$this->clear_native_outcome();
 			$this->active        = false;
 			$this->consumed      = true;
 			$this->scope         = null;

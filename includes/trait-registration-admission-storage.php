@@ -63,16 +63,33 @@ trait Alynt_Drime_Backups_Uploader_Registration_Admission_Storage {
 			return false;
 		}
 		$before = $this->before['rows']['ledger'];
+		++$this->writes;
+		$this->native_outcome_event( 'attempt_reserved' );
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Pinned ASCII core identifier; exact original row predicates are bound.
 		$stmt = $this->reader->prepare( "UPDATE `{$table}` SET option_value=? WHERE option_id=? AND BINARY option_name=? AND BINARY autoload=? AND BINARY option_value=? LIMIT 1" );
 		if ( false === $stmt ) {
 			return false;
 		}
 		try {
-			++$this->writes;
 			$name = 'alynt_drime_backups_scan_effect_state';
-			$stmt->bind_param( 'sssss', $this->after, $before['option_id'], $name, $before['autoload'], $before['value'] );
-			return true === $stmt->execute() && 1 === $stmt->affected_rows;
+			if ( true !== $stmt->bind_param( 'sssss', $this->after, $before['option_id'], $name, $before['autoload'], $before['value'] ) ) {
+				return false;
+			}
+			$this->native_outcome_event( 'bind_verified' );
+			if ( ! $this->session( true ) || ! $this->budget( $this->proposal['command'] ) ) {
+				return false;
+			}
+			$this->native_outcome_send( 'dml' );
+			$ack = $stmt->execute();
+			$this->native_outcome_ack( 'dml', $ack );
+			if ( true !== $ack ) {
+				return false;
+			}
+			$rows = $stmt->affected_rows;
+			if ( null !== $this->native_outcome ) {
+				$this->native_outcome['facts']['affected_rows'] = 1 === $rows ? 'one' : ( 0 === $rows ? 'zero' : 'other' );
+			}
+			return 1 === $rows;
 		} finally {
 			$stmt->close();
 		}

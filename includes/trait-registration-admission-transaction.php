@@ -58,10 +58,14 @@ trait Alynt_Drime_Backups_Uploader_Registration_Admission_Transaction {
 			return false;
 		}
 		$this->phase = 'begin_sent';
-		if ( true !== $this->reader->query( 'START TRANSACTION READ WRITE' ) || ! $this->session( true ) ) {
+		$this->native_outcome_send( 'begin' );
+		$ack = $this->reader->query( 'START TRANSACTION READ WRITE' );
+		$this->native_outcome_ack( 'begin', $ack );
+		if ( true !== $ack || ! $this->session( true ) ) {
 			return false;
 		}
 		$this->phase = 'transaction_owned';
+		$this->native_outcome_event( 'transaction_owned' );
 		foreach ( array_keys( Alynt_Drime_Backups_Uploader_Scan_Effect_Manifest::rows() ) as $role ) {
 			if ( ! $this->budget( $e ) || $this->admission_row( $core['options'], $role, true ) !== $this->before['rows'][ $role ] || ( 'safety' === $role && ! $this->metadata( $core['options'] ) ) ) {
 				return false;
@@ -81,10 +85,15 @@ trait Alynt_Drime_Backups_Uploader_Registration_Admission_Transaction {
 		if ( ! $this->session( true ) || ! $this->budget( $e ) ) {
 			return false;
 		}
+		$this->native_outcome_event( 'readback' );
 		$this->phase = 'commit_sent';
-		if ( true !== $this->reader->query( 'COMMIT AND NO CHAIN NO RELEASE' ) || ! $this->session( false ) ) {
+		$this->native_outcome_send( 'commit' );
+		$ack = $this->reader->query( 'COMMIT AND NO CHAIN NO RELEASE' );
+		$this->native_outcome_ack( 'commit', $ack );
+		if ( true !== $ack || ! $this->session( false ) ) {
 			return false;
 		}
+		$this->native_outcome_event( 'commit_idle' );
 		$this->phase = 'committed';
 		return true;
 	}
