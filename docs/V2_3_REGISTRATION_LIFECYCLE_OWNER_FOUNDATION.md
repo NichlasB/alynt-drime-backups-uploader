@@ -148,3 +148,7 @@ with confirmed exact local target and owned disposable users/storage fixtures an
 cleanup, preserving application state. Native admission/observer transactions,
 wiring, grants/activation/rollback remain disabled. Fresh explicit site/fixture
 approval required; this is not approval for native admission-to-observation execution.
+
+Follow-up: the separately approved genuine owned-core authentication/cleanup proof
+is recorded in [lifecycle owner auth proof](V2_3_REGISTRATION_LIFECYCLE_OWNER_AUTH_PROOF.md).
+This historical isolated-API foundation record does not itself claim that runtime evidence.

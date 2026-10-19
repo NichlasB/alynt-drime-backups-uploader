@@ -1,7 +1,7 @@
 <?php
 /** Native full-core worker, isolated before core bootstrap; not a site endpoint. */
 if ( 'cli' !== PHP_SAPI || ! in_array( count( $argv ), array( 5, 6 ), true ) ) exit( 1 );
-$proof = $argv[5] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation', 'native-scan-ledger', 'registration-construction', 'registration-native-reader', 'registration-native-admission', 'registration-observation-construction', 'registration-observation-handoff', 'registration-native-barrier', 'registration-native-contention' ), true ) ) exit( 1 );
+$proof = $argv[5] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation', 'native-scan-ledger', 'registration-construction', 'registration-native-reader', 'registration-native-admission', 'registration-observation-construction', 'registration-observation-handoff', 'registration-native-barrier', 'registration-native-contention', 'registration-lifecycle-owner' ), true ) ) exit( 1 );
 $root = realpath( $argv[1] );
 if ( ! $root || $root !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || ! ctype_digit( $argv[2] ) || ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[3] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[4] ) ) exit( 1 );
 require __DIR__ . '/fixed-core-proof-storage.php';
@@ -52,7 +52,8 @@ try {
     if ( 'guard' === $proof ) { alynt_core_cases(); alynt_core_denials(); }
     else {
         require __DIR__ . '/native-observer-proof-fixtures.php';
-        if ( 'registration-native-contention' === $proof ) { require __DIR__ . '/registration-contention-proof.php'; require __DIR__ . '/registration-contention-failures.php'; alynt_contention_cases(); alynt_contention_failures(); }
+        if ( 'registration-lifecycle-owner' === $proof ) { require __DIR__ . '/registration-lifecycle-proof-fixtures.php'; require __DIR__ . '/registration-lifecycle-proof-cases.php'; require __DIR__ . '/registration-lifecycle-proof-denials.php'; alynt_lifecycle_cases(); alynt_lifecycle_denials(); }
+        elseif ( 'registration-native-contention' === $proof ) { require __DIR__ . '/registration-contention-proof.php'; require __DIR__ . '/registration-contention-failures.php'; alynt_contention_cases(); alynt_contention_failures(); }
         elseif ( 'registration-native-barrier' === $proof ) { require __DIR__ . '/registration-barrier-proof-fixtures.php'; require __DIR__ . '/registration-barrier-proof-cases.php'; require __DIR__ . '/registration-barrier-proof-denials.php'; require __DIR__ . '/registration-barrier-proof-locks.php'; alynt_barrier_cases(); alynt_barrier_denials(); alynt_barrier_locks(); }
         elseif ( 'registration-observation-handoff' === $proof ) { require __DIR__ . '/registration-handoff-proof-fixtures.php'; require __DIR__ . '/registration-handoff-proof-cases.php'; require __DIR__ . '/registration-handoff-proof-denials.php'; alynt_handoff_cases(); alynt_handoff_denials(); }
         elseif ( 'registration-observation-construction' === $proof ) { require __DIR__ . '/registration-observation-proof-fixtures.php'; require __DIR__ . '/registration-observation-proof-cases.php'; require __DIR__ . '/registration-observation-proof-denials.php'; alynt_origin_cases(); alynt_origin_denials(); }
