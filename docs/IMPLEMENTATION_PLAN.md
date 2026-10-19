@@ -10,6 +10,27 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed Registration Native Admission and Owned Ledger Commit Proof
+
+Approved R3 **Plugin Tester local-only**, exact owned disposable users/storage/
+cleanup confirmation, native admission writes only owned ledger fixture. The
+[owning proof](V2_3_REGISTRATION_NATIVE_ADMISSION_PROOF.md) covers excluded uploader
+`1470a4024de1bce257f9610c313b708861dbea17`, dashboard
+`f571596bcd4b363008c82dd3a7b358d5a7bd5326`. Dormant private genuine guarded capture/
+construction -> all-ten locked equality -> one exact schema-2 ledger CAS/readback/
+acknowledged commit implemented. Genuine **2766 / 14**, eight assertion-killed/
+exactly restored controls; predecessor proofs green, all **77** application tables
+unchanged and all fixtures removed. Related local **265 / 3369**, no skips;
+canonical source-scoped Light/Bloat/05/07/07A/final Security recorded by owner.
+
+Implementation-plan progress: genuine native closed registration admission now
+executable, not production activation or auth-valid-at-COMMIT/lost-wire proof.
+Public endpoints/application state/production wiring/grants/activation/effects/
+rollback remain untouched/disabled. **Recommended next gated slice: local-only
+V2.3 Guarded Registration Receipt Observation and In-Flight Closure Design**,
+repository/design-only read-purpose/barrier/history versus not-observed and delayed
+work protocol; no absence=>retry or execution. New trust-contract approval required.
+
 ### V2.3 Closed Registration Admission Plan and One-Shot Handoff Foundation
 
 Approved R3 **repository-only, dormant, in-memory tests only**. The
