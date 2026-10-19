@@ -169,3 +169,18 @@ erase/transfer ordering. Existing standalone `admit()` constructs its own propos
 and returns a boolean that may follow commit; calling it as-is cannot establish
 same-owner provenance. No storage writes/native execution/fixtures, production
 wiring, grants, activation or rollback in that design slice. Fresh approval required.
+
+## Follow-up design and Windows verification close-out — 2026-10-19
+
+The separately approved design-only native join/outcome refinement is dashboard
+`docs/V2_3_NATIVE_ADMISSION_JOIN_OUTCOME_DESIGN.md`. It specifies same-root original
+provenance before DML, exact send/ack boundaries and independent historical outcome/
+client release/current-auth facts; no implementation or native execution enabled.
+Next gate is **Admission Outcome and Release DATA Safety Foundation**, in-memory
+only. This record's genuine proof is not promoted to native joined execution proof.
+
+The additional Windows full run against e2d7a3e finished **1592 tests / 21004
+assertions / four platform skips**, no failures,18m58.521s. Both exact-head Linux
+PHP suites remain1592/21058, no skips; do not conflate their coverage with Windows.
+Its one-off follow-up was deleted after retrieving completion; no proof/site run
+was repeated to close that follow-up. The current design's validation is separate.

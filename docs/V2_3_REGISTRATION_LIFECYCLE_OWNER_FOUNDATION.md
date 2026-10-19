@@ -152,3 +152,13 @@ approval required; this is not approval for native admission-to-observation exec
 Follow-up: the separately approved genuine owned-core authentication/cleanup proof
 is recorded in [lifecycle owner auth proof](V2_3_REGISTRATION_LIFECYCLE_OWNER_AUTH_PROOF.md).
 This historical isolated-API foundation record does not itself claim that runtime evidence.
+
+The approved repository-only **Fixed Native Admission Join and Lifecycle Outcome
+Integration Design** is owned by dashboard
+`docs/V2_3_NATIVE_ADMISSION_JOIN_OUTCOME_DESIGN.md`. It maps actual private native
+helpers into this root **before** unconditional cleanup, never after the returned
+preparation boolean or through a second constructor. Attempt/send/ack/idle facts,
+historical outcome, client release and current auth remain separate. Source/tests,
+native execution, production wiring and grants/activation/rollback unchanged.
+Next gated slice: in-memory-only Admission Outcome and Release DATA Safety Foundation;
+this design approval does not authorize that implementation or native fixture work.
