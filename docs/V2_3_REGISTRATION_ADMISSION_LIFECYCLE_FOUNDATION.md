@@ -1,5 +1,19 @@
 # V2.3 Admission-Origin Lifecycle DATA Safety Foundation
 
+## Successor fixed-owner checkpoint — 2026-10-19
+
+The separately approved isolated API foundation is recorded in
+[fixed lifecycle owner](V2_3_REGISTRATION_LIFECYCLE_OWNER_FOUNDATION.md): one guarded
+construction, exact original provenance before final preparation guards, no native
+execution or synthetic outcome import, unconditional same-stack cleanup. The
+shared packet methods were extracted unchanged for stateless reuse; prior DATA
+semantics remain covered. New13/1072, related381/10690, eight assertion-killed/
+exactly restored controls. This does not upgrade DATA into genuine admission or
+release provenance. Next gate is Plugin Tester owned authentication/cleanup proof,
+with fresh exact target/fixture approval; native transactions/wiring remain disabled.
+
+## Original DATA checkpoint
+
 2026-10-19. Approved R3 repository-only, **in-memory tests only**. No WordPress,
 LocalWP, users, database/storage operations, native execution or production wiring.
 Grants, activation, effects and schedule rollback remain disabled/unchanged.
