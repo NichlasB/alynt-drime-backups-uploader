@@ -10,6 +10,26 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Observation Origin Retention / Guarded Construction Owned Authentication Proof
+
+Approved R3 Plugin Tester local-only, exact owned users/fixture creation/testing/
+cleanup confirmed. [Owning proof](V2_3_REGISTRATION_OBSERVATION_AUTH_PROOF.md)
+covers excluded uploader `48416bd7d9d206a95bdf6268b5c52c7f0b04f31d`, dashboard
+`188a87a63c7284667a3ef49540bfd672ed5feac7`. Dormant genuine guarded two-sweep capture
+to own origin retention, independent small/full read construction and original
+physical auth-session pinning implemented. Genuine **984 / 12 groups**, eight
+assertion-killed/exactly restored controls; all **77** application checksums
+unchanged, all fixtures removed. API/DATA observation **34 / 974**, related
+**299 / 4343**, no skips; canonical source-scoped Light/Bloat/final Security.
+
+Implementation-plan progress: genuine origin/read construction now executable,
+not native receipt observation/locking/closure or activation. Actual application
+state, production wiring/grants/activation/effects/rollback untouched/disabled.
+**Recommended next gated slice: local-only V2.3 Registration Observation Native
+Barrier and Private Handoff Design**, design-only original context/nonce/deadline
+handoff into fixed all-ten zero-DML observer; no SQL/fixtures/storage writes or
+wiring. New observer trust/ownership contract requires separate approval.
+
 ### V2.3 Observation Origin Retention and Guarded Request Construction Foundation
 
 Approved R3 repository-only/dormant, isolated API tests only. The

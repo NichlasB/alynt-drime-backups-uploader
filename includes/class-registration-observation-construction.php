@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/class-registration-request-owner.php';
 require_once __DIR__ . '/class-registration-observation-origin.php';
 require_once __DIR__ . '/trait-registration-observation-construction-window.php';
+require_once __DIR__ . '/class-registration-native-reader.php';
+require_once __DIR__ . '/trait-registration-observation-native-capture.php';
 
 /** Test reflection only; no public raw frame, origin import or continuation. */
 final class Alynt_Drime_Backups_Uploader_Registration_Observation_Construction {
@@ -19,6 +21,10 @@ final class Alynt_Drime_Backups_Uploader_Registration_Observation_Construction {
 	use Alynt_Drime_Backups_Uploader_Registration_Eligibility;
 	use Alynt_Drime_Backups_Uploader_Registration_Construction;
 	use Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window;
+	use Alynt_Drime_Backups_Uploader_Native_Observer_Session;
+	use Alynt_Drime_Backups_Uploader_Native_Observer_Rows;
+	use Alynt_Drime_Backups_Uploader_Scan_Observation_Rows;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Native_Capture;
 
 	/**
 	 * Existing registration constructor's non-reentrancy latch.

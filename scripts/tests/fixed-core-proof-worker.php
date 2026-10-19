@@ -1,7 +1,7 @@
 <?php
 /** Native full-core worker, isolated before core bootstrap; not a site endpoint. */
 if ( 'cli' !== PHP_SAPI || ! in_array( count( $argv ), array( 5, 6 ), true ) ) exit( 1 );
-$proof = $argv[5] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation', 'native-scan-ledger', 'registration-construction', 'registration-native-reader', 'registration-native-admission' ), true ) ) exit( 1 );
+$proof = $argv[5] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation', 'native-scan-ledger', 'registration-construction', 'registration-native-reader', 'registration-native-admission', 'registration-observation-construction' ), true ) ) exit( 1 );
 $root = realpath( $argv[1] );
 if ( ! $root || $root !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || ! ctype_digit( $argv[2] ) || ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[3] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[4] ) ) exit( 1 );
 require __DIR__ . '/fixed-core-proof-storage.php';
@@ -52,7 +52,8 @@ try {
     if ( 'guard' === $proof ) { alynt_core_cases(); alynt_core_denials(); }
     else {
         require __DIR__ . '/native-observer-proof-fixtures.php';
-        if ( 'registration-construction' === $proof ) { require __DIR__ . '/registration-proof-fixtures.php'; require __DIR__ . '/registration-proof-cases.php'; require __DIR__ . '/registration-proof-denials.php'; alynt_registration_cases(); alynt_registration_denials(); }
+        if ( 'registration-observation-construction' === $proof ) { require __DIR__ . '/registration-observation-proof-fixtures.php'; require __DIR__ . '/registration-observation-proof-cases.php'; require __DIR__ . '/registration-observation-proof-denials.php'; alynt_origin_cases(); alynt_origin_denials(); }
+        elseif ( 'registration-construction' === $proof ) { require __DIR__ . '/registration-proof-fixtures.php'; require __DIR__ . '/registration-proof-cases.php'; require __DIR__ . '/registration-proof-denials.php'; alynt_registration_cases(); alynt_registration_denials(); }
         elseif ( 'registration-native-reader' === $proof ) { require __DIR__ . '/registration-native-proof-fixtures.php'; require __DIR__ . '/registration-native-proof-cases.php'; require __DIR__ . '/registration-native-proof-denials.php'; alynt_registration_native_cases(); alynt_registration_native_denials(); }
         elseif ( 'registration-native-admission' === $proof ) { require __DIR__ . '/registration-admission-proof-fixtures.php'; require __DIR__ . '/registration-admission-proof-cases.php'; alynt_admission_cases(); }
         elseif ( 'native-observation' === $proof ) { require __DIR__ . '/native-observer-proof-cases.php'; alynt_native_cases(); }
