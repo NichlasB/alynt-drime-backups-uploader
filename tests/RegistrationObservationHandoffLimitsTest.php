@@ -67,7 +67,9 @@ class RegistrationObservationHandoffLimitsTest extends TestCase {
             $error = null; try { if ( 'clone' === $operation ) { $copy = clone $o; } elseif ( '__unserialize' === $operation ) { $o->__unserialize( array( 'barrier_verified' => true ) ); } else { $o->$operation(); } } catch ( Throwable $caught ) { $error = $caught; }
             $this->assertInstanceOf( 'clone' === $operation ? Error::class : LogicException::class, $error );
         }
-        foreach ( array_merge( array( dirname( __DIR__ ) . '/alynt-drime-backups-uploader.php' ), glob( dirname( __DIR__ ) . '/includes/class-plugin*.php' ), array( dirname( __DIR__ ) . '/includes/class-registration-observation-construction.php', dirname( __DIR__ ) . '/includes/class-registration-native-admission.php' ) ) as $path ) {
+        // The separately approved private API coordinator may now compose these
+        // DATA helpers; production loaders and native admission must still not.
+        foreach ( array_merge( array( dirname( __DIR__ ) . '/alynt-drime-backups-uploader.php' ), glob( dirname( __DIR__ ) . '/includes/class-plugin*.php' ), array( dirname( __DIR__ ) . '/includes/class-registration-native-admission.php' ) ) as $path ) {
             foreach ( array( 'registration-observation-handoff', 'registration-observation-candidate' ) as $part ) $this->assertStringNotContainsString( $part, file_get_contents( $path ) );
         }
         $bad = $f; $bad['form']['barrier_verified'] = true; $this->assertFalse( $this->handoffStep( $this->handoffOwner(), 'stage', $bad ) );

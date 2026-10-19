@@ -13,6 +13,10 @@ require_once __DIR__ . '/class-registration-observation-origin.php';
 require_once __DIR__ . '/trait-registration-observation-construction-window.php';
 require_once __DIR__ . '/class-registration-native-reader.php';
 require_once __DIR__ . '/trait-registration-observation-native-capture.php';
+require_once __DIR__ . '/class-registration-observation-candidate.php';
+require_once __DIR__ . '/trait-registration-observation-handoff-data.php';
+require_once __DIR__ . '/trait-registration-observation-read-construction.php';
+require_once __DIR__ . '/trait-registration-observation-guarded-handoff.php';
 
 /** Test reflection only; no public raw frame, origin import or continuation. */
 final class Alynt_Drime_Backups_Uploader_Registration_Observation_Construction {
@@ -25,6 +29,9 @@ final class Alynt_Drime_Backups_Uploader_Registration_Observation_Construction {
 	use Alynt_Drime_Backups_Uploader_Native_Observer_Rows;
 	use Alynt_Drime_Backups_Uploader_Scan_Observation_Rows;
 	use Alynt_Drime_Backups_Uploader_Registration_Observation_Native_Capture;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Handoff_Data;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Read_Construction;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Guarded_Handoff;
 
 	/**
 	 * Existing registration constructor's non-reentrancy latch.
@@ -216,54 +223,11 @@ final class Alynt_Drime_Backups_Uploader_Registration_Observation_Construction {
 			}
 		);
 		try {
-			$i = Alynt_Drime_Backups_Uploader_Registration_Observation_Request::intent( $body );
-			if ( 1 !== func_num_args() || false === $i || null === $this->origin || $i['observed_command_id'] !== $this->origin_data['mutation']['command_id'] ) {
+			if ( 1 !== func_num_args() ) {
 				return false;
 			}
-			$this->active = true;
-			$core         = $this->open_window();
-			if ( false === $core || $this->installation( $core ) !== $this->origin_data['installation'] ) {
-				return false;
-			}
-			$actor = get_current_user_id();
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- Original read actor/cookie pinned within this stack, not the historical mutation actor.
-			$cookie = $_COOKIE[ LOGGED_IN_COOKIE ] ?? null;
-			$action = Alynt_Drime_Backups_Uploader_Registration_Observation_Request::issue_action( $core['blog'], $i['observed_command_id'] );
-			if ( ! $this->guard( $core, $i['nonce'], $action, null ) || ! $this->same_request( $core, $cookie, $actor ) || ! $this->within_budget() ) {
-				return false;
-			}
-			$id  = wp_generate_uuid4();
-			$now = time();
-			if ( ! is_string( $id ) || isset( $this->used[ $id ] ) || $now < 1 || $now > PHP_INT_MAX - 3900 ) {
-				return false;
-			}
-			$form = array(
-				'contract'            => 'scan_registration_observation_v2',
-				'purpose'             => 'observe_registration',
-				'command_id'          => $id,
-				'site_uuid'           => $this->origin_data['scope']['site_uuid'],
-				'observed_command_id' => $i['observed_command_id'],
-				'issued_at'           => (string) $now,
-				'expires_at'          => (string) ( $now + 300 ),
-				'confirm'             => 'observe',
-				'nonce'               => 'pending',
-			);
-			$p    = Alynt_Drime_Backups_Uploader_Registration_Request_Contract::parse( $form );
-			if ( false === $p ) {
-				return false;
-			}
-			$form['nonce'] = wp_create_nonce( $p['action'] );
-			$final         = Alynt_Drime_Backups_Uploader_Registration_Request_Contract::parse( $form );
-			if ( false === $final || $final['envelope'] !== $p['envelope'] || ! $this->origin->accepts( $body, $form, time() ) || ! $this->guard( $core, $i['nonce'], $action, $p['envelope'] ) || ! $this->same_request( $core, $cookie, $actor ) || ! $this->guard( $core, $final['nonce'], $final['action'], $p['envelope'] ) || ! $this->same_request( $core, $cookie, $actor ) || ! $this->within_budget() ) {
-				return false;
-			}
-			return $this->disposition() + array(
-				'envelope'         => $p['envelope'],
-				'nonce'            => $final['nonce'],
-				'action'           => $final['action'],
-				'barrier_verified' => false,
-				'closure_proven'   => false,
-			);
+			$built = $this->build_observation( $body );
+			return false === $built ? false : $built['blueprint'];
 		} catch ( Throwable $error ) {
 			return false;
 		} finally {
