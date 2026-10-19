@@ -10,6 +10,26 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Registration Observation Native Barrier and Private Handoff Design
+
+Approved R3 repository-only/design-only, owned by dashboard
+`docs/V2_3_REGISTRATION_OBSERVATION_NATIVE_HANDOFF_DESIGN.md`; excluded uploader
+`e6b24f18a4b9060ce0362abf7e93a50e227d17b8`, dashboard
+`d964231688d1deecc8c0132c81df0f78b935433c`. Same-owner transfer before consuming
+cleanup, independent read nonce/original deadline lifecycle, fixed ten-row
+zero-DML barrier and pending-aware historical result qualification specified.
+Do not reuse admission's empty-pending predicate, old-frame equality or DML path.
+No source/test/schema/runtime/site operations, production wiring or activation.
+
+Implementation-plan progress: the observation ownership/barrier contract is
+designed, not implemented; this design lane reaches a new implementation gate.
+**Recommended next gated slice: local-only V2.3 Registration Observation Private
+Handoff and Barrier Result Safety Foundation**, in-memory bounded handoff and
+complete-frame candidate/result tests with non-vacuous valid histories and
+semantic controls. No native certificate, actual WordPress/storage operations,
+grants, wiring, activation or rollback. Separate implementation approval required;
+genuine native/owned proof and uncertain-admission lifecycle remain later gates.
+
 ### V2.3 Observation Origin Retention / Guarded Construction Owned Authentication Proof
 
 Approved R3 Plugin Tester local-only, exact owned users/fixture creation/testing/
