@@ -166,6 +166,10 @@ if ( ! function_exists( 'add_action' ) ) {
 
 if ( ! function_exists( 'add_filter' ) ) {
 	function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+		// Opt-in isolated hook inventory; never executes callbacks or loads WordPress.
+		if ( isset( $GLOBALS['alynt_test_owned_filter_inventory'] ) ) {
+			$GLOBALS['alynt_test_owned_filter_inventory'][ $hook ][] = array( $callback, $priority );
+		}
 		unset( $hook, $callback, $priority, $accepted_args );
 	}
 }

@@ -45,5 +45,5 @@ function alynt_test_fixed_core_request_shims() {
 	}
 	function wp_validate_auth_cookie( $cookie, $scheme ) { alynt_test_core_call( 'validate_cookie', array( $cookie, $scheme ) ); $s = $GLOBALS['alynt_core_request_test']; return ( $s['session_cache'] ?? $s['session_now'] ) ? $s['cookie_actor'] : false; }
 	function user_can( $user, $capability ) { alynt_test_core_call( 'capability', array( $user->ID, $capability ) ); return $user->allowed && $GLOBALS['alynt_core_request_test']['filter_allows']; }
-	function wp_verify_nonce( $nonce, $action ) { alynt_test_core_call( 'verify_nonce', array( $nonce, $action ) ); $s = $GLOBALS['alynt_core_request_test']; return 'unit-nonce' === $nonce && ( ! isset( $s['expected_action'] ) || $s['expected_action'] === $action ) ? $s['nonce_result'] : false; }
+	function wp_verify_nonce( $nonce, $action ) { alynt_test_core_call( 'verify_nonce', array( $nonce, $action ) ); $s = $GLOBALS['alynt_core_request_test']; if ( isset( $s['nonce_actions'] ) ) return isset( $s['nonce_actions'][$nonce] ) && $s['nonce_actions'][$nonce] === $action ? $s['nonce_result'] : false; return 'unit-nonce' === $nonce && ( ! isset( $s['expected_action'] ) || $s['expected_action'] === $action ) ? $s['nonce_result'] : false; }
 }
