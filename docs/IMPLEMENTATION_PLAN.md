@@ -10,6 +10,25 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Guarded Registration Receipt Observation and In-Flight Closure Design
+
+Approved R3 **repository-only/design-only**, owned by dashboard
+`docs/V2_3_REGISTRATION_RECEIPT_OBSERVATION_CLOSURE_DESIGN.md`; excluded dashboard
+`7165b9df616ee2ee33f64ace5b90bc79797b86f6`, uploader
+`df89d677db990fc909f2e53bf4d67876afb31060`. Retained private origin, independent
+read issuance/full nonce, all-ten zero-DML barrier and pending-history lookup
+defined. Historical receipt/not-observed never authorize retry; separate versioned
+durable ingress closure and participant proof required to fence delayed requests.
+
+Implementation-plan progress: observation/origin/closure contract specified, not
+implemented. No runtime/tests/schema/version/site/SQL/fixtures/storage operations,
+public endpoints/wiring/grants/activation/effects/rollback or release changes.
+**Recommended next gated slice: local-only V2.3 Registration Observation Origin
+and Result Safety Foundation**, dormant in-memory bounded immutable origin,
+read-intent/query/result/lifetime contracts and non-vacuous controls; actual auth/
+native handles/storage, closure writes and production wiring remain disabled.
+Approval required for the new trust-data implementation, not maintenance churn.
+
 ### V2.3 Closed Registration Native Admission and Owned Ledger Commit Proof
 
 Approved R3 **Plugin Tester local-only**, exact owned disposable users/storage/
