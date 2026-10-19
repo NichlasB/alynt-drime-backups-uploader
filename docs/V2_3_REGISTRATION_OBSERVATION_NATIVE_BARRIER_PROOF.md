@@ -1,5 +1,14 @@
 # V2.3 Fixed Native Registration Observation Barrier / Owned Zero-DML Proof
 
+Progress checkpoint 2026-10-19: the subsequently approved owned contention/failure
+slice is completed in [the contention proof record](V2_3_REGISTRATION_OBSERVATION_CONTENTION_PROOF.md):
+611/9, five assertion-killed/exactly restored controls, unchanged application state.
+The native barrier predecessor reran4247/9. The previously pending extra Windows
+full run finished1551/17500 with four platform skips, lint/syntax pass; its one-off
+reminder was deleted. This is baseline evidence, not new-head CI. The historical
+scope/results and next-gate statement below describe this earlier barrier slice;
+current gated recommendation is the admission-origin lifecycle design in that record.
+
 2026-10-19. Approved R3 Plugin Tester **local-only**, exact resolved target and
 read-only locking transaction / owned disposable fixtures / cleanup confirmed.
 Coherent excluded Git review baselines: uploader
