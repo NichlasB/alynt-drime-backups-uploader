@@ -10,6 +10,25 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Registration Observation Origin and Result Safety Foundation
+
+Approved R3 **repository-only/dormant, in-memory new tests only**. The
+[owning record](V2_3_REGISTRATION_OBSERVATION_FOUNDATION.md) covers excluded uploader
+`b0461eade2f11f67ece7e7370a3933f9151adac1`, dashboard
+`d8881745290e74a177a3ac840f76e548ee6e5a2a`. Immutable bounded original context,
+separate read-intent/query binding, complete candidate-history lookup and private
+consumed lifetime implemented. New **15 / 285**, related **280 / 3654**, no skips;
+ten assertion-killed/exactly restored controls. Canonical focused Light/final
+Security source-scoped; no genuine auth/native barrier/closure proof claimed.
+
+Implementation-plan progress: executable origin/read-result DATA milestone, not
+production observation or permission. Existing source/guards/owners/codecs/wiring,
+actual site/storage/authentication/UUID operations, grants/activation/effects/
+closure writes/rollback remain unchanged/disabled. **Recommended next gated slice:
+local-only V2.3 Observation Origin Retention and Guarded Request Construction
+Safety Foundation**, dormant isolated-API integration, actual WordPress/native/
+storage proof separately gated. New origin/auth boundary requires approval.
+
 ### V2.3 Guarded Registration Receipt Observation and In-Flight Closure Design
 
 Approved R3 **repository-only/design-only**, owned by dashboard
