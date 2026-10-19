@@ -10,6 +10,26 @@ The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete a
 
 ## Current Stable Baseline
 
+### V2.3 Closed Registration Admission Plan and One-Shot Handoff Foundation
+
+Approved R3 **repository-only, dormant, in-memory tests only**. The
+[owning record](V2_3_REGISTRATION_ADMISSION_PLAN_FOUNDATION.md) covers excluded
+uploader `81fc2617d466b4c31db26021223f30727de1325d`, dashboard
+`e26d282b4d2929322348474f0138986da59aa575`. Immutable complete eligible candidate,
+full tuple/proposal/scope equality and private consumed data lifetime implemented;
+no actual authentication/native origin or write capability. New **9 / 346**,
+related **262 / 3300**, no skips; six assertion-killed/restored controls, canonical
+Feature Light/final Security source-scoped, owning record has QA/proof limits.
+
+Implementation-plan progress: executable admission-plan/handoff milestone, not
+native commit or production participation. No existing source/guards/reader,
+schema/version/site/database, actual auth/native handles, storage writes/public
+endpoints/wiring/grants/activation/effects/rollback or release changes.
+**Recommended next gated slice: Plugin Tester local-only V2.3 Closed Registration
+Native Admission and Owned Ledger Commit Proof**, dormant genuine guarded all-ten
+locks/one owned ledger-fixture CAS/readback/commit and failure controls. Separate
+exact target/fixture/write approval required; existing application state untouched.
+
 ### V2.3 Closed Registration Native Admission and Locked Revalidation Design
 
 Approved R3 **repository-only/design-only**, owned by companion dashboard
