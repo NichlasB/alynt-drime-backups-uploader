@@ -1,6 +1,6 @@
 <?php
 /**
- * Dormant process-local origin retention and guarded read blueprints, no IO.
+ * Dormant process-local guarded observation; no public execution entry point.
  *
  * @package Alynt_Drime_Backups_Uploader
  */
@@ -17,10 +17,15 @@ require_once __DIR__ . '/class-registration-observation-candidate.php';
 require_once __DIR__ . '/trait-registration-observation-handoff-data.php';
 require_once __DIR__ . '/trait-registration-observation-read-construction.php';
 require_once __DIR__ . '/trait-registration-observation-guarded-handoff.php';
+require_once __DIR__ . '/trait-registration-observation-native-barrier.php';
+require_once __DIR__ . '/trait-native-options-metadata.php';
+require_once __DIR__ . '/trait-native-closed-begin-session.php';
 
 /** Test reflection only; no public raw frame, origin import or continuation. */
 final class Alynt_Drime_Backups_Uploader_Registration_Observation_Construction {
-	use Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Core_Guard;
+	use Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Core_Guard {
+		same_request as private construction_same_request;
+	}
 	use Alynt_Drime_Backups_Uploader_Closed_Writer_Contract_Privacy;
 	use Alynt_Drime_Backups_Uploader_Registration_Eligibility;
 	use Alynt_Drime_Backups_Uploader_Registration_Construction;
@@ -29,7 +34,12 @@ final class Alynt_Drime_Backups_Uploader_Registration_Observation_Construction {
 	use Alynt_Drime_Backups_Uploader_Native_Observer_Rows;
 	use Alynt_Drime_Backups_Uploader_Scan_Observation_Rows;
 	use Alynt_Drime_Backups_Uploader_Registration_Observation_Native_Capture;
-	use Alynt_Drime_Backups_Uploader_Registration_Observation_Handoff_Data;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Handoff_Data, Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session {
+		Alynt_Drime_Backups_Uploader_Registration_Observation_Handoff_Data::finish insteadof Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session;
+		Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session::finish as private close_barrier;
+	}
+	use Alynt_Drime_Backups_Uploader_Native_Options_Metadata;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Native_Barrier;
 	use Alynt_Drime_Backups_Uploader_Registration_Observation_Read_Construction;
 	use Alynt_Drime_Backups_Uploader_Registration_Observation_Guarded_Handoff;
 
@@ -114,6 +124,18 @@ final class Alynt_Drime_Backups_Uploader_Registration_Observation_Construction {
 
 	/** Zero IO. */
 	private function __construct() {}
+
+	/**
+	 * Native lane also pins the borrowed physical authentication session.
+	 *
+	 * @param array  $frame Original core facts.
+	 * @param string $cookie Original cookie, never exported.
+	 * @param int    $actor Original current observer.
+	 * @return bool No physical requirement is imposed on isolated API callers.
+	 */
+	private function same_request( array $frame, $cookie, $actor ) {
+		return $this->construction_same_request( $frame, $cookie, $actor ) && ( null === $this->barrier_auth || $this->auth_same( $frame, $this->barrier_auth, $this->barrier_auth_facts ) );
+	}
 
 	/**
 	 * No constructor ports for origins, callbacks, actors, clocks or connections.
