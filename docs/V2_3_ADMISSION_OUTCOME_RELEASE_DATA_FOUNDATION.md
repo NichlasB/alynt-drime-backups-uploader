@@ -87,7 +87,7 @@ server quiescence, durable closure or safe retry. There is no public result expo
 
 ## Non-vacuous validation and controls
 
-New pure suite: **15 tests / 1662 assertions**, no skips. Positive committed,
+New pure suite: **15 tests / 1663 assertions**, no skips. Positive committed,
 rolled-back, uncreated, bind-failure, uncertain-send, COMMIT-unknown and ack-without-
 idle cases ensure an always-unavailable implementation fails. Negative cases cover
 every prerequisite, unknown BEGIN/rollback, late close/auth/physical failure,
@@ -96,11 +96,14 @@ altered provenance, wrong types/UTF-8/aliases/cycles, exact ID/position/packet/d
 node ceilings and half-open clocks. Reflection/token checks cover inert public
 surface, no retained private facts and no auth/storage/native/production ports.
 
-Nine bounded semantic controls each produced **assertion failures**, not bootstrap
+Ten bounded semantic controls each produced **assertion failures**, not bootstrap
 or syntax errors, and the exact source SHA256 was restored after each: one-shot
 consumption, original binding, causal prerequisites, raw acknowledgement ordering,
 COMMIT verified-idle requirement, positive close, uncertain-only candidate policy,
-writer clock and observation-position ceiling. The clean suite passed afterward.
+writer clock, observation-position ceiling and PHP7.4 trait-constant compatibility.
+The first nine guard bodies are unchanged by the later declaration move; the tenth
+control proves that the permanent compatibility assertion fails even on newer PHP.
+Each control was exactly restored and the clean suite passed afterward.
 
 Light review found one additional consumption gap: PHP required arguments could
 throw before consuming an under-arity reflection-only attempt. A failing regression
@@ -108,23 +111,32 @@ was added, parameters now default to null solely so exact-arity rejection occurs
 inside the consuming boundary, and all 0..5-argument cases pass. No public surface
 was added and no accepted DATA shape was widened.
 
+First exact-head CI `29f6d4d` / run39323497727 caught a second issue: PHP7.4 cannot
+declare trait constants, although the newer local runtime accepted that declaration
+and local WPCS did not catch it. The identical event-key constant was moved from
+the trait to the final class (no contract/guard change); a permanent no-trait-
+constants assertion and its assertion-killed/restored control were added. This
+record does not claim that the failed run was green or that its PHP7.4 suite ran.
+
 ## Canonical focused reviews (source-scoped only)
 
 Feature Light: scope=the five new PHP files, this record and dashboard plan/design
 links, plus the four shared validator dependencies; risk=Other/dormant DATA only.
-One issue found/fixed (under-arity consumption); zero manual decisions. No UI,
+Two issues found/fixed (under-arity consumption and CI-discovered PHP7.4 constant
+placement, included in the rerun); zero manual decisions. No UI,
 AJAX, REST, query, hook, schedule, file operation or third-party behavior added.
 Existing global-class naming, PHP7.4 and WordPress compatibility retained.
 
 Feature Bloat/Structure Phase1: explicit uploader base4c3e5efe; helper reports five
-changed PHP files and zero oversized files. TOTAL before/after: class78/78,
-fact trait143/143, boundary tests93/93, matrix tests86/86, fixture43/43. Helper CODE=1
+changed PHP files and zero oversized files. TOTAL initial/final: class78/85,
+fact trait143/136, boundary tests93/94, matrix tests86/86, fixture43/43. Helper CODE=1
 for each is a known measurement anomaly, not a claimed size reduction. Each file
 classified **Consolidate (retain cohesive implementation; no cleanup needed)**.
 Direct references/production root, plugin loader, native coordinator, fixed owner,
 hooks/filters/shortcodes/AJAX/REST/cron registrations checked; new code test-loaded
-only. No removals, splits or deferred oversized work. Phase2: no edits required;
-same explicit boundary remeasured, totals unchanged.
+only. No removals, splits or deferred oversized work. Bloat Phase2 required no
+cleanup; the subsequent compatibility declaration move was remeasured against the
+same explicit boundary, not presented as a forced split or behavior reduction.
 
 Final Feature Security runs after fixes, controls and validation: exact bounded
 primitive input, no request/core/auth callback, SQL/file operation/output, handles

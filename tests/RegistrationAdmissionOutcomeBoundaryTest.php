@@ -86,6 +86,7 @@ class RegistrationAdmissionOutcomeBoundaryTest extends TestCase {
         $root = dirname( __DIR__ );
         foreach ( array( 'class-registration-admission-outcome.php', 'trait-registration-admission-outcome-data.php' ) as $file ) {
             $source = file_get_contents( $root . '/includes/' . $file ); $this->assertLessThanOrEqual( 300, count( explode( "\n", $source ) ) );
+            if ( 'trait-registration-admission-outcome-data.php' === $file ) $this->assertSame( array(), (new ReflectionClass( 'Alynt_Drime_Backups_Uploader_Registration_Admission_Outcome_Data' ))->getConstants(), 'PHP7.4 trait must not declare constants.' );
             foreach ( token_get_all( $source ) as $token ) if ( is_array( $token ) && T_STRING === $token[0] ) $this->assertFalse( (bool) preg_match( '/^(wp_|mysqli|current_user_can$|get_option$|update_option$|add_action$|add_filter$|hrtime$|time$|microtime$|sleep$|fopen$|file_put_contents$|curl_)/i', $token[1] ), $token[1] );
         }
         foreach ( array( 'alynt-drime-backups-uploader.php', 'includes/class-plugin.php', 'includes/class-registration-native-admission.php', 'includes/class-registration-lifecycle-request-owner.php' ) as $file ) $this->assertStringNotContainsString( 'Registration_Admission_Outcome', file_get_contents( $root . '/' . $file ) );

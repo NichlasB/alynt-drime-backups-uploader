@@ -22,6 +22,13 @@ final class Alynt_Drime_Backups_Uploader_Registration_Admission_Outcome {
 	use Alynt_Drime_Backups_Uploader_Closed_Writer_Contract_Privacy;
 
 	/**
+	 * Exact observation positions, declared on the class for PHP7.4 compatibility.
+	 *
+	 * @var array
+	 */
+	const EVENTS = array( 'writer_created', 'attempt_reserved', 'begin_sent', 'begin_ack_at', 'transaction_owned', 'bind_verified', 'dml_sent', 'dml_ack_at', 'readback', 'commit_sent', 'commit_ack_at', 'commit_idle', 'rollback_sent', 'rollback_ack_at', 'rollback_idle', 'detached', 'close_at', 'accepted_at' );
+
+	/**
 	 * Any classification attempt is permanently consumed, including invalid DATA.
 	 *
 	 * @var bool
