@@ -1,6 +1,6 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
-Updated: 2026-10-18
+Updated: 2026-10-19
 
 ## Purpose
 
@@ -9,6 +9,26 @@ This document tracks the current implementation state and future roadmap for the
 The previous `alynt-drime-wpvivid-uploader` plugin line is considered complete and is not the focus of this plan except for migration/coexistence notes.
 
 ## Current Stable Baseline
+
+### V2.3 Closed Registration Native Admission and Locked Revalidation Design
+
+Approved R3 **repository-only/design-only**, owned by companion dashboard
+`docs/V2_3_CLOSED_REGISTRATION_NATIVE_ADMISSION_DESIGN.md`. Excluded dashboard
+`a2621078d7181f4d576f2a01781a63e15758cf93`, uploader
+`ace53355aabc1c530e200a62f5cb61e3b08bdd9d`. Private same-stack one-shot handoff,
+separate issuance/command guards, full ten-row locked equality, one schema-2
+ledger-only successor/receipt, original budget/40-read ceiling and no-replay
+unknown-outcome contract defined. Captured blueprint is not native authority;
+options locks do not serialize concurrent core auth revocation or prove no ABA.
+
+Implementation-plan progress: native admission boundary specified, not implemented.
+No runtime/test/schema/version/site/SQL/fixture, storage write, public endpoint,
+production wiring/grant/activation/effect/rollback or package/release/deploy change.
+**Recommended next gated slice: local-only V2.3 Closed Registration Admission Plan
+and One-Shot Handoff Safety Foundation**, dormant in-memory plan/equality/lifetime
+contracts and non-vacuous behavioral controls only. Actual authentication/native
+handles/storage/site operations and execution remain disabled; approval required
+for this new trust-contract implementation, not more maintenance-only cleanup.
 
 ### V2.3 Fixed Registration Native Reader and Guarded Construction Integration
 
