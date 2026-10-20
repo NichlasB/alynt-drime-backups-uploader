@@ -5,6 +5,8 @@ final class Alynt_Test_Qualification_Source_Manifest {
     const PRODUCTION = '15ea222c67467802ebacef48c21bf14d8dda4592f6fbc3b04f2dde0fe06b8c85';
     const PROOF = '859f3b3ac4655a24dd2b957601a32282cddf9aafe54eae34f32d72ba913a2b20';
     const PROJECTION = '8c43fd880c6cc4950ee900f994d6a64d32e6aa0449827b72cfbd69f628ba4170';
+    const WORKER = '1aa5e59b4d585c856b34058f1991571d4ee99cde741b8fbb10ba1e45a06b9726';
+    const TRANSCRIPT = '12a642532d06610c8450e296c094ea5b1ca284097f243f3166f02622ce22ad8e';
     private static function token_digest( $code ) {
         $tokens = array(); foreach ( token_get_all( '<?php ' . $code ) as $t ) {
             if ( is_array( $t ) && in_array( $t[0], array( T_OPEN_TAG, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT ), true ) ) continue;
@@ -46,10 +48,14 @@ final class Alynt_Test_Qualification_Source_Manifest {
     public static function verify() {
         if ( 0 !== func_num_args() ) return false;
         try {
-            $file = __DIR__ . '/QualificationObservationProjection.php';
-            if ( ! is_readable( $file ) || filesize( $file ) > 262144 || ! hash_equals( self::PROJECTION, self::token_digest( substr( file_get_contents( $file ), 5 ) ) ) ) return false;
+            foreach ( array( 'QualificationObservationProjection.php' => self::PROJECTION, 'QualificationObservationWorker.php' => self::WORKER, 'QualificationPrivateTranscript.php' => self::TRANSCRIPT ) as $name => $hash ) if ( ! self::support( $name, $hash ) ) return false;
             return self::compare( self::snapshot( Alynt_Drime_Backups_Uploader_Registration_Native_Admission::class ), self::snapshot( Alynt_Test_Qualification_Observation_Owner::class ) );
         }
         catch ( Throwable $ignored ) { return false; }
+    }
+    private static function support( $name, $hash ) {
+        if ( ! in_array( $name, array( 'QualificationObservationProjection.php', 'QualificationObservationWorker.php', 'QualificationPrivateTranscript.php' ), true ) ) return false;
+        $file = __DIR__ . '/' . $name;
+        return is_readable( $file ) && filesize( $file ) <= 262144 && hash_equals( $hash, self::token_digest( substr( file_get_contents( $file ), 5 ) ) );
     }
 }

@@ -317,3 +317,15 @@ and clearing, a separate bounded strict private domain and no external receipt
 feedback. Keep actual authentication/storage/networking/IPC/native execution and
 production wiring disabled. A later genuine owned native proof needs new explicit
 approval and exact Plugin Tester target/scope confirmation.
+
+## Approved fixed worker/transcript successor — 2026-10-20
+
+Implemented isolated-only successor:
+[fixed worker and private transcript foundation](V2_3_QUALIFICATION_WORKER_PRIVATE_TRANSCRIPT_FOUNDATION.md).
+Source-gated fixed owner, private one-shot extraction/clear and separate bounded
+synthetic frame; request entry remains unconditionally closed. Actual qualifier
+positive tests use synthetic post-root state, not authenticated root/erasure or
+native IPC proof. Original three source pins and runtime wiring unchanged.
+Canonical scoped reviews, new31/7884 and related125/12735 pass; full QA/exact-head
+CI recorded in toolkit. Next gate is design-only fixed request-entry/private stdio
+integration, not native execution or another generic DATA layer.
