@@ -4,11 +4,11 @@ if ( 'cli' !== PHP_SAPI || ! isset( $GLOBALS['alynt_core_proof'] ) ) exit( 1 );
 require_once __DIR__ . '/registration-proof-fixtures.php';
 require_once __DIR__ . '/native-scan-ledger-fixtures.php';
 require_once dirname( __DIR__, 2 ) . '/includes/class-registration-native-admission.php';
-function alynt_admit( $form, $positive, $reads, $writes = 0, $method = 'POST' ) {
+function alynt_admit( $form, $positive, $reads, $writes = 0, $method = 'POST', $joined = false ) {
     $o = Alynt_Drime_Backups_Uploader_Registration_Native_Admission::create(); $GLOBALS['alynt_admission_owner'] = $o;
     $prior = array(); foreach ( array( 'query', 'pre_wp_load_alloptions' ) as $hook ) $prior[$hook] = isset( $GLOBALS['wp_filter'][$hook] ) ? $GLOBALS['wp_filter'][$hook]->callbacks : array();
     $roles = $GLOBALS['wp_roles']; $GLOBALS['alynt_core_proof']['guard_readonly'] = true;
-    try { $result = alynt_core_private( $o, 'admit', array( $method, $form ) ); }
+    try { $result = alynt_core_private( $o, $joined ? 'admit_retained' : 'admit', array( $method, $form ) ); }
     finally { $GLOBALS['alynt_core_proof']['guard_readonly'] = false; unset( $GLOBALS['alynt_admission_owner'] ); }
     alynt_core_assert( $positive === $result, 'Private admission decision differed; expected=' . (int) $positive . ', actual=' . (int) $result . ', reads=' . alynt_core_property( $o, 'protected_reads' ) . ', writes=' . alynt_core_property( $o, 'writes' ) . ', phase=' . alynt_core_property( $o, 'phase' ) . ', groups=' . count( $GLOBALS['alynt_core_proof']['cases'] ) );
     alynt_core_assert( $reads === alynt_core_property( $o, 'protected_reads' ) && $writes === alynt_core_property( $o, 'writes' ), 'Admission protected reads/writes differed: expected=' . $reads . '/' . $writes . ', actual=' . alynt_core_property( $o, 'protected_reads' ) . '/' . alynt_core_property( $o, 'writes' ) );
