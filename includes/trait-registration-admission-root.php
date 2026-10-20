@@ -113,14 +113,57 @@ trait Alynt_Drime_Backups_Uploader_Registration_Admission_Root {
 				return false;
 			}
 			$e = $parsed['envelope'];
-			if ( ! $this->auth_same( $core, $auth, $facts ) || ! $this->guard( $core, $f['nonce'], $issue, $e ) || ! $this->same_request( $core, $cookie, $actor ) || ! $this->auth_same( $core, $auth, $facts ) || ! $this->guard( $core, $parsed['nonce'], $parsed['action'], $e ) || ! $this->same_request( $core, $cookie, $actor ) || ! $this->auth_same( $core, $auth, $facts ) || ! $this->budget( $e ) || ( $retained && ! $this->admission_origin_same( $origin_pin ) ) || ! $this->admission_transaction( $core, $e ) ) {
+			if ( ! $this->auth_same( $core, $auth, $facts ) || ! $this->guard( $core, $f['nonce'], $issue, $e ) || ! $this->same_request( $core, $cookie, $actor ) || ! $this->auth_same( $core, $auth, $facts ) || ! $this->guard( $core, $parsed['nonce'], $parsed['action'], $e ) || ! $this->same_request( $core, $cookie, $actor ) || ! $this->auth_same( $core, $auth, $facts ) || ! $this->budget( $e ) || ( $retained && ! $this->admission_origin_same( $origin_pin ) ) ) {
 				return false;
 			}
+			$guards = array_fill_keys( array( 'auth', 'intent', 'physical', 'unreentered' ), null );
+			if ( ! $this->admission_transaction( $core, $e ) ) {
+				if ( $retained ) {
+					$this->finish();
+					$this->qualify_admission_outcome( $origin_pin, $guards );
+				}
+				return false; // No fresh current guards after native refusal/uncertainty.
+			}
 			$this->finish(); // All locks/owned handles released before WordPress callbacks.
-			return ( ! $retained || $this->admission_origin_same( $origin_pin ) ) && 'committed' === $this->phase && $this->budget( $e ) && $this->auth_same( $core, $auth, $facts ) && $this->guard( $core, $f['nonce'], $issue, $e ) && $this->same_request( $core, $cookie, $actor ) && $this->auth_same( $core, $auth, $facts ) && $this->guard( $core, $parsed['nonce'], $parsed['action'], $e ) && $this->same_request( $core, $cookie, $actor ) && $this->auth_same( $core, $auth, $facts ) && $this->budget( $e ) && ( ! $retained || $this->admission_origin_same( $origin_pin ) );
+			$accepted = ( ! $retained || $this->admission_origin_same( $origin_pin ) ) && 'committed' === $this->phase && $this->budget( $e );
+			if ( $accepted ) {
+				$guards['physical'] = $this->auth_same( $core, $auth, $facts );
+				$accepted           = $guards['physical'];
+			}
+			if ( $accepted ) {
+				$guards['intent'] = $this->guard( $core, $f['nonce'], $issue, $e );
+				$accepted         = $guards['intent'];
+			}
+			if ( $accepted ) {
+				$guards['auth'] = $this->same_request( $core, $cookie, $actor );
+				$accepted       = $guards['auth'];
+			}
+			if ( $accepted ) {
+				$guards['physical'] = $this->auth_same( $core, $auth, $facts );
+				$accepted           = $guards['physical'];
+			}
+			if ( $accepted ) {
+				$guards['intent'] = $this->guard( $core, $parsed['nonce'], $parsed['action'], $e );
+				$accepted         = $guards['intent'];
+			}
+			if ( $accepted ) {
+				$guards['auth'] = $this->same_request( $core, $cookie, $actor );
+				$accepted       = $guards['auth'];
+			}
+			if ( $accepted ) {
+				$guards['physical'] = $this->auth_same( $core, $auth, $facts );
+				$accepted           = $guards['physical'];
+			}
+			$accepted = $accepted && $this->budget( $e ) && ( ! $retained || $this->admission_origin_same( $origin_pin ) );
+			if ( ! $retained ) {
+				return $accepted;
+			}
+			$qualified = $this->qualify_admission_outcome( $origin_pin, $guards );
+			return $accepted && is_array( $qualified ) && 'committed' === $qualified['historical_outcome'] && true === $qualified['current_acceptance_claimed'];
 		} catch ( Throwable $error ) {
 			return false;
 		} finally {
+			$this->admission_qualification_spent = true;
 			$this->finish();
 			$this->clear_native_outcome();
 			$this->clear_admission_origin();

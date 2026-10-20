@@ -19,11 +19,13 @@ require_once __DIR__ . '/trait-registration-native-outcome-capture.php';
 require_once __DIR__ . '/trait-registration-native-outcome-session.php';
 require_once __DIR__ . '/trait-registration-admission-root.php';
 require_once __DIR__ . '/trait-registration-admission-join.php';
+require_once __DIR__ . '/trait-registration-admission-qualification.php';
 
 /** Explicit owned-proof reflection only; production never loads this class. */
 final class Alynt_Drime_Backups_Uploader_Registration_Native_Admission {
 	use Alynt_Drime_Backups_Uploader_Registration_Admission_Root;
 	use Alynt_Drime_Backups_Uploader_Registration_Admission_Join;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Qualification;
 	use Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Core_Guard;
 	use Alynt_Drime_Backups_Uploader_Registration_Construction;
 	use Alynt_Drime_Backups_Uploader_Registration_Admission_Candidate;
@@ -39,6 +41,13 @@ final class Alynt_Drime_Backups_Uploader_Registration_Native_Admission {
 		Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session::finish as private finish_without_outcome;
 	}
 	use Alynt_Drime_Backups_Uploader_Closed_Writer_Contract_Privacy;
+
+	/**
+	 * Canonical sealed-history event names, not a second event domain.
+	 *
+	 * @var array
+	 */
+	const EVENTS = Alynt_Drime_Backups_Uploader_Registration_Admission_Outcome::EVENTS;
 
 	/**
 	 * Separate outer once-attempted lifetime; never reset by inner construction.

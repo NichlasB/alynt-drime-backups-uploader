@@ -12,6 +12,52 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Reuse bounded graphs and causal validators; never repair unknown observations. */
 trait Alynt_Drime_Backups_Uploader_Registration_Sealed_Outcome_Data {
 	/**
+	 * Shared pure projection; consuming owners supply their own one-shot latch.
+	 *
+	 * @param mixed $data Original origin DATA.
+	 * @param mixed $proposal Original proposal DATA.
+	 * @param mixed $ids Complete collision set.
+	 * @param mixed $start Original root clock.
+	 * @param mixed $clock Current observation clock.
+	 * @param mixed $capture Sealed primitive capture.
+	 * @param mixed $owner Separate cleanup bookkeeping.
+	 * @param mixed $acceptance Independent current observations/claims.
+	 * @return array|false Non-authorizing closed-policy DATA, never a continuation.
+	 */
+	private static function closed_qualification_data( $data, $proposal, $ids, $start, $clock, $capture, $owner, $acceptance ) {
+		if ( ! self::packet( func_get_args() ) || ! self::original( $data, $proposal, $ids ) || ! is_array( $start ) || ! self::root_time( $start, $start, 10000000000 ) || $start['utc'] < $data['mutation']['issued_at'] || $start['utc'] >= $data['mutation']['expires_at'] ) {
+			return false;
+		}
+		$facts = self::sealed_facts( $capture, $owner );
+		if ( false === $facts || ! self::bounded( $acceptance ) || ! self::keys( $acceptance, array( 'domain', 'guards', 'final_pin' ) ) || 'closed_qualification_claims_v1' !== $acceptance['domain'] || ! self::keys( $acceptance['guards'], array( 'auth', 'intent', 'physical', 'unreentered' ) ) || true !== $acceptance['final_pin'] ) {
+			return false;
+		}
+		foreach ( $acceptance['guards'] as $guard ) {
+			if ( null !== $guard && ! is_bool( $guard ) ) {
+				return false;
+			}
+		}
+		$history  = self::history( $facts );
+		$released = self::released( $facts );
+		$current  = $released && $facts['events']['close_at'] > 0 && self::root_time( $clock, $start, 10000000000 ) && $clock['utc'] < $data['mutation']['expires_at'] && ! in_array( false, $acceptance['guards'], true ) && ! in_array( null, $acceptance['guards'], true );
+		return array(
+			'historical_outcome'               => $history,
+			'client_release_claimed'           => $released,
+			'current_acceptance_claimed'       => $current,
+			'request_lifecycle_closed_claimed' => true,
+			'diagnostic_candidate_only'        => false,
+			'candidate_only'                   => true,
+			'authenticated'                    => false,
+			'barrier_verified'                 => false,
+			'closure_proven'                   => false,
+			'retry_supported'                  => false,
+			'storage_supported'                => false,
+			'dispatch_supported'               => false,
+			'execution_supported'              => false,
+		);
+	}
+
+	/**
 	 * Validate separate owner claims before interpreting any release claim.
 	 *
 	 * @param mixed $owner Explicit synthetic lifecycle/empty-slot claims.
