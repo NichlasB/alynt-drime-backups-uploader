@@ -52,7 +52,7 @@ try {
     if ( 'guard' === $proof ) { alynt_core_cases(); alynt_core_denials(); }
     else {
         require __DIR__ . '/native-observer-proof-fixtures.php';
-        if ( 'registration-native-join' === $proof ) { require __DIR__ . '/registration-join-proof-fixtures.php'; require __DIR__ . '/registration-join-proof-cases.php'; require __DIR__ . '/registration-join-proof-denials.php'; alynt_join_cases(); alynt_join_denials(); }
+        if ( 'registration-native-join' === $proof ) { require __DIR__ . '/registration-join-proof-fixtures.php'; require __DIR__ . '/registration-join-proof-cases.php'; require __DIR__ . '/registration-join-proof-denials.php'; require __DIR__ . '/registration-join-proof-qualification.php'; alynt_join_cases(); alynt_join_denials(); alynt_join_qualification_cases(); }
         elseif ( 'registration-native-outcome' === $proof ) { require __DIR__ . '/registration-outcome-proof-fixtures.php'; require __DIR__ . '/registration-outcome-proof-cases.php'; require __DIR__ . '/registration-outcome-proof-failures.php'; alynt_outcome_cases(); alynt_outcome_failures(); }
         elseif ( 'registration-lifecycle-owner' === $proof ) { require __DIR__ . '/registration-lifecycle-proof-fixtures.php'; require __DIR__ . '/registration-lifecycle-proof-cases.php'; require __DIR__ . '/registration-lifecycle-proof-denials.php'; alynt_lifecycle_cases(); alynt_lifecycle_denials(); }
         elseif ( 'registration-native-contention' === $proof ) { require __DIR__ . '/registration-contention-proof.php'; require __DIR__ . '/registration-contention-failures.php'; alynt_contention_cases(); alynt_contention_failures(); }

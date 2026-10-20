@@ -4,6 +4,7 @@ if ( 'cli' !== PHP_SAPI || ! isset( $GLOBALS['alynt_core_proof'] ) ) exit( 1 );
 require_once __DIR__ . '/registration-outcome-proof-fixtures.php';
 
 function alynt_join_erased( $o, $form ) {
+    alynt_core_assert( true === alynt_core_property( $o, 'admission_qualification_spent' ), 'Joined qualification lifetime not consumed on return/refusal.' );
     foreach ( array( 'admission_origin', 'admission_clock' ) as $key ) alynt_core_assert( null === alynt_core_property( $o, $key ), 'Joined root retained private origin/clock.' );
     alynt_core_assert( array() === alynt_core_property( $o, 'admission_ids' ) && false === alynt_core_property( $o, 'admission_join_busy' ), 'Joined root retained IDs/busy latch.' );
     alynt_outcome_erased( $o );
