@@ -13,11 +13,12 @@ function relayGreeting(payload) {
 		((flags & 1) && !payload.subarray(at + 27, at + 31).every((b) => b === 0)) || payload[at + 43] !== 0 || !payload.subarray(at + 44).equals(Buffer.from('mysql_native_password\0'))) throw Error('unsupported_greeting');
 	return payload.readUInt32LE(at);
 }
-export function frameStream(onFrame, reserve = () => {}, release = () => {}) {
+export function frameStream(onFrame, reserve = () => {}, release = () => {}, onHeader = () => {}) {
 	let header = Buffer.alloc(4), used = 0, frame = null, at = 0, count = 0;
 	const received = createHash('sha256'), emitted = createHash('sha256');
 	let bytes = 0, sent = 0, ended = false;
 	return Object.freeze({
+		boundary() { return used === 0 && frame === null; },
 		async feed(chunk) {
 			if (ended || !Buffer.isBuffer(chunk)) throw Error('frame_input');
 			received.update(chunk); bytes += chunk.length;
@@ -29,6 +30,7 @@ export function frameStream(onFrame, reserve = () => {}, release = () => {}) {
 					if (used !== 4) continue;
 					const length = header.readUIntLE(0, 3);
 					if (length === 0 || length > FRAME_CAP || ++count > 4096) throw Error('frame_cap');
+					onHeader(length); // Passive observer; the transparent transport cap is unchanged.
 					reserve(length + 4); frame = Buffer.alloc(length + 4); header.copy(frame); at = 4;
 				}
 				const n = Math.min(frame.length - at, chunk.length - i);

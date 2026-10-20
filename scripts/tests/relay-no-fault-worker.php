@@ -1,6 +1,7 @@
 <?php
 /** Separate full-core relay worker. Existing fixed direct worker is unchanged. */
-if ( 'cli' !== PHP_SAPI || 6 !== count( $argv ) ) exit( 1 );
+$observation = 7 === count( $argv ) && '--observation-only' === $argv[6];
+if ( 'cli' !== PHP_SAPI || ( ! $observation && 6 !== count( $argv ) ) ) exit( 1 );
 $root = realpath( $argv[1] );
 if ( ! $root || $root !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || ! ctype_digit( $argv[2] ) || ! ctype_digit( $argv[5] ) || (int) $argv[5] < 1 || (int) $argv[5] > 65535 || $argv[2] === $argv[5] || ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[3] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[4] ) ) exit( 1 );
 require __DIR__ . '/fixed-core-proof-storage.php';
@@ -40,11 +41,13 @@ try {
     require __DIR__ . '/fixed-core-proof-fixtures.php'; require __DIR__ . '/fixed-core-proof-cases.php'; require __DIR__ . '/fixed-core-proof-denials.php';
     alynt_core_seed();
     require __DIR__ . '/native-observer-proof-fixtures.php'; require __DIR__ . '/registration-join-proof-fixtures.php'; require __DIR__ . '/relay-no-fault-cases.php';
-    $roles = alynt_relay_no_fault_cases();
+    if ( $observation ) require __DIR__ . '/observation-private-channel.php';
+    $roles = alynt_relay_no_fault_cases( $observation );
     alynt_core_check( 0 === $GLOBALS['alynt_core_proof']['protected_reads'] && 0 === $GLOBALS['alynt_core_proof']['denied_io'] && array() === headers_list(), 'Protected IO or browser headers escaped.' );
     foreach ( get_included_files() as $file ) alynt_core_check( 0 !== strpos( str_replace( '\\', '/', $file ), str_replace( '\\', '/', WP_CONTENT_DIR ) . '/' ), 'Site content code was loaded.' );
     $receipt = array( 'passed' => true, 'native_full_core' => true, 'checks' => $GLOBALS['alynt_core_proof']['checks'], 'cases' => $GLOBALS['alynt_core_proof']['cases'], 'relay_roles' => $roles, 'production_wiring' => false, 'response_suppression' => false );
 } catch ( Throwable $error ) { $receipt['failed'] = true; $receipt['failure'] = $error instanceof RuntimeException ? $error->getMessage() : 'Unexpected relay worker failure; private diagnostics withheld.'; $receipt['location'] = array( basename( $error->getFile() ), $error->getLine() ); }
 finally { $_COOKIE = array(); unset( $GLOBALS['current_user'] ); }
-echo json_encode( $receipt ) . "\n";
+if ( $observation && $receipt['passed'] ) alynt_observation_final();
+else echo json_encode( $receipt ) . "\n";
 exit( $receipt['passed'] ? 0 : 1 );

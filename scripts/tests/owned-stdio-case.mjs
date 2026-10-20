@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createOwnedStdioLines } from './owned-stdio-lines.mjs';
+import { resolveOwnedStdioRuntime } from './owned-stdio-runtime.mjs';
 
 export const ownedStdioModes = Object.freeze(['roundtrip', 'stderr', 'eof', 'partial', 'malformed', 'oversize', 'output-overflow', 'output-partial', 'exit', 'stall-read', 'stall-write', 'no-read', 'late-ack', 'tail', 'stderr-overflow']);
 const ready = '{"v":1,"kind":"ready","seq":1}';
@@ -10,9 +11,9 @@ const reply = '{"v":1,"kind":"reply","seq":2}';
 const probe = Buffer.from(`{"v":1,"kind":"probe","seq":1,"value":"${'A'.repeat(1024)}"}\n`);
 const ack = Buffer.from('{"v":1,"kind":"ack","seq":2}\n');
 
-export async function runOwnedStdioCase(mode) {
+export async function runOwnedStdioCase(mode, target = 'standalone') {
 	if (process.platform !== 'win32' || !ownedStdioModes.includes(mode)) throw Error('Unsupported owned stdio target.');
-	const php = 'C:/php/php.exe', worker = fileURLToPath(new URL('./owned-stdio-worker.php', import.meta.url));
+	const php = resolveOwnedStdioRuntime(target), worker = fileURLToPath(new URL('./owned-stdio-worker.php', import.meta.url));
 	if (realpathSync(php).replaceAll('\\', '/') !== php) throw Error('Unexpected PHP runtime.');
 	const env = Object.fromEntries(['SystemRoot', 'WINDIR', 'TEMP', 'TMP'].filter((key) => typeof process.env[key] === 'string').map((key) => [key, process.env[key]]));
 	const disabled = 'exec,shell_exec,system,passthru,proc_open,popen,fsockopen,pfsockopen,stream_socket_client,stream_socket_server';

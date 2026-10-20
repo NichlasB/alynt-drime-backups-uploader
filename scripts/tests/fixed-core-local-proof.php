@@ -1,7 +1,8 @@
 <?php
 /** Confirmed Plugin Tester supervisor. Owns only three fresh disposable tables. */
 if ( 'cli' !== PHP_SAPI || ! in_array( count( $argv ), array( 3, 4 ), true ) ) exit( 1 );
-$relay_no_fault = 'relay-no-fault' === ( $argv[3] ?? null );
+$observation_only = 'observation-native' === ( $argv[3] ?? null );
+$relay_no_fault = $observation_only || 'relay-no-fault' === ( $argv[3] ?? null );
 if ( $relay_no_fault ) $argv[3] = 'registration-native-join'; // Same fixture owner, explicitly different supervisor/worker.
 $proof = $argv[3] ?? 'guard'; if ( ! in_array( $proof, array( 'guard', 'native-observation', 'native-closed-begin', 'native-paired-completion', 'native-scan-observation', 'native-scan-ledger', 'registration-construction', 'registration-native-reader', 'registration-native-admission', 'registration-observation-construction', 'registration-observation-handoff', 'registration-native-barrier', 'registration-native-contention', 'registration-lifecycle-owner', 'registration-native-outcome', 'registration-native-join' ), true ) ) exit( 1 );
 $root = realpath( $argv[1] ); $approved = realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' );
@@ -18,6 +19,7 @@ $prefix = 'wp_alynt_core_probe_' . bin2hex( random_bytes( 6 ) ) . '_'; $marker =
 $created = array(); $process = null; $pipes = array(); $receipt = array( 'proof_kind' => array( 'registration-native-join' => 'genuine_core_single_root_retained_origin_native_admission_join', 'registration-native-outcome' => 'genuine_core_fixed_native_outcome_capture_owned_failures_cleanup', 'registration-lifecycle-owner' => 'genuine_core_guarded_lifecycle_owner_authentication_cleanup_no_native_transactions', 'guard' => 'fixed_genuine_core_request_guard_only', 'native-observation' => 'fixed_native_read_only_planning_observation', 'native-closed-begin' => 'fixed_native_owned_safety_row_closed_begin', 'native-paired-completion' => 'fixed_native_owned_pair_and_locked_resolution', 'native-scan-observation' => 'fixed_native_ten_row_closed_codec_observation', 'native-scan-ledger' => 'fixed_native_closed_ledger_only_checkpoint', 'registration-construction' => 'genuine_core_private_registration_captured_owned_frame_only', 'registration-native-reader' => 'genuine_core_fixed_read_only_registration_capture_and_construction', 'registration-native-admission' => 'genuine_core_closed_registration_owned_ledger_admission', 'registration-native-contention' => 'genuine_core_native_registration_owned_contention_and_failure', 'registration-native-barrier' => 'genuine_core_native_registration_barrier_owned_zero_dml', 'registration-observation-handoff' => 'genuine_core_private_candidate_handoff_no_observer_transactions', 'registration-observation-construction' => 'genuine_core_own_origin_retention_and_guarded_read_construction_only' )[$proof], 'fixture_prefix' => $prefix );
 $before = alynt_core_actual_digest( $db );
 if ( $relay_no_fault ) $receipt['proof_kind'] = 'owned_no_fault_relay_genuine_core_positive_admission';
+if ( $observation_only ) $receipt['proof_kind'] = 'owned_native_observation_private_stdio_positive_admission';
 try {
     foreach ( array( 'options', 'users', 'usermeta' ) as $suffix ) {
         $table = $prefix . $suffix;
@@ -31,7 +33,7 @@ try {
     if ( $relay_no_fault ) {
         $node = 'C:/Program Files/nodejs/node.exe';
         alynt_core_check( is_file( $node ), 'Resolve installed Node runtime before relay proof.' );
-        $command = array( $node, __DIR__ . '/relay-no-fault-supervisor.mjs', PHP_BINARY, ini_get( 'extension_dir' ), $root, $argv[2], $prefix, $marker );
+        $command = array( $node, __DIR__ . ( $observation_only ? '/observation-native-supervisor.mjs' : '/relay-no-fault-supervisor.mjs' ), PHP_BINARY, ini_get( 'extension_dir' ), $root, $argv[2], $prefix, $marker );
     }
     $process = proc_open( $command, array( 0 => array( 'pipe', 'r' ), 1 => array( 'pipe', 'w' ), 2 => array( 'pipe', 'w' ) ), $pipes );
     alynt_core_check( is_resource( $process ), 'Worker start failed.' ); fclose( $pipes[0] );
@@ -50,7 +52,7 @@ try {
     if ( $relay_no_fault ) {
         $owned_threads = $receipt['worker']['owned_threads'] ?? null;
         unset( $receipt['worker']['owned_threads'] );
-        alynt_core_check( true === ( $receipt['worker']['transport']['listener_closed'] ?? $receipt['worker']['listener_closed'] ?? false ) && empty( $receipt['worker']['cleanup_unresolved'] ), 'Relay listener cleanup unresolved; retain owned fixtures.' );
+        alynt_core_check( true === ( $receipt['worker']['transport']['listener_closed'] ?? $receipt['worker']['listener_closed'] ?? false ) && empty( $receipt['worker']['cleanup_unresolved'] ) && ( ! $observation_only || ( true === ( $receipt['worker']['worker_closed'] ?? false ) && true === ( $receipt['worker']['pipes_destroyed'] ?? false ) ) ), 'Relay listener/process cleanup unresolved; retain owned fixtures.' );
         alynt_core_check( is_array( $owned_threads ) && count( $owned_threads ) <= 8, 'Relay session cleanup identity unavailable; retain owned fixtures for review.' );
         foreach ( $owned_threads as $id ) alynt_core_check( is_int( $id ) && $id > 0, 'Invalid relay session identity.' );
         $remaining = count( $owned_threads ); $end = microtime( true ) + 3;

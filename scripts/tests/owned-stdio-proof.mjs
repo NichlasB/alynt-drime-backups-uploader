@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 import { ownedStdioModes, runOwnedStdioCase } from './owned-stdio-case.mjs';
 
-if (process.platform !== 'win32' || process.argv.length !== 3 || process.argv[2] !== '--owned-stdio-only') {
+const target = process.argv[2] === '--plugin-tester-bundled-stdio-only' ? 'plugin-tester' : 'standalone';
+if (process.platform !== 'win32' || process.argv.length !== 3 || !['--owned-stdio-only', '--plugin-tester-bundled-stdio-only'].includes(process.argv[2])) {
 	process.stderr.write('Requires the approved Windows owned-stdio-only scope.\n'); process.exitCode = 1;
 } else {
 	let checks = 0;
@@ -10,7 +11,7 @@ if (process.platform !== 'win32' || process.argv.length !== 3 || process.argv[2]
 	const check = (actual, expected, message) => { assert.equal(actual, expected, message); checks++; };
 	try {
 		for (const mode of ownedStdioModes) {
-			const receipt = await runOwnedStdioCase(mode); receipts.push(receipt);
+			const receipt = await runOwnedStdioCase(mode, target); receipts.push(receipt);
 			for (const key of ['spawned', 'closed', 'exit_seen', 'pipes_destroyed']) check(receipt[key], true, `${mode}: ${key}`);
 			check(receipt.elapsed_ms < 8500, true, `${mode}: bounded completion`);
 			if (['roundtrip', 'stderr'].includes(mode)) {
@@ -32,7 +33,7 @@ if (process.platform !== 'win32' || process.argv.length !== 3 || process.argv[2]
 				if (mode === 'exit') check(receipt.closed_pipe_refused, true, 'closed owned stdin callback refusal');
 			}
 		}
-		process.stdout.write(JSON.stringify({ passed: true, scope: 'owned_child_stdio_only', platform: process.platform, checks, groups: receipts.length, receipts }) + '\n');
+		process.stdout.write(JSON.stringify({ passed: true, scope: 'owned_child_stdio_only', target, platform: process.platform, checks, groups: receipts.length, receipts }) + '\n');
 	} catch {
 		process.stdout.write(JSON.stringify({ passed: false, scope: 'owned_child_stdio_only', checks, groups: receipts.length, receipts, failure: 'Owned stdio proof failed; inspect compiled case evidence.' }) + '\n');
 		process.exitCode = 1;
