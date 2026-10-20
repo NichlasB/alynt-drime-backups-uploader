@@ -1,5 +1,10 @@
 # V2.3 Fixed Native Admission Outcome Capture Safety Foundation
 
+Successor2026-10-20: approved Plugin Tester local-only owned native proof is recorded
+in `V2_3_NATIVE_ADMISSION_OUTCOME_CAPTURE_OWNED_PROOF.md` (2028 checks/9 groups).
+The isolated evidence and limits below remain historical; production wiring stays
+disabled. The implementation plan now gates the single-root retained-origin join.
+
 2026-10-19. Approved R3 **repository-only, isolated API tests**. Uploader0.5.25 /
 dashboard0.1.77 unchanged. No actual WordPress authentication, storage, native
 execution, LocalWP/site access, production loading/wiring, grants, activation,
