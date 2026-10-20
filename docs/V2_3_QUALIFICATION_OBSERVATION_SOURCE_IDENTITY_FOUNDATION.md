@@ -71,12 +71,14 @@ production inventory is67 methods/29 properties/20 recursive traits. Snapshots p
 method parameter/default/type/modifier/return/reference metadata, token bodies,
 source file/start/end, property/default metadata, constants, recursive/direct
 traits, aliases, finality, parent and interfaces. Token names, rather than numeric
-token IDs, are hashed; only whitespace/comments/open tags are ignored.
+token IDs, are hashed; whitespace/comments/open tags are ignored. PHP8.1's two
+named ampersand token kinds canonicalize to PHP7.4's literal `&`, retaining the
+lexeme, context and independent parameter/reference metadata.
 
 Reviewed fixed SHA256 manifests:
 
-- Production: `22d43c6d3293213f0b287fc2e744852c715d763443e99c425b9458190812d13e`.
-- Proof composition: `351c0d8ad977067cae2211a9c05489b25e8bae207d2e4f50c98fc03c9260db04`.
+- Production: `15ea222c67467802ebacef48c21bf14d8dda4592f6fbc3b04f2dde0fe06b8c85`.
+- Proof composition: `859f3b3ac4655a24dd2b957601a32282cddf9aafe54eae34f32d72ba913a2b20`.
 - Projection source: `8c43fd880c6cc4950ee900f994d6a64d32e6aa0449827b72cfbd69f628ba4170`.
 
 Only the fixed wrapper trait/alias/three private fields are removed for equivalence;
@@ -193,6 +195,110 @@ private payload/throwable/handle export, source eval/provider, state write or au
 promotion. QO-01..04 addressed with permanent narrow tests; no unresolved scoped
 security defect. 04 WP/Database/UI/UX and whole-plugin13/full pre-release readiness
 are not claimed. FULL_PRE_RELEASE remains required for a coherent RC before release.
+
+## Approved verification repair — 2026-10-20
+
+Initial publication `24f318abfbbc85d392567f5ad10f367935fdd967` is **failed history**,
+not retroactively green: Quality39491954756 PHP8.3 passed1803/31846, PHP7.4 failed
+19 manifest-before-exercise assertions (1803/31496), Node472 passed. Windows full
+PHP8.5 at128M failed9 errors/17 failures/4 skips (1803/31681), with upload memory
+refusal and dependent missing mock response state. Toolkit retains those facts.
+
+User-approved repair is repository-only tests/source-manifest/configuration/docs.
+No production file, native harness, dependencies or minimum PHP contract changed.
+Restore-point workflow Option B before edits, no checkpoint/rollback:
+
+- Uploader `alynt-drime-backups-uploader-20261020-223712.zip`,11218 files,
+  SHA256 `20196FBD72C595887FB69A792C4502BCFB2D979B4F302B6AF34846D7EA47F89D`.
+- Dashboard `alynt-drime-backups-dashboard-20261020-223718.zip`,13202 files,
+  SHA256 `9DC5D42288EA65C7D1CB16C8F4F2DE4F7774CE86FD03C6C673E4CCB18B865526`.
+
+Archives/sidecars are in the same external toolkit-snapshots directories above;
+source-only, not site/database backups. Repair starts at uploader24f318ab,
+dashboardf11fb651/toolkit585f608, clean/synced; original coherent review bases remain
+uploader9d3c9d10/dashboard4a84f89, with24f318ab as the narrower repair-diff boundary.
+
+### QO-05: token identity compatibility, not a guard bypass
+
+PHP8.1+ tokenizes reference/bitwise `&` as
+`T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG` or
+`T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG`; PHP7.4 uses the literal character.
+Original hash representation therefore differed despite identical source. Normalize
+only those exact named-token/`&` pairs to the same literal. No token deletion,
+signature normalization, missing guard, source movement or extra class/state allowed.
+`&&`, other operators and quoted strings retain their distinct tokens.
+
+Read-only comparison found precisely three changed method-body descriptors in both
+classes: `plain`, `plain_observation`, `walk`. Their old-to-canonical SHA256:
+
+- plain: `6ce66d0db927b70206efa62424c21270f5b0b417a9eddd035653173d1625f59f`
+  to `23943e72d44221851ef81fa4bc46a385ad33a92103779f1e27380e45b42e67fa`.
+- plain_observation: `d276ded09f6a32a07a95c95bbe6609939e3730f7d4c8f048cc870fd4614ac480`
+  to `d74b5bf0709018dc57314a7227050a59b2753bc8ac5c8be577410990cb8b89c7`.
+- walk: `b46e2039fa2cfc63b9149a71b611ed26d20bdb0707b9b48a57297dcd41a3314d`
+  to `b65238ee13ff21829a7d56993fd6177f9933887c41e236f60c2dbbfe7d2e94bb`.
+
+Reconstructing the old token representation for those three descriptors reproduces
+the complete old production `22d43c6d3293213f0b287fc2e744852c715d763443e99c425b9458190812d13e`
+and proof `351c0d8ad977067cae2211a9c05489b25e8bae207d2e4f50c98fc03c9260db04`
+pins exactly. Every other descriptor is unchanged; projection pin remains unchanged.
+New reviewed pins above are not an arbitrary repin to suppress a mismatch.
+
+Independent canonical-token fixture fails against the old algorithm with expected
+`1e09ac8d...` versus actual `fed224c1...`, then passes after normalization. Removing
+the reference marker or changing bitwise `&` to `|` still changes the digest. An
+additional descriptor fault rejects losing `plain`'s by-reference parameter: now15
+descriptor cases, with all67 missing-method checks retained. Genuine PHP7.4 runtime
+confirmation is exact-head Linux CI, not a simulated version or new dependency.
+
+### QO-06: bounded test-process memory, unchanged production guard
+
+The full suite at128M can exceed its headroom for the unchanged32MiB multipart
+fixture plus32MiB production reserve. Fresh affected upload groups passed37/199;
+a bounded48MiB representative suite-overhead regression reproduced the precise
+`alynt_drime_chunk_exceeds_memory` refusal before configuration changes. This is a
+test-environment resource mismatch, not justification to weaken the guard, shrink
+fixture chunks or change expected upload outcomes.
+
+Set **only phpunit.xml** to a finite256M test-process budget (also bounded in CI;
+never production php.ini, WordPress memory constants or a live setting). A second
+test uses the actual unchanged guard with a temporary limit equal to current usage
+plus64MiB-minus-one:32MiB chunk correctly refuses with the exact error,1MiB chunk
+passes, original limit restored in finally and asserted. No actual chunk allocation
+or upload/network request in that negative test. The48MiB overhead test asserts its
+buffer remains live through the guard and the configured256M budget; no exhaustion.
+
+Before fix: focused3 tests/7 assertions, two intended failures (token identity and
+actual memory guard). After fix: same3/11 pass. Repaired qualification plus memory
+tests **41/619**; those plus all five affected upload groups **78/818**, no skips.
+No weaker assertion, new exclusion/skip, unlimited memory or production edit.
+
+### Focused review continuation and validation
+
+Canonical Feature Light: four executable/config paths plus owning/dashboard docs;
+Other/test-only, two confirmed test/harness defects QO-05/QO-06 fixed, no production
+defect or new approval boundary. Keep scope/trust, fail-closed errors, compatibility,
+finite resource budget and documentation; UI/UX/hooks/REST/auth/SQL N/A.
+Bloat explicit original base:11 PHP/0 oversized, final TOTAL
+28/51/58/60/49/26/56/29/32/55/36 (prior path order plus UploaderMemoryBudgetTest).
+Reported CODE1 limitation unchanged; all Consolidate/retain, no split/removal or
+extra architecture work justified. Original03/07/06 review contracts preserved;
+07A Phase2 continuation adds credible red-to-green harness regressions above and
+requires full supported-version CI before completion. No runtime/Database claim.
+
+All11 scoped PHP syntax, WPCS235 (tests excluded), Node472/no skips, runner lint/
+build/deterministic verify pass; runner7356EACD unchanged. Dashboard299/1423/two
+known Windows Sodium skips, WPCS138/structure/build pass. Full Windows verbose
+rerun and actual exact-head Linux PHP7.4/8.3 counts/skips/run links are recorded
+in toolkit at closeout; prior failures remain failed history. Existing third-party
+PHPCompatibility deprecation recorded, not suppressed.
+
+Final focused Feature Security after repair/local targeted validation: canonical
+ampersands retain source semantics and by-reference metadata; no arbitrary runtime
+profiles or accepted alternate hashes, removed manifest checks, observer bypass or
+external authority input. Finite test-only budget with actual low-headroom refusal
+coverage; no storage/auth/native/wiring/secret change. No confirmed security defect
+or new runtime authority; no whole-plugin13/full pre-release readiness claim.
 
 ## Proof limits and next gate
 

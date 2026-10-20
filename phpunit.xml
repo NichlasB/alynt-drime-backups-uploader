@@ -7,6 +7,10 @@
 	failOnRisky="true"
 	failOnWarning="true"
 >
+	<!-- Test-process budget: suite overhead + unchanged 32MiB multipart chunk + 32MiB reserve. Never a production ini change. -->
+	<php>
+		<ini name="memory_limit" value="256M"/>
+	</php>
 	<testsuites>
 		<testsuite name="Plugin Tests">
 			<directory suffix=".php">tests/</directory>

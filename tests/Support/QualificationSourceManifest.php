@@ -2,13 +2,15 @@
 /** Read-only bounded repository-source identity. No WordPress, storage or native IO. */
 require_once __DIR__ . '/QualificationObservationOwner.php';
 final class Alynt_Test_Qualification_Source_Manifest {
-    const PRODUCTION = '22d43c6d3293213f0b287fc2e744852c715d763443e99c425b9458190812d13e';
-    const PROOF = '351c0d8ad977067cae2211a9c05489b25e8bae207d2e4f50c98fc03c9260db04';
+    const PRODUCTION = '15ea222c67467802ebacef48c21bf14d8dda4592f6fbc3b04f2dde0fe06b8c85';
+    const PROOF = '859f3b3ac4655a24dd2b957601a32282cddf9aafe54eae34f32d72ba913a2b20';
     const PROJECTION = '8c43fd880c6cc4950ee900f994d6a64d32e6aa0449827b72cfbd69f628ba4170';
     private static function token_digest( $code ) {
         $tokens = array(); foreach ( token_get_all( '<?php ' . $code ) as $t ) {
             if ( is_array( $t ) && in_array( $t[0], array( T_OPEN_TAG, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT ), true ) ) continue;
-            $tokens[] = is_array( $t ) ? array( token_name( $t[0] ), $t[1] ) : $t;
+            // PHP8.1 named the same '&' lexeme differently; retain PHP7.4's literal token, not less source.
+            $ampersand = is_array( $t ) && '&' === $t[1] && in_array( token_name( $t[0] ), array( 'T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG', 'T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG' ), true );
+            $tokens[] = $ampersand ? '&' : ( is_array( $t ) ? array( token_name( $t[0] ), $t[1] ) : $t );
         }
         return hash( 'sha256', json_encode( $tokens ) );
     }
