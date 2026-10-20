@@ -89,6 +89,8 @@ jobs:
           for file in scripts/tests/registration-outcome-proof-*.php; do php -l "$file" || exit 1; done
           for file in scripts/tests/registration-join-proof-*.php; do php -l "$file" || exit 1; done
           for file in scripts/tests/relay-no-fault-*.php; do php -l "$file" || exit 1; done
+          for file in scripts/tests/owned-stdio-*.php; do php -l "$file" || exit 1; done
+          for file in scripts/tests/owned-stdio-*.mjs; do node --check "$file" || exit 1; done
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
