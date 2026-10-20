@@ -72,8 +72,8 @@ production defect, public contract change or manual product decision.
 
 Canonical bloat helper with explicit uploadera78bc9c reports zero PHP/JS/CSS files:
 it excludes `.mjs`, **not evidence of zero changed source**. Supplemental measured
-TOTAL: profile67, selector97, control79; tests78/104/110; fixture44 at final
-measurement (later review evidence changes, if any, are remeasured at closeout).
+TOTAL: profile67, selector97, control79; tests78/103/110; fixture44, remeasured
+at closeout against the same explicit source boundary.
 All below250, fixture below150. Classify all Consolidate/retain, no removals,
 split-now or pre-release02 deferral; no Phase2 structural edits needed. Direct,
 string and WordPress hook/filter/shortcode/AJAX/REST/cron references checked: new
