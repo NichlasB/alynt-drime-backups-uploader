@@ -23,7 +23,7 @@ function alynt_admission_denials( $db, $values, $original ) {
         if ( $removed ) return $life;
         foreach ( $GLOBALS['wp_filter']['pre_wp_load_alloptions']->callbacks as $priority => $callbacks ) foreach ( $callbacks as $callback ) {
             $fn = $callback['function'];
-            if ( $fn instanceof Closure && 'class-registration-native-admission.php' === basename( ( new ReflectionFunction( $fn ) )->getFileName() ) ) { remove_filter( 'pre_wp_load_alloptions', $fn, $priority ); $removed = true; }
+            if ( $fn instanceof Closure && 'trait-registration-admission-root.php' === basename( ( new ReflectionFunction( $fn ) )->getFileName() ) ) { remove_filter( 'pre_wp_load_alloptions', $fn, $priority ); $removed = true; }
         }
         remove_filter( 'query', $late_watch, PHP_INT_MAX );
         add_filter( 'query', $late_watch, PHP_INT_MAX ); // Move AFTER the source fence, before any actual SQL execution.
