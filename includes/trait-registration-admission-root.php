@@ -117,7 +117,13 @@ trait Alynt_Drime_Backups_Uploader_Registration_Admission_Root {
 				return false;
 			}
 			$guards = array_fill_keys( array( 'auth', 'intent', 'physical', 'unreentered' ), null );
-			if ( ! $this->admission_transaction( $core, $e ) ) {
+			try {
+				$committed = $this->admission_transaction( $core, $e );
+			} catch ( Throwable $error ) {
+				// Only this native call joins normal closed failure; no outcome inferred.
+				$committed = false;
+			}
+			if ( ! $committed ) {
 				if ( $retained ) {
 					$this->finish();
 					$this->qualify_admission_outcome( $origin_pin, $guards );
