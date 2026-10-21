@@ -1,0 +1,7 @@
+{
+  "selected_worker": ["tests/Support/SelectedQualificationManifest.php", "tests/Support/SelectedQualificationWorker.php", "scripts/tests/selected-qualification-groups.json", "scripts/tests/selected-qualification-identity.mjs"],
+  "selected_channel": ["tests/Support/SelectedQualificationProtocol.php", "scripts/tests/selected-qualification-grammar.mjs"],
+  "selected_supervisor": ["scripts/tests/selected-qualification-transcript.mjs"],
+  "selected_relay": ["scripts/tests/selected-native-relay.mjs", "scripts/tests/selected-native-frames.mjs", "scripts/tests/selected-native-lifetime.mjs"],
+  "selected_registry": ["scripts/tests/selected-native-registry.mjs", "scripts/tests/native-witness-profile.mjs", "scripts/tests/selected-loss-contract.mjs"]
+}
