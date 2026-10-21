@@ -108,6 +108,9 @@ jobs:
           # Socket-free foundation syntax only; never starts a native/private-channel proof.
           for file in scripts/tests/native-qualification-*.php; do php -l "$file" || exit 1; done
           for file in scripts/tests/native-qualification-*.mjs; do node --check "$file" || exit 1; done
+          # Syntax only; this terminal-owner no-fault proof needs exact local approval.
+          for file in scripts/tests/uncertain-barrier-no-fault-*.php; do php -l "$file" || exit 1; done
+          for file in scripts/tests/uncertain-barrier-no-fault-*.mjs; do node --check "$file" || exit 1; done
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result

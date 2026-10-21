@@ -1,5 +1,11 @@
 # V2.3 Socket-Free Same-Root Uncertain Barrier Contention and Failure Qualification Safety Foundation
 
+Latest separately approved native successor:
+[terminal-owner genuine/no-fault owned proof](V2_3_UNCERTAIN_BARRIER_NO_FAULT_OWNED_PROOF.md).
+The new composition's committed no-fault prerequisite and physical cleanup passed;
+actual uncertain admission plus barrier wait/timeout/failure is still unproven.
+Historical isolated scope and next-gate statements below are not new permission.
+
 2026-10-21. Approved isolated tests/synthetic bytes/virtual clocks only.
 Uploader0.5.25/dashboard0.1.77 unchanged. No actual WordPress authentication,
 storage/database/native session, fixture table/user, private control channel,
