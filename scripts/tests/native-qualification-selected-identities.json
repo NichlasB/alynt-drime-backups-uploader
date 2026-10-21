@@ -1,0 +1,47 @@
+{
+  "production": {
+    "tests/Support/NativeQualificationNoFaultManifest.php": "6585ce3b4c5bd50a073bad543724122337752becdbbb0f6cc8293dbacaeb3050",
+    "scripts/tests/native-qualification-no-fault-identities.json": "5883cd7caae6a75ecd4e18c7890f4b3731cf91d2ac92a1ae630eca8b10afae7a"
+  },
+  "composition": {
+    "scripts/tests/native-qualification-no-fault-owner.php": "26f264c7f74e3ba344a2afd7867f860d0cc9a383f142b0c6b1c2c2573d672dc1",
+    "tests/Support/NativeQualificationObservation.php": "d6d666b07ee3cba98c6121dfd1719d573ce5b289464a966c8273bc1abd67a99b"
+  },
+  "projection": {
+    "tests/Support/QualificationObservationWrapper.php": "d9cdb737994841209db2b0c30b766f88d6bd76104a4becb964feec60c4778fc0",
+    "tests/Support/QualificationObservationProjection.php": "841a41a9308eccc8228573d2ffef89631f4229e015a05960680f9cdce06cc803"
+  },
+  "protocol": {
+    "scripts/tests/native-qualification-selected-channel.php": "3df8cd08f370666e5c710eec9f6a8445a11ba1c7a92776e74b5ed595ec40fa49",
+    "scripts/tests/native-qualification-grammar.mjs": "304111464f943a71df06fa32d630ea10747f1b50a392981304a19ab275e167f5",
+    "scripts/tests/owned-stdio-io.php": "b7d655b49ecacab489259f7388f1424597c8ffa078007a17bee5564ac070a7cb",
+    "scripts/tests/owned-stdio-lines.mjs": "bdbb1a932ced5f5fec5a2f043d4613fe3ced14a66ebc46b3cd3da9706f54b45d"
+  },
+  "transcript": {
+    "scripts/tests/native-qualification-selected-control.mjs": "a9126173fb9adb83837370ecad078e79dc98c5b70ca568447953ff3a1a31e598",
+    "scripts/tests/native-qualification-transcript.mjs": "4c0ef43c18aaa2f86c1d180891e37027b81044be03211ae600053f99ba055d8e"
+  },
+  "eligibility": {
+    "scripts/tests/native-qualification-selected-registry.mjs": "9e8f7e44f4cad269e4df1ff37e15a632744dcdd08dfb2699403d42e092993b2b",
+    "scripts/tests/native-qualification-selected-relay.mjs": "2542d005ab9d69f14c09ef9125ca914ccbc869d575a10435a30a81c3f1e962ee",
+    "scripts/tests/selected-native-frames.mjs": "8562da61ce78d5565c01bb8e179129fc90733e97241ad1e8fa18c1cdcd65daa2",
+    "scripts/tests/native-qualification-no-fault-barrier-drain.mjs": "a1c34930d084bb2e0d05d4ec85feb7cd6c9ff3910a6773578d5a89b8dc5bbe9e",
+    "scripts/tests/fixed-drain-grammar.mjs": "61e804feb2dec86ebc5119758fa2380728a2a789eef43182bc52b8fe8198cf32",
+    "scripts/tests/native-witness-profile.mjs": "c368b04281d0ae6101b8b0ac153c45a48e2497ee63dc3c68f7d033cd90b92e80",
+    "scripts/tests/relay-no-fault-frames.mjs": "657098a5306dc57322ef101beb5a7ccf40822443c3c4ec4250dacc03c7eb0780"
+  },
+  "isolated_worker": {
+    "scripts/tests/native-qualification-selected-worker.php": "c1eab2e47a38e512d6f4df969e1b430afa1eb8588016f095b9f2b3d8553c8d70",
+    "scripts/tests/native-qualification-selected-bootstrap.php": "7f6cc0005375a153ed27bb102b0183d1f6c857fffbcfb43156a4b7564daa727a",
+    "scripts/tests/native-qualification-selected-preflight.php": "94e54b5ed80248b25b9a6b558aabf043b0b6a2f41e547b33f8940ccad3cac340",
+    "scripts/tests/native-qualification-no-fault-fixtures.php": "fca97fd9d1baea3f721917123c29fd56060614564702f302173d9a81fefac86a",
+    "scripts/tests/native-qualification-selected-process.mjs": "2b8a922e290ad619eaaddf1af7c66b7f6fd66bc7b4e88d3072a6c426288b5b0e",
+    "scripts/tests/native-qualification-selected-proof.mjs": "2be0766999cad7d25e72f99e192ffa2ab511f35210023685a92e0636aa7ec381",
+    "scripts/tests/native-qualification-selected-proof.ps1": "6a02ed47fcfbb1cba66e96cc5d1f36e196f11c4496216b5b8767479d960f4f0f",
+    "scripts/tests/native-qualification-selected-prerequisite.mjs": "7a5a118c4f079d3d6ed9835eaceec9ef8df509103001ce41c8e93ce62dce2aca",
+    "scripts/tests/owned-stdio-runtime.mjs": "77ae41a9abab692adfdd0c7ff95138122c64a58809e4dd685765f12411f95acd",
+    "scripts/tests/selected-native-lifetime.mjs": "88e3a01632564a20169414eed972ed329fb94b739eb71dd371729801ca1891ff",
+    "scripts/tests/selected-native-tree-proof.mjs": "3ee58f98831e4b3288e127388a33c0d230363c3e1d6975073f5f387a66d10b02",
+    "scripts/tests/selected-native-cleanup-proof.mjs": "371bf731c7cbad156652d1a38914eefc3611550c1dc45da94c14841cf8ac90af"
+  }
+}
