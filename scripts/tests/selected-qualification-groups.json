@@ -1,7 +1,37 @@
 {
-  "selected_worker": ["tests/Support/SelectedQualificationManifest.php", "tests/Support/SelectedQualificationWorker.php", "scripts/tests/selected-qualification-groups.json", "scripts/tests/selected-qualification-identity.mjs"],
-  "selected_channel": ["tests/Support/SelectedQualificationProtocol.php", "scripts/tests/selected-qualification-grammar.mjs"],
-  "selected_supervisor": ["scripts/tests/selected-qualification-transcript.mjs"],
-  "selected_relay": ["scripts/tests/selected-native-relay.mjs", "scripts/tests/selected-native-frames.mjs", "scripts/tests/selected-native-lifetime.mjs"],
-  "selected_registry": ["scripts/tests/selected-native-registry.mjs", "scripts/tests/native-witness-profile.mjs", "scripts/tests/selected-loss-contract.mjs"]
+  "selected_worker": [
+    "tests/Support/SelectedQualificationManifest.php",
+    "tests/Support/SelectedQualificationWorker.php",
+    "scripts/tests/selected-qualification-groups.json",
+    "scripts/tests/selected-qualification-identity.mjs",
+    "tests/Support/SelectedQualificationNativeWorker.php",
+    "scripts/tests/selected-qualification-native-worker.php",
+    "scripts/tests/selected-qualification-native-bootstrap.php",
+    "scripts/tests/selected-qualification-native-cases.php",
+    "scripts/tests/selected-qualification-native-preflight.php"
+  ],
+  "selected_channel": [
+    "tests/Support/SelectedQualificationProtocol.php",
+    "scripts/tests/selected-qualification-grammar.mjs",
+    "scripts/tests/selected-qualification-native-channel.php",
+    "scripts/tests/selected-qualification-native-control.mjs"
+  ],
+  "selected_supervisor": [
+    "scripts/tests/selected-qualification-transcript.mjs",
+    "scripts/tests/selected-qualification-native-proof.mjs",
+    "scripts/tests/selected-qualification-native-process.mjs",
+    "scripts/tests/selected-qualification-native-proof.ps1",
+    "scripts/tests/selected-qualification-prerequisite.mjs",
+    "scripts/tests/selected-native-cleanup-proof.mjs"
+  ],
+  "selected_relay": [
+    "scripts/tests/selected-native-relay.mjs",
+    "scripts/tests/selected-native-frames.mjs",
+    "scripts/tests/selected-native-lifetime.mjs"
+  ],
+  "selected_registry": [
+    "scripts/tests/selected-native-registry.mjs",
+    "scripts/tests/native-witness-profile.mjs",
+    "scripts/tests/selected-loss-contract.mjs"
+  ]
 }

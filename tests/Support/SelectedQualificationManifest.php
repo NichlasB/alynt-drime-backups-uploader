@@ -25,7 +25,7 @@ final class Alynt_Test_Selected_Qualification_Manifest {
                 if ( ! is_array( $names ) || count( $names ) < 1 || count( $names ) > 32 ) return false;
                 $rows = array(); $bytes = 0;
                 foreach ( $names as $name ) {
-                    if ( ! is_string( $name ) || strlen( $name ) > 160 || 1 !== preg_match( '~^(?:tests/Support|scripts/tests)/[A-Za-z0-9_-]+\.(?:php|mjs|json)$~D', $name ) ) return false;
+                    if ( ! is_string( $name ) || strlen( $name ) > 160 || 1 !== preg_match( '~^(?:tests/Support|scripts/tests)/[A-Za-z0-9_-]+\.(?:php|mjs|json|ps1)$~D', $name ) ) return false;
                     $file = realpath( $root . '/' . $name );
                     if ( false === $file || 0 !== strpos( $file, $root . DIRECTORY_SEPARATOR ) || ! is_readable( $file ) || filesize( $file ) > 262144 || ( $bytes += filesize( $file ) ) > 2097152 ) return false;
                     $rows[] = array( $name, str_replace( "\r\n", "\n", file_get_contents( $file ) ) );

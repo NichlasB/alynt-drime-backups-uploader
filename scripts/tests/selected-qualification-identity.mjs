@@ -24,7 +24,7 @@ export function verifySelectedIdentity() {
 			if (!Array.isArray(names) || !names.length || names.length > 32) return false;
 			let bytes = 0;
 			const rows = names.map((name) => {
-				if (typeof name !== 'string' || name.length > 160 || !/^(?:tests\/Support|scripts\/tests)\/[A-Za-z0-9_-]+\.(?:php|mjs|json)$/.test(name)) throw Error('selected_source_name');
+				if (typeof name !== 'string' || name.length > 160 || !/^(?:tests\/Support|scripts\/tests)\/[A-Za-z0-9_-]+\.(?:php|mjs|json|ps1)$/.test(name)) throw Error('selected_source_name');
 				const path = realpathSync(new URL('../../' + name, import.meta.url)), size = statSync(path).size;
 				if (!path.startsWith(root + (process.platform === 'win32' ? '\\' : '/')) || size > 262144 || (bytes += size) > 2097152) throw Error('selected_source_boundary');
 				return [name, readFileSync(path, 'utf8').replaceAll('\r\n', '\n')];

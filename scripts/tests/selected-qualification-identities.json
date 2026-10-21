@@ -7,9 +7,9 @@
   "native_worker": "97b42dcdd466837c8b7eafdc6f46c159c8a7ea0901a41a0c75c7d1e22acb1f40",
   "native_channel": "46180837dd5674527ff4a14392d7a6764db9cbf37d5ae347ec7117da7fe66a49",
   "native_supervisor": "9da0a11eb244cf2fa88abfa5173e237c763495eb1da81d23e65d4a30abbfcf7c",
-  "selected_worker": "4c5dc47cba8abc31b99d1dc67e5ee20138948bfc5a3c9dada2c59bed705d49da",
-  "selected_channel": "18252f54dc2e5b5d50a00dd392fec59f2c1075deeb3143cc59857ec2a5c262c2",
-  "selected_supervisor": "84e6e0545811579fa31be28ecb387b31ae0dbc1adcd548262f5a61d159fbb504",
+  "selected_worker": "c47643363f42bec0df470ee89cd1b934f375413538c6dd7bc2c919670764e20b",
+  "selected_channel": "5dd883412cbebc34ffb4c93f95c30f498216535837778b18f8bea47fe2481f56",
+  "selected_supervisor": "d4b7fc9108b89c717fdc697fd7903158c2f39837467fbabd0c6221eee0e2b21d",
   "selected_relay": "8f32e2a90bf7c63d2bdfea84c4329b79e874507a8d0ddfda26f9db9c2790510c",
   "selected_registry": "c4fc4e9ecbb89d298e4c9e4b900025fb74aacba78f489b65677b208c8716a907"
 }
