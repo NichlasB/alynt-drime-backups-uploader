@@ -1,0 +1,36 @@
+{
+  "production": {
+    "scripts/tests/native-lifecycle-proof-identities.json": "9ce248e71d7c1e8cacab1868a8eba7fc3d8b4e01ae880ad36d824a2d5a4888ab",
+    "scripts/tests/native-lifecycle-proof-manifest.php": "9b903bf92aacc756d27b8a251877fb77a5689bc6cea9c7e3edf15e8f728e418e"
+  },
+  "composition": {
+    "tests/Support/NativeQualificationObservation.php": "d6d666b07ee3cba98c6121dfd1719d573ce5b289464a966c8273bc1abd67a99b",
+    "tests/Support/NativeQualificationOwner.php": "d39fe65084f79a291b5a8b0c4ec555e229bbbf5c0b09d4dd08b8082f1ca7fbfe"
+  },
+  "projection": {
+    "tests/Support/QualificationObservationWrapper.php": "d9cdb737994841209db2b0c30b766f88d6bd76104a4becb964feec60c4778fc0",
+    "tests/Support/QualificationObservationProjection.php": "841a41a9308eccc8228573d2ffef89631f4229e015a05960680f9cdce06cc803"
+  },
+  "protocol": {
+    "scripts/tests/native-qualification-grammar.mjs": "304111464f943a71df06fa32d630ea10747f1b50a392981304a19ab275e167f5",
+    "scripts/tests/selected-qualification-grammar.mjs": "e50262b2b3a9af31fc366ac48a8526bf1483b0dd7647d9667b5c224d4cd0559e"
+  },
+  "transcript": {
+    "scripts/tests/native-qualification-transcript.mjs": "4c0ef43c18aaa2f86c1d180891e37027b81044be03211ae600053f99ba055d8e"
+  },
+  "eligibility": {
+    "scripts/tests/native-qualification-eligibility.mjs": "86f4d02f83eb261821a5f4531c6cf3de99a3881de53f32627f9fe27e48ab9e0a",
+    "scripts/tests/native-witness-profile.mjs": "c368b04281d0ae6101b8b0ac153c45a48e2497ee63dc3c68f7d033cd90b92e80",
+    "scripts/tests/fixed-drain-stream.mjs": "7934d58d0fce281314def640ebf424720347842f0c5bfb9925584e261da748e1"
+  },
+  "isolated_worker": {
+    "tests/Support/NativeQualificationApiWorker.php": "85a2927c946a5ae49b2da93d3acc28753a0a878c5dca6f78605ebf2df2a3dd1c",
+    "scripts/tests/native-qualification-preflight.php": "a5f9c1903d4834b9d41a4de32518bc1ce6e7768b52a1b89c60433b21d4726a4b",
+    "tests/Support/NativeLifecycleApiHarness.php": "5bb4973bf2a07dfd751077b52028e4a72e2870b1a8fc71e3c82149b7c6ca3399",
+    "tests/Support/NativeLifecycleApiBootstrap.php": "5454cbc738eb5e0b216f5754d621b2661f413bf713bc2f56bd5fad40dd347dc2",
+    "tests/Support/NativeLifecycleApiCases.php": "f1bbfa22f56187e790fb4e135abff6649901e08dd699012031d4a330159b82fa",
+    "tests/Support/RegistrationOutcomeApiDoubles.php": "4e47edd02c80cc52a9cfc34d7e85201acef1d44c8852a2fe7c88a583cb0004e2",
+    "tests/Support/NativeLifecycleAuthDb.php": "de08d9449131368a2eb21e0b7ef8fbd2d6c0a0a9c6ef42f6d615fb91c8857be9",
+    "tests/Support/FixedCoreRequestShims.php": "0110fca25168351f2ad0468fb88b6a03d994d19a1ad34ce1e7378387f6565f9f"
+  }
+}
