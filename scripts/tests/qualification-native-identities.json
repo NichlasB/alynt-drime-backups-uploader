@@ -1,0 +1,10 @@
+{
+  "production": "15ea222c67467802ebacef48c21bf14d8dda4592f6fbc3b04f2dde0fe06b8c85",
+  "composition": "859f3b3ac4655a24dd2b957601a32282cddf9aafe54eae34f32d72ba913a2b20",
+  "projection": "8c43fd880c6cc4950ee900f994d6a64d32e6aa0449827b72cfbd69f628ba4170",
+  "isolated_worker": "1aa5e59b4d585c856b34058f1991571d4ee99cde741b8fbb10ba1e45a06b9726",
+  "isolated_transcript": "12a642532d06610c8450e296c094ea5b1ca284097f243f3166f02622ce22ad8e",
+  "native_worker": "97b42dcdd466837c8b7eafdc6f46c159c8a7ea0901a41a0c75c7d1e22acb1f40",
+  "native_channel": "46180837dd5674527ff4a14392d7a6764db9cbf37d5ae347ec7117da7fe66a49",
+  "native_supervisor": "9da0a11eb244cf2fa88abfa5173e237c763495eb1da81d23e65d4a30abbfcf7c"
+}

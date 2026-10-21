@@ -96,6 +96,9 @@ jobs:
           # Syntax only: the owned native experiment requires separate local approval.
           for file in scripts/tests/selected-native-*.mjs; do node --check "$file" || exit 1; done
           for file in scripts/tests/selected-native-*.php; do php -l "$file" || exit 1; done
+          # Syntax only; this no-fault native proof requires exact local target approval.
+          for file in scripts/tests/qualification-native-*.php; do php -l "$file" || exit 1; done
+          for file in scripts/tests/qualification-native-*.mjs; do node --check "$file" || exit 1; done
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
