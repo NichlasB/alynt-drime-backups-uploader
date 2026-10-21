@@ -331,6 +331,57 @@ security regression handoff. No Database Review, physical atomicity/durability/
 cancellation or production-readiness claim. FULL_PRE_RELEASE remains required
 before packaging a coherent release candidate containing this work.
 
+## Repository-only portable declaration preflight recovery — 2026-10-21
+
+User approved source-manifest/preflight portability diagnosis and exact-head CI
+recovery, preserving every strict check, with **no WordPress operation or native
+rerun**. Coherent excluded repair baseline44b9dd2e87f5e64d1fd66ad3af7cbd036391111a.
+That head's Quality39652042682 failed the new isolated composition preflight on
+both Linux PHP7.4/8.3, although its Node job passed. This is publication failure,
+not a retroactive failure of the accepted genuine no-fault proof above.
+
+Clean OptionB source snapshot202947/11622 files, SHA256
+63776A0E3BB8A30E855F6D9C4DE1E2CA0301C7097D4CB1DD205F32762854D837, matching
+sidecar under the same external directory; hash verified. A separate git-archive
+source-only diagnostic tree at portability-lf-20261021/source also passed the
+unchanged declaration gates on Windows. Neither creates a site/database backup,
+executes WordPress/native code or modifies tracked original sources.
+
+The original isolated test prepared JSON when shared but omitted Tokenizer,
+which the transitive strict lexical source verifier requires. Explicitly disabling
+token_get_all locally reproduces the exact false preflight at line8. PHP -n ignores
+php.ini, including configured shared extensions; see the official
+[CLI options reference](https://www.php.net/commandline.options). Runner-specific
+dependency availability and exact-head outcomes are recorded in the toolkit
+checklist from actual CI logs, not inferred from this local reproduction.
+
+Repair is limited to the isolated PHP test bootstrap: retain -n, probe both real
+JSON/Tokenizer functions and, only if absent, require the existing extension file
+from this PHP runtime's configured extension_dir. No install, php.ini change,
+stub function, source-hash replacement or fallback verifier. The unchanged full
+source/composition gate must still pass. One bounded CI capability line makes
+missing built-in/shared dependencies visible without source/private payloads.
+
+Two new regressions verify that actual dependencies are available with mysqli/
+pdo_mysql/WordPress absent, and that disabling Tokenizer still fails the original
+preflight closed. Existing positive composition assertions remain intact. Current
+local focused67 tests/1553 assertions,0 skips/failures; post-rename narrow5/180
+passed. Full Node633/633,0 skips/failures; PHP syntax/diff checks passed. The slow
+full Windows suite was not rerun for this bootstrap-only repair; current full
+Linux matrix execution belongs to the exact-head CI evidence in the checklist.
+Do not relabel the previous full Windows2057/49596/four-skipped result as a new
+zero-skip run.
+
+Canonical source-scoped Feature Light/final Security delta review: one test-
+bootstrap dependency defect fixed; no new security finding, UI, runtime/public
+contract, SQL, credentials, permission or production wiring change. Review scope
+is this owning record, the PHP test and Quality workflow plus the unchanged
+transitive verifiers. Strict checks and the entire native28-file closure remain
+unchanged at5883cd7caae6a75ecd4e18c7890f4b3731cf91d2ac92a1ae630eca8b10afae7a.
+Helper measurement explicit44b9dd2:one changed PHP file39 TOTAL/CODE1 helper
+anomaly, below300; no bloat/structure action or UI/UX workflow warranted. No new
+physical proof, release-readiness or historical whole-plugin checklist claim.
+
 ## Completion boundary and exact next gate
 
 Implementation-plan progress: R1 same-composition relayed native no-fault

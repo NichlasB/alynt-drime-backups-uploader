@@ -49,6 +49,7 @@ jobs:
 
       - name: Run portable runner and lifecycle proof syntax checks
         run: |
+          php -n -r 'echo "Isolated CLI dependencies: json=", (int) function_exists("json_encode"), ", tokenizer=", (int) function_exists("token_get_all"), PHP_EOL;'
           npm run lint:runner
           php -l scripts/tests/lifecycle-local-proof.php
           php -l scripts/tests/lifecycle-proof-processes.php
