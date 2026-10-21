@@ -1,0 +1,31 @@
+<?php
+/**
+ * Fixed reusable composition, no injected strategy or native operation.
+ *
+ * @package Alynt_Drime_Backups_Uploader
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/** Same source methods in the dormant owner and isolated IO-double composition. */
+trait Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_Methods {
+	use Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Core_Guard;
+	use Alynt_Drime_Backups_Uploader_Registration_Construction;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Candidate;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Join;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Qualification;
+	use Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Capture;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Handoff_Data;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Read_Construction;
+	use Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_State;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window {
+		Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window::open_window as private initial_window;
+		Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_State::open_window insteadof Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window;
+		Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_State::within_budget insteadof Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window;
+	}
+	use Alynt_Drime_Backups_Uploader_Closed_Writer_Contract_Privacy;
+	use Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_Root;
+	use Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_Read;
+}
