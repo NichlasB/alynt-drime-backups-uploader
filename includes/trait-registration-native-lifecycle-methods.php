@@ -1,0 +1,54 @@
+<?php
+/**
+ * Explicit native adapter composition, separate DATA and resource lifetimes.
+ *
+ * @package Alynt_Drime_Backups_Uploader
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+foreach ( array( 'state', 'root', 'prepare', 'adapter', 'cleanup', 'read' ) as $part ) {
+	require_once __DIR__ . '/trait-registration-native-lifecycle-' . $part . '.php';
+}
+
+/** Original primitives retained unchanged; no nested consuming owner. */
+trait Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Methods {
+	use Alynt_Drime_Backups_Uploader_Real_Closed_Writer_Core_Guard;
+	use Alynt_Drime_Backups_Uploader_Registration_Construction;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Candidate;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Join;
+	use Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Capture;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Qualification;
+	use Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_State;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window {
+		Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window::open_window as private initial_window;
+		Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_State::open_window insteadof Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window;
+		Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_State::within_budget insteadof Alynt_Drime_Backups_Uploader_Registration_Observation_Construction_Window;
+	}
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Handoff_Data, Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session, Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Session {
+		Alynt_Drime_Backups_Uploader_Registration_Observation_Handoff_Data::finish insteadof Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session, Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Session;
+		Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session::finish as private finish_without_outcome;
+		Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session::finish as private finish_barrier;
+		Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Session::finish as private finish_admission;
+		Alynt_Drime_Backups_Uploader_Registration_Native_Outcome_Session::open_writer insteadof Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session;
+		Alynt_Drime_Backups_Uploader_Native_Closed_Begin_Session::open_writer as private open_writer_without_outcome;
+	}
+	use Alynt_Drime_Backups_Uploader_Native_Observer_Session;
+	use Alynt_Drime_Backups_Uploader_Native_Options_Metadata;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Storage;
+	use Alynt_Drime_Backups_Uploader_Registration_Admission_Transaction;
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Read_Construction;
+	use Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_Read, Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Read {
+		Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Read::continue_lifecycle insteadof Alynt_Drime_Backups_Uploader_Registration_Lifecycle_Integration_Read;
+	}
+	use Alynt_Drime_Backups_Uploader_Registration_Observation_Native_Barrier, Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Adapter {
+		Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Adapter::observe_native insteadof Alynt_Drime_Backups_Uploader_Registration_Observation_Native_Barrier;
+		Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Adapter::barrier_budget insteadof Alynt_Drime_Backups_Uploader_Registration_Observation_Native_Barrier;
+	}
+	use Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_State;
+	use Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Root;
+	use Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Prepare;
+	use Alynt_Drime_Backups_Uploader_Registration_Native_Lifecycle_Cleanup;
+	use Alynt_Drime_Backups_Uploader_Closed_Writer_Contract_Privacy;
+}
