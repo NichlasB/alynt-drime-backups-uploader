@@ -219,12 +219,18 @@ Database Review, release readiness or real uncertain-COMMIT provenance.
   unavailability skips (invalid-private-key and round-trip signature tests);
   configured WPCS138, structure/build and whitespace checks passed.
 - Exact-head uploader/dashboard CI and toolkit source-scoped publication:
-  **blocked before any push** by automatic approval review of the public GitHub
-  destination. Explicit approval to publish the new proof source/non-secret
-  records is required. Local commits may preserve the validated work; no remote
-  CI success/head is claimed. Actual head/run/count/skip evidence remains the
-  toolkit closeout's responsibility after publication approval. Do not rerun the
-  consumed native attempt merely to finish commit/push/CI verification.
+  initially held before push by the public-destination approval gate. The user
+  subsequently explicitly approved publishing this proof/non-secret evidence to
+  the public uploader/dashboard repos and the private toolkit. Source commit
+  `7182b243bc8fa11ac43b24c5e550fb86bb6de523` and dashboard docs commit
+  `d47ba23311dba97251520099d65eb9b3feda3a10` were pushed. Source-head uploader
+  [Quality39591118819](https://github.com/NichlasB/alynt-drime-backups-uploader/actions/runs/39591118819)
+  was still running at this publication-note edit; no success is inferred.
+  Dashboard [CI39591124521](https://github.com/NichlasB/alynt-drime-backups-dashboard/actions/runs/39591124521)
+  succeeded for that exact head: actual PHP7.4/8.3 logs each299/1430, no skips.
+  The toolkit closeout owns final exact uploader documentation-head CI/log counts,
+  dashboard checks and private toolkit remote/check evidence. No native attempt
+  is rerun for publication verification; no new runtime/source identity changed.
 
 Native source identities for the successful attempt:
 
