@@ -102,6 +102,8 @@ jobs:
           # Syntax only: selected qualification execution stays separately local-approved.
           for file in scripts/tests/selected-qualification-*.php; do php -l "$file" || exit 1; done
           for file in scripts/tests/selected-qualification-*.mjs; do node --check "$file" || exit 1; done
+          # Syntax only: genuine-core/native proof still requires exact local target approval.
+          for file in scripts/tests/native-lifecycle-proof-*.php; do php -l "$file" || exit 1; done
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result
