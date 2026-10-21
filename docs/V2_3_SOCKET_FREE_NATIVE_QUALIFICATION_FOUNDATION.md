@@ -256,7 +256,53 @@ uncertainty proof contracts now implemented at isolated/synthetic layers. Genuin
 same-root relayed no-fault, real uncertain-COMMIT/failure proof and production
 readiness R2-R7 remain open/NO-GO. No maintenance/package detour recommended.
 
-Recommended next gated slice: **Plugin Tester local-only V2.3 Same-Root Native
+## PHP 7.4 composition compatibility recovery — 2026-10-21
+
+The first publication c57e800 failed PHP7.4 Quality39640180251: one preflight
+and49 API cases stopped at the shared composition gate (2046/49131/50 failures).
+PHP8.3 passed2046/49456 and Node576/576. This was not50 product failures and did
+not authorize bypassing the gate or starting the next native milestone.
+
+Approved repair baseline c57e800d46f37debd48406d2b8022bd47dc6d945; source-only
+OptionB snapshot `alynt-drime-backups-uploader-20261021-191036.zip` and matching
+`.txt`,11558 files, SHA256
+CD579268D85443683FCDD84C20A7B5B32E5236939A3880634B303C3289A0EFD9, under the
+same external toolkit-snapshots/uploader folder; no branch/stash/restore/site IO.
+
+Reproduced on portable official PHP7.4.33, CLI -n: nested alias enumeration
+reports original method names and the consuming class alias map is empty.
+Direct `getMethod(alias)` still resolves the correct method. The old method-map
+loop therefore omitted both aliases and overwrote original-name rows. PHP8.5
+reports alias names, explaining the earlier local/8.3 success. Alias-map ordering
+and method signatures were not the cause.
+
+The verifier now seeds names from the separately strictly verified direct trait
+alias map, includes every enumerated/direct-class alias name, and resolves each
+row by exact named lookup. All existing exact source/line/modifier/return/ref/
+parameter/default/state/constant/finality/public-surface checks remain; no
+signature or source normalization, hash refresh, old-manifest edit or native
+entry enablement. Seven permanent verifier counterfactuals reject missing/wrong
+aliases, source-row mismatch, altered signature/default, extra method and an
+available-entry expectation; a positive genuine composition prevents vacuity.
+Variants modify trusted verifier text in memory only, with unique fixed anchors;
+no supplied code/path and no owner/source file mutation. JSON-shared-extension
+fallback retains PHP7.4 Linux support without skipping a case.
+
+Local PHP7.4 and PHP8.5 targeted NativeQualification groups each passed100 tests/
+3617 assertions, no skips/failures; PHP7.4 syntax and source/composition preflight
+passed. The exact three new foundation classes passed62/1373 on PHP7.4 (the
+original54 cases plus8 verifier cases). Full Node576/576, WPCS248, lint:runner,
+build/verify:runner passed; generated source pins/assets/runner remain unchanged.
+Repair bloat report uses c57e800:2 PHP files58/70 TOTAL, zero oversized (CODE1
+helper anomaly unchanged); no split/helper extraction outside this repair needed.
+Full current local and exact-head CI results are owned by the toolkit
+closeout, not inferred from earlier baselines. This repair's final source-scoped
+security review found no confirmed security defect: fixed local reads/variants
+only, no user request/eval, endpoint/SQL/authorization/secret/handle surface.
+Existing actual and fixed owner entries remain unavailable. No actual WordPress,
+database, native/IPC experiment, physical cleanup or whole-plugin readiness claim.
+
+Recommended next gated slice after exact-head recovery: **Plugin Tester local-only V2.3 Same-Root Native
 Qualification No-Fault Private Stdio Integration and Owned Cleanup Proof**.
 Build the NEW fixed source-pinned worker/channel/native trace adapter, fresh genuine
 guard prelude and same-composition eight-stream no-fault transparency/cleanup.

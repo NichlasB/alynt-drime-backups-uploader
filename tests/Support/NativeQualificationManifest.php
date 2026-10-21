@@ -30,6 +30,14 @@ final class Alynt_Test_Native_Qualification_Manifest {
         $parameters = array(); foreach ( $m->getParameters() as $p ) $parameters[] = array( $p->getName(), (string) $p->getType(), $p->isPassedByReference(), $p->isVariadic(), $p->isOptional(), $p->isDefaultValueAvailable() ? $p->getDefaultValue() : null );
         return array( realpath( $m->getFileName() ), $m->getStartLine(), $m->getEndLine(), $m->getModifiers(), (string) $m->getReturnType(), $m->returnsReference(), $parameters );
     }
+    private static function methods( ReflectionClass $class, array $aliases ) {
+        // PHP 7.4 enumerates nested aliases under original names and omits their class alias map.
+        // Recover names from the separately verified direct trait; resolve every row by that name.
+        $names = array_keys( $class->getTraitAliases() + $aliases );
+        foreach ( $class->getMethods() as $method ) $names[] = $method->getName();
+        $rows = array(); foreach ( array_unique( $names ) as $name ) $rows[$name] = self::method( $class->getMethod( $name ) );
+        return $rows;
+    }
     public static function composition() {
         if ( 0 !== func_num_args() || ! self::verify() ) return false;
         require_once __DIR__ . '/NativeQualificationOwner.php';
@@ -44,7 +52,7 @@ final class Alynt_Test_Native_Qualification_Manifest {
             if ( ! array_key_exists( $k, $defaults ) || $defaults[$k] !== $v || ! $proof->getProperty( $k )->isPrivate() ) return false; unset( $defaults[$k] );
         }
         $originalDefaults = $source->getDefaultProperties(); ksort( $defaults ); ksort( $originalDefaults ); if ( $defaults !== $originalDefaults ) return false;
-        $a = array(); $b = array(); foreach ( array( $source, $proof ) as $i => $c ) foreach ( $c->getMethods() as $m ) { if ( 0 === $i ) $a[$m->name] = self::method( $m ); else $b[$m->name] = self::method( $m ); }
+        $a = self::methods( $source, array() ); $b = self::methods( $proof, $trait->getTraitAliases() );
         foreach ( array( 'qualify_admission_outcome' => array( 'qualification_source', 'Alynt_Test_Qualification_Observation_Wrapper' ), 'open_lifecycle_session' => array( 'session_source', 'Alynt_Test_Native_Qualification_Observation' ) ) as $name => $spec ) {
             if ( ! isset( $b[$spec[0]] ) || $b[$spec[0]] !== $a[$name] || $b[$name] !== self::method( new ReflectionMethod( $spec[1], $name ) ) ) return false;
             $b[$name] = $b[$spec[0]]; unset( $b[$spec[0]] );
