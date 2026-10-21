@@ -1,0 +1,44 @@
+{
+  "production": {
+    "tests/Support/NativeQualificationManifest.php": "95a1bbc51d693354b0474af7766c66711cfea9b79b9b005d8999ba9d6a5dcc79",
+    "scripts/tests/native-qualification-identities.json": "2d61b8b249e694c25d3b50f8c87af410b3339a8df56a608d4c9cc910348756e1",
+    "tests/Support/QualificationNativeManifest.php": "9175db079a0489c5fe29afedbd913191ff9c68af73586871f543dab2c4606a34",
+    "scripts/tests/qualification-native-identities.json": "9b4f2c2015eb2e052fb42703d11b7b9c263a6ebec6cd3827fce427ccd27cab41"
+  },
+  "composition": {
+    "scripts/tests/native-qualification-no-fault-owner.php": "26f264c7f74e3ba344a2afd7867f860d0cc9a383f142b0c6b1c2c2573d672dc1",
+    "tests/Support/NativeQualificationObservation.php": "d6d666b07ee3cba98c6121dfd1719d573ce5b289464a966c8273bc1abd67a99b",
+    "tests/Support/NativeQualificationOwner.php": "d39fe65084f79a291b5a8b0c4ec555e229bbbf5c0b09d4dd08b8082f1ca7fbfe"
+  },
+  "projection": {
+    "tests/Support/QualificationObservationWrapper.php": "d9cdb737994841209db2b0c30b766f88d6bd76104a4becb964feec60c4778fc0",
+    "tests/Support/QualificationObservationProjection.php": "841a41a9308eccc8228573d2ffef89631f4229e015a05960680f9cdce06cc803"
+  },
+  "protocol": {
+    "scripts/tests/native-qualification-no-fault-channel.php": "e8c81e01b7f3e7213ae439b97957098b2016a4d2b9f71730e8886b9416ecdea1",
+    "scripts/tests/native-qualification-grammar.mjs": "304111464f943a71df06fa32d630ea10747f1b50a392981304a19ab275e167f5",
+    "scripts/tests/owned-stdio-io.php": "b7d655b49ecacab489259f7388f1424597c8ffa078007a17bee5564ac070a7cb",
+    "scripts/tests/owned-stdio-lines.mjs": "bdbb1a932ced5f5fec5a2f043d4613fe3ced14a66ebc46b3cd3da9706f54b45d"
+  },
+  "transcript": {
+    "scripts/tests/native-qualification-no-fault-control.mjs": "d66702639559ca62802f62b1ad1f0ea39b3e98e9843458f7209515eb3a67eb01",
+    "scripts/tests/native-qualification-transcript.mjs": "4c0ef43c18aaa2f86c1d180891e37027b81044be03211ae600053f99ba055d8e"
+  },
+  "eligibility": {
+    "scripts/tests/native-qualification-no-fault-registry.mjs": "7474963d1edb6101df9649a474e470d74c0750de0b4d07e07a4576745068a702",
+    "scripts/tests/native-qualification-no-fault-barrier-drain.mjs": "a1c34930d084bb2e0d05d4ec85feb7cd6c9ff3910a6773578d5a89b8dc5bbe9e",
+    "scripts/tests/fixed-drain-grammar.mjs": "61e804feb2dec86ebc5119758fa2380728a2a789eef43182bc52b8fe8198cf32",
+    "scripts/tests/native-witness-profile.mjs": "c368b04281d0ae6101b8b0ac153c45a48e2497ee63dc3c68f7d033cd90b92e80",
+    "scripts/tests/relay-no-fault-frames.mjs": "657098a5306dc57322ef101beb5a7ccf40822443c3c4ec4250dacc03c7eb0780",
+    "scripts/tests/native-qualification-no-fault-relay.mjs": "8f5487a00d652f245bce05a9dfbacc4442f2966c9a5b038ca8dfafd37d99d671"
+  },
+  "isolated_worker": {
+    "scripts/tests/native-qualification-no-fault-worker.php": "c760bcdea9d5339ca05e3b8195ee7d12631524b6c70cec677389bb3502967771",
+    "scripts/tests/native-qualification-no-fault-bootstrap.php": "e27eda9e5cb1f1c102a5acafd7f6fc6bb8679e36f48f8b9e2c7b6af842a5bf66",
+    "scripts/tests/native-qualification-no-fault-preflight.php": "a47149771ee36fc4bb38f3d7bb9ec8ee79e27f5738271dae819f31a702435ee7",
+    "scripts/tests/native-qualification-no-fault-fixtures.php": "fca97fd9d1baea3f721917123c29fd56060614564702f302173d9a81fefac86a",
+    "scripts/tests/native-qualification-no-fault-process.mjs": "dd8aa7e6fc3a5460d0b7a3481c398455555fb920e3a6be453083ed0d16eb7e79",
+    "scripts/tests/native-qualification-no-fault-proof.mjs": "aaa45a4a6fbdb7600dd7df82696d0b86781fd6c74932df94ffa0b42ebab55286",
+    "scripts/tests/native-qualification-no-fault-proof.ps1": "ddee06117e4fd26db02d90565d55b763d09ff839f1a03cae7cee0c9c86696a27"
+  }
+}
