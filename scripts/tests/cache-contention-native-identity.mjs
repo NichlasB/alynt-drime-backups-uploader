@@ -2,7 +2,7 @@
 import { readFileSync,realpathSync,statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { verifyCacheWitnessIdentity } from './cache-witness-native-identity.mjs';
-export const cacheContentionDigest='6e5101b4f308d0e191abdcb143ecf79adb730f8804b7c8a5f8b33aa3c5943998';
+export const cacheContentionDigest='31481ac16832920ccca35a118a0c7b3c77c18ef017c93abc90e5b930c98d4137';
 const digest=s=>createHash('sha256').update(s).digest('hex');
 export function verifyCacheContentionIdentity() {
     if(arguments.length)return false;

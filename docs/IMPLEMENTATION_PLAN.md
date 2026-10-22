@@ -1,5 +1,21 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Blocker Rollback Correction / Joined Proof — 2026-10-22
+
+See [owning proof](V2_3_BLOCKER_ROLLBACK_ACK_CORRECTION_OWNED_PROOF.md). Read-only
+discovery reproduces CAST autocommit as ON;fixed numeric projection keeps exact
+true acknowledgement/string1/string0 guards.13 actual-branch PHP regressions.
+ONE fresh ordered proof passes:genuine266/11,original/integrated no-fault960/24,
+selected/released960/24,held936/22 with exact1205/rollback refusal,not success.
+Both actual waits/rollback acknowledgements/cleanup pass;77 checksums unchanged,
+zero residue. Original guards/budgets/production wiring untouched.
+
+Implementation-plan progress:R1 combined contention/failure acceptance satisfied
+for fixed local composition;production NO-GO,R2-R7 gated. Next gated slice:
+local-only V2.3 Real Authenticated Closed Entry Surface and Request Policy Design
+(R2),design-only;keep writes,native execution,public wiring/grants/activation/
+rollback disabled. Do not continue with generic maintenance or a patch release.
+
 ## V2.3 Cache-Aware Exact-Wait Owned Attempt — 2026-10-22
 
 See [owning proof](V2_3_CACHE_AWARE_EXACT_WAIT_OWNED_PROOF.md). Fresh genuine266/11,

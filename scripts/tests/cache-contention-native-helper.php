@@ -63,7 +63,12 @@ try {
         $stage = 'ready'; alynt_contention_send( 'ready', array( 'zero_dml' => true ) );
         $stage = 'command'; alynt_contention_receive( 'rollback', $db );
         $stage = 'rollback';
-        if ( true !== $db->query( 'ROLLBACK AND NO CHAIN NO RELEASE' ) || array( '1','0' ) !== $db->query( 'SELECT CAST(@@autocommit AS CHAR),CAST(@@in_transaction AS CHAR)' )->fetch_row() ) throw new RuntimeException( 'rollback' );
+        $rollback_ack = $db->query( 'ROLLBACK AND NO CHAIN NO RELEASE' );
+        if ( true !== $rollback_ack ) throw new RuntimeException( 'rollback_ack' );
+        $stage = 'rollback_state';
+        $rollback_result = $db->query( 'SELECT CAST(@@autocommit+0 AS CHAR),CAST(@@in_transaction+0 AS CHAR)' );
+        $rollback_state = $rollback_result->fetch_row(); $rollback_result->free();
+        if ( array( '1','0' ) !== $rollback_state ) throw new RuntimeException( 'rollback_state' );
         $owned_transaction = false; $stage = 'counters'; alynt_contention_zero( $db );
         alynt_contention_send( 'released', array( 'rollback_acknowledged' => true, 'zero_dml' => true ) );
     } else {
@@ -97,7 +102,7 @@ try {
     if ( true !== $db->close() ) throw new RuntimeException( 'close' ); $db = null;
     $stage = 'closed'; alynt_contention_send( 'closed', array( 'zero_dml' => true, 'closed_ns' => (string) ( hrtime( true ) - $epoch ) ) ); $exit = 0;
 } catch ( Throwable $error ) {
-    $allowed = array( 'late_execute','expired','query_cap','late_query','wait_identity','safety_row','rollback','close','context','thread','owner','input','target','counters','dml','output' );
+    $allowed = array( 'late_execute','expired','query_cap','late_query','wait_identity','safety_row','rollback','rollback_ack','rollback_state','close','context','thread','owner','input','target','counters','dml','output' );
     $reason = $error instanceof mysqli_sql_exception ? 'database' : ( in_array( $error->getMessage(), $allowed, true ) ? $error->getMessage() : 'owned' );
     $code = $error instanceof mysqli_sql_exception && in_array( (int) $error->getCode(), array( 1205,1213,2006,2013 ), true ) ? (int) $error->getCode() : 0;
     try { alynt_contention_send( 'refused', array( 'failure' => array( 'stage' => $stage, 'reason' => $reason, 'code' => $code ) ) ); } catch ( Throwable $unreportable ) { $exit = 1; }

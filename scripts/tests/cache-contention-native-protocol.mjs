@@ -4,8 +4,8 @@ import { validWaitContext,exactWaitTuple } from './wait-witness-contract.mjs';
 export const contentionDomain='alynt.uncertain-barrier.wait-contended.v1';
 export const contentionSetup='alynt.uncertain-barrier.wait-contended-setup.v1';
 export const contentionProfiles=Object.freeze(['released','held']);
-export const contentionStages=Object.freeze(['connect','target','hello','command','policy','counters','begin','prepare','lock','ready','arm','execute','query','waiting','finish','rollback','close','closed']);
-export const contentionReasons=Object.freeze(['database','protocol','owned','late_execute','expired','query_cap','late_query','wait_identity','safety_row','rollback','close','context','thread','owner','input','target','counters','dml','output']);
+export const contentionStages=Object.freeze(['connect','target','hello','command','policy','counters','begin','prepare','lock','ready','arm','execute','query','waiting','finish','rollback','rollback_state','close','closed']);
+export const contentionReasons=Object.freeze(['database','protocol','owned','late_execute','expired','query_cap','late_query','wait_identity','safety_row','rollback','rollback_ack','rollback_state','close','context','thread','owner','input','target','counters','dml','output']);
 const ns=s=>typeof s==='string'&&/^(?:0|[1-9][0-9]{0,10})$/.test(s);
 export function validContentionMetrics(m){
     if(!exact(m,['trigger_ns','queries','zero_dml'])||!ns(m.trigger_ns)||BigInt(m.trigger_ns)>=2500000000n||m.zero_dml!==true||!Array.isArray(m.queries)||!m.queries.length||m.queries.length>125)return false;

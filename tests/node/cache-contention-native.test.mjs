@@ -61,6 +61,11 @@ test('garbage, escaped/duplicate/deep/oversized bytes and unbounded failure text
     const good=JSON.stringify(message());for(const line of [good+' ',good.replace('"waiting"','"wait\\u0069ng"'),good.replace('"role":"monitor"','"role":"monitor","role":"monitor"'),'['.repeat(9)+']'.repeat(9),'x'.repeat(4096),'{}\n{}'])assert.equal(parseContentionHelper(line,'monitor','released',context(),cacheContentionDigest),false);
     const f={domain:contentionDomain,kind:'refused',role:'monitor',profile:'released',failure:{stage:'query',reason:'expired',code:0},context:context()};assert.equal(parseContentionHelper(JSON.stringify(f),'monitor','released',context(),cacheContentionDigest).failure.reason,'expired');
     for(const change of [{...f,failure:{...f.failure,reason:'private SQL text'}},{...f,failure:{...f.failure,code:123456}},{...f,failure:{...f.failure,stage:'private path'}}])assert.equal(parseContentionHelper(JSON.stringify(change),'monitor','released',context(),cacheContentionDigest),false);
+    for(const [stage,reason]of [['rollback','rollback_ack'],['rollback_state','rollback_state']]){
+        const m={...f,role:'blocker',failure:{stage,reason,code:0}};
+        assert.equal(parseContentionHelper(JSON.stringify(m),'blocker','released',context(),cacheContentionDigest).failure.reason,reason);
+        assert.equal(parseContentionHelper(JSON.stringify({...m,failure:{...m.failure,raw:['ON','0']}}),'blocker','released',context(),cacheContentionDigest),false);
+    }
 });
 test('no-match, forged/stale/replayed execute evidence or false/early closure never proves a wait',()=>{
     assert.equal(createContentionReplay(context(),{statement:7,receipt:{}},metrics(),wait(context())),false);

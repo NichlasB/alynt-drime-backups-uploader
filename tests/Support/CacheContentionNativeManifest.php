@@ -2,7 +2,7 @@
 /** Source-only successor preflight, no authentication, socket or WordPress bootstrap. */
 require_once __DIR__ . '/CacheWitnessNativeManifest.php';
 final class Alynt_Test_Cache_Contention_Native_Manifest {
-    const DIGEST = '6e5101b4f308d0e191abdcb143ecf79adb730f8804b7c8a5f8b33aa3c5943998';
+    const DIGEST = '31481ac16832920ccca35a118a0c7b3c77c18ef017c93abc90e5b930c98d4137';
     public static function verify() {
         if ( 0 !== func_num_args() || ! Alynt_Test_Cache_Witness_Native_Manifest::verify() ) return false;
         $base = realpath( dirname( __DIR__, 2 ) ); $file = $base . '/scripts/tests/cache-contention-native-identities.json';
