@@ -1,5 +1,23 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Metadata/Safety Role Repair and Ordered Proof — 2026-10-22
+
+See [owning successor](V2_3_METADATA_ROLE_REPAIR_OWNED_PROOF.md). Approved UB6/UB7
+harness-only repair,62-file source closure,RED2/GREEN26 source-backed tests and
+fresh single ordered invocation. Genuine guard266/11,no-fault960/24 and selected
+uncertain terminal960/24 passed with independent cleanup/application77 checksum
+preservation. Released case failed direct_ack before relay/worker startup;
+held NOT RUN. Exact owned prefix wp_alynt_core_probe_7f3e5973b625_ retained:
+three tables,options8/users0/usermeta0;no other DB sessions/transactions or owned
+processes. Do not claim whole-attempt cleanup or final released-case checksums.
+
+Implementation-plan progress: R1 selected uncertain acceptance advances; joined
+contention/timeout and retained-fixture recovery BLOCKED,R2-R7 NO-GO. Recommended
+next gated slice: harness-only Windows helper path and pre-worker ownership/
+cleanup recovery correction,source-backed regressions,exact retained-fixture
+recovery,fresh prerequisites and ONE new ordered proof on the same local target.
+Preserve guards,budgets,application state and disabled wiring;new approval needed.
+
 ## V2.3 Terminal-Owner Selected/Contended Proof — 2026-10-22
 
 Approved/confirmed Plugin Tester local-only attempt and owned cleanup; see

@@ -5,7 +5,7 @@ require_once __DIR__ . '/QualificationNativeManifest.php';
 require_once __DIR__ . '/UncertainBarrierManifest.php';
 require_once __DIR__ . '/UncertainBarrierNoFaultManifest.php';
 final class Alynt_Test_Uncertain_Barrier_Native_Manifest {
-    const DIGEST = 'dba7632d7f48340a3f06565312abf7f34c113193d38b45af9b7ed83f88eee20c';
+    const DIGEST = '5c93e289e5fe06d291b59efed65ebbd016e44b94670591d721abe65cd5852675';
     private static function groups() {
         $path = dirname( __DIR__, 2 ) . '/scripts/tests/uncertain-barrier-native-identities.json';
         if ( ! is_readable( $path ) || filesize( $path ) > 16384 ) return false;

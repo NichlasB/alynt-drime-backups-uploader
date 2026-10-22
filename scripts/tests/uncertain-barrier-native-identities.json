@@ -47,11 +47,12 @@
     "scripts/tests/native-witness-profile.mjs": "c368b04281d0ae6101b8b0ac153c45a48e2497ee63dc3c68f7d033cd90b92e80",
     "scripts/tests/relay-no-fault-frames.mjs": "657098a5306dc57322ef101beb5a7ccf40822443c3c4ec4250dacc03c7eb0780",
     "scripts/tests/native-qualification-no-fault-relay.mjs": "8f5487a00d652f245bce05a9dfbacc4442f2966c9a5b038ca8dfafd37d99d671",
-    "scripts/tests/uncertain-barrier-native-registry.mjs": "a4e3ff42e9568bd17cf68a00d91df92ad153f04a205ecf00337ec76c4c0c96ea",
+    "scripts/tests/uncertain-barrier-native-registry.mjs": "90e019d2375a8e75562ffc99f8ebe0c706837d6e5564248949599db5c02ae527",
     "scripts/tests/uncertain-barrier-native-drain.mjs": "f94c407b40bd3ccf48887bc13c68801c7887adf2003ddcd8c57c7519467d2cec",
     "scripts/tests/native-qualification-selected-relay.mjs": "2542d005ab9d69f14c09ef9125ca914ccbc869d575a10435a30a81c3f1e962ee",
     "scripts/tests/selected-native-frames.mjs": "8562da61ce78d5565c01bb8e179129fc90733e97241ad1e8fa18c1cdcd65daa2",
-    "scripts/tests/selected-native-lifetime.mjs": "88e3a01632564a20169414eed972ed329fb94b739eb71dd371729801ca1891ff"
+    "scripts/tests/selected-native-lifetime.mjs": "88e3a01632564a20169414eed972ed329fb94b739eb71dd371729801ca1891ff",
+    "scripts/tests/uncertain-barrier-native-statements.mjs": "91fd3ee8aaa5520dce91b23addaf77e22e5194ad34a177b6a1d81590217a7aa4"
   },
   "isolated_worker": {
     "scripts/tests/uncertain-barrier-native-fixtures.php": "1d9bfe0f8f130a59af979b6299ef4b60deb81fd9ac60f00b1366166111ede011",
