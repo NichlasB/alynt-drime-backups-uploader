@@ -1,5 +1,19 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Closed Entry Ingress / Request-Policy Foundation (R2) — 2026-10-22
+
+See [owning source-scoped record](V2_3_CLOSED_ENTRY_INGRESS_POLICY_FOUNDATION.md).
+Dormant strict four-field raw/POST parser preserves original slashed domain
+strings;separate fixed GET/POST policy DATA model consumes/refuses/erases and
+projects diagnostic-only values. Positive fixtures,aligned C1 RED/GREEN and
+twelve in-memory semantic controls;no actual authentication/storage/native work.
+Loader/hooks,public facades and native availability remain unchanged/disabled.
+
+Implementation-plan progress:R2 ingress/policy model advances,not genuine owner
+or HTTP/auth proof;production NO-GO,R3-R7 gated. Recommended next gated slice:
+local-only V2.3 Fixed Genuine Closed-Entry Request Owner and Bounded Raw Reader
+Integration Design (R2),design-only;keep writes,native execution and wiring off.
+
 ## V2.3 Real Authenticated Closed Entry Policy Design (R2) — 2026-10-22
 
 Dashboard owns docs/V2_3_REAL_AUTHENTICATED_CLOSED_ENTRY_REQUEST_POLICY_DESIGN.md.
