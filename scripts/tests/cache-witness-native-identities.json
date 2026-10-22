@@ -1,0 +1,20 @@
+{
+  "model": {
+    "scripts/tests/wait-witness-contract.mjs": "ea7bd4e6e6101a6ec1e60d518d5f8bb791694ba0e27ada2224b82d72b8e3e347",
+    "scripts/tests/wait-witness-credit.mjs": "63ec1351ca46f9cfb09cec7672066b58e4554fc12f48e72ed0dc733f31b68838",
+    "scripts/tests/wait-witness-window.mjs": "63e9677b7a43bce2a879f021a64997cd533a26c4a16c85ffe1eeb61ddfdbdc70"
+  },
+  "integration": {
+    "scripts/tests/cache-witness-native-case.mjs": "837708f8affb929c39eb7357bf3a50166bf18ac83ac48e893829a7066202809a",
+    "scripts/tests/cache-witness-native-control.mjs": "36127964e01605e65901fb6005847bc2ad474de0b7662e4ca0e3c2b90d61bb48",
+    "scripts/tests/cache-witness-native-helper.php": "6c6f3a2f1d7f4f7e6bbab50ad5e74b996cde7c2d568885588947854acdc20d52",
+    "scripts/tests/cache-witness-native-helpers.mjs": "94f56be5d717043a326f3106effdda5280b59d751c45e351d2a2341b66713cd5",
+    "scripts/tests/cache-witness-native-idle.php": "11c42df39393109ca18e07d371a89b161cfcf5b55215d6e0e9b604b12adcfda1",
+    "scripts/tests/cache-witness-native-monitor.php": "a48a6193c27c32c26e7c51a1944efca41b7dff281a232793b83c95504d5e77e6",
+    "scripts/tests/cache-witness-native-process.mjs": "c3924ee9b39c9a453a54b681f909a896e9d34d5d6ec51b18cbca3e88025df3e8",
+    "scripts/tests/cache-witness-native-proof.mjs": "7b5362542693a0a9b56723b4645f84a9a508ca01b31cc8c2da198833db8891aa",
+    "scripts/tests/cache-witness-native-protocol.mjs": "64f5fd93370d7dd271225fb5da7ba503bce6aed124aa5882adc79f5e71fc4290",
+    "scripts/tests/cache-witness-native-registry.mjs": "b248b6c0ef5c8a7563ef733526ac239075b868c97de7abd8381f68f4298963c9",
+    "scripts/tests/cache-witness-native-replay.mjs": "7f82918b10b785251f872d4c9d413fd52027f1fa10e1f037ae5d5b480866c5be"
+  }
+}

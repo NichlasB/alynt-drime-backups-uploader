@@ -114,6 +114,9 @@ jobs:
           # Controlled-loss/lock proof: syntax only, never native execution in CI.
           for file in scripts/tests/uncertain-barrier-native-*.php; do php -l "$file" || exit 1; done
           for file in scripts/tests/uncertain-barrier-native-*.mjs; do node --check "$file" || exit 1; done
+          # Successor syntax only; never run the approved-local no-fault proof in CI.
+          for file in scripts/tests/cache-witness-native-*.php; do php -l "$file" || exit 1; done
+          for file in scripts/tests/cache-witness-native-*.mjs; do node --check "$file" || exit 1; done
 
       - name: Run PHPUnit
         run: php vendor/bin/phpunit --do-not-cache-result

@@ -1,5 +1,19 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Cache-Aware Native No-Fault Integration — 2026-10-22
+
+See [owning proof](V2_3_CACHE_AWARE_NO_FAULT_OWNED_PROOF.md). Separate successor
+preserves historical native seal/owner/guards/limits. Fresh guard266/11,original
+no-fault960/24 and ONE integrated no-fault960/24 pass. Actual forwarded safety
+credit,17 cache-spaced queries and honest no-match expiry;not actual wait/uncertain
+qualification. Owned fixtures/listeners/processes removed;77 checksums unchanged.
+
+Implementation-plan progress:R1 private-stdio/relay no-fault evidence advances;
+exact-wait/released/held qualification BLOCKED,R2-R7 NO-GO. Next gated slice:Plugin
+Tester local-only V2.3 Cache-Aware Exact-Wait Released/Held Integration and One
+Ordered Qualification/Owned Cleanup Proof,with fresh guard/no-fault prerequisites
+and exact target/fixture confirmation. Wiring/activation/rollback disabled.
+
 ## V2.3 Socket-Free Cache-Aware Wait-Witness Foundation — 2026-10-22
 
 See [owning record](V2_3_SOCKET_FREE_CACHE_AWARE_WAIT_WITNESS_FOUNDATION.md).
