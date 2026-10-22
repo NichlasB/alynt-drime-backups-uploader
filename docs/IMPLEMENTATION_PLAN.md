@@ -1,5 +1,19 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Cache-Aware Exact-Wait Owned Attempt — 2026-10-22
+
+See [owning proof](V2_3_CACHE_AWARE_EXACT_WAIT_OWNED_PROOF.md). Fresh genuine266/11,
+original/integrated no-fault960/24 each and selected uncertain960/24 pass. One
+released attempt observes the exact owned wait and original960/24 successful
+barrier path,but blocker rollback verification refuses. Combined proof Blocked;
+held NOT RUN,no retry. Independent cleanup/77 checksums preserved,zero residue.
+
+Implementation-plan progress:R1 actual wait advances,complete released/held
+acceptance Blocked,R2-R7 NO-GO. Next gated slice:Plugin Tester local-only V2.3
+Harness-Only Blocker Rollback Acknowledgement Diagnostics/Correction and One Fresh
+Ordered Qualification/Owned Cleanup Proof,with fresh prerequisites. Cause not yet
+established;preserve guards,budgets,state and disabled production wiring.
+
 ## V2.3 Cache-Aware Native No-Fault Integration — 2026-10-22
 
 See [owning proof](V2_3_CACHE_AWARE_NO_FAULT_OWNED_PROOF.md). Separate successor
