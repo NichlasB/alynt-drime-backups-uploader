@@ -1,5 +1,23 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Windows Helper Startup/Fixture Recovery — 2026-10-22
+
+See [owning successor](V2_3_HELPER_STARTUP_RECOVERY_OWNED_PROOF.md). Approved UB8/UB9
+path/ownership repair,63-file closure and isolated6 Node/1 PHP42 assertions.
+Exact retained three-table fixture removed,8/0/0 rows,current recovery baseline
+preserved77 application checksums/digests. ONE fresh ordered invocation:guard266/11,
+no-fault960/24 and selected uncertain terminal960/24 passed;released failed
+direct_closed before HELLO/relay/worker,but new initial cleanup passed with original
+lifetime baseline/77 checksums. Held NOT RUN. Final77 tables,zero owned fixtures/
+other DB sessions/transactions/native processes;log unchanged. No retry.
+
+Implementation-plan progress:R1 startup-failure cleanup/recovery advances;joined
+wait/timeout BLOCKED by UB10 helper manifest require before ABSPATH,confirmed
+socket-free exit0/no continuation. R2-R7 NO-GO. Recommended next gated slice:
+harness-only socket-free helper bootstrap/include-order repair,actual PHP
+dependency preflight/regressions,fresh prerequisites and ONE new ordered local
+proof. Preserve guards/budgets/state/disabled wiring;new approval required.
+
 ## V2.3 Metadata/Safety Role Repair and Ordered Proof — 2026-10-22
 
 See [owning successor](V2_3_METADATA_ROLE_REPAIR_OWNED_PROOF.md). Approved UB6/UB7

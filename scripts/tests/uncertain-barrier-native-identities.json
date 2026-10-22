@@ -38,7 +38,7 @@
   "transcript": {
     "scripts/tests/uncertain-barrier-native-control.mjs": "699f1eccc7d1eb3b0f2050b377747e4a4da192a74dbb913fbe63ba23321bf7d0",
     "scripts/tests/uncertain-barrier-native-transcript.mjs": "1cf4bfccd13230d16fe6b74e1344b7d2c4057eba6092539d3f02d0730d9dd2c4",
-    "scripts/tests/uncertain-barrier-native-helpers.mjs": "2d3d23e51520c6fc10372bed422347ce8e7e2d794f391f1b8d99ef8af3692d55"
+    "scripts/tests/uncertain-barrier-native-helpers.mjs": "da810d45ac4e6c573bbeb2c46655a7a88253ed175ab975c50ea3f97636d922d6"
   },
   "eligibility": {
     "scripts/tests/native-qualification-no-fault-registry.mjs": "7474963d1edb6101df9649a474e470d74c0750de0b4d07e07a4576745068a702",
@@ -55,7 +55,7 @@
     "scripts/tests/uncertain-barrier-native-statements.mjs": "91fd3ee8aaa5520dce91b23addaf77e22e5194ad34a177b6a1d81590217a7aa4"
   },
   "isolated_worker": {
-    "scripts/tests/uncertain-barrier-native-fixtures.php": "1d9bfe0f8f130a59af979b6299ef4b60deb81fd9ac60f00b1366166111ede011",
+    "scripts/tests/uncertain-barrier-native-fixtures.php": "57f8439b0c8a86e9fd6660e80a9b5fb2e15de2f7e1a19f9945929f7a84cfb80e",
     "scripts/tests/uncertain-barrier-native-worker.php": "9f4efe8bf1a4a7c50620d75cadb1ad73cf7ac2d484fe9e2e04113391f49d3811",
     "scripts/tests/uncertain-barrier-native-bootstrap.php": "abeba7205c8787897f1625b2b1d4fcfbb14c764d4fb8b05d6d394a1f6b914f3b",
     "scripts/tests/uncertain-barrier-native-preflight.php": "d6ff28dcf68afb5361584d374ad9c37925ed8700e9e385164573b845655be8c6",
@@ -63,7 +63,7 @@
     "scripts/tests/uncertain-barrier-native-proof.mjs": "b83c44c2f0afba5778b025d22c572ce68d2d582fe7402cdceb1a4747de2f450c",
     "scripts/tests/uncertain-barrier-native-proof.ps1": "24fd68260847708af30695a41c006b4fc244c567dd2f4d7c75ca19e2d06bde43",
     "scripts/tests/uncertain-barrier-native-denials.php": "39c6cb3182313fa510b042f60c2f43d4f3a53bccd4a706315faf2ad095beb7d1",
-    "scripts/tests/uncertain-barrier-native-case.mjs": "c02a7cdf981b15a52769590ecde2f58de3536b5c0cadfdd08a7a362ec1ea4988",
+    "scripts/tests/uncertain-barrier-native-case.mjs": "1774997e60955c0834807aee5c095b560b359cadedea9be570874d0d496a66dc",
     "scripts/tests/uncertain-barrier-native-committed.php": "5bcf6665d835fcccb982f1ab1314abfd99540b0190f7686dabb8d6875feaf613",
     "scripts/tests/uncertain-barrier-native-selected.php": "499eb54c45eca2c13b9fda85e0542ccccd78d497ec4e84f8634af5996adf2780",
     "scripts/tests/uncertain-barrier-native-released.php": "e214cccbf6cc4a0b97fa7f8a11a9a16b480e5db8fbd6b4ff2ed13b0b1fd75a45",
@@ -73,6 +73,7 @@
     "scripts/tests/uncertain-barrier-native-monitor.php": "d73c0a7282fabc3efd11dc9c0552fddccbcaa00288a970d47aa8ebd67cc5706f",
     "scripts/tests/uncertain-barrier-native-blocker-body.php": "ac4e6ea890e40065728523b4cbefc2332aa2bf88acd3a0ad8062402f34cc45d3",
     "scripts/tests/uncertain-barrier-native-monitor-body.php": "f5b98f87ac344b1770458e632fc7cd6e0df4c1a75d93de946086fe911cb10724",
-    "scripts/tests/selected-native-cleanup-proof.mjs": "371bf731c7cbad156652d1a38914eefc3611550c1dc45da94c14841cf8ac90af"
+    "scripts/tests/selected-native-cleanup-proof.mjs": "371bf731c7cbad156652d1a38914eefc3611550c1dc45da94c14841cf8ac90af",
+    "scripts/tests/uncertain-barrier-native-initial.php": "c1c7b87a6e0318e15c33fe9c10eba240e9a565ea60c5abe11b0b012265a6984f"
   }
 }

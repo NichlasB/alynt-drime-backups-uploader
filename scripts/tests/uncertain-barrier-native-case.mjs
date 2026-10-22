@@ -18,7 +18,7 @@ const root = 'C:/Users/Captain/Local Sites/plugin-tester/app/public';
 if (process.argv.length !== 3 || process.argv[2] !== '--confirmed-plugin-tester' || !process.env.MYSQL_PWD || realpathSync(root).replaceAll('\\', '/') !== root || !verifyUncertainNativeIdentity()) throw Error('qualification_explicit_scope');
 const php = resolveOwnedStdioRuntime('plugin-tester'), source = uncertainNativeIdentities();
 const prefix = 'wp_alynt_core_probe_' + randomBytes(6).toString('hex') + '_', marker = randomBytes(12).toString('hex');
-let helpers=null, helperReceipt=null, relay = null, worker = null, state = null, initial = null, transport = null, cleanup = null, watchdog = null, relayJoin = null, created = false, watched = false;
+let helpers=null, helperReceipt=null, relayStarted=false, workerStarted=false, relay = null, worker = null, state = null, initial = null, transport = null, cleanup = null, watchdog = null, relayJoin = null, created = false, watched = false;
 const result = { passed: false, profile, response_suppression: profile!=='no_fault', production_wiring: false, private_qualification_proven: false };
 const resolved = (s) => s.closed && s.exited && s.code === 0 && !s.timed_out && !s.overflow && s.stderr_bytes === 0 && s.cleanup_resolved && s.pipes_destroyed;
 async function preflight() {
@@ -70,8 +70,10 @@ try {
 	} created = true;
 	result.declaration_preflight_passed = true;
 	const registry = profile==='no_fault'?createNativeQualificationRegistry():createUncertainNativeRegistry(profile);
-    if(['released','held'].includes(profile))helpers=await startUncertainNativeHelpers(php,[root,'10004',prefix,marker],profile);
+    if(['released','held'].includes(profile)){helpers=startUncertainNativeHelpers(php,[root,'10004',prefix,marker],profile);await helpers.start();}
+    relayStarted=true;
     relay = await (profile==='no_fault'?openNativeQualificationRelay:openNativeSelectedRelay)(10004, registry);
+	workerStarted=true;
 	worker = startNativeQualificationPhp(php, ({no_fault:'uncertain-barrier-native-committed.php',selected:'uncertain-barrier-native-selected.php',released:'uncertain-barrier-native-released.php',held:'uncertain-barrier-native-held.php'})[profile], [root, '10004', prefix, marker, String(relay.port)]);
 	const control = ownNativeQualificationControl(worker.child, registry, source,profile,helpers);
 	watchdog = setTimeout(() => { watched = true; control.abort(); worker.child.kill(); relayJoin = relay.close(); }, 24000);
@@ -99,7 +101,12 @@ finally {
 			result.unresolved_cleanup_refused = refused.state.closed && refused.state.cleanup_resolved && refused.state.code === 1 && refused.value?.passed === false && refused.value.fixtures_retained === true;
 			cleanup = await fixture('cleanup', claims); result.cleanup = cleanup.value; result.cleanup_process_resolved = cleanup.state.cleanup_resolved;
 		} catch { result.cleanup_unresolved = true; }
-	} else if (created) result.cleanup_unresolved = true;
+    } else if (created && !relayStarted && !workerStarted && (!helpers||helperReceipt?.cleanup_resolved===true)) {
+        try {
+            cleanup=await fixture('cleanup_initial',{baseline:initial.value.baseline,threads:helperReceipt?.threads??[],owned_children_closed:true,relay_never_started:true,worker_never_started:true});
+            result.initial_cleanup=cleanup.value;result.cleanup_process_resolved=cleanup.state.cleanup_resolved;
+        }catch{result.cleanup_unresolved=true;}
+    } else if (created) result.cleanup_unresolved = true;
 	if (created && (!cleanup?.value?.passed || !resolved(cleanup.state))) result.owned_fixture_prefix = prefix;
 }
 result.passed = (profile!=='no_fault'||result.guard_prelude?.passed === true) && result.native_passed === true && result.unresolved_cleanup_refused === true && cleanup?.value?.passed === true && resolved(cleanup.state);

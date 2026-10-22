@@ -1,7 +1,9 @@
 <?php
 /** Fixed direct-backend fixture lifetime. No subprocesses, actual-table writes or web path. */
-if ( 'cli' !== PHP_SAPI || 6 !== count( $argv ) || ! in_array( $argv[1], array( 'create', 'cleanup' ), true ) || $argv[2] !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || '10004' !== $argv[3] || ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[4] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[5] ) || ! getenv( 'MYSQL_PWD' ) ) exit( 1 );
+if ( 'cli' !== PHP_SAPI || 6 !== count( $argv ) || ! in_array( $argv[1], array( 'create', 'cleanup', 'cleanup_initial', 'recover_initial' ), true ) || $argv[2] !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || '10004' !== $argv[3] || ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[4] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[5] ) || ! getenv( 'MYSQL_PWD' ) ) exit( 1 );
+if ( 'recover_initial' === $argv[1] && 'wp_alynt_core_probe_7f3e5973b625_' !== $argv[4] ) exit( 1 ); // One explicitly approved retained lifetime only.
 require __DIR__ . '/fixed-core-proof-storage.php';
+require __DIR__ . '/uncertain-barrier-native-initial.php';
 mysqli_report( MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT );
 $db = mysqli_init(); $db->options( MYSQLI_OPT_CONNECT_TIMEOUT, 3 ); $db->options( MYSQLI_OPT_READ_TIMEOUT, 5 ); $db->real_connect( '127.0.0.1', 'root', getenv( 'MYSQL_PWD' ), 'local', 10004 ); $db->set_charset( 'utf8mb4' );
 $prefix = $argv[4]; $marker = $argv[5]; $receipt = array( 'passed' => false ); $created = array();
@@ -22,8 +24,28 @@ try {
         $baseline = array( 'inventory' => alynt_selected_inventory( $db, array() ), 'actual' => alynt_core_actual_digest( $db ) );
         foreach ( array( 'options', 'users', 'usermeta' ) as $suffix ) { $table = $prefix . $suffix; $db->query( "CREATE TABLE {$table} LIKE wp_{$suffix}" ); $created[] = $table; }
         $stmt = $db->prepare( "INSERT INTO {$prefix}options(option_name,option_value,autoload) VALUES(?,?,'no')" );
-        foreach ( array( 'probe_owner' => $marker, 'siteurl' => 'http://plugin-tester.local', 'home' => 'http://plugin-tester.local', 'active_plugins' => 'a:0:{}', 'template' => 'alynt-core-proof-no-theme', 'stylesheet' => 'alynt-core-proof-no-theme', 'blogname' => 'Disposable native qualification no-fault proof', 'WPLANG' => '' ) as $name => $value ) { $stmt->bind_param( 'ss', $name, $value ); $stmt->execute(); }
+        foreach ( alynt_uncertain_initial_rows( $marker ) as $name => $value ) { $stmt->bind_param( 'ss', $name, $value ); $stmt->execute(); }
         $stmt->close(); $receipt = array( 'passed' => true, 'baseline' => $baseline );
+    } elseif ( in_array( $argv[1], array( 'cleanup_initial', 'recover_initial' ), true ) ) {
+        $recovery = 'recover_initial' === $argv[1];
+        if ( $recovery ) {
+            $claims = array( 'baseline' => array( 'inventory' => alynt_selected_inventory( $db, $tables ), 'actual' => alynt_core_actual_digest( $db ) ), 'threads' => array() ); // CURRENT recovery baseline, never a recreated historical baseline.
+            alynt_core_check( 77 === count( $claims['baseline']['inventory'] ), 'Recovery application inventory changed.' );
+        } else {
+            $input = stream_get_contents( STDIN, 65537 ); $claims = strlen( $input ) <= 65536 ? json_decode( $input, true ) : null;
+            alynt_core_check( is_array( $claims ) && array_keys( $claims ) === array( 'baseline','threads','owned_children_closed','relay_never_started','worker_never_started' ) && true === $claims['owned_children_closed'] && true === $claims['relay_never_started'] && true === $claims['worker_never_started'], 'Initial ownership unresolved; retain.' );
+        }
+        alynt_core_check( is_array( $claims['threads'] ) && count( $claims['threads'] ) <= 2 && count( array_unique( $claims['threads'] ) ) === count( $claims['threads'] ), 'Initial sessions unresolved.' );
+        foreach ( $claims['threads'] as $id ) alynt_core_check( is_int( $id ) && $id > 0 && $id <= 4294967295, 'Initial session invalid.' );
+        alynt_core_check( 0 === (int) $db->query( 'SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE DB=DATABASE() AND ID<>CONNECTION_ID()' )->fetch_row()[0] && 0 === (int) $db->query( 'SELECT COUNT(*) FROM information_schema.INNODB_TRX' )->fetch_row()[0], 'Initial sessions or transactions remain.' );
+        alynt_core_check( 3 === (int) $db->query( "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME REGEXP '^wp_alynt_core_probe_'" )->fetch_row()[0], 'Unexpected owned inventory.' );
+        foreach ( $tables as $table ) alynt_core_check( array( 'InnoDB','BASE TABLE' ) === $db->query( "SELECT ENGINE,TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='{$table}'" )->fetch_row() && 0 === (int) $db->query( "SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE EVENT_OBJECT_SCHEMA=DATABASE() AND EVENT_OBJECT_TABLE='{$table}'" )->fetch_row()[0] && 0 === (int) $db->query( "SELECT COUNT(*) FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME IS NOT NULL AND ((TABLE_SCHEMA=DATABASE() AND TABLE_NAME='{$table}') OR (REFERENCED_TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME='{$table}'))" )->fetch_row()[0], 'Initial schema ownership changed.' );
+        alynt_core_check( alynt_uncertain_initial_shape( $db->query( "SELECT CAST(option_id AS CHAR),option_name,option_value,autoload FROM {$prefix}options ORDER BY option_id" )->fetch_all( MYSQLI_NUM ), $marker ) && 0 === (int) $db->query( "SELECT COUNT(*) FROM {$prefix}users" )->fetch_row()[0] && 0 === (int) $db->query( "SELECT COUNT(*) FROM {$prefix}usermeta" )->fetch_row()[0], 'Initial fixture shape changed.' );
+        $unchanged = $claims['baseline']['inventory'] === alynt_selected_inventory( $db, $tables ) && $claims['baseline']['actual'] === alynt_core_actual_digest( $db );
+        alynt_core_check( $unchanged, 'Initial application state changed; retain.' );
+        $cleanup = array(); foreach ( array_reverse( $tables ) as $table ) { $count = (int) $db->query( "SELECT COUNT(*) FROM {$table}" )->fetch_row()[0]; $db->query( "DROP TABLE {$table}" ); $cleanup[] = array( 'rows_previewed' => $count, 'absent' => 0 === (int) $db->query( "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='{$table}'" )->fetch_row()[0] ); }
+        $unchanged = $unchanged && $claims['baseline']['inventory'] === alynt_selected_inventory( $db, array() ) && $claims['baseline']['actual'] === alynt_core_actual_digest( $db );
+        $receipt = array( 'passed' => $unchanged, 'initial_shape' => true, 'baseline_scope' => $recovery ? 'current_recovery' : 'current_fixture_lifetime', 'sessions_absent' => true, 'cleanup' => $cleanup, 'application_table_count' => count( $claims['baseline']['inventory'] ), 'all_application_checksums_unchanged' => $unchanged );
     } else {
         $input = stream_get_contents( STDIN, 65537 ); $claims = strlen( $input ) <= 65536 ? json_decode( $input, true ) : null;
         alynt_core_check( is_array( $claims ) && array_keys( $claims ) === array( 'baseline', 'threads', 'worker_closed', 'pipes_closed', 'relay_resolved', 'listener_closed' ) && true === $claims['worker_closed'] && true === $claims['pipes_closed'] && true === $claims['relay_resolved'] && true === $claims['listener_closed'], 'Cleanup ownership unresolved; retain.' );
@@ -46,6 +68,6 @@ try {
 } catch ( Throwable $error ) {
     // Creation cannot have started a worker. Only tables created in THIS call may be dropped.
     if ( 'create' === $argv[1] ) foreach ( array_reverse( $created ) as $table ) $db->query( "DROP TABLE {$table}" );
-    $receipt = array( 'passed' => false, 'redacted_failure' => true, 'location' => array( basename( $error->getFile() ), $error->getLine() ), 'fixtures_retained' => 'cleanup' === $argv[1] );
+    $receipt = array( 'passed' => false, 'redacted_failure' => true, 'location' => array( basename( $error->getFile() ), $error->getLine() ), 'fixtures_retained' => 'create' !== $argv[1] );
 }
 echo json_encode( $receipt ) . "\n"; exit( $receipt['passed'] ? 0 : 1 );
