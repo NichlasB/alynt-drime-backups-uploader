@@ -10,13 +10,13 @@ export function startUncertainNativeHelpers(php,args,profile) {
     const root=realpathSync('C:/Users/Captain/Local Sites/plugin-tester/app/public');
     if(typeof args[0]!=='string'||realpathSync(args[0])!==root||args[1]!=='10004'||!/^wp_alynt_core_probe_[a-f0-9]{12}_$/.test(args[2])||!/^[a-f0-9]{24}$/.test(args[3]))throw Error('direct_scope');
     args=[root,...args.slice(1)];
-    let context=null, bound=false, released=false, waiting=false, watch=null, failed=false, traffic=0, starting=false, started=false;
+    let context=null, bound=false, released=false, waiting=false, watch=null, failed=false, traffic=0, starting=false, started=false, firstFailure=null;
     const rows=[];
     async function open(role) {
         const proc=startNativeQualificationPhp(php,`uncertain-barrier-native-${role}.php`,args), messages=[];let waiter=null, bad=false, count=0, closed=false;
         proc.child.once('close',()=>{closed=true;if(waiter){waiter();waiter=null;}});
         const timer=setTimeout(()=>{bad=true;proc.child.stdin.destroy();proc.child.kill();},28000);
-        const parser=createOwnedStdioLines(line=>{let m;try{m=JSON.parse(line);}catch{return false;}if(JSON.stringify(m)!==line||!validDirectFrame(m,role,context)||++count>4){bad=true;return false;}messages.push(m);if(waiter){waiter();waiter=null;}return true;});
+        const parser=createOwnedStdioLines(line=>{let m;try{m=JSON.parse(line);}catch{return false;}if(JSON.stringify(m)!==line||!validDirectFrame(m,role,context)||++count>4){bad=true;return false;}if(m.kind==='refused'){bad=true;failed=true;firstFailure??=Object.freeze({role,...m.failure});}messages.push(m);if(waiter){waiter();waiter=null;}return true;});
         proc.child.stdout.on('data',bytes=>{if((traffic+=bytes.length)>32768||!parser.feed(bytes)){bad=true;proc.child.stdin.destroy();}});
         const row={role,proc,timer,thread:null,state:null,parser,get bad(){return bad;},async next(kind,ms=1000){
             if(!messages.length&&!closed){const joined=await boundedSettlement(new Promise(resolve=>{waiter=resolve;}),ms);if(!joined.settled){waiter=null;throw Error('direct_ack');}}
@@ -49,7 +49,7 @@ export function startUncertainNativeHelpers(php,args,profile) {
             await Promise.all(rows.map(async r=>{r.state=await r.proc.join(3000);clearTimeout(r.timer);}));
             const resolved=rows.every(r=>r.state.closed&&r.state.exited&&r.state.cleanup_resolved&&r.state.pipes_destroyed&&!r.state.timed_out);
             const passed=bound&&waiting&&released&&!failed&&watchJoin.settled&&!watchJoin.rejected&&rows.every(r=>!r.bad&&r.parser.end()&&r.state.code===0&&r.state.stderr_bytes===0&&!r.state.overflow);
-            return {passed,cleanup_resolved:resolved,threads:rows.map(r=>r.thread).filter(Number.isInteger),startup_completed:started,children_created:rows.length,actual_wait:waiting,rollback_acknowledged:released,blocker_zero_dml:passed,monitor_zero_dml:passed,direct_sessions:rows.length,relay_roles_added:0,control_bytes:traffic};
+            return {passed,cleanup_resolved:resolved,threads:rows.map(r=>r.thread).filter(Number.isInteger),startup_completed:started,children_created:rows.length,actual_wait:waiting,rollback_acknowledged:released,blocker_zero_dml:passed,monitor_zero_dml:passed,direct_sessions:rows.length,relay_roles_added:0,control_bytes:traffic,first_failure:firstFailure};
         }
     });
 }

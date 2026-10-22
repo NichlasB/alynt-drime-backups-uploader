@@ -1,0 +1,7 @@
+{
+  "common": ["connect", "target", "hello", "body", "final_counters", "close", "closed"],
+  "blocker": ["lock_request", "lock_owner", "lock_policy", "lock_counters_before", "lock_begin", "lock_prepare", "lock_execute", "lock_rows", "lock_counters_after", "lock_ready", "rollback_request", "rollback", "rollback_counters", "rollback_ack"],
+  "monitor": ["watch_request", "watch_owner", "watch_policy", "watch_prepare", "watch_execute", "watch_identity", "watch_missing", "watch_counters", "watch_waiting", "finish_request"],
+  "reasons": ["unknown", "database", "helper_output", "helper_input", "helper_context", "helper_thread", "helper_rebind", "helper_counters", "helper_dml", "helper_target", "helper_close", "helper_owner", "helper_safety_row", "helper_rollback", "helper_query_cap", "helper_wait_identity", "helper_wait_missing"],
+  "codes": [0, 1044, 1045, 1054, 1064, 1146, 1205, 1213, 2002, 2006, 2013, 3572]
+}

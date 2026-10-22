@@ -1,5 +1,24 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Direct-Helper Wait Diagnostics and Ordered Proof — 2026-10-22
+
+See [owning successor](V2_3_HELPER_WAIT_DIAGNOSTICS_OWNED_PROOF.md),which also
+preserves the preceding bootstrap-repair record. Approved65-file failure-only
+stage/reason/code diagnostics,PHP actual-body doubles3/140,Node7 new groups.
+Related56/1335 and59 Node pass. Fresh guard266/11,no-fault960/24 and selected
+uncertain960/24 pass. Released fails after22 guards;actual first helper failure
+monitor/watch_missing/helper_wait_missing/code0. No actual wait or successful
+barrier acceptance;held NOT RUN,no retry. All owned cleanup/77 checksums preserved
+before/after DROP,zero final fixtures/sessions/transactions/processes.
+
+Implementation-plan progress:R1 bootstrap now repaired and failure observability
+advances;joined wait/timeout BLOCKED,R2-R7 NO-GO. Recommended next gated slice:
+harness-only passive barrier-progress/failure diagnostics and source-backed
+pre-BEGIN/first-safety-read regressions,fresh prerequisites and ONE new ordered
+proof on same confirmed Plugin Tester local-only target. Monitor symptom is not
+a proven database timeout/index cause;preserve primitives,guards,budgets,state
+and disabled wiring. Generic maintenance is not the next meaningful item.
+
 ## V2.3 Windows Helper Startup/Fixture Recovery — 2026-10-22
 
 See [owning successor](V2_3_HELPER_STARTUP_RECOVERY_OWNED_PROOF.md). Approved UB8/UB9

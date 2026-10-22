@@ -9,6 +9,7 @@ define( 'ABSPATH', $argv[1] . '/' );
 require dirname( __DIR__, 2 ) . '/tests/Support/UncertainBarrierNativeManifest.php';
 if ( ! Alynt_Test_Uncertain_Barrier_Native_Manifest::verify() ) exit( 1 );
 require_once dirname( __DIR__, 2 ) . '/includes/class-scan-effect-manifest.php';
+require_once __DIR__ . '/uncertain-barrier-helper-diagnostics.php';
 $helper_bytes = 0; $helper_context = null;
 function alynt_uncertain_helper_send( $kind, array $facts ) {
     global $helper_bytes, $helper_context;
@@ -39,18 +40,27 @@ function alynt_uncertain_helper_zero( $db ) {
     if ( 15 !== count( $rows ) ) throw new RuntimeException( 'helper_counters' );
     foreach ( $rows as $row ) if ( '0' !== $row[1] ) throw new RuntimeException( 'helper_dml' );
 }
-$db = null; $owned_transaction = false; $passed = false;
+$db = null; $owned_transaction = false; $passed = false; $helper_stage = 'connect';
 try {
     mysqli_report( MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT );
     $db = mysqli_init(); $db->options( MYSQLI_OPT_CONNECT_TIMEOUT, 3 ); $db->options( MYSQLI_OPT_READ_TIMEOUT, 5 );
     $db->real_connect( '127.0.0.1', 'root', getenv( 'MYSQL_PWD' ), 'local', 10004 ); $db->set_charset( 'utf8mb4' );
+    $helper_stage = 'target';
     if ( '10.6.23-MariaDB' !== $db->server_info || $argv[4] !== $db->query( "SELECT option_value FROM {$argv[3]}options WHERE option_name='probe_owner'" )->fetch_row()[0] ) throw new RuntimeException( 'helper_target' );
+    $helper_stage = 'hello';
     alynt_uncertain_helper_send( 'hello', array( 'role' => ALYNT_UNCERTAIN_HELPER, 'thread' => $db->thread_id ) );
+    $helper_stage = 'body';
     require __DIR__ . '/uncertain-barrier-native-' . ALYNT_UNCERTAIN_HELPER . '-body.php';
+    $helper_stage = 'final_counters';
     alynt_uncertain_helper_zero( $db );
+    $helper_stage = 'close';
     if ( true !== $db->close() ) throw new RuntimeException( 'helper_close' ); $db = null;
+    $helper_stage = 'closed';
     alynt_uncertain_helper_send( 'closed', array( 'role' => ALYNT_UNCERTAIN_HELPER, 'zero_dml' => true ) ); $passed = true;
-} catch ( Throwable $error ) { alynt_uncertain_helper_send( 'refused', array( 'role' => ALYNT_UNCERTAIN_HELPER ) ); }
+} catch ( Throwable $error ) {
+    $failure = alynt_uncertain_helper_failure( ALYNT_UNCERTAIN_HELPER, $helper_stage, $error );
+    if ( false !== $failure ) alynt_uncertain_helper_send( 'refused', array( 'role' => ALYNT_UNCERTAIN_HELPER, 'failure' => $failure ) );
+}
 finally {
     if ( $db instanceof mysqli ) { try { if ( $owned_transaction ) $db->query( 'ROLLBACK AND NO CHAIN NO RELEASE' ); $db->close(); } catch ( Throwable $ignored ) { $passed = false; } }
 }
