@@ -3,7 +3,7 @@
 if ( 'cli' !== PHP_SAPI || 6 !== count( $argv ) ) exit( 1 );
 $root = realpath( $argv[1] );
 if ( $root !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || '10004' !== $argv[2] || ! ctype_digit( $argv[5] ) || (int) $argv[5] < 1 || (int) $argv[5] > 65535 || $argv[2] === $argv[5] || ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[3] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[4] ) ) exit( 1 );
-$passed = false; $audit = null; $stage = 'bootstrap'; $callback_error = null; $gates = array(); $probe = null;
+$passed = false; $audit = null; $stage = 'bootstrap'; $callback_error = null; $gates = array(); $probe = null; $barrier_progress = null;
 try {
     $native_qualification_bootstrap_port = (int) $argv[5]; require __DIR__ . '/uncertain-barrier-native-bootstrap.php';
     require __DIR__ . '/native-lifecycle-proof-source.php';
@@ -64,6 +64,9 @@ try {
     add_filter( 'nonce_life', $probe, 10, 2 ); $GLOBALS['alynt_core_proof']['guard_readonly'] = true;
     try { $actual = alynt_core_private( $o, 'lifecycle_root', array( 'POST', $form ) ); }
     finally { $GLOBALS['alynt_core_proof']['guard_readonly'] = false; remove_filter( 'nonce_life', $probe, 10 ); }
+    // Passive post-root scalars only: no new hook, method override, handle, query or guard result.
+    $barrier_progress = array( 'phase' => alynt_core_property( $o, 'phase' ), 'reads' => alynt_core_property( $o, 'barrier_reads' ), 'metadata' => alynt_core_property( $o, 'barrier_metadata_checks' ), 'zero_dml' => alynt_core_property( $o, 'zero_dml_checks' ) );
+    if ( ! in_array( $barrier_progress['phase'], array( 'unopened','idle','begin_sent','transaction_owned','commit_sent','barrier_released','rollback_sent','rolled_back','poisoned','closed' ), true ) ) $barrier_progress = null;
     $negative = 'held' === ALYNT_UNCERTAIN_NATIVE_PROFILE; $expected_guards = $negative ? 22 : 24;
     $stage = 'root_result'; if ( $callback_error ) throw $callback_error;
     alynt_core_assert( $hooks === alynt_native_lifecycle_hooks() && $wp_roles_before === $GLOBALS['wp_roles'] && $writes === $GLOBALS['alynt_core_proof']['fixture_writes'], 'native_qualification_hooks_roles_no_wp_writes' );
@@ -89,7 +92,7 @@ try {
     $channel->finish( array_merge( $roles, array( 'native_result' => $actual, 'pre_guards' => 10, 'post_guards' => $expected_guards - 10, 'guard_order' => array_slice( $order, 0, $expected_guards ), 'admission_reads' => $counts[0], 'barrier_reads' => $counts[1], 'writes' => $counts[2], 'metadata_checks' => $counts[3], 'zero_dml_checks' => $counts[4], 'original_slots_empty' => true, 'writer_erased_before_read' => $writer_erased, 'barrier_closed_before_finish' => $barrier_closed, 'observation' => $taken['qualification'], 'terminal' => $taken['terminal'], 'genuine_denials' => $denial_count, 'checks' => $GLOBALS['alynt_core_proof']['checks'] ) ) );
     $passed = true;
 } catch ( Throwable $error ) {
-    echo json_encode( array( 'passed' => false, 'failure' => 'native_qualification_worker', 'stage' => $stage, 'location' => array( basename( $error->getFile() ), $error->getLine() ), 'guards' => count( $gates ) ) ) . "\n";
+    echo json_encode( array( 'passed' => false, 'failure' => 'native_qualification_worker', 'stage' => $stage, 'location' => array( basename( $error->getFile() ), $error->getLine() ), 'guards' => count( $gates ), 'barrier_progress' => $barrier_progress ) ) . "\n";
 } finally {
     if ( $probe && function_exists( 'remove_filter' ) ) remove_filter( 'nonce_life', $probe, 10 );
     if ( $audit instanceof mysqli ) $audit->close();

@@ -1,5 +1,22 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Passive Barrier Progress Diagnostics — 2026-10-22
+
+See [owning record](V2_3_BARRIER_PROGRESS_DIAGNOSTICS_OWNED_PROOF.md). Approved
+66-file passive diagnostics leave native owner/primitives/guards/budgets unchanged.
+New actual-loop PHP2/56 and six Node groups;fresh genuine266/11,no-fault960/24
+and selected uncertain960/24 pass. ONE ordered proof:released fails with missing
+monitor witness,but now BEGIN/first safety execute and native1205 are observed;
+post-root rolled_back/one read/one metadata/one zero-DML check after22 guards.
+Held NOT RUN,no retry. All owned cleanup/77 checksums preserved,zero final residue.
+
+Implementation-plan progress:R1 failure localization advances beyond pre-BEGIN;
+joined exact-wait/released acceptance BLOCKED,R2-R7 NO-GO. Exact next gated slice:
+design-only V2.3 Exact-Wait Witness Window and First-Safety-Execute Coordination
+Design. Evaluate visibility/arming/timing under existing limits before another
+native attempt;no guard/predicate/budget relaxation or production wiring. Native
+1205 is not a substitute for matching requester/blocker/table/index evidence.
+
 ## V2.3 Direct-Helper Wait Diagnostics and Ordered Proof — 2026-10-22
 
 See [owning successor](V2_3_HELPER_WAIT_DIAGNOSTICS_OWNED_PROOF.md),which also

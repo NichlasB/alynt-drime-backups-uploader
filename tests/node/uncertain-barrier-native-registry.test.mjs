@@ -10,11 +10,14 @@ import { nativeTimeoutFixture } from './uncertain-barrier-native-fixtures.mjs';
 for(const profile of ['selected','released'])test(`${profile} positive selected trace retains four roles and exact successful drain`,()=>{
     const f=fixture(profile);assert.equal(f.ready(),true);assert.equal(f.loss(),true);assert.equal(f.api.close(f.ids.writer),true);assert.equal(f.barrier(),true);
     const r=f.finish();assert.equal(r.passed,true);assert.equal(r.selected_response_discarded,true);assert.equal(r.writer_commit_delivered,false);assert.equal(r.barrier_commit_delivered,true);assert.equal(r.native_timeout_suffix,false);
+    assert.equal(r.barrier_progress.diagnostic_only,true);assert.equal(r.barrier_progress.safety_execute_seen,true);
+    assert.equal(r.barrier_statements.rows_closed,10);assert.equal(r.barrier_statements.failed,false);
 });
 test('held trace accepts only actual error-shaped first execute plus complete rollback suffix; no barrier COMMIT',()=>{
     const f=fixture('held');assert.equal(f.ready(),true);assert.equal(f.loss(),true);assert.equal(f.api.close(f.ids.writer),true);f.first();f.execute();
     for(const [d,n,b]of nativeTimeoutFixture())assert.equal(f.send('barrier',d,frame(b,n)),true);
     assert.equal(f.api.close(f.ids.barrier),true);const r=f.finish();assert.equal(r.passed,true);assert.equal(r.native_timeout_suffix,true);assert.equal(r.barrier_commit_delivered,false);assert.equal(r.exact_writer_drain,false);
+    assert.equal(r.barrier_progress.safety_execute_seen,true);assert.equal(r.barrier_progress.server_error_code,1205);assert.equal(r.barrier_statements.rows_closed,0);
 });
 for(const fault of ['early-error','missing-credit','coalesced-tail','fifth-role','wrong-statement','wrong-error','missing-suffix','successful-barrier'])test('new native registry refuses '+fault,()=>{
     const f=fixture('held');assert.equal(f.ready(),true);

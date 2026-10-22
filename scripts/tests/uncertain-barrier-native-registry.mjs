@@ -4,6 +4,7 @@ import { createBarrierStatementRoles } from './uncertain-barrier-native-statemen
 import { createFixedDrain } from './fixed-drain-grammar.mjs';
 import { createNativeTimeoutDrain } from './uncertain-barrier-native-drain.mjs';
 import { createNativeBarrierDrain } from './native-qualification-no-fault-barrier-drain.mjs';
+import { createBarrierProgress } from './uncertain-barrier-progress.mjs';
 export function createUncertainNativeRegistry(profile) {
 	if (arguments.length !== 1 || !['selected','released','held'].includes(profile)) throw Error('fixed_native_qualification_registry');
 	const rows = new Map(), names = ['auth','capture','writer','barrier'];
@@ -32,6 +33,7 @@ export function createUncertainNativeRegistry(profile) {
 			if (cut && r?.role === 'writer') return fail('post_cut');
 			if (finished || !r?.live || r.quit || !['client','server'].includes(direction) || typeof credit !== 'symbol' || r.pending[direction] || !Buffer.isBuffer(frame) || frame.length < 5 || frame.readUIntLE(0,3) !== frame.length - 4 || ++r.count > 4096 || (total += frame.length) > 67108864) return fail('frame');
 			const seq = frame[3], bytes = frame.subarray(4); let selected = '';
+			if(r.role==='barrier'&&r.stage===3){try{r.progress??=createBarrierProgress();r.progress.frame(direction,seq,bytes,r.statements.diagnostic());}catch{/* Passive projection only. Existing validation still runs below. */}}
 			if (r.stage < 3) {
 				if (seq !== r.stage || direction !== (r.stage === 1 ? 'client' : 'server')) return fail('profile_order');
 				if (r.stage === 0) { r.thread = nativeGreeting(bytes); if (!r.thread || [...rows.values()].some((x) => x !== r && x.thread === r.thread)) return fail('greeting'); }
@@ -72,6 +74,8 @@ export function createUncertainNativeRegistry(profile) {
 		bindBarrier(ids) { if (!this.readyBarrier(ids)) return fail('barrier_bind'); const all = pick(ids,true); if (['auth','capture','writer'].some((k) => all[k] !== roles[k])) return fail('role_swap'); if(!all.barrier.statements.bind())return fail('barrier_statement_bind'); roles = all; barrierBound = true; return true; },
 		claim(ids) { if (failed || claimed || !barrierBound || !budget() || !clean() || !roles.auth.live || ['capture','writer','barrier'].some((k) => roles[k].live) || !roles.barrier.drain.done() || (profile==='held' ? !roles.barrier.timeout || roles.barrier.commit || roles.barrier.responseDone : !roles.barrier.responseDone) || Object.keys(ids).join(',') !== names.join(',') || names.some((k) => ids[k] !== roles[k].thread)) return fail('final'); claimed = true; return true; },
 		close(id) { const r = rows.get(id); if (!r?.live || !empty(r)) return fail('close'); r.live = false; if (r.stage !== 3 || (r.role === 'writer' && cut ? !r.requestDone || !r.response || r.responseDone : !r.quit || (r.role==='barrier' && profile==='held' ? !r.timeout || !r.drain.done() || r.commit : r.drain && (!r.drain.done() || !r.requestDone || !r.responseDone))) || r.role === 'auth' && (!claimed || !barrierBound)) return fail('role_close'); return !failed; },
-		finish(transport) { const passed = !finished && !failed && eligible && cut && claimed && barrierBound && budget() && transport === true && rows.size === 4 && [...rows.values()].every((r) => !r.live && empty(r)); finished = true; return Object.freeze({ passed, reason, four_roles_bound: barrierBound, selected_response_discarded: cut, original_request_completed: roles?.writer?.requestDone === true, writer_commit_delivered: roles?.writer?.responseDone === true, native_timeout_suffix: roles?.barrier?.timeout===true && roles?.barrier?.drain.done()===true, barrier_commit_delivered: roles?.barrier?.responseDone === true, exact_writer_drain: roles?.writer?.drain.done() === true, exact_barrier_drain: roles?.barrier?.drain.done() === true, barrier_drain: roles?.barrier?.drain.diagnostic() ?? null, private_qualification_proven: false, suppression_supported: true }); },
+		finish(transport) { const passed = !finished && !failed && eligible && cut && claimed && barrierBound && budget() && transport === true && rows.size === 4 && [...rows.values()].every((r) => !r.live && empty(r)); finished = true;
+            const barrier=[...rows.values()].find(r=>r.role==='barrier');
+            return Object.freeze({ passed, reason, four_roles_bound: barrierBound, selected_response_discarded: cut, original_request_completed: roles?.writer?.requestDone === true, writer_commit_delivered: roles?.writer?.responseDone === true, native_timeout_suffix: roles?.barrier?.timeout===true && roles?.barrier?.drain.done()===true, barrier_commit_delivered: roles?.barrier?.responseDone === true, exact_writer_drain: roles?.writer?.drain.done() === true, exact_barrier_drain: roles?.barrier?.drain.done() === true, barrier_drain: roles?.barrier?.drain.diagnostic() ?? null, barrier_progress:barrier?.progress?.summary()??null, barrier_statements:barrier?.statements.diagnostic()??null, private_qualification_proven: false, suppression_supported: true }); },
 	});
 }

@@ -12,6 +12,7 @@ import { createUncertainNativeRegistry } from './uncertain-barrier-native-regist
 import { openNativeSelectedRelay } from './native-qualification-selected-relay.mjs';
 import { startUncertainNativeHelpers } from './uncertain-barrier-native-helpers.mjs';
 import { parseQualificationPrelude } from './qualification-native-grammar.mjs';
+import { validBarrierWorkerProgress } from './uncertain-barrier-progress.mjs';
 export async function runUncertainNativeCase(profile) {
 if(arguments.length!==1||!['no_fault','selected','released','held'].includes(profile))throw Error('fixed_case');
 const root = 'C:/Users/Captain/Local Sites/plugin-tester/app/public';
@@ -87,7 +88,7 @@ try {
 	result.native_passed = !watched && resolved(state) && channel.passed && witness.passed && transport.passed && !transport.observation_failed && (!helpers||helperReceipt?.passed===true);
 	if (!result.native_passed && state.private_output.length <= 65536) {
 		const failures = state.private_output.split('\n').flatMap((line) => { try { const m=JSON.parse(line); return m?.passed===false && m.failure==='native_qualification_worker' && ['bootstrap','denials','native_root','root_result','final'].includes(m.stage) && Array.isArray(m.location) && m.location.length===2 && /^[A-Za-z0-9_-]+\.php$/.test(m.location[0]) && Number.isInteger(m.location[1]) && Number.isInteger(m.guards) && m.guards>=0 && m.guards<=24 ? [m] : []; } catch { return []; } });
-		if (failures.length === 1) result.redacted_failure = failures[0];
+		if (failures.length === 1) { const m=failures[0]; if(m.barrier_progress===null||validBarrierWorkerProgress(m.barrier_progress))result.redacted_failure=m; }
 	}
 } catch (e) { result.failed = true; result.failure_stage = /^[a-z_]{1,48}$/.test(e.message) ? e.message : 'qualification_owned_failure'; }
 finally {

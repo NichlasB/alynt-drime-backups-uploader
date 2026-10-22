@@ -42,6 +42,7 @@ export function createBarrierStatementRoles() {
             return true;
         },
         ready,
+        diagnostic(){return Object.freeze({bound,failed,metadata_closed:metadata,rows_closed:rows,pending_kind:pending??'none',live_kind:live?.kind??'none',live_executed:live?.executed??false});},
         bind(){if(arguments.length||!ready())return fail();bound=true;return true;},
         timeoutStatement(){return !failed&&bound&&rows===0&&!pending&&live?.kind==='row'&&live.executed ? live.id:false;},
         complete(){return !failed&&bound&&rows===10&&post&&metadata===5&&!pending&&!live;}

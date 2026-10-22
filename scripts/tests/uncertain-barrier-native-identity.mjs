@@ -6,7 +6,7 @@ import { verifyNativeQualificationIdentity } from './native-qualification-identi
 import { verifyQualificationIdentity } from './qualification-native-identity.mjs';
 import { verifyNativeSelectedIdentity } from './native-qualification-selected-identity.mjs';
 import { verifyUncertainNoFaultIdentity } from './uncertain-barrier-no-fault-identity.mjs';
-export const nativeSourceDigest = 'a686d0c6a99b4ed60c85e67d9e8a1127d4eaf6ca1821e73c7bc056f65efc9fe2';
+export const nativeSourceDigest = '2ac6e5fb44961d21ff4f04996e1f011b8aaa4ed8534746e0711220713c8066f4';
 const digest = (s) => createHash('sha256').update(s).digest('hex');
 function groups() {
 	const url = new URL('./uncertain-barrier-native-identities.json',import.meta.url);
