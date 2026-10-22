@@ -4,9 +4,11 @@ if ( 'cli' !== PHP_SAPI || 5 !== count( $argv ) || ! defined( 'ALYNT_UNCERTAIN_H
     $argv[1] !== realpath( 'C:/Users/Captain/Local Sites/plugin-tester/app/public' ) || '10004' !== $argv[2] ||
     ! preg_match( '/^wp_alynt_core_probe_[a-f0-9]{12}_$/D', $argv[3] ) || ! preg_match( '/^[a-f0-9]{24}$/D', $argv[4] ) || ! getenv( 'MYSQL_PWD' ) ) exit( 1 );
 require __DIR__ . '/owned-stdio-io.php';
+// Production source guards must exist before transitive manifest includes.
+define( 'ABSPATH', $argv[1] . '/' );
 require dirname( __DIR__, 2 ) . '/tests/Support/UncertainBarrierNativeManifest.php';
 if ( ! Alynt_Test_Uncertain_Barrier_Native_Manifest::verify() ) exit( 1 );
-define( 'ABSPATH', $argv[1] . '/' ); require dirname( __DIR__, 2 ) . '/includes/class-scan-effect-manifest.php';
+require_once dirname( __DIR__, 2 ) . '/includes/class-scan-effect-manifest.php';
 $helper_bytes = 0; $helper_context = null;
 function alynt_uncertain_helper_send( $kind, array $facts ) {
     global $helper_bytes, $helper_context;
