@@ -1,0 +1,77 @@
+{
+  "production": {
+    "tests/Support/NativeQualificationManifest.php": "95a1bbc51d693354b0474af7766c66711cfea9b79b9b005d8999ba9d6a5dcc79",
+    "scripts/tests/native-qualification-identities.json": "2d61b8b249e694c25d3b50f8c87af410b3339a8df56a608d4c9cc910348756e1",
+    "tests/Support/QualificationNativeManifest.php": "9175db079a0489c5fe29afedbd913191ff9c68af73586871f543dab2c4606a34",
+    "scripts/tests/qualification-native-identities.json": "9b4f2c2015eb2e052fb42703d11b7b9c263a6ebec6cd3827fce427ccd27cab41",
+    "tests/Support/UncertainBarrierObservation.php": "de0152f3498a37c46408fde9815e58d1a318e54e150f838b61a2d1f89d142b86",
+    "tests/Support/UncertainBarrierProjection.php": "9323e77dcbaa0c54c7f60853fffec39a653a9415246c42e03a4e8c432672d852",
+    "tests/Support/UncertainBarrierOwner.php": "1f4fc49b42c8780ba77ce8994a9fabc009f82f6e443bb6f0c8223d3953d92e11",
+    "tests/Support/UncertainBarrierApiWorker.php": "1a1ad53741bd5ae5af36c226dc8d9708d0135c50c0d16fa187d95cfdac7d7851",
+    "scripts/tests/native-qualification-uncertain-grammar.mjs": "8920d8f9ac24d4e8de8e9c73eb6b3ef64708e09eee1d6984fdb61f0a46e18ee5",
+    "scripts/tests/native-qualification-uncertain-transcript.mjs": "c4e047123c2d39b06a8e260988a858c6bcab5b5beff7f15c0eea1bb5936658ea",
+    "scripts/tests/native-qualification-uncertain-accounting.mjs": "0b207e191d4a31daa4a76ecbc1094b4efa1a1c1ab9d625620243310c581e8243",
+    "scripts/tests/native-qualification-uncertain-drain.mjs": "c266e1bcb8463c68acf530fd7cf9ad278434d952bd0c6bcc328861c24aca547f",
+    "tests/Support/UncertainBarrierManifest.php": "3787c717bfc46ec179e7ba8b5f6da77544d4c25e3c9a5374375bcee843864895",
+    "scripts/tests/native-qualification-uncertain-identities.json": "9a337c4aef74a1afe5b08f358d9705a423e4623c57b30e9fd5893a4b5b6bb309",
+    "tests/Support/NativeQualificationSelectedManifest.php": "935ae2a7d6637def9be1da141913c5e687f3ad6aacb17756600caf32b2f01151",
+    "scripts/tests/native-qualification-selected-identities.json": "444997f74d1d40207f0f546f9dee10b503b38948dd045cf5592ae9c8ba8d4658",
+    "tests/Support/UncertainBarrierNoFaultManifest.php": "931e0e04279422763d69e2e94a2f49e814e487b018e94db57baf25e4df07fcd3",
+    "scripts/tests/uncertain-barrier-no-fault-identities.json": "59862a0515d5441adaa19fd36a98a4a8800a105077c51d958df1ef605e19b6b2"
+  },
+  "composition": {
+    "tests/Support/NativeQualificationObservation.php": "d6d666b07ee3cba98c6121dfd1719d573ce5b289464a966c8273bc1abd67a99b",
+    "tests/Support/NativeQualificationOwner.php": "d39fe65084f79a291b5a8b0c4ec555e229bbbf5c0b09d4dd08b8082f1ca7fbfe",
+    "scripts/tests/uncertain-barrier-native-owner.php": "af496ffafe13425b31060495a79d45dc82b4d1564e6c4c4d8704992adccf66d1"
+  },
+  "projection": {
+    "tests/Support/QualificationObservationWrapper.php": "d9cdb737994841209db2b0c30b766f88d6bd76104a4becb964feec60c4778fc0",
+    "tests/Support/QualificationObservationProjection.php": "841a41a9308eccc8228573d2ffef89631f4229e015a05960680f9cdce06cc803"
+  },
+  "protocol": {
+    "scripts/tests/owned-stdio-io.php": "b7d655b49ecacab489259f7388f1424597c8ffa078007a17bee5564ac070a7cb",
+    "scripts/tests/owned-stdio-lines.mjs": "bdbb1a932ced5f5fec5a2f043d4613fe3ced14a66ebc46b3cd3da9706f54b45d",
+    "scripts/tests/uncertain-barrier-native-channel.php": "78584b486750734c06fb748db6c308c920344f6218622d199bf037d5fdf146a9",
+    "scripts/tests/uncertain-barrier-native-grammar.mjs": "d7b1823a0110854cff928ef5893c02e10b7df198a8530f1f93cd283af02a35f6",
+    "scripts/tests/uncertain-barrier-native-direct.mjs": "af650a6a0c243ccd351970d666ccf87b91187e6950c7d058541b3374e5bba3d0"
+  },
+  "transcript": {
+    "scripts/tests/uncertain-barrier-native-control.mjs": "699f1eccc7d1eb3b0f2050b377747e4a4da192a74dbb913fbe63ba23321bf7d0",
+    "scripts/tests/uncertain-barrier-native-transcript.mjs": "1cf4bfccd13230d16fe6b74e1344b7d2c4057eba6092539d3f02d0730d9dd2c4",
+    "scripts/tests/uncertain-barrier-native-helpers.mjs": "2d3d23e51520c6fc10372bed422347ce8e7e2d794f391f1b8d99ef8af3692d55"
+  },
+  "eligibility": {
+    "scripts/tests/native-qualification-no-fault-registry.mjs": "7474963d1edb6101df9649a474e470d74c0750de0b4d07e07a4576745068a702",
+    "scripts/tests/native-qualification-no-fault-barrier-drain.mjs": "a1c34930d084bb2e0d05d4ec85feb7cd6c9ff3910a6773578d5a89b8dc5bbe9e",
+    "scripts/tests/fixed-drain-grammar.mjs": "61e804feb2dec86ebc5119758fa2380728a2a789eef43182bc52b8fe8198cf32",
+    "scripts/tests/native-witness-profile.mjs": "c368b04281d0ae6101b8b0ac153c45a48e2497ee63dc3c68f7d033cd90b92e80",
+    "scripts/tests/relay-no-fault-frames.mjs": "657098a5306dc57322ef101beb5a7ccf40822443c3c4ec4250dacc03c7eb0780",
+    "scripts/tests/native-qualification-no-fault-relay.mjs": "8f5487a00d652f245bce05a9dfbacc4442f2966c9a5b038ca8dfafd37d99d671",
+    "scripts/tests/uncertain-barrier-native-registry.mjs": "a4e3ff42e9568bd17cf68a00d91df92ad153f04a205ecf00337ec76c4c0c96ea",
+    "scripts/tests/uncertain-barrier-native-drain.mjs": "f94c407b40bd3ccf48887bc13c68801c7887adf2003ddcd8c57c7519467d2cec",
+    "scripts/tests/native-qualification-selected-relay.mjs": "2542d005ab9d69f14c09ef9125ca914ccbc869d575a10435a30a81c3f1e962ee",
+    "scripts/tests/selected-native-frames.mjs": "8562da61ce78d5565c01bb8e179129fc90733e97241ad1e8fa18c1cdcd65daa2",
+    "scripts/tests/selected-native-lifetime.mjs": "88e3a01632564a20169414eed972ed329fb94b739eb71dd371729801ca1891ff"
+  },
+  "isolated_worker": {
+    "scripts/tests/uncertain-barrier-native-fixtures.php": "1d9bfe0f8f130a59af979b6299ef4b60deb81fd9ac60f00b1366166111ede011",
+    "scripts/tests/uncertain-barrier-native-worker.php": "9f4efe8bf1a4a7c50620d75cadb1ad73cf7ac2d484fe9e2e04113391f49d3811",
+    "scripts/tests/uncertain-barrier-native-bootstrap.php": "abeba7205c8787897f1625b2b1d4fcfbb14c764d4fb8b05d6d394a1f6b914f3b",
+    "scripts/tests/uncertain-barrier-native-preflight.php": "d6ff28dcf68afb5361584d374ad9c37925ed8700e9e385164573b845655be8c6",
+    "scripts/tests/uncertain-barrier-native-process.mjs": "50c51dec540c810b5df20bbf0dbc98cdebffadfdcc617e561aeec6b9e30a8cb8",
+    "scripts/tests/uncertain-barrier-native-proof.mjs": "b83c44c2f0afba5778b025d22c572ce68d2d582fe7402cdceb1a4747de2f450c",
+    "scripts/tests/uncertain-barrier-native-proof.ps1": "24fd68260847708af30695a41c006b4fc244c567dd2f4d7c75ca19e2d06bde43",
+    "scripts/tests/uncertain-barrier-native-denials.php": "39c6cb3182313fa510b042f60c2f43d4f3a53bccd4a706315faf2ad095beb7d1",
+    "scripts/tests/uncertain-barrier-native-case.mjs": "c02a7cdf981b15a52769590ecde2f58de3536b5c0cadfdd08a7a362ec1ea4988",
+    "scripts/tests/uncertain-barrier-native-committed.php": "5bcf6665d835fcccb982f1ab1314abfd99540b0190f7686dabb8d6875feaf613",
+    "scripts/tests/uncertain-barrier-native-selected.php": "499eb54c45eca2c13b9fda85e0542ccccd78d497ec4e84f8634af5996adf2780",
+    "scripts/tests/uncertain-barrier-native-released.php": "e214cccbf6cc4a0b97fa7f8a11a9a16b480e5db8fbd6b4ff2ed13b0b1fd75a45",
+    "scripts/tests/uncertain-barrier-native-held.php": "fe52a20c0cce72df282d33186337406b57fffba93c26a3cc93fe83d506d44d3c",
+    "scripts/tests/uncertain-barrier-native-helper.php": "51d6d33b99f902673e4d0472092e0e01c377d0dfb5b4cf1ab212c51f58f503ad",
+    "scripts/tests/uncertain-barrier-native-blocker.php": "4f568e43bda53af5fe00e928e51adddf8b92afabb63b4bfd5431f5ce68face86",
+    "scripts/tests/uncertain-barrier-native-monitor.php": "d73c0a7282fabc3efd11dc9c0552fddccbcaa00288a970d47aa8ebd67cc5706f",
+    "scripts/tests/uncertain-barrier-native-blocker-body.php": "ac4e6ea890e40065728523b4cbefc2332aa2bf88acd3a0ad8062402f34cc45d3",
+    "scripts/tests/uncertain-barrier-native-monitor-body.php": "f5b98f87ac344b1770458e632fc7cd6e0df4c1a75d93de946086fe911cb10724",
+    "scripts/tests/selected-native-cleanup-proof.mjs": "371bf731c7cbad156652d1a38914eefc3611550c1dc45da94c14841cf8ac90af"
+  }
+}

@@ -1,5 +1,26 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Terminal-Owner Selected/Contended Proof — 2026-10-22
+
+Approved/confirmed Plugin Tester local-only attempt and owned cleanup; see
+[owning record](V2_3_UNCERTAIN_BARRIER_NATIVE_OWNED_PROOF.md). New61-file fixed
+test-only composition/source/channel and isolated tests;production unchanged.
+ONE ordered invocation: fresh genuine guard266/11 and same-composition no-fault
+960 checks/24 guards passed. Fresh selected control then FAILED at harness
+barrier_execute before barrier binding;one exact11-byte writer response withheld,
+but no final qualifier/terminal/barrier proof. Contention/timeout cases NOT RUN.
+All owned fixtures/sessions/processes removed,10 locks available,all77 application
+checksums unchanged before/after cleanup. No retry or post-failure source repair.
+
+Implementation-plan progress: R1 fresh new-composition no-fault prerequisite
+advanced;selected/joined wait/timeout BLOCKED. Confirmed metadata-versus-safety
+statement tracking defect and missing source-complete metadata test trace;
+R2-R7 NO-GO. Recommended next gated slice: harness-only compiled metadata/safety
+statement-role correction,source-backed pre-BEGIN/post-safety regressions,fresh
+prerequisites and ONE fresh ordered selected/contention/timeout proof on the same
+confirmed Plugin Tester target. Additional native-attempt approval required;
+preserve original guards/limits/application state and disabled production wiring.
+
 Updated: 2026-10-19
 
 ## Purpose
