@@ -1,5 +1,20 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Exact-Wait Witness Window Design — 2026-10-22
+
+Dashboard owns docs/V2_3_EXACT_WAIT_WITNESS_WINDOW_EXECUTE_COORDINATION_DESIGN.md.
+Design-only successor identifies version-pinned cache idle and pre-execute poll
+risks,not proven prior native cause. Preferred arm-once/original2.5s deadline,
+post-write consumed first-safety-execute credit and125ms quiet gap preserves exact
+wait identity and all budgets. No harness/production edit or reseal;66-file source
+seal remains2ac6e5fb44961d21ff4f04996e1f011b8aaa4ed8534746e0711220713c8066f4.
+
+Implementation-plan progress:R1 design advances;physical exact-wait/released
+acceptance BLOCKED,R2-R7 NO-GO. Next gated slice:local-only V2.3 Socket-Free
+Cache-Aware Wait-Witness Scheduling and Execute-Credit Safety Foundation,synthetic
+bytes/virtual clocks only;no real timers/IPC/network/WordPress/storage/native
+execution or production wiring. Existing proof record remains historical.
+
 ## V2.3 Passive Barrier Progress Diagnostics — 2026-10-22
 
 See [owning record](V2_3_BARRIER_PROGRESS_DIAGNOSTICS_OWNED_PROOF.md). Approved
