@@ -33,6 +33,25 @@ focused Feature Security:strict time types/order,non-resettable budget and refus
 reviewed,no confirmed defect or new regression handoff. Actual preservation/CI
 counts and publication links are recorded in toolkit source-scoped closeout.
 
+## Task6: fixed standard-parser header snapshot policy
+
+The policy validates exact primitive method/target/version/raw-header snapshot
+keys and own data properties,GET/POST /probe.php HTTP/1.1 only. Host owned.invalid,
+Connection close,one canonical CL0..16384,exact POST form type,GET empty/no type.
+Unknown/duplicate(case-insensitive)/control/folded/oversized/missing/type-confused
+fields reject;no merged-header trust,TE/chunked reconciliation,query/absolute URL,
+cookie/authentication/forwarding/compression domain. No body,URL or header decoding.
+Positive GET and zero/small/max POST plus25 isolated tests;accessor fixtures prove
+getters are not invoked. Fixed plain snapshots from a future standard-parser
+adapter are the intended input,not hostile same-process proxies or wire bytes.
+
+Canonical Feature Light:2 new source/test files,direct budget/design dependencies,
+Other/test semantic framing;issues0. Bloat/Structure not indicated for these small
+cohesive files. Final focused Feature Security:duplicate/raw evidence,exact method/
+length/target/host/type,control/unknown-key and descriptor checks reviewed;no
+confirmed scoped defect. It is not HTTP parser/framing or genuine auth proof.
+No production import or native operator integration. Continue bounded body task7.
+
 Source-only canonical OptionB before this batch:12248 files at clean5f12f98,
 toolkit-snapshots/alynt-drime-backups-uploader/
 alynt-drime-backups-uploader-20261023-225259.zip plus matching.txt,SHA256
