@@ -1,5 +1,18 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Fixed Closed-Entry Owner / Raw Reader Design (R2) — 2026-10-23
+
+Dashboard owns docs/V2_3_FIXED_CLOSED_ENTRY_OWNER_RAW_READER_DESIGN.md. Dedicated
+fixed owner earns bounded raw/metadata facts and pins original identity across
+callbacks;request-wide consumption,strict read/EOF/error/close budgets,separate
+GET issuer without weakening POST guards. Actual server/SAPI support requires
+separate proof. This slice changes docs only,not source,auth,IO or native gates.
+
+Implementation-plan progress:R2 owner/reader decisions selected,not genuine
+HTTP/auth/profile proof;production NO-GO,R3-R7 gated. Recommended next gated slice:
+local-only V2.3 Fixed Closed-Entry Owner and Bounded Reader Safety Foundation
+(R2),isolated API/IO tests only;real auth,storage/native execution,wiring remain off.
+
 ## V2.3 Closed Entry Ingress / Request-Policy Foundation (R2) — 2026-10-22
 
 See [owning source-scoped record](V2_3_CLOSED_ENTRY_INGRESS_POLICY_FOUNDATION.md).
