@@ -8,7 +8,7 @@ function params(bytes){const fields={};for(let i=0;i<bytes.length;){let a=bytes[
 for(const size of [0,3,16384])test(`actual composed POST ${size} preserves fixed CGI fields/body and erases forwarded buffer at cleanup`,()=>{
     const body=Buffer.alloc(size,120),h=new FixtureCgiHandoff(head(size),100,101,script);
     if(size)h.push(body,102);h.end(eof(),2099);assert.equal(h.prepare(3000),true);const wire=h.take(4099),r=records(wire);
-    assert.deepEqual(r.map(x=>x.type),[1,4,4,5,5]);assert.equal(r[0].body.readUInt16BE(),1);assert.equal(r[0].body[2],0);
+    assert.deepEqual(r.map(x=>x.type),size?[1,4,4,5,5]:[1,4,4,5]);assert.equal(r[0].body.readUInt16BE(),1);assert.equal(r[0].body[2],0);
     const fields=params(r[1].body);assert.equal(fields.SCRIPT_FILENAME,script);assert.equal(fields.QUERY_STRING,'');assert.equal(fields.REQUEST_METHOD,'POST');assert.equal(fields.CONTENT_LENGTH,String(size));assert.equal(fields.CONTENT_TYPE,'application/x-www-form-urlencoded');assert.equal(fields.HTTP_COOKIE,undefined);assert.deepEqual(r[3].body,body);
     assert.equal(h.cleanup(9999),true);assert.equal(wire.every(b=>b===0),true);assert.throws(()=>h.take(9999));
 });

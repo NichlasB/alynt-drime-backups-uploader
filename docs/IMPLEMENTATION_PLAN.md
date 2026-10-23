@@ -5,7 +5,7 @@
 See [owning record](V2_3_SOCKET_FREE_HTTP_CGI_SOURCE_PREPARATION.md). Tasks5-8 add
 original-epoch accounting,strict header policy,bounded raw body and fixed CGI
 handoff with source-scoped error/performance/edge/adversarial/final security review.
-61 new isolated tests,ten assertion-killed controls,935 full Node tests;no timer,
+62 new isolated tests,ten assertion-killed controls,936 full Node tests;no timer,
 process,HTTP/native execution or production path. Per-task exact-head CI is in
 toolkit closeout;five requested tasks reach original batch8/8 after verification.
 

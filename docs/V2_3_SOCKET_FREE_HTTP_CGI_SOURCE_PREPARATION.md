@@ -88,7 +88,7 @@ already physically forwarded. There is no socket/native forwarding in this sourc
 Marked absolute /probe.php paths are lexical checks only;physical source/hash/
 directory/process ownership must be earned in a future approved operator.
 
-Review found two bounded harness defects,not production plugin defects:
+Review found three bounded harness defects,not production plugin defects:
 
 - E1/Error Handling,Medium:non-Buffer builder output could break #fail's cleanup
   handling. Validate Buffer type before retaining a wire reference;fixed error
@@ -100,6 +100,12 @@ Review found two bounded harness defects,not production plugin defects:
   emits CONTENT_TYPE only for POST;unchanged regression GREEN. POST/incomplete
   STDIN and response decoder tests retained. This is a source correction,not a
   rerun/refresh of the historical native proof at5f12f98.
+- E3/Edge Case,Low:closeout wire inspection found two zero-length STDIN markers
+  for an empty body. A new independent record-count regression RED reproduced
+  2!==1. Emit a payload record only when nonempty,then exactly one completion
+  marker;update the integrated zero-byte record expectation to this canonical
+  contract. Nonempty/incomplete requests unchanged. This remained task8 routine
+  repair,with refreshed inventory/QA and exact follow-up-head CI,not a sixth task.
 
 ### Review inventory and outcomes
 
@@ -109,12 +115,12 @@ http-cgi modules,existing cgi-profile-codec and five new Node test files;direct
 predecessor codec/process/transport tests and owning design/plan records inspected.
 No production loader,WordPress hooks/auth/nonce domains/native source seal changed.
 
-Canonical Feature Light:10 executable/test files plus owning docs,Other/test-only
-framing/buffer/accounting;issues2,auto-fixed2,manual0(E1/E2). No UI;UI/UX N/A.
+Canonical Feature Light:11 executable/test files plus owning docs,Other/test-only
+framing/buffer/accounting;issues3,auto-fixed3,manual0(E1/E2/E3). No UI;UI/UX N/A.
 Canonical Feature Bloat/Structure:helper with explicit base reports0 because it
 excludes .mjs,not because the feature is empty. Supplemental measured TOTAL:
-budget19,headers26,body36,handoff34,codec38;tests24/20/29/25/49. No executable CODE
-count inferred. All10 classified Consolidate(reviewed,keep cohesive);zero oversized,
+budget19,headers26,body36,handoff34,codec38;tests24/20/29/25/49/11. No executable CODE
+count inferred. All11 classified Consolidate(reviewed,keep cohesive);zero oversized,
 split,defer/removal or Phase2 structure edits. No unrelated cleanup or test removal.
 Direct references are confined to tests/test-support;no native operator or runtime
 import of the new helpers. The codec's old operator caller is acknowledged above.
@@ -132,11 +138,11 @@ bounded. Handoff adds bounded copy/encoding,not unbounded payload recursion. No
 queries,network,assets,cache or background work. This is a complexity/resource
 property plus representative memory tests,not physical HTTP timing qualification.
 
-Canonical source-scoped07 Phase1:E2 only uncovered defect;empty GET/POST,exact max/
+Canonical source-scoped07 Phase1:E2 plus closeout inventory refresh E3;empty GET/POST,exact max/
 over-limit,types/controls/aliases,clock boundaries,reentry/truncation,failure and
 cleanup inventories mapped to existing isolated coverage. WordPress/DB/permission/
 real browser/deletion cascades N/A here,remain product/runtime handoffs. Phase2
-fixes E2;permanent byte-level regression handed to07A. No nonce/auth policy change.
+fixes E2/E3;permanent byte-level regressions handed to07A. No nonce/auth policy change.
 
 Canonical source-scoped07A Phase1 baseline58/58 related tests(after E1/E2 fixes,
 including predecessor codec8),no skips/failures,Node assertions not separately
@@ -156,21 +162,21 @@ observed only via labeled fixed-source instrumentation in memory;no test getter 
 provider is installed in runtime source. Four controlled source SHA256s unchanged
 on disk. Tests use <=16KiB synthetic buffers,virtual clocks and no external state.
 
-Final07A status:Clean at this source-scoped automated layer;full Node935/935,
-0 failures/skips,61 new tests over batch baseline874. Scoped61 plus unchanged
-codec8;integration positives decode actual records independently,not duplicate the
+Final07A status:Clean at this source-scoped automated layer;full Node936/936,
+0 failures/skips,62 new tests over batch baseline874. Scoped HTTP61 plus codec9
+(including new E3 case);integration positives decode actual records independently,not duplicate the
 encoder algorithm. No tests consolidated/removed,production defects0,harness
-defects2. Physical HTTP/CGI,authentication and final whole-plugin security remain
+defects3. Physical HTTP/CGI,authentication and final whole-plugin security remain
 outside this status. No coverage percentage fabricated or broad historical row
 refreshed. Formal13/FULL_PRE_RELEASE remains for a coherent release candidate.
 
 Final canonical focused Feature Security after all fixes and validation:strict
 primitive/raw-header domains,original clocks,bounds-before-copy,one-shot outcomes,
 lexical versus physical identity,buffer erasure,closed entry and lack of native
-handles reviewed. No unresolved confirmed scoped security defect;E1/E2 have exact
+handles reviewed. No unresolved confirmed scoped security defect;E1/E2/E3 have exact
 permanent regression coverage. No WordPress sanitization/nonce guard is waived.
 
-Local preservation:Node935/935,focused PHP141/1767,no failures/skips;uploader
+Local preservation:Node936/936,focused PHP141/1767,no failures/skips;uploader
 WPCS255(existing ruleset metadata deprecation),build/runner verify pass. Dashboard
 PHP299/1423 with2 existing Windows Sodium skips,WPCS138/structure/build pass.
 Exact-head CI/status for every pushed task belongs in toolkit closeout. Source-only

@@ -12,7 +12,7 @@ export function cgiRequest(script, body, method = 'POST', complete = true) {
         params.push(length(a.length),length(b.length),a,b);
     }
     const begin=Buffer.alloc(8);begin.writeUInt16BE(1); // RESPONDER, no keep-connection flag.
-    return Buffer.concat([record(1,begin),record(4,Buffer.concat(params)),record(4),record(5,body),...(complete?[record(5)]:[])]);
+    return Buffer.concat([record(1,begin),record(4,Buffer.concat(params)),record(4),...(body.length?[record(5,body)]:[]),...(complete?[record(5)]:[])]);
 }
 export class CgiResponse {
     #bytes=Buffer.alloc(0);#out=[];#err=[];#size=0;#records=0;#done=false;#result=null;#failed=false;
