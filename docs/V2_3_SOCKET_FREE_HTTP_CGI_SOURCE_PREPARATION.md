@@ -52,6 +52,28 @@ length/target/host/type,control/unknown-key and descriptor checks reviewed;no
 confirmed scoped defect. It is not HTTP parser/framing or genuine auth proof.
 No production import or native operator integration. Continue bounded body task7.
 
+## Task7: bounded raw body and one-shot erasure
+
+FixtureHttpBody creates its own original budget and validates headers before one
+allocation of exactly declared0..16384 bytes. Nonempty Buffer chunks are copied
+once into fixed storage;no chunk list,decoding,seek,spill,stream/socket or native
+handle. One-byte fragmentation remains linear and bounded by total accepted bytes.
+End requires exact length and own strict complete=true/aborted=false/error=false
+facts;future runtime must earn those facts from Node's actual parser,not a client.
+Malformed/truncated/extra/late/repeated data or facts poison and erase. Take requires
+completed end and remaining original handoff budget;it copies once and erases the
+private buffer. Its synthetic byte copy is not an authority/receipt and will be
+consumed/erased by task8's fixed handoff. Cleanup cannot re-arm or reset time.
+
+10 isolated tests include max16KiB at1/7/1024/16384-byte fragments,zero GET/POST,
+caller mutation isolation,pre-end/repeated take,truncation/type/overrun/empty/extra
+data,EOF/accessor facts,exact cutoffs and regressing clock. Canonical Feature Light:
+2 new source/test files plus direct budget/header dependencies,Other/memory IO;
+issues0. Final focused Feature Security:bounds before copy,method/raw preservation,
+one-shot refusal and private erasure reviewed;no confirmed scoped defect. Final
+task8 review adds cross-component/counterfactual erasure proof,not native claims.
+No operational integration or change to old CGI operator. Continue fixed handoff.
+
 Source-only canonical OptionB before this batch:12248 files at clean5f12f98,
 toolkit-snapshots/alynt-drime-backups-uploader/
 alynt-drime-backups-uploader-20261023-225259.zip plus matching.txt,SHA256
