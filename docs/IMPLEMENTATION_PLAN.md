@@ -1,5 +1,20 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Fixed Closed-Entry Owner / Bounded Reader Foundation (R2) — 2026-10-23
+
+See [owning source-scoped record](V2_3_FIXED_CLOSED_ENTRY_OWNER_READER_FOUNDATION.md).
+Actual fixed private POST/GET owner, original identity/transport/deadlines,
+request-wide consumption/poisoning, bounded one-open raw reader and role-only
+fences. Positive isolated API/IO tests and thirteen semantic controls; no actual
+WordPress/auth/cache/storage/native operations. Existing source seals and public/
+native unavailable boundaries unchanged; no loader/hooks or production wiring.
+
+Implementation-plan progress:R2 source/protocol foundation advances, not genuine
+auth/HTTP input-profile support; production NO-GO, R3-R7 gated. Recommended next
+gated slice:Plugin Tester local-only V2.3 Fixed Closed-Entry Owner Genuine
+Authentication and Input-Profile Feasibility / Owned Cleanup Proof (R2), with
+exact target/owned user-fixture confirmation. Production ingress stays disabled.
+
 ## V2.3 Fixed Closed-Entry Owner / Raw Reader Design (R2) — 2026-10-23
 
 Dashboard owns docs/V2_3_FIXED_CLOSED_ENTRY_OWNER_RAW_READER_DESIGN.md. Dedicated
