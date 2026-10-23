@@ -1,5 +1,16 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Socket-Free HTTP/CGI Source Preparation (R2) — 2026-10-23
+
+See [owning record](V2_3_SOCKET_FREE_HTTP_CGI_SOURCE_PREPARATION.md). Task5 adds
+original-epoch header/body/handoff/cleanup accounting with virtual-clock tests;
+no timer,process,HTTP/native execution or production path. Continue fixed header,
+bounded body and isolated handoff/review tasks,not another approval pause.
+
+Implementation-plan progress:R2 gate B source preparation advances;physical HTTP/
+profile qualification stays Blocked. Keep entry_available=false,original owner
+budgets/native feature/wiring unchanged,R3-R7 gated. Exact-head CI recorded per task.
+
 ## V2.3 Dedicated Buffered HTTP/CGI Supervision Design (R2) — 2026-10-23
 
 Dashboard owns docs/V2_3_DEDICATED_BUFFERED_HTTP_CGI_SUPERVISION_DESIGN.md.
