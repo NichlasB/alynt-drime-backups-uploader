@@ -83,10 +83,12 @@ function alynt_entry_configure( $case ) {
         case 'reader-mismatch': $_SERVER['CONTENT_LENGTH'] = '1'; break;
         case 'reader-calls': $io::$sizes = array_fill( 0, 18, 1 ); break;
         case 'reader-short': $io::$sizes = array( 1, 2, 3 ); break;
+        case 'post-buffer-drift': $io::$sizes = array(); $io::$fault = 'seekable-drift'; break;
     }
     if ( 'post-slashed' === $case ) $io::$bytes = http_build_query( array_map( 'stripslashes', $_POST ), '', '&', PHP_QUERY_RFC3986 );
     if ( 'post-slashed' === $case ) $_SERVER['CONTENT_LENGTH'] = (string) strlen( $io::$bytes );
     if ( 0 === strpos( $case, 'io-' ) ) $io::$fault = substr( $case, 3 );
+    if ( 'io-seekable-drift' === $case ) $io::$sizes = array();
     if ( 'reader-calls' === $case ) $io::$fault = 'never-eof';
     if ( 'post-duplicate' === $case ) { $io::$bytes = str_replace( 'purpose=register_closed', 'nonce=unit-nonce', $io::$bytes ); $_SERVER['CONTENT_LENGTH'] = (string) strlen( $io::$bytes ); }
     if ( 'post-wire-mismatch' === $case ) $_POST['nonce'] = 'other';

@@ -1,5 +1,19 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Buffered Closed-Entry Reader Foundation (R2) — 2026-10-23
+
+See [owning record](V2_3_BUFFERED_CLOSED_ENTRY_READER_FOUNDATION.md). Existing
+private reader selects strict buffered metadata without seeking/reopening;15
+new isolated cases,five assertion-killed controls,forward-only/admission source
+invariants. entry_available=false,production loader/hooks and native gates unchanged.
+No actual authentication/storage/WordPress/HTTP/native/configuration operations.
+
+Implementation-plan progress:R2 gate A advances,not supported server profile or
+integrated HTTP root. Next meaningful gated slice:Plugin Tester local-only V2.3
+Buffered Input Profile Qualification Feasibility and Owned Cleanup Proof (R2),
+hard IO/worker settlement feasibility first;no unchanged benign-probe loop or
+maintenance churn. Production NO-GO,R3-R7 gated;exact operational scope needs approval.
+
 ## V2.3 Buffered Input / Genuine HTTP Integration Design (R2) — 2026-10-23
 
 Dashboard owns docs/V2_3_BUFFERED_INPUT_GENUINE_HTTP_INTEGRATION_DESIGN.md.

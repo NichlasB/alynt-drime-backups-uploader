@@ -31,7 +31,20 @@ final class Alynt_Test_Closed_Entry_Io {
     }
     public static function metadata( $handle ) {
         alynt_entry_check( self::resource( $handle ), 'metadata uses owned handle' );
-        $meta = array( 'wrapper_type' => 'PHP', 'stream_type' => 'Input', 'mode' => 'rb', 'uri' => 'php://input', 'timed_out' => false, 'blocked' => true, 'seekable' => false, 'eof' => self::eof( $handle ), 'unread_bytes' => 0 );
+        $meta = array( 'wrapper_type' => 'PHP', 'stream_type' => 'Input', 'mode' => 'rb', 'uri' => 'php://input', 'timed_out' => false, 'blocked' => true, 'seekable' => true, 'eof' => self::eof( $handle ), 'unread_bytes' => 0 );
+        if ( 'meta-null' === self::$fault ) return null;
+        if ( 'seekable-false' === self::$fault || ( 'seekable-drift' === self::$fault && self::$position > 0 ) ) $meta['seekable'] = false;
+        if ( 'seekable-int' === self::$fault ) $meta['seekable'] = 1;
+        if ( 'seekable-string' === self::$fault ) $meta['seekable'] = '1';
+        if ( 'seekable-missing' === self::$fault ) unset( $meta['seekable'] );
+        if ( 'eof-int' === self::$fault ) $meta['eof'] = (int) $meta['eof'];
+        if ( 'unread-string' === self::$fault ) $meta['unread_bytes'] = '0';
+        if ( 'blocked-false' === self::$fault ) $meta['blocked'] = false;
+        if ( 'blocked-int' === self::$fault ) $meta['blocked'] = 1;
+        if ( 'mode-append' === self::$fault ) $meta['mode'] = 'ab';
+        if ( 'wrong-type' === self::$fault ) $meta['stream_type'] = 'TEMP';
+        if ( 'wrong-wrapper' === self::$fault ) $meta['wrapper_type'] = 'plainfile';
+        if ( 'timeout-int' === self::$fault ) $meta['timed_out'] = 0;
         if ( 'timeout' === self::$fault ) $meta['timed_out'] = true;
         if ( 'unknown-meta' === self::$fault ) unset( $meta['blocked'] );
         if ( 'wrong-uri' === self::$fault ) $meta['uri'] = 'php://temp';

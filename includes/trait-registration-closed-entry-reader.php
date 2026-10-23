@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/** Unavailable in production until an exact server/SAPI profile is proved. */
+/** Buffered candidate only; production admission still requires profile proof. */
 trait Alynt_Drime_Backups_Uploader_Registration_Closed_Entry_Reader {
 	/**
 	 * At most 17 reads / 16385 bytes, no seek, reopen, spill or caller path.
@@ -62,6 +62,8 @@ trait Alynt_Drime_Backups_Uploader_Registration_Closed_Entry_Reader {
 	}
 
 	/**
+	 * Fixed buffered capability, never permission to seek or proof of provenance.
+	 *
 	 * Refuse unknown wrappers, timeout, mode/buffering state and conflicting EOF.
 	 *
 	 * @param resource $stream Only the owned input stream.
@@ -69,7 +71,7 @@ trait Alynt_Drime_Backups_Uploader_Registration_Closed_Entry_Reader {
 	 */
 	private function input_metadata( $stream ) {
 		$meta = stream_get_meta_data( $stream );
-		return is_array( $meta ) && 'PHP' === ( $meta['wrapper_type'] ?? null ) && 'Input' === ( $meta['stream_type'] ?? null ) && 'rb' === ( $meta['mode'] ?? null ) && 'php://input' === ( $meta['uri'] ?? null ) && false === ( $meta['timed_out'] ?? null ) && true === ( $meta['blocked'] ?? null ) && false === ( $meta['seekable'] ?? null ) && is_bool( $meta['eof'] ?? null ) && feof( $stream ) === $meta['eof'] && 0 === ( $meta['unread_bytes'] ?? null );
+		return is_array( $meta ) && 'PHP' === ( $meta['wrapper_type'] ?? null ) && 'Input' === ( $meta['stream_type'] ?? null ) && 'rb' === ( $meta['mode'] ?? null ) && 'php://input' === ( $meta['uri'] ?? null ) && false === ( $meta['timed_out'] ?? null ) && true === ( $meta['blocked'] ?? null ) && true === ( $meta['seekable'] ?? null ) && is_bool( $meta['eof'] ?? null ) && feof( $stream ) === $meta['eof'] && 0 === ( $meta['unread_bytes'] ?? null );
 	}
 
 	/**

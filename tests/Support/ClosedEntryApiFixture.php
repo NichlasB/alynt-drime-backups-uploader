@@ -58,6 +58,11 @@ function alynt_entry_load( $enable_private, $mutation ) {
             'reentry-not-poisoned' => array( 'class-registration-closed-entry-request-owner.php', 'self::$poisoned = true;', 'self::$poisoned = false;' ),
             'transport-bypass' => array( 'trait-registration-closed-entry-reader.php', "\$this->post_transport() === ( \$this->state['transport'] ?? null )", 'true' ),
             'get-context-bypass' => array( 'trait-registration-closed-entry-get-auth.php', '$this->tools_context()', 'true' ),
+            'buffered-required' => array( 'trait-registration-closed-entry-reader.php', "true === ( \$meta['seekable'] ?? null )", 'true' ),
+            'after-meta-bypass' => array( 'trait-registration-closed-entry-reader.php', '! $this->input_metadata( $stream ) || strlen( $chunk )', 'false || strlen( $chunk )' ),
+            'wrapper-required' => array( 'trait-registration-closed-entry-reader.php', "'PHP' === ( \$meta['wrapper_type'] ?? null )", 'true' ),
+            'unread-required' => array( 'trait-registration-closed-entry-reader.php', "0 === ( \$meta['unread_bytes'] ?? null )", 'true' ),
+            'timeout-required' => array( 'trait-registration-closed-entry-reader.php', "false === ( \$meta['timed_out'] ?? null )", 'true' ),
         );
         if ( isset( $controls[$mutation] ) && $file === $controls[$mutation][0] ) {
             list( , $before, $after ) = $controls[$mutation];

@@ -67,6 +67,7 @@ if ( $reader ) {
         alynt_entry_check( $protocol === array_merge( $auth, array( $nonce_call ), $auth ), 'fresh current auth/capability brackets small nonce' );
     }
     if ( in_array( $case, array( 'post-denied', 'get-denied', 'post-guest', 'get-guest', 'post-session', 'get-session', 'post-role-revoked', 'get-role-revoked', 'post-expired', 'get-expired' ), true ) ) alynt_entry_check( array() === $nonce, 'failed first auth cannot inspect/create nonce' );
+    if ( 'post-buffer-drift' === $case ) alynt_entry_check( array() === $nonce && ! in_array( 'parse_cookie', $calls, true ), 'untrusted buffer refuses before authentication and nonce' );
     if ( in_array( $case, array( 'closed', 'get-closed' ), true ) ) {
         alynt_entry_check( array() === $s['calls'], 'unproved profile refuses before all external APIs/IO' );
         alynt_entry_check( false === Alynt_Drime_Backups_Uploader_Registration_Closed_Entry_Request_Owner::create( true ), 'no injected enable port' );

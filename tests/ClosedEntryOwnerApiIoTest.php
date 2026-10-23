@@ -35,6 +35,8 @@ final class ClosedEntryOwnerApiIoTest extends PHPUnit\Framework\TestCase {
             'get-closed', 'get-valid', 'get-wrong-method', 'get-query-import', 'get-post-import', 'get-screen', 'get-nonadmin', 'get-denied', 'get-guest', 'get-session', 'get-role-revoked', 'get-expired', 'get-user-throw', 'get-capability-throw', 'get-role-throw', 'get-revoked-after', 'get-actor-after', 'get-cookie-after', 'get-screen-after', 'get-transport-after', 'get-method-after', 'get-reentry', 'get-auth-deadline',
             'reader-short', 'reader-max', 'reader-overflow', 'reader-mismatch', 'reader-calls',
             'io-open-false', 'io-read-false', 'io-read-throw', 'io-read-warning', 'io-stall', 'io-never-eof', 'io-timeout', 'io-unknown-meta', 'io-wrong-uri', 'io-false-eof', 'io-close-throw', 'io-close-false',
+            'post-buffer-drift', 'io-meta-null', 'io-seekable-false', 'io-seekable-int', 'io-seekable-string', 'io-seekable-missing', 'io-seekable-drift',
+            'io-eof-int', 'io-unread-string', 'io-blocked-false', 'io-blocked-int', 'io-mode-append', 'io-wrong-type', 'io-wrong-wrapper', 'io-timeout-int',
         );
         return array_combine( $cases, array_map( function ( $v ) { return array( $v ); }, $cases ) );
     }
@@ -55,6 +57,21 @@ final class ClosedEntryOwnerApiIoTest extends PHPUnit\Framework\TestCase {
             array( 'close-bypass', 'io-close-false' ), array( 'repeat-allowed', 'post-repeat' ),
             array( 'reentry-not-poisoned', 'post-reentry' ),
             array( 'transport-bypass', 'post-transport-after' ), array( 'get-context-bypass', 'get-screen-after' ),
+            array( 'buffered-required', 'io-seekable-false' ), array( 'after-meta-bypass', 'io-seekable-drift' ),
+            array( 'wrapper-required', 'io-wrong-wrapper' ), array( 'unread-required', 'io-unread-string' ), array( 'timeout-required', 'io-timeout-int' ),
         );
+    }
+    public function test_reader_retains_fixed_forward_only_acquisition_and_production_gate() {
+        $root = dirname( __DIR__ ) . '/';
+        $reader = file_get_contents( $root . 'includes/trait-registration-closed-entry-reader.php' );
+        $calls = array();
+        foreach ( token_get_all( $reader ) as $token ) if ( is_array( $token ) && T_STRING === $token[0] ) $calls[] = strtolower( $token[1] );
+        foreach ( array( 'fseek', 'rewind', 'stream_filter_append', 'stream_filter_prepend', 'file_get_contents', 'stream_get_contents', 'tmpfile', 'tempnam', 'fwrite' ) as $api ) $this->assertNotContains( $api, $calls );
+        $this->assertSame( 1, substr_count( $reader, "fopen( 'php://input', 'rb' )" ) );
+        $this->assertSame( 1, substr_count( $reader, 'fread( $stream,' ) );
+        $this->assertSame( 1, substr_count( $reader, 'fclose( $stream )' ) );
+        $owner = str_replace( "\r\n", "\n", file_get_contents( $root . 'includes/class-registration-closed-entry-request-owner.php' ) );
+        $this->assertStringContainsString( "private function entry_available() {\n\t\treturn false;\n\t}", $owner );
+        foreach ( array( 'alynt-drime-backups-uploader.php', 'includes/class-plugin.php' ) as $file ) $this->assertStringNotContainsString( 'registration-closed-entry', file_get_contents( $root . $file ) );
     }
 }
