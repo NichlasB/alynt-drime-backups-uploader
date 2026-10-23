@@ -1,5 +1,20 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Closed-Entry Genuine Auth / Input-Profile Owned Proof (R2) — 2026-10-23
+
+See [owning proof](V2_3_CLOSED_ENTRY_GENUINE_AUTH_INPUT_PROFILE_OWNED_PROOF.md).
+17 genuine-core helper cases/8963 checks pass on owned disposable tables;51
+tables and HTTP stub removed,all77 application checksums unchanged. Four bounded
+HTTP observations find seekable=true;current reader requires false and correctly
+refuses. Broad server/input time limits do not prove the required bounded profile.
+No runtime/guard/source-seal,configuration or production-ingress change.
+
+Implementation-plan progress:R2 genuine helper/auth/cleanup evidence advances,
+not integrated HTTP root or genuine Tools routing;input-profile support Blocked,
+production NO-GO,R3-R7 gated. Recommended next gated slice:design-only V2.3 Buffered
+Input Profile and Genuine Closed-Entry HTTP Integration Design (R2),not a guard
+waiver or server change. Keep writes,native execution,wiring and ingress disabled.
+
 ## V2.3 Fixed Closed-Entry Owner / Bounded Reader Foundation (R2) — 2026-10-23
 
 See [owning source-scoped record](V2_3_FIXED_CLOSED_ENTRY_OWNER_READER_FOUNDATION.md).
