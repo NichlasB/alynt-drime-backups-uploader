@@ -1,5 +1,17 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Dedicated Buffered HTTP/CGI Supervision Design (R2) — 2026-10-23
+
+Dashboard owns docs/V2_3_DEDICATED_BUFFERED_HTTP_CGI_SUPERVISION_DESIGN.md.
+Task4 selects original-epoch,strict header,bounded body and fixed synthetic CGI
+handoff support for a separately approved disposable proof. No new listener,
+process,WordPress/storage/native feature or production registration operation.
+
+Implementation-plan progress:R2 gate B source preparation advances;continue four
+worthwhile safe-local support tasks in the approved remaining-five batch. Physical
+HTTP/profile qualification remains Blocked;entry_available=false,wiring/native
+feature execution off,R3-R7 gated. No release/package/deploy or protocol enablement.
+
 ## V2.3 Isolated CGI Termination / Cleanup Proof (R2) — 2026-10-23
 
 See [owning proof](V2_3_ISOLATED_CGI_TERMINATION_OWNED_PROOF.md). Final ordered5
