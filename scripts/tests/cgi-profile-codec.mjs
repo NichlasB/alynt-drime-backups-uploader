@@ -5,7 +5,7 @@ function record(type, bytes = Buffer.alloc(0)) {
 }
 export function cgiRequest(script, body, method = 'POST', complete = true) {
     if (typeof script !== 'string' || script.length > 512 || /[\r\n\0]/.test(script) || !Buffer.isBuffer(body) || body.length > 16384 || !['POST','GET'].includes(method) || typeof complete !== 'boolean') throw Error('cgi_request');
-    const fields = {GATEWAY_INTERFACE:'CGI/1.1',SERVER_PROTOCOL:'HTTP/1.1',REQUEST_METHOD:method,QUERY_STRING:'',SCRIPT_FILENAME:script,SCRIPT_NAME:'/probe.php',REQUEST_URI:'/probe.php',DOCUMENT_ROOT:script.slice(0,-10),SERVER_NAME:'owned.invalid',SERVER_PORT:'1',REMOTE_ADDR:'127.0.0.1',REDIRECT_STATUS:'200',CONTENT_TYPE:'application/x-www-form-urlencoded',CONTENT_LENGTH:String(complete ? body.length : 1024)};
+    const fields = {GATEWAY_INTERFACE:'CGI/1.1',SERVER_PROTOCOL:'HTTP/1.1',REQUEST_METHOD:method,QUERY_STRING:'',SCRIPT_FILENAME:script,SCRIPT_NAME:'/probe.php',REQUEST_URI:'/probe.php',DOCUMENT_ROOT:script.slice(0,-10),SERVER_NAME:'owned.invalid',SERVER_PORT:'1',REMOTE_ADDR:'127.0.0.1',REDIRECT_STATUS:'200',...(method==='POST'?{CONTENT_TYPE:'application/x-www-form-urlencoded'}:{}),CONTENT_LENGTH:String(complete ? body.length : 1024)};
     const params = [];
     for (const [name,value] of Object.entries(fields)) {
         const a=Buffer.from(name),b=Buffer.from(value),length=(n)=>{if(n<128)return Buffer.from([n]);const x=Buffer.alloc(4);x.writeUInt32BE(n+0x80000000);return x;};

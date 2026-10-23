@@ -28,5 +28,9 @@ export class FixtureHttpBody {
         this.#taken=true;const body=Buffer.from(this.#buffer);this.#buffer.fill(0);
         return Object.freeze({method:this.#head.method,body});
     }
+    remainingHandoff(now){
+        if(this.#failed||!this.#taken){this.#burn();return 0;}
+        const remaining=this.#budget.remaining('handoff',now);if(remaining===0)this.#burn();return remaining;
+    }
     cleanup(now){this.#burn();return this.#budget.check('cleanup',now);}
 }

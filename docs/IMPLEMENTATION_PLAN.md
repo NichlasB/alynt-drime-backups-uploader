@@ -2,14 +2,19 @@
 
 ## V2.3 Socket-Free HTTP/CGI Source Preparation (R2) — 2026-10-23
 
-See [owning record](V2_3_SOCKET_FREE_HTTP_CGI_SOURCE_PREPARATION.md). Task5 adds
-original-epoch header/body/handoff/cleanup accounting with virtual-clock tests;
-no timer,process,HTTP/native execution or production path. Continue fixed header,
-bounded body and isolated handoff/review tasks,not another approval pause.
+See [owning record](V2_3_SOCKET_FREE_HTTP_CGI_SOURCE_PREPARATION.md). Tasks5-8 add
+original-epoch accounting,strict header policy,bounded raw body and fixed CGI
+handoff with source-scoped error/performance/edge/adversarial/final security review.
+61 new isolated tests,ten assertion-killed controls,935 full Node tests;no timer,
+process,HTTP/native execution or production path. Per-task exact-head CI is in
+toolkit closeout;five requested tasks reach original batch8/8 after verification.
 
-Implementation-plan progress:R2 gate B source preparation advances;physical HTTP/
-profile qualification stays Blocked. Keep entry_available=false,original owner
-budgets/native feature/wiring unchanged,R3-R7 gated. Exact-head CI recorded per task.
+Implementation-plan progress:R2 gate B source preparation milestone reached;
+physical HTTP/profile qualification stays Blocked. Recommended next gated slice:
+isolated disposable fixed HTTP-to-CGI supervision no-fault/resource-limit and owned
+cleanup proof(R2),with explicit temporary configs/listeners/processes/files scope.
+Keep entry_available=false,original owner budgets/native feature/wiring unchanged,
+R3-R7 gated. No further source churn or package/release before operational evidence.
 
 ## V2.3 Dedicated Buffered HTTP/CGI Supervision Design (R2) — 2026-10-23
 
