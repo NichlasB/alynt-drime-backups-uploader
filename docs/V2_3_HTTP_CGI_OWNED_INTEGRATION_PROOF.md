@@ -140,3 +140,74 @@ FastCGI STDERR,not a raw trace or generic-refusal-as-timeout inference.21 relate
 checks pass/no skips. Final focused security rerun:fixed scope and guard/budget
 limits unchanged,no remaining confirmed defect in this correction. One fresh
 ordered attempt with fresh no-fault/refusal prerequisites follows;no blind retry.
+
+### Fresh ordered attempt: Complete for the standalone candidate
+
+Exact executable source:d23dc614bc35445c3dce20fb7acc9ea20807b4d4. Explicit command:
+`node scripts/tests/http-cgi-owned-proof.mjs --run-owned-http-cgi`.
+Fresh no-fault/refusal prerequisites precede the controlled failure cases. All12
+passed;each independently verified worker exit/close,pipes,console/listener
+absence,HTTP/client socket closure and exact fixture removal. Before/after
+existing service/configuration identities matched. No retained root or uncertain
+cleanup. No WordPress,SQL,application checksum query,credential or service change.
+
+| Case | Observation / CGI handoffs | Connection through cleanup(ms) |
+|---|---|---|
+|no_fault|complete,actual parser complete,3 raw bytes conserved /1|3554|
+|refusal|unknown header refused before PHP entry /0|3699|
+|max_body|complete,16384 raw bytes conserved /1|3721|
+|oversized_body|declared16385 refused before PHP /0|3842|
+|duplicate_length|real parser error before request event /0|4116|
+|transfer_encoding|CL+TE real parser error before request event /0|3839|
+|header_overflow|real parser error before request event /0|3680|
+|slow_headers|original header timer1003ms,not an idle-gap reset /0|5157|
+|incomplete_body|original body timer2003ms,no PHP entry /0|6154|
+|disconnect|parser refusal,no PHP entry /0|3702|
+|pipeline|early parser rejection,requests1,no second CGI handoff /0|3649|
+|native_fatal|specific fatal observed1059ms,worker still alive until owned termination /1|5190|
+
+Each separate warm-worker/preflight measured2455..3849ms;it is not hidden inside
+the connection epoch. All connection/cleanup observations are below10000ms;
+remaining credit was resampled before nested inspection/join/transport operations.
+These are measured bounded experiments,not a hard-real-time OS guarantee or
+exhaustive concurrency/load/framing certification. A future budget overrun or
+unknown ownership still blocks. Pipeline refusal does not claim retroactive undo
+of a previously completed valid request. PHP fatal alone did not settle its worker.
+
+Final local full Node972/972,no failures/skips with concurrency2. Initial default-
+concurrency Windows failures remain recorded above,not hidden by this result.
+Exact executable-source CI40078970300 succeeded:Node972/972,no failures/skips,
+0 vulnerabilities;PHP7.4=2289/54283 and8.3=2289/54035,OK,no failures/skips.
+Final focused security rerun after corrected outcome validation and native
+evidence:no remaining confirmed scoped defect;production/native authority remains
+disabled. This proof does not turn entry_available on or certify WordPress
+bootstrap/protected-read containment,minimum-version support or ordinary profiles.
+
+## Task 8: plan/readiness and publication closeout
+
+Reconciled the uploader/dashboard implementation plans and related dashboard
+readiness/design records with this earned milestone,not historical whole-plugin
+release-readiness rows. Toolkit owns per-task exact-head CI/publication evidence.
+No version bump,package,release,tag,deploy or product runtime change.
+
+Source restoration provenance:initial OptionB archive20261024-101807 began at
+clean66418ea but creation overlapped edits;two first-edited entries failed baseline
+comparison. It is explicitly NOT a pristine pre-edit restore point. Tracked
+baseline remains in Git;no restore was applied. A fresh archive was created while
+the entire uploader tree stayed clean/unchanged atd23dc61:
+toolkit-snapshots/alynt-drime-backups-uploader/
+alynt-drime-backups-uploader-20261024-104258.zip and matching.txt,12402 files,
+SHA256 E9C6FCC624AB1A37B7D2A472F8A3714205CB6DED119D7C3F27B68153483DB97B.
+All11 changed executable source/test entries matched current bytes by SHA256.
+No checkpoint branch,source restore apply,site/database backup or rollback.
+
+Implementation-plan progress:R2 gate B's standalone candidate now has physical
+framing/resource/owned-settlement evidence. Ordinary LocalWP and genuine owner
+HTTP/bootstrap/profile admission remain unqualified;entry_available=false,
+original10s/20s owner budgets and production wiring/native feature unchanged.
+Recommended next gated slice:**design-only V2.3 Fixed Profile Admission and Genuine
+Closed-Entry HTTP Integration Design(R2)**. Resolve remaining wire-profile and
+GET/POST parity evidence,private admission facts versus deployment trust,and
+pre-owner/WP6.0 bootstrap/protected-read containment before another genuine HTTP
+authentication experiment. No enable flag,synthetic authority shortcut or new
+runtime installation is authorized by this completed standalone proof;R3-R7 gated.
