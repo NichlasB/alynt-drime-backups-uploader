@@ -1,5 +1,20 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Fixed Projection Catalog / Shutdown Transcript Foundation — 2026-10-24
+
+Approved R2, isolated tests only. [Owning record](V2_3_FIXED_PROJECTION_SHUTDOWN_FOUNDATION.md)
+documents the compiled29P/7N/32-row model and sticky canonical shutdown transcript.
+Both cases/all six close/EOF orders pass only with normal modeled core/cache
+completion, sole bounded candidate and original deadline; no authority is granted.
+Permanent PHP/Node negatives plus source-backed guard controls prevent vacuous
+always-unavailable success. Actual eight-key operator/worker and production files
+are unchanged; no WordPress/SQL/site/native/storage operation or release.
+
+Implementation-plan progress:R2 candidate contracts implemented,not full source/
+resource/native qualification. Recommended next gated slice:design-only V2.3
+Complete Bootstrap Include, Object-Lifetime and Resource Closure Design, before
+any expanded native proof. Keep storage writes/native execution/wiring disabled.
+
 ## V2.3 Fixed Theme-Mode Projection / Full-Shutdown Evidence Design — 2026-10-24
 
 Dashboard owns docs/V2_3_THEME_MODE_PROJECTION_SHUTDOWN_EVIDENCE_DESIGN.md.
