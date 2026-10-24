@@ -32,13 +32,14 @@ export function createFixtureHttpServer(script,cgiPort){
     for(const event of ['checkContinue','checkExpectation','upgrade','connect'])server.on(event,()=>finish('unsupported_ingress'));
     server.on('clientError',()=>finish('parser_error'));
     server.on('request',(request,response)=>{
+        request.on('error',()=>finish('request_error'));request.on('aborted',()=>finish('request_aborted'));
+        response.on('error',()=>finish('response_error'));
         receipt.requests=++requestCount;
         if(done||requestCount!==1||origin===null||remaining(1000)<1){finish('request_refused');return;}
         try{
             handoff=new FixtureCgiHandoff({method:request.method,target:request.url,version:request.httpVersion,headers:request.rawHeaders},origin,performance.now(),script);
             receipt.headers_accepted=true;if(!arm(2000))return;
         }catch{finish('headers_refused');return;}
-        request.on('error',()=>finish('request_error'));request.on('aborted',()=>finish('request_aborted'));
         request.on('data',chunk=>{if(done)return;try{handoff.push(chunk,performance.now());}catch{finish('body_refused');}});
         request.once('end',async()=>{
             if(done)return;
@@ -54,7 +55,6 @@ export function createFixtureHttpServer(script,cgiPort){
             }catch{finish('handoff_refused');}
         });
         // No HTTP response body is required; completion is the private parent observation.
-        response.on('error',()=>finish('response_error'));
     });
     return {server,completion,origin:()=>origin,remainingCleanup:()=>remaining(10000),async close(){
         clearTimeout(timer);for(const socket of sockets)socket.destroy();

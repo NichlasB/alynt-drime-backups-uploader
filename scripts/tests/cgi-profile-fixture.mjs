@@ -8,8 +8,10 @@ const check=(value,label)=>{if(!value)throw Error(label);};
 export function createCgiFixture(){
     const marker=randomBytes(16).toString('hex'),root=path.join(realpathSync(tmpdir()),`alynt-cgi-profile-${marker}`);
     const owner=JSON.stringify({marker,source:sha(source),config:sha(config)});
-    mkdirSync(root);writeFileSync(path.join(root,'owner.json'),owner,{flag:'wx'});
-    writeFileSync(path.join(root,'php.ini'),config,{flag:'wx'});writeFileSync(path.join(root,'probe.php'),source,{flag:'wx'});
+    mkdirSync(root);
+    try{writeFileSync(path.join(root,'owner.json'),owner,{flag:'wx'});
+        writeFileSync(path.join(root,'php.ini'),config,{flag:'wx'});writeFileSync(path.join(root,'probe.php'),source,{flag:'wx'});
+    }catch(cause){const error=new Error('cgi_fixture_creation',{cause});error.ownedFixtureRoot=root;throw error;}
     return Object.freeze({root,marker,ini:path.join(root,'php.ini'),script:path.join(root,'probe.php').replaceAll('\\','/'),remove(){
         check(path.dirname(root)===realpathSync(tmpdir())&&path.basename(root)===`alynt-cgi-profile-${marker}`&&realpathSync(root)===root&&!lstatSync(root).isSymbolicLink(),'cleanup_root');
         const files=readdirSync(root);check(files.every(f=>['owner.json','php.ini','probe.php','stage.json','shutdown.json','process.json','diagnostic.json'].includes(f)),'cleanup_inventory');

@@ -61,12 +61,12 @@ async function runCase(mode,cgi){
     receipt.passed=clean&&!receipt.failure_stage&&!receipt.cleanup_unresolved;return receipt;
 }
 async function main(){
-    const receipts=[];let before=null,preserved=false,phase='preflight',reason=null;
+    const receipts=[];let before=null,preserved=false,phase='preflight',reason=null,retainedRoot=null;
     try{const cgi=resolveCgi();before=canonical(await inspectCgi('snapshot'));
         for(const mode of cases){phase=mode;const r=await runCase(mode,cgi);receipts.push(r);process.stdout.write(JSON.stringify({event:'owned_http_case',...r})+'\n');check(r.passed,'owned_http_case_failed');}
-    }catch(error){reason=/^[a-z_]+$/.test(error.message)?error.message:'operator_preflight_failure';}
+    }catch(error){reason=/^[a-z_]+$/.test(error.message)?error.message:'operator_preflight_failure';retainedRoot=error.ownedFixtureRoot??null;}
     finally{if(before!==null){try{preserved=before===canonical(await inspectCgi('snapshot'));}catch{preserved=false;}}}
     const passed=receipts.length===cases.length&&receipts.every(r=>r.passed)&&preserved;
-    process.stdout.write(JSON.stringify({passed,phase,reason,cases:receipts.length,expected_cases:cases.length,existing_service_and_config_identity_preserved:preserved,wordpress:false,database_access:false,production_profile_qualified:false,production_wiring:false})+'\n');if(!passed)process.exitCode=1;
+    process.stdout.write(JSON.stringify({passed,phase,reason,retained_root:retainedRoot,cases:receipts.length,expected_cases:cases.length,existing_service_and_config_identity_preserved:preserved,wordpress:false,database_access:false,production_profile_qualified:false,production_wiring:false})+'\n');if(!passed)process.exitCode=1;
 }
 if(process.platform!=='win32'||process.argv.length!==3||process.argv[2]!=='--run-owned-http-cgi'){process.stdout.write('{"passed":false,"refused_before_operations":true}\n');process.exitCode=1;}else await main();

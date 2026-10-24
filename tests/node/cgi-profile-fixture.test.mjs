@@ -10,3 +10,10 @@ test('unknown files and directories block all deletion until owned test restorat
     mkdirSync(dir);assert.throws(()=>f.remove(),/cleanup_file/);assert.equal(existsSync(f.script),true);rmdirSync(dir);
 }finally{if(existsSync(extra))unlinkSync(extra);if(existsSync(dir))rmdirSync(dir);f.remove();}});
 test('oversized allowed-name diagnostic blocks all deletion',()=>{const f=createCgiFixture(),target=path.join(f.root,'diagnostic.json');try{writeFileSync(target,Buffer.alloc(16384));assert.throws(()=>f.remove(),/cleanup_file/);assert.equal(existsSync(f.script),true);}finally{unlinkSync(target);f.remove();}});
+test('partial fixture creation reports the exact retained owned root without blind deletion',async()=>{
+    const source=readFileSync(new URL('../../scripts/tests/cgi-profile-fixture.mjs',import.meta.url),'utf8');
+    const shim=`export const mkdirSync=()=>{};let n=0;export function writeFileSync(){if(++n===2)throw Error('owned IO failure')};export const readFileSync=()=>Buffer.from('probe');export const realpathSync=p=>p;export const readdirSync=()=>[];export const lstatSync=()=>{};export function unlinkSync(){throw Error('unexpected_delete')};export function rmdirSync(){throw Error('unexpected_delete')};export const existsSync=()=>true;`;
+    const data=s=>`data:text/javascript;base64,${Buffer.from(s).toString('base64')}`;
+    const text=source.replace("from 'node:fs'",`from '${data(shim)}'`).replace("readFileSync(new URL('./cgi-profile-probe.php',import.meta.url))","Buffer.from('probe')");
+    const module=await import(data(text));assert.throws(()=>module.createCgiFixture(),error=>error.message==='cgi_fixture_creation'&&/alynt-cgi-profile-[a-f0-9]{32}$/.test(error.ownedFixtureRoot)&&error.cause.message==='owned IO failure');
+});

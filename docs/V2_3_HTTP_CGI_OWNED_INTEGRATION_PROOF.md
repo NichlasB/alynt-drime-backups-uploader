@@ -71,3 +71,52 @@ requires physical worker/console/listener/socket/file cleanup and before/after
 existing configuration/service identity preservation. Unknown cleanup retains
 the exact marked root and reports Blocked; no blind retry. Syntax/CLI refusal
 validation is not native proof. Actual ordered execution is the next task.
+
+## Task 6: canonical source-scoped review and regression hardening
+
+Explicit excluded baseline remains66418eae3bcfcfb0fe3bfe22fd229fe9bf80700e,
+not the latest verification commit. Scope:11 changed executable source/test files,
+plus directly used budget/header/body/handoff/codec/lifetime/inspection/PHP fixture
+dependencies and this record. No production plugin code or public contract.
+
+Feature Light:Other/file operations/process/loopback HTTP,2 Medium error-handling
+findings,2 fixed,0 manual decisions. UI/UX/WP hooks/translations/SQL/third-party
+service categories N/A:standalone test support only. Bloat/Structure unnecessary:
+small cohesive helpers,shared fixture replaces duplicate ownership logic,none near
+300 lines,no additional splitting justified. FULL_PRE_RELEASE remains deferred.
+
+Source-scoped03 Error Handling,06 Performance,07 Edge Cases then07A Adversarial
+were run using the canonical prompts. Phase1 was read-only;Phase2 routine fixes
+and tests remained within approved standalone scope. Inventory/disposition:
+
+| ID | Severity / category | Evidence and action | Regression layer |
+|---|---|---|---|
+| E1 | Medium / early refusal error recovery | Request/response error listeners were attached after header acceptance;rejected input could leave late errors unhandled. Moved handlers before every return. RED:doesNotThrow failed on `owned late error`;same regression GREEN after fix. |Actual-source HTTP event doubles;native parser behavior remains separate|
+| E2 | Medium / partial fixture creation recovery | Failed write after mkdir could lose the retained root from operator output. Preserve exact owned root on typed creation error;no blind deletion. Fault-injected actual-source regression proves root and cause retained without delete. |Isolated filesystem API failure;not physical disk-fault proof|
+| W1 | Low / environment-sensitive predecessor tests | Default-concurrency full Windows run963/965,two unchanged3s positive pipe timeouts. Both files unchanged from baseline;isolated18/18 and full concurrency2 run965/965. No assertions,limits,source or CI configuration changed. |Windows scheduling limitation,not a new HTTP defect|
+
+Performance inventory:0 additional scoped defects. One connection/request policy,
+4KiB headers,16KiB body,18KiB CGI request,16KiB CGI response and original-epoch
+wait caps are bounded;no DB/assets/cache/production background work. OS suspension
+is failure,not hard-real-time qualification. File ownership checks are not cached
+across deletion. No machine/service exhaustion experiment is included.
+
+Edge inventory covers empty/exact/oversize inputs,framing,duplicate requests,
+disconnect/late errors,expiry during cleanup,tampered/unknown/oversized files,
+partial creation and fail-closed recovery. WordPress/user/permission/schema and
+plugin-conflict/cascade categories are not exercised or claimed by this scope.
+07A classification:43 targeted checks pass/no skips;actual-source owner/event
+doubles are Strong for local contracts,not real parser/process/auth evidence.
+Owned file tests are real temporary filesystem tests,not application storage.
+No redundant deletion or suite restructuring. Three in-memory semantic removals
+(actual complete fact,request reuse,immediate erasure) import successfully then
+are assertion-killed. Required positive handoff uses real composition and bytes;
+an always-refusing owner cannot pass. Mutation copies never edit on-disk source.
+Full concurrency2 suite is rerun after these fixes;CI and native evidence follow.
+
+Final focused Feature Security after fixes/targeted validation:fixed loopback
+destination,exact script/root/hash/parent/executable/console guards,strict ingress,
+no protected/authenticated reads or write-capable application handles,no secrets
+in output,nonrecursive bounded cleanup and refusal on uncertain ownership. No
+remaining confirmed scoped security defect;no new regression handoff. This is
+not prompt13 whole-plugin audit,Database Review or authenticated HTTP proof.
