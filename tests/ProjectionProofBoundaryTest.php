@@ -22,11 +22,21 @@ final class ProjectionProofBoundaryTest extends PHPUnit\Framework\TestCase {
         $this->assertSame( 2, alynt_projection_canaries( array( 'alynt_drime_backups_settings' => '', 'alynt_drime_backups_schedule_safety_state' => '' ) ) );
     }
     public function test_worker_refuses_missing_flag_and_empty_private_input_before_database() {
+        $php = array( PHP_BINARY, '-n' );
+        $probe = proc_open( array_merge( $php, array( '-r', 'echo function_exists("json_encode") ? "yes" : "no";' ) ), array( array( 'pipe', 'r' ), array( 'pipe', 'w' ), array( 'pipe', 'w' ) ), $pipes );
+        $this->assertIsResource( $probe ); fclose( $pipes[0] ); $json = stream_get_contents( $pipes[1] ); $err = stream_get_contents( $pipes[2] ); fclose( $pipes[1] ); fclose( $pipes[2] );
+        $this->assertSame( 0, proc_close( $probe ) ); $this->assertSame( '', $err ); $this->assertContains( $json, array( 'yes', 'no' ) );
+        if ( 'no' === $json ) { $path = rtrim( ini_get( 'extension_dir' ), '/\\' ) . DIRECTORY_SEPARATOR . 'json.' . PHP_SHLIB_SUFFIX; $this->assertFileExists( $path ); $php = array_merge( $php, array( '-d', 'extension=' . $path ) ); }
         foreach ( array( array(), array( '--owned-projection-worker' ) ) as $args ) {
-            $p = proc_open( array_merge( array( PHP_BINARY, '-n', dirname( __DIR__ ) . '/scripts/tests/projection-proof-worker.php' ), $args ), array( array( 'pipe', 'r' ), array( 'pipe', 'w' ), array( 'pipe', 'w' ) ), $pipes );
+            $p = proc_open( array_merge( $php, array( dirname( __DIR__ ) . '/scripts/tests/projection-proof-worker.php' ), $args ), array( array( 'pipe', 'r' ), array( 'pipe', 'w' ), array( 'pipe', 'w' ) ), $pipes );
             $this->assertIsResource( $p ); fclose( $pipes[0] ); $out = stream_get_contents( $pipes[1] ); $err = stream_get_contents( $pipes[2] ); fclose( $pipes[1] ); fclose( $pipes[2] );
-            $this->assertSame( 1, proc_close( $p ) ); $this->assertSame( '', $err );
-            if ( $args ) $this->assertFalse( json_decode( $out, true )['passed'] ); else $this->assertSame( '', $out );
+            $this->assertSame( '', $err ); $this->assertSame( 1, proc_close( $p ), $out );
+            if ( $args ) {
+                $receipt = json_decode( $out, true ); $this->assertIsArray( $receipt );
+                $this->assertFalse( $receipt['passed'] ); $this->assertSame( 'private_context', $receipt['failure'] );
+                $this->assertFalse( $receipt['admission'] ); $this->assertFalse( $receipt['wiring'] );
+                $this->assertArrayNotHasKey( 'database_error_code', $receipt );
+            } else $this->assertSame( '', $out );
         }
     }
 }

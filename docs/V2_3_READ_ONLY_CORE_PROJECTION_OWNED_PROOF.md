@@ -153,6 +153,42 @@ npm audit0vulnerabilities. Dashboard299/1423,2 existing Windows Sodium skips;
 PHPCS138/structure/build pass. Exact-head CI and publication belong in toolkit.
 No local full uploader PHP suite or minimum-WP runtime claim;native proof is separate.
 
+### Safe-local publication verification repair — 2026-10-24
+
+Task1 of the requested autonomous batch;excluded repair base
+`e7d7a76e6a73a32fe930e694358d4216d6023eae`. Its exact-head CI40103156598 failed
+PHP7.4 with2296tests/54348assertions/two failures:isolated worker exit255 versus1,
+and the representative memory test exhausting headroom after unrelated suite cases.
+PHP8.3 and Node passed;this is verification failure,not a failed/dirty native proof.
+
+ProjectionProofBoundaryTest now uses the existing isolated-PHP JSON dependency
+probe and fixed extension path when required,retaining `-n`;missing dependencies
+fail assertions rather than skip. Empty input must report exactly private_context,
+not just passed=false,with no database error/admission/wiring. Exit/stderr/output
+diagnostics distinguish a missing extension from the intended rejected request.
+UploaderMemoryBudgetTest now runs each case in a fresh process without serialized
+suite globals. The256M ceiling,explicit48MiB pressure,32MiB chunk/32MiB reserve,
+real insufficient-headroom refusal,small-chunk positive and ini restoration remain
+unchanged. No raised budget,removed assertion,skip or production guard edit.
+
+OptionA source safety check verified clean pushed base and the existing pristine
+archive above;no new archive/checkpoint or restore apply. Canonical Feature Light:
+three changed test/record files plus direct worker/guard/bootstrap/config callers,
+Other/test-support scope;two known verification defects repaired,zero remaining
+local review findings. Reusing the established JSON probe is deliberate;no shared
+helper/framework or file split warranted. Bloat/Structure and UI/UX unnecessary.
+Final canonical Feature Security after local QA:fixed executable/extension paths,
+rejected envelope before DB capability,unchanged production auth/guards and child
+isolation;no confirmed scoped security finding or security regression handoff.
+Not a whole-plugin DS3/Database/FULL_PRE_RELEASE rerun or runtime qualification.
+
+Executed local PHP7tests/61assertions for repaired classes,then related isolated
+suite156/1951,no failures/skips. Full Node980/980,0failures/skips;PHPCS255pass with
+existing ruleset metadata deprecation;build/runner SHA above unchanged,audit0.
+No local PHP7.4/full-PHP runtime claim:exact-head CI results belong in the toolkit
+closeout. No WordPress/SQL/native proof,fixtures/accounts/configuration/services,
+production source/wiring or version change in this repair.
+
 Implementation-plan progress:R2 has database-enforced owned projection and privilege
 evidence,not an ordinary or completed authenticated profile. Recommended next gated
 slice: **design-only V2.3 Fixed Core Projection Dependency Manifest and Cold Bootstrap

@@ -1,5 +1,10 @@
 <?php
-/** Isolated upload API fixtures only; no WordPress, network or native session. */
+/** Isolated upload API fixtures only; no WordPress, network or native session.
+ * Fresh processes measure the explicit pressure fixture, not retained mocks from
+ * unrelated suite cases. Keep the same 256M ceiling and all real guard assertions.
+ * @runTestsInSeparateProcesses
+ * @preserveGlobalState disabled
+ */
 final class UploaderMemoryBudgetTest extends Alynt_Drime_Backups_Uploader_Uploader_Test_Case {
     private function memoryGuard() {
         $options = $this->base_options();
