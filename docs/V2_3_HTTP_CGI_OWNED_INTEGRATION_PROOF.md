@@ -37,3 +37,15 @@ cleanup still destroys its owned socket but never reports unobserved settlement.
 Default callers retain their limits. Actual-source EventEmitter socket regressions
 cover zero operations on invalid credit, delayed connect without writes, valid
 forwarding and expired cleanup refusal. These tests do not open real sockets.
+
+## Task 3: one-connection standard-parser boundary
+
+The explicit test-support HTTP owner composes the existing header/body/handoff
+with Node HTTP events. It closes its listener after one accepted connection,
+retains untruncated rawHeaders, rejects alternate ingress events and reuse,
+uses actual message.complete/aborted facts, and forwards at most once. Absolute
+connection timers at one/two/four seconds share the original epoch; cleanup
+cannot extend ten seconds. Refusal erases buffered bytes immediately. Private
+parent observation is not a general HTTP response proxy or authenticated entry.
+Actual-source isolated event/clock regressions prove valid handoff and refusals;
+real parser/timer/socket/worker evidence remains pending the explicit operator.
