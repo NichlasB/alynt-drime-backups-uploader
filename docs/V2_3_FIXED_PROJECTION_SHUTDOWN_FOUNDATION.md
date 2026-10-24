@@ -1,5 +1,10 @@
 # V2.3 Fixed Projection Catalog and Shutdown Transcript Safety Foundation
 
+Successor: dashboard docs/V2_3_BOOTSTRAP_INCLUDE_LIFETIME_RESOURCE_CLOSURE_DESIGN.md.
+Fresh source inventory is1512 PHP members;the existing includes<=1900 synthetic
+domain below is unchanged and is not a source-complete count/native certificate.
+The successor designs the remaining include/lifetime/resource audit only.
+
 2026-10-24. Approved R2 repository-only implementation; isolated values, bytes and
 virtual clocks. No actual authentication, WordPress, SQL, storage write, process/
 socket/native proof, configuration, permissions, grants, activation, rollback or

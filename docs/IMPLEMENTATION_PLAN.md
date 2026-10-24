@@ -1,5 +1,20 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Include / Object-Lifetime / Resource Closure Design — 2026-10-24
+
+Dashboard owns docs/V2_3_BOOTSTRAP_INCLUDE_LIFETIME_RESOURCE_CLOSURE_DESIGN.md.
+Design-only artifact/edge/callback/lifetime/cost obligations;fresh public7.1.2
+archive1512 PHP files supersedes1900 discovery count,not the unchanged synthetic
+counter domain. Eleven root constructor sites/twelve destructor-definition files
+are seeds,not a complete lifetime/source/peak-resource certificate. Existing
+eight-key worker/operator and catalog/transcript helpers remain untouched.
+
+Implementation-plan progress:R2 closure design advances,complete audit/native
+qualification still Blocked. Recommended next gated slice:repository-only V2.3
+Pinned Bootstrap Reachability, Lifetime and Effect/Cost Audit,public text only
+before any native revision. No code/tests/config/version/storage/native/wiring
+change;keep grants/activation/rollback disabled. No package/release/deploy.
+
 ## V2.3 Fixed Projection Catalog / Shutdown Transcript Foundation — 2026-10-24
 
 Approved R2, isolated tests only. [Owning record](V2_3_FIXED_PROJECTION_SHUTDOWN_FOUNDATION.md)
