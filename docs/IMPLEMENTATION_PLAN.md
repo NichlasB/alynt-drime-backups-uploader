@@ -1,5 +1,21 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Fixed Core Projection Dependency Manifest Design — 2026-10-24
+
+Dashboard owns docs/V2_3_FIXED_CORE_PROJECTION_DEPENDENCY_MANIFEST_DESIGN.md.
+Autonomous batch task2 fixes the successor design to a finite nine-key candidate,
+bounded synthetic values,both0/1 branches and actual-core dependency audit before
+provisioning. Existing eight-key scripts,credentials/views/query guards,production
+loading and versions remain unchanged. No native/auth/storage operation performed.
+
+Implementation-plan progress:R2's dependency decision advances,not completed
+bootstrap/HTTP/auth/profile readiness. Next meaningful gated slice:Plugin Tester
+local-only V2.3 Fixed Core Projection Dependency Manifest and Cold Bootstrap Owned
+Qualification / Cleanup Proof(R2),with actual-core read-only audit before any
+approved owned accounts/views/fixture change and fresh proof. Stop on further
+dependencies rather than an allowlist-growth loop. Admission,wiring,feature grants,
+activation/rollback disabled,R3-R7 independent. No package/release/deploy.
+
 ## V2.3 Owned Read-Only Core Projection / Privilege Proof — 2026-10-24
 
 See [owning proof](V2_3_READ_ONLY_CORE_PROJECTION_OWNED_PROOF.md).
