@@ -1,5 +1,22 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Fixed Theme-Mode Projection / Full-Shutdown Evidence Design — 2026-10-24
+
+Dashboard owns docs/V2_3_THEME_MODE_PROJECTION_SHUTDOWN_EVIDENCE_DESIGN.md.
+Design only:fixed29P/7N/32 owned options rows,synthetic1779 value bytes;fifteen
+support callbacks/three metadata transforms and empty-provider branch reviewed.
+Keep fences through teardown;post-core candidate includes cache close,parent
+acceptance requires process/EOF plus preservation/cleanup. No early close/reset,
+exit0-only success,late-query allowance or canary/budget reduction.
+
+Implementation-plan progress:R2 evidence contract designed,not harness/native
+implementation. Remaining full source/object-lifetime/resource/physical and
+authenticated HTTP/minimum-version qualification Blocked. Recommended next gated
+slice:local-only V2.3 Fixed Projection Catalog and Shutdown Transcript Safety
+Foundation,in-memory/virtual-clock and isolated API tests only. Existing eight-key
+worker,actual constants/auth/storage/native/wiring/grants/activation/rollback
+untouched/disabled;no new fixture/account/site authority or package/deploy.
+
 ## V2.3 Theme-Mode Bootstrap Catalog / Resource Review — 2026-10-24
 
 Dashboard owns docs/V2_3_THEME_MODE_BOOTSTRAP_CLOSURE_CATALOG.md. Repository-only
