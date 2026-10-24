@@ -59,3 +59,15 @@ file. Random temporary root, exact owner/source/config hashes, file allowlist an
 absence proof remain mandatory. Owned disposable filesystem regressions exercise
 tampering, unknown entries, directory substitution, oversize and successful cleanup;
 they do not launch PHP or access a site. The historical operator was not rerun.
+
+## Task 5: explicit ordered operator
+
+New operator is inert without the exact Windows-only flag. It requires a warm
+independently identified owned worker before accepting HTTP, separately bounds
+preflight, and supplies the original remaining epoch to every subsequent process
+and transport wait. It orders no-fault/refusal before body/parser/header/time/
+disconnect/pipeline/fatal cases and stops at the first failed case. Every case
+requires physical worker/console/listener/socket/file cleanup and before/after
+existing configuration/service identity preservation. Unknown cleanup retains
+the exact marked root and reports Blocked; no blind retry. Syntax/CLI refusal
+validation is not native proof. Actual ordered execution is the next task.
