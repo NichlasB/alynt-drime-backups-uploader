@@ -6,7 +6,7 @@ async function fixture(change=s=>s){
     const key=`http_boundary_${Math.random()}`;globalThis[key]={now:100,forwarded:0,timers:new Map(),serial:0};const state=globalThis[key];
     const http=`import {EventEmitter} from 'node:events';export function createServer(options){const state=globalThis[${JSON.stringify(key)}],s=new EventEmitter();state.options=options;s.listening=true;s.close=()=>{s.listening=false;queueMicrotask(()=>s.emit('close'))};return s;}`;
     const clock=`export const performance={now:()=>globalThis[${JSON.stringify(key)}].now};`;
-    const transport=`export function openCgiRequest(port,wire,credit){const s=globalThis[${JSON.stringify(key)}];s.forwarded++;s.borrowed=wire;s.wire=Buffer.from(wire);s.credit=credit;return {completion:Promise.resolve({kind:'complete',application_status:0,stderr:'',stdout:'fixture'}),close:async()=>{s.transportClosed=true}};}`;
+    const transport=`export function openCgiRequest(port,wire,credit){const s=globalThis[${JSON.stringify(key)}];s.forwarded++;s.borrowed=wire;s.wire=Buffer.from(wire);s.credit=credit;return {completion:Promise.resolve(s.result??{kind:'complete',application_status:0,stderr:'',stdout:'fixture'}),close:async()=>{s.transportClosed=true}};}`;
     const timers=`const state=globalThis[${JSON.stringify(key)}];const setTimeout=(fn,ms)=>{const id=++state.serial;state.timers.set(id,{fn,ms});return id};const clearTimeout=id=>state.timers.delete(id);`;
     let text=timers+change(source).replace("from 'node:http'",`from '${data(http)}'`).replace("from 'node:perf_hooks'",`from '${data(clock)}'`)
       .replace("from './cgi-profile-transport.mjs'",`from '${data(transport)}'`);
@@ -48,6 +48,12 @@ test('request/response errors after early header refusal are consumed without re
     const r=f.request({url:'/wrong'}),response=new EventEmitter();f.owner.server.emit('request',r,response);await f.owner.completion;
     assert.doesNotThrow(()=>r.emit('error',Error('owned late error')));assert.doesNotThrow(()=>response.emit('error',Error('owned late response')));assert.equal(f.state.forwarded,0);await f.owner.close();
 }finally{f.clear();}});
+test('CGI refusal preserves only specific fatal observation, never generic failure as timeout evidence',async()=>{
+    for(const stderr of ['Maximum execution time of 1 second exceeded','generic failure']){const f=await fixture();try{
+        f.state.result={kind:'complete',application_status:1,stderr,stdout:''};const r=f.request();f.send(r);r.emit('data',Buffer.from('x=1'));r.emit('end');
+        const result=await f.owner.completion;assert.equal(result.reason,'cgi_refused');assert.equal(result.cgi_fatal_observed,stderr!=='generic failure');assert.ok(f.state.borrowed.every(b=>b===0));await f.owner.close();
+    }finally{f.clear();}}
+});
 for(const [name,before,after] of [
     ['parser fact','complete:request.complete','complete:true'],
     ['request reuse','requestCount!==1','false'],

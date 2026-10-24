@@ -1,6 +1,7 @@
 // Explicit standalone Windows experiment. No WordPress, SQL or existing service connection.
 import {createConnection} from 'node:net';import {readFileSync,writeFileSync,existsSync} from 'node:fs';import path from 'node:path';
 import {createHash} from 'node:crypto';import {performance} from 'node:perf_hooks';import {setTimeout as delay} from 'node:timers/promises';
+import {fileURLToPath} from 'node:url';
 import {createCgiFixture} from './cgi-profile-fixture.mjs';import {createFixtureHttpServer} from './http-cgi-server.mjs';
 import {resolveCgi,reserveCgiPort,startCgi,inspectCgi} from './cgi-profile-process.mjs';import {boundedSettlement} from './selected-native-lifetime.mjs';
 const sha=v=>createHash('sha256').update(v).digest('hex');
@@ -8,6 +9,12 @@ const canonical=v=>JSON.stringify(v,(_k,x)=>x&&typeof x==='object'&&!Array.isArr
 const check=(v,reason)=>{if(!v)throw Error(reason);};
 const headers=(length,extra='')=>`POST /probe.php HTTP/1.1\r\nHost: owned.invalid\r\nConnection: close\r\nContent-Length: ${length}\r\nContent-Type: application/x-www-form-urlencoded\r\n${extra}\r\n`;
 const cases=['no_fault','refusal','max_body','oversized_body','duplicate_length','transfer_encoding','header_overflow','slow_headers','incomplete_body','disconnect','pipeline','native_fatal'];
+// Node may reject illegal pipelining after Connection: close before request #2 exists.
+// Neither branch can accept generic transport failure, completed reuse or >1 CGI handoff.
+export function pipelineRejected(r){return r!==null&&typeof r==='object'&&(
+    (r.reason==='parser_error'&&r.requests===1&&r.forwarded===0)||
+    (r.reason==='request_refused'&&r.requests===2&&(r.forwarded===0||r.forwarded===1)));
+}
 async function runCase(mode,cgi){
     const fixture=createCgiFixture(),receipt={mode,passed:false};let owner=null,http=null,client=null,clientClosed=null,clean=false,phase='startup',startup=performance.now(),preflightMs=null;
     const remaining=()=>http?.origin()!==null&&http?.origin()!==undefined?http.remainingCleanup():Math.max(0,Math.floor(10000-(performance.now()-startup)));
@@ -41,8 +48,8 @@ async function runCase(mode,cgi){
             check(result.fixture===true&&result.wordpress===false&&result.mysqli===false&&result.sapi==='cgi-fcgi'&&result.bytes===body.length&&result.synthetic_sha256===sha(body)&&result.reads<=17&&result.eof===true&&result.closed===true&&result.seekable===true&&result.execution_limit==='1'&&result.input_limit==='5'&&result.post_limit==='16K'&&result.prepend===''&&!result.scanned_ini,'fixture_response');
             receipt.body_bytes=body.length;receipt.body_conserved=true;receipt.effective_owned_ini=true;
         }else if(mode==='native_fatal'){
-            check(r.reason==='cgi_refused'&&r.forwarded===1&&owner.alive()&&/Maximum execution time of 1 seconds? exceeded/.test(owner.privateStderr()),'fatal_is_not_exit');receipt.worker_alive_after_fatal=true;
-        }else if(mode==='pipeline')check(r.requests===2&&r.reason!=='complete'&&r.forwarded<=1,'pipeline_accounting');
+            check(r.reason==='cgi_refused'&&r.forwarded===1&&owner.alive()&&(r.cgi_fatal_observed===true||/Maximum execution time of 1 seconds? exceeded/.test(owner.privateStderr())),'fatal_is_not_exit');receipt.worker_alive_after_fatal=true;
+        }else if(mode==='pipeline')check(pipelineRejected(r),'pipeline_accounting');
         else{check(r.reason!=='complete'&&r.forwarded===0&&!existsSync(path.join(fixture.root,'stage.json')),'pre_handoff_refusal');receipt.refusal_before_php_entry=true;}
         if(mode==='slow_headers')check(r.elapsed_ms>=900&&r.elapsed_ms<1500,'header_deadline');
         if(mode==='incomplete_body')check(r.elapsed_ms>=1900&&r.elapsed_ms<2500,'body_deadline');
@@ -69,4 +76,6 @@ async function main(){
     const passed=receipts.length===cases.length&&receipts.every(r=>r.passed)&&preserved;
     process.stdout.write(JSON.stringify({passed,phase,reason,retained_root:retainedRoot,cases:receipts.length,expected_cases:cases.length,existing_service_and_config_identity_preserved:preserved,wordpress:false,database_access:false,production_profile_qualified:false,production_wiring:false})+'\n');if(!passed)process.exitCode=1;
 }
-if(process.platform!=='win32'||process.argv.length!==3||process.argv[2]!=='--run-owned-http-cgi'){process.stdout.write('{"passed":false,"refused_before_operations":true}\n');process.exitCode=1;}else await main();
+if(path.resolve(process.argv[1]??'')===fileURLToPath(import.meta.url)){
+    if(process.platform!=='win32'||process.argv.length!==3||process.argv[2]!=='--run-owned-http-cgi'){process.stdout.write('{"passed":false,"refused_before_operations":true}\n');process.exitCode=1;}else await main();
+}

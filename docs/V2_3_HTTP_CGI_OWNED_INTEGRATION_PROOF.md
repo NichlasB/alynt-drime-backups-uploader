@@ -120,3 +120,23 @@ no protected/authenticated reads or write-capable application handles,no secrets
 in output,nonrecursive bounded cleanup and refusal on uncertain ownership. No
 remaining confirmed scoped security defect;no new regression handoff. This is
 not prompt13 whole-plugin audit,Database Review or authenticated HTTP proof.
+
+## Task 7: ordered physical qualification and truthful outcome accounting
+
+First ordered attempt:10 cases passed,then pipeline accounting failed. Node's
+real parser rejected the fixed illegal pipelining after Connection:close before
+request#2 existed:parser_error,requests1,forwarded0. All11 attempted cases had
+verified worker/console/listener/socket/file cleanup;existing service/configuration
+identities were unchanged. Native fatal was NOT RUN. This is not a12-case pass.
+Completed original connection-to-cleanup observations ranged3564..6615ms;
+startup/preflight was separate. No retained fixture or uncertain cleanup.
+
+Harness-only correction accepts exactly that early parser rejection or exactly
+the guarded second-request refusal with at most one handoff. Generic disconnect,
+deadline,success,wrong counts and multiple handoffs still fail. Source-backed
+predicate negatives cover every other tested reason/count combination. CGI fatal
+diagnostics additionally retain only a specific one-second fatal boolean from
+FastCGI STDERR,not a raw trace or generic-refusal-as-timeout inference.21 related
+checks pass/no skips. Final focused security rerun:fixed scope and guard/budget
+limits unchanged,no remaining confirmed defect in this correction. One fresh
+ordered attempt with fresh no-fault/refusal prerequisites follows;no blind retry.

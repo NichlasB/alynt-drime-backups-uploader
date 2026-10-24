@@ -49,7 +49,9 @@ export function createFixtureHttpServer(script,cgiPort){
                 if(!arm(4000))return;
                 transport=openCgiRequest(cgiPort,wire,phase=>remaining(phase==='work'?4000:10000));receipt.forwarded++;
                 const result=await transport.completion;if(done)return;
-                if(result.kind!=='complete'||result.application_status!==0||result.stderr!==''){finish('cgi_refused');return;}
+                if(result.kind!=='complete'||result.application_status!==0||result.stderr!==''){
+                    receipt.cgi_fatal_observed=typeof result.stderr==='string'&&/Maximum execution time of 1 seconds? exceeded/.test(result.stderr);finish('cgi_refused');return;
+                }
                 // No general response proxy: only bounded synthetic fixture output is observed.
                 finish('complete',result.stdout);
             }catch{finish('handoff_refused');}
