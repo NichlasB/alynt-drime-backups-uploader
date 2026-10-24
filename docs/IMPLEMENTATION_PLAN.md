@@ -1,5 +1,21 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Theme-Mode Bootstrap Catalog / Resource Review — 2026-10-24
+
+Dashboard owns docs/V2_3_THEME_MODE_BOOTSTRAP_CLOSURE_CATALOG.md. Repository-only
+review traces phase/effect families,provisional29P/7N domains and exact widget/
+cron prerequisites.29 present values +two canaries +owner marker exhaust actual
+32-row cleanup ceiling;no64-name policy expansion. Current worker observes and
+closes before natural shutdown,so no full-shutdown proof. No new unavoidable
+writer established;remaining dynamic/include/factory/resource closure is open.
+
+Implementation-plan progress:R2 gains concrete catalog/resource constraints,
+not a qualified profile. Recommended next gated slice:design-only V2.3 Fixed
+Theme-Mode Projection and Full-Shutdown Evidence Design before any harness/native
+revision. Eight-key worker,actual constants,storage,native execution and production
+wiring unchanged;grants/activation/rollback disabled. No fixture/site authority,
+package/release/deploy or declared-minimum change.
+
 ## V2.3 Theme Development Profile Decision / Closure Revision — 2026-10-24
 
 Dashboard owns docs/V2_3_THEME_DEVELOPMENT_PROFILE_CLOSURE_DESIGN.md.
