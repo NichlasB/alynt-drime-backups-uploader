@@ -27,3 +27,13 @@ Isolated actual-source process-double regressions:10/10, no skips, including exp
 during inspection refusing before kill, shrinking credits, fixed cap preservation,
 foreign/console refusal and malformed timeout rejection. No PHP/process/network
 operation. Publication evidence is recorded after exact-head CI completes.
+
+## Task 2: transport work/cleanup credit
+
+The existing fixed loopback CGI transport optionally samples the same original
+epoch before socket creation, again before forwarding after connect, and before
+cleanup join. Fixed four-second work/one-second join caps cannot expand. Expired
+cleanup still destroys its owned socket but never reports unobserved settlement.
+Default callers retain their limits. Actual-source EventEmitter socket regressions
+cover zero operations on invalid credit, delayed connect without writes, valid
+forwarding and expired cleanup refusal. These tests do not open real sockets.
