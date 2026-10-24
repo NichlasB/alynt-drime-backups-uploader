@@ -1,5 +1,23 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Fixed Profile Admission / Genuine HTTP Integration Design (R2) — 2026-10-24
+
+Dashboard owns docs/V2_3_FIXED_PROFILE_ADMISSION_GENUINE_HTTP_INTEGRATION_DESIGN.md.
+Fixed probe versus genuine route/header/cookie parity,nontransferable deployment
+assurance,earliest bootstrap/cache containment and WP6.0 fallback/canary evidence
+are now explicit. Existing owner/reader/ingress/fences and scripts remain unchanged;
+no WordPress/database/HTTP/native experiment,configuration,production wiring or
+version change. Source safety OptionA confirms clean f5b0b9b and existing clean
+post-proof archive;no new archive,checkpoint or restore apply for this docs slice.
+
+Implementation-plan progress:R2 design advances,not profile/admission or real HTTP
+auth qualification. Recommended next gated slice:Plugin Tester local-only V2.3
+Pre-Owner Bootstrap Read-Containment and Route Feasibility Owned Proof(R2),with
+fresh exact target/owned fixture/canary/user/config/listener/process cleanup scope.
+No all-SELECT/name-only counter shortcut or blocked-route-as-success. Keep literal
+entry_available=false,initial10s/original20s,production/native feature/grants/
+activation/rollback disabled;R3-R7 remain gated.
+
 ## V2.3 Disposable Fixed HTTP/CGI Owned Integration Proof (R2) — 2026-10-24
 
 See [owning proof/review record](V2_3_HTTP_CGI_OWNED_INTEGRATION_PROOF.md).
