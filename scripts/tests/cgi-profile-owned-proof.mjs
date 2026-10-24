@@ -1,29 +1,18 @@
 // Explicit operator only. Standalone FastCGI, not an HTTP/WordPress/profile-admission endpoint.
-import {mkdirSync,writeFileSync,readFileSync,realpathSync,readdirSync,lstatSync,unlinkSync,rmdirSync,existsSync} from 'node:fs';
-import {tmpdir} from 'node:os';import path from 'node:path';import {randomBytes,createHash} from 'node:crypto';import {performance} from 'node:perf_hooks';
+import {writeFileSync,readFileSync,existsSync} from 'node:fs';
+import path from 'node:path';import {createHash} from 'node:crypto';import {performance} from 'node:perf_hooks';
 import {setTimeout as delay} from 'node:timers/promises';
 import {cgiRequest} from './cgi-profile-codec.mjs';import {openCgiRequest} from './cgi-profile-transport.mjs';
 import {resolveCgi,reserveCgiPort,startCgi,inspectCgi} from './cgi-profile-process.mjs';
+import {createCgiFixture} from './cgi-profile-fixture.mjs';
 const canonical=v=>JSON.stringify(v,(_key,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x);
 const sha=v=>createHash('sha256').update(v).digest('hex');
-const source=readFileSync(new URL('./cgi-profile-probe.php',import.meta.url));
-const config='max_execution_time=1\nmax_input_time=5\npost_max_size=16K\nmemory_limit=32M\nmax_input_vars=16\noutput_buffering=0\nimplicit_flush=1\ndisplay_errors=0\nlog_errors=1\nhtml_errors=0\nauto_prepend_file=\nauto_append_file=\nuser_ini.filename=\nsession.auto_start=0\nallow_url_fopen=0\ncgi.fix_pathinfo=0\ndisable_functions=exec,shell_exec,system,passthru,proc_open,popen,dl\n';
 function check(value,label){if(!value)throw Error(label);}
 function stage(root){const file=path.join(root,'stage.json');return existsSync(file)?JSON.parse(readFileSync(file,'utf8')).stage:null;}
 async function awaitStage(root,name){const end=performance.now()+1600;while(performance.now()<end){if(stage(root)===name)return;await delay(20);}throw Error('stage_missing');}
-function eraseOwned(root,marker){
-    check(path.dirname(root)===realpathSync(tmpdir())&&path.basename(root)===`alynt-cgi-profile-${marker}`&&realpathSync(root)===root&&!lstatSync(root).isSymbolicLink(),'cleanup_root');
-    check(readFileSync(path.join(root,'owner.json'),'utf8')===JSON.stringify({marker,source:sha(source),config:sha(config)}),'cleanup_owner');
-    const files=readdirSync(root);check(files.every(f=>['owner.json','php.ini','probe.php','stage.json','shutdown.json','process.json','diagnostic.json'].includes(f)),'cleanup_inventory');
-    check(readFileSync(path.join(root,'php.ini'),'utf8')===config&&sha(readFileSync(path.join(root,'probe.php')))===sha(source),'cleanup_sources');
-    for(const file of files){const target=path.join(root,file),s=lstatSync(target);check(s.isFile()&&!s.isSymbolicLink()&&s.size<16384,'cleanup_file');}
-    for(const file of files)unlinkSync(path.join(root,file));rmdirSync(root);check(!existsSync(root),'cleanup_absence');
-}
 async function runCase(mode,cgi){
-    const marker=randomBytes(16).toString('hex'),root=path.join(realpathSync(tmpdir()),`alynt-cgi-profile-${marker}`);
+    const fixture=createCgiFixture(),{marker,root}=fixture;
     let owner=null,request=null,clean=false,phase='fixture',epoch=null;const receipt={mode,passed:false};
-    mkdirSync(root);writeFileSync(path.join(root,'owner.json'),JSON.stringify({marker,source:sha(source),config:sha(config)}),{flag:'wx'});
-    writeFileSync(path.join(root,'php.ini'),config,{flag:'wx'});writeFileSync(path.join(root,'probe.php'),source,{flag:'wx'});
     try{
         phase='spawn';const port=await reserveCgiPort();owner=startCgi(cgi,path.join(root,'php.ini'),port,marker,mode);writeFileSync(path.join(root,'process.json'),JSON.stringify({pid:owner.child.pid,owner:process.pid,port,marker}),{flag:'wx'});await delay(350);
         phase='identity';await owner.verify();check(owner.alive(),'startup');
@@ -59,7 +48,7 @@ async function runCase(mode,cgi){
             if(mode==='stalled_input'&&stage(root)!==null){receipt.failure_stage??='stall_cleanup';receipt.reason='stall_released_before_termination';}
             receipt.request_and_cleanup_ms=epoch===null?null:Math.ceil(performance.now()-epoch);
             if(epoch!==null&&receipt.request_and_cleanup_ms>=9500){receipt.failure_stage??='cleanup_budget';receipt.reason='original_cleanup_budget';}
-            eraseOwned(root,marker);clean=true;
+            fixture.remove();clean=true;
         }catch{if(request){try{await request.close();}catch{receipt.socket_cleanup_unresolved=true;}}receipt.cleanup_unresolved=true;receipt.retained_root=root;if(owner?.child){owner.child.unref();owner.child.stdin.destroy();owner.child.stdout.destroy();owner.child.stderr.destroy();}}
     }
     receipt.fixtures_removed=clean;receipt.passed=clean&&!receipt.failure_stage&&!receipt.cleanup_unresolved;

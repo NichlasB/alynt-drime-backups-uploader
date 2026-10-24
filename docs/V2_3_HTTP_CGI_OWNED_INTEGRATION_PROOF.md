@@ -49,3 +49,13 @@ cannot extend ten seconds. Refusal erases buffered bytes immediately. Private
 parent observation is not a general HTTP response proxy or authenticated entry.
 Actual-source isolated event/clock regressions prove valid handoff and refusals;
 real parser/timer/socket/worker evidence remains pending the explicit operator.
+
+## Task 4: shared marked fixture and exact cleanup
+
+Extracted the existing CGI fixture configuration/source and nonrecursive cleanup
+into one owner shared by the old explicit operator and the new candidate. Every
+allowed file is now lstat/size checked before reading through it or deleting any
+file. Random temporary root, exact owner/source/config hashes, file allowlist and
+absence proof remain mandatory. Owned disposable filesystem regressions exercise
+tampering, unknown entries, directory substitution, oversize and successful cleanup;
+they do not launch PHP or access a site. The historical operator was not rerun.
