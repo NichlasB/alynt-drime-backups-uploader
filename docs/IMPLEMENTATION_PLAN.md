@@ -1,5 +1,21 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Pre-Owner Read Contract / Isolated Auth Profile Design (R2) — 2026-10-24
+
+Dashboard owns docs/V2_3_PRE_OWNER_READ_CONTRACT_ISOLATED_AUTH_PROFILE_DESIGN.md.
+Retain strict protected-value containment and Unsupported ordinary routes;choose
+one owned read-only projection test candidate,not a PHP cache/filter shortcut.
+Fixed positive-key views,populated canaries,separate DB principals and root-secret
+erasure from worker environment need actual capability proof. Current owner/fences,
+proof scripts,source limits,production load graph and versions are unchanged.
+
+Implementation-plan progress:R2 now has a concrete isolated-profile boundary and
+privilege-proof gate. Recommended next gated slice:Plugin Tester local-only V2.3
+Owned Read-Only Core Projection Feasibility and Privilege-Denial Proof(R2),including
+owned source tables/views,TWO disposable DB principals,permission setup and exact
+cleanup after fresh target confirmation. No site/database/native operation in this
+design;admission/wiring/feature grants/activation/rollback disabled,R3-R7 independent.
+
 ## V2.3 Pre-Owner Bootstrap Containment Owned Proof (R2) — 2026-10-24
 
 See [owning proof](V2_3_PRE_OWNER_BOOTSTRAP_CONTAINMENT_OWNED_PROOF.md).
