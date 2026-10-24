@@ -33,3 +33,27 @@ for(const kind of ['foreign','console','listener'])test(`actual owner refuses ${
 });
 test('console/listener residue cannot count as cleanup success',async()=>{const f=await fixture('leak');try{const owner=f.module.startCgi(f.cgi,f.ini,25000,f.marker,'no_fault');await owner.verify();await assert.rejects(owner.close(),/cgi_cleanup/);assert.equal(f.state.kills,1);}finally{f.clear();}});
 test('unowned path, marker, case and port refuse before spawn',async()=>{const f=await fixture();try{for(const args of [...[1,65536,10002,10003,10004,10005].map(p=>[f.cgi,f.ini,p,f.marker,'no_fault']),[f.cgi,f.ini,25000,'bad','no_fault'],[f.cgi,'C:/foreign/php.ini',25000,f.marker,'no_fault'],[f.cgi,f.ini,25000,f.marker,'activate']])assert.throws(()=>f.module.startCgi(...args));assert.equal(f.state.spawn,undefined);assert.equal(f.state.calls.length,0);}finally{f.clear();}});
+
+test('cleanup re-reads original remaining budget before inspection, kill/join and absence proof',async()=>{
+    const f=await fixture();try{const credits=[3500,1000,800];const owner=f.module.startCgi(f.cgi,f.ini,25000,f.marker,'no_fault',()=>credits.shift());
+    assert.equal((await owner.close()).listener_closed,true);assert.deepEqual(f.state.calls.map(c=>c.timeout),[3500,800]);assert.equal(credits.length,0);assert.equal(f.state.kills,1);
+    }finally{f.clear();}
+});
+test('expiry during fresh identity inspection refuses before kill; invalid credits never inspect',async()=>{
+    const f=await fixture();try{const credits=[100,0];const owner=f.module.startCgi(f.cgi,f.ini,25000,f.marker,'no_fault',()=>credits.shift());
+    await assert.rejects(owner.close(),/cgi_cleanup_budget/);assert.equal(f.state.kills,0);assert.equal(f.state.calls.length,1);
+    for(const value of [0,-1,NaN,Infinity,1.5,'100']){const other=f.module.startCgi(f.cgi,f.ini,25000,f.marker,'no_fault',()=>value);await assert.rejects(other.verify(),/cgi_cleanup_budget/);}
+    assert.equal(f.state.calls.length,1);assert.equal(f.state.kills,0);
+    }finally{f.clear();}
+});
+test('remaining credit cannot expand fixed inspection caps or bypass identity',async()=>{
+    for(const kind of ['valid','foreign','console']){const f=await fixture(kind);try{const owner=f.module.startCgi(f.cgi,f.ini,25000,f.marker,'no_fault',()=>20000);
+    if(kind==='valid')await owner.close();else await assert.rejects(owner.close(),/cgi_identity/);
+    assert.ok(f.state.calls.every(c=>c.timeout===5000));assert.equal(f.state.kills,kind==='valid'?1:0);
+    }finally{f.clear();}}
+});
+test('invalid inspection timeout and invalid budget type refuse before operations',async()=>{
+    const f=await fixture();try{for(const value of [0,-1,5001,NaN,Infinity,1.5,'100'])await assert.rejects(f.module.inspectCgi('owned',[],value),/cgi_inspection_budget/);
+    assert.throws(()=>f.module.startCgi(f.cgi,f.ini,25000,f.marker,'no_fault',100),/cgi_cleanup_budget/);assert.equal(f.state.spawn,undefined);assert.equal(f.state.calls.length,0);
+    }finally{f.clear();}
+});
