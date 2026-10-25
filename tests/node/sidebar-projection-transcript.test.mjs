@@ -46,3 +46,29 @@ test('fixed wrappers cannot select or silently promote another profile', () => {
 	assert.equal(p.event('fenced', profile, 0), false);
 	authorityFree(p.finish(1), false);
 });
+test('v2 cannot relabel a seven-absence counter trace as eight-absence evidence', () => {
+	const f = frame(); f[6][4] = 7; f[6][5] = 7;
+	assert.equal(parse(JSON.stringify(f) + '\n', root, 'autoload'), false);
+});
+test('canonical bytes, every frame/counter slot and extra profile arguments refuse', () => {
+	const base = frame(), bytes = JSON.stringify(base) + '\n', bad = [];
+	for (let slot = 0; slot < base.length; slot++) {
+		const missing = structuredClone(base); missing.splice(slot, 1); bad.push(JSON.stringify(missing) + '\n');
+		const changed = structuredClone(base); changed[slot] = null; bad.push(JSON.stringify(changed) + '\n');
+	}
+	for (let slot = 0; slot < 12; slot++) for (const value of [-1, '1', null, 0.5]) {
+		const changed = structuredClone(base); changed[6][slot] = value; bad.push(JSON.stringify(changed) + '\n');
+	}
+	for (const [slot,value] of [[0,33],[1,18],[2,2],[3,28],[4,7],[4,9],[5,7],[6,0],[6,1901],[7,1],[8,1],[9,1],[10,0],[11,0]]) {
+		const changed = structuredClone(base); changed[6][slot] = value; bad.push(JSON.stringify(changed) + '\n');
+	}
+	bad.push(bytes + bytes, bytes.slice(0,-1), ' ' + bytes, bytes.replace(',1,', ',1.0,'), bytes.replace('modeled_only','native_proven'),
+		bytes.replace('candidate','candidaté'), bytes.replace('modeled_only','modeled_\\u006fnly'), '['.repeat(4097));
+	for (const line of bad) assert.equal(parse(line, root, 'autoload'), false, line.slice(0,90));
+	for (let cut = 0; cut < bytes.length; cut++) {
+		const p = ready(); if (cut) assert.equal(p.event('stdout', bytes.slice(0,cut), 3), true);
+		authorityFree(p.finish(10), false);
+	}
+	assert.equal(parse(bytes, root, 'fallback'), false);
+	assert.equal(parse(bytes, 'b'.repeat(24), 'autoload'), false);
+});

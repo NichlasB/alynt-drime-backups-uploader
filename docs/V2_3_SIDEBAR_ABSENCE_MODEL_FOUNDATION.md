@@ -24,6 +24,11 @@ dashboard076abc69c7fc30ccadfd6e2944bca95e3fa32b4d.
    Existing v1 exports retain their fixed profile; both modes, all six close/EOF
    orders and fragmented bytes produce only authority-free synthetic matches.
    Protocol layout/counters remain synthetic domains, not physical measurements.
+5. Parser downgrade/canonical-wire hardening: new v2 requires exactly eight
+   modeled N requests/results (v1 unchanged). A new regression first failed by
+   assertion when a relabeled seven-N trace was accepted, then passed after the
+   fixed-profile guard. Every slot/type/counter and all truncated prefixes tested.
+   Counts still do not identify actual rows or prove physical absence.
 
 The catalog has no native consumer. An absent name in a synthetic array is not
 proof of a missing backing-store row, permission denial, pre-owner containment or

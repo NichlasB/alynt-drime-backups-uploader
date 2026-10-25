@@ -24,7 +24,7 @@ function parseForProfile(line, root, mode, projectionProfile) {
 	try { m = JSON.parse(line); } catch { return false; }
 	if (!Array.isArray(m) || m.length !== 8 || JSON.stringify(m) + '\n' !== line || m[0] !== 'alynt.projection.candidate' ||
 		m[1] !== 1 || m[2] !== root || m[3] !== mode || m[4] !== projectionProfile || m[5] !== 'core_shutdown_returned' ||
-		!countersShape(m[6]) || m[7] !== 'modeled_only') return false;
+		!countersShape(m[6]) || (projectionProfile === sidebarProjectionProfile && m[6][4] !== 8) || m[7] !== 'modeled_only') return false;
 	return Object.freeze(m.map((v) => Array.isArray(v) ? Object.freeze([...v]) : v));
 }
 export function createProjectionShutdownTranscript(root, mode, start) {
