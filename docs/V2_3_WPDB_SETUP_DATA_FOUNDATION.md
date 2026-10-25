@@ -34,3 +34,8 @@ archive; no backup/checkpoint/restore created.
 Task1 adds the fixed catalog and positive/negative immutable evidence tests.
 Further tasks implement only bounded invented primitive events and virtual time;
 their completion must never claim physical authentication or native authority.
+
+Task2 adds exact primitive context/event snapshots, ordered fresh/no-database
+connect, invented auth outcome and explicit zero/one-wire charset mappings.
+Unknown mappings and failed results refuse. Checkpoint is reachable but cannot
+complete before the still-required mode/schema/terminal obligations exist.

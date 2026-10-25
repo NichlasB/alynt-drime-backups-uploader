@@ -1,4 +1,5 @@
 // Test-only primitive DATA model. No packet parser, IO, driver or native authority.
+import { types } from 'node:util';
 export const WPDB_SETUP_DATA_PROFILE = 'wpdb-postconnect-setup.data.v1';
 const references = Object.freeze([
 	['WordPress7.1.3', 'wp-includes/class-wpdb.php', 121437, 'e15403e90032dd0508811301505e491d4212de5152581a98f51b744a1a3903bd'],
@@ -19,4 +20,51 @@ const catalog = Object.freeze({ profile: WPDB_SETUP_DATA_PROFILE, source_catalog
 export function wpdbSetupCatalog(profile) {
 	if (profile !== WPDB_SETUP_DATA_PROFILE) throw new TypeError('Unsupported synthetic setup profile.');
 	return catalog;
+}
+
+const identityKeys = ['attempt', 'pair', 'generation', 'request', 'session'];
+const record = (value, keys) => {
+	if (!value || typeof value !== 'object' || types.isProxy(value) || Object.getPrototypeOf(value) !== Object.prototype || Reflect.ownKeys(value).length !== keys.length) return null;
+	const descriptors = Object.getOwnPropertyDescriptors(value);
+	return keys.every((k) => Object.hasOwn(descriptors, k) && Object.hasOwn(descriptors[k], 'value')) ?
+		Object.fromEntries(keys.map((k) => [k, descriptors[k].value])) : null;
+};
+
+export function createWpdbSetupData(options) {
+	const config = record(options, [...identityKeys, 'startedNs', 'profile', 'schema']);
+	if (!config || config.profile !== WPDB_SETUP_DATA_PROFILE || config.schema !== 'owned-synthetic' ||
+		typeof config.startedNs !== 'bigint' || config.startedNs < 0n ||
+		!identityKeys.every((k) => typeof config[k] === 'symbol' && Symbol.keyFor(config[k]) === undefined) ||
+		new Set(identityKeys.map((k) => config[k])).size !== identityKeys.length) throw new TypeError('Unsupported synthetic setup context.');
+	let stage = 'fresh', refused = false, closed = false, last = config.startedNs;
+	const fail = () => { refused = true; return false; };
+	const context = (identity, now) => {
+		if (closed || refused) return false;
+		const fields = record(identity, identityKeys);
+		if (!fields || !identityKeys.every((k) => fields[k] === config[k]) || typeof now !== 'bigint' || now < last || now >= config.startedNs + 20000000000n) return fail();
+		last = now; return true;
+	};
+	return Object.freeze({
+		accept(event, identity, now) {
+			if (!context(identity, now)) return false;
+			const fields = record(event, ['kind', 'value']);
+			if (!fields || typeof fields.kind !== 'string' || typeof fields.value !== 'string') return fail();
+			const { kind, value } = fields;
+			if (stage === 'fresh' && kind === 'connect' && value === 'fresh-nonpersistent-no-database') stage = 'authentication';
+			else if (stage === 'authentication' && kind === 'auth-result' && value === 'synthetic-ok') stage = 'charset';
+			else if (stage === 'charset' && kind === 'charset-api' && value === 'ok-zero-wire') stage = 'mode-read';
+			else if (stage === 'charset' && kind === 'charset-api' && value === 'ok-one-wire') stage = 'charset-wire';
+			else if (stage === 'charset-wire' && kind === 'charset-statement-result' && value === 'ok') stage = 'mode-read';
+			else return fail();
+			return true;
+		},
+		finish(identity, now) {
+			if (closed) return false;
+			context(identity, now); closed = true;
+			return Object.freeze({ synthetic_match: false, synthetic_only: true, stage, refused,
+				source_proven: false, authentication_proven: false, native_proven: false, forwarding_proven: false,
+				backing_absence_proven: false, resource_closure_proven: false, storage_supported: false,
+				wiring_supported: false, execution_supported: false });
+		},
+	});
 }
