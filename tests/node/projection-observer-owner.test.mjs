@@ -58,7 +58,7 @@ test('original clock and cumulative copy ceilings are not refreshed by disposal'
 	const h = fixture(); assert.equal(typeof h.capture(0, Buffer.alloc(16384)), 'symbol'); assert.equal(h.capture(0, Buffer.from([1])), false); result(h.finish());
 });
 
-test('session profile is required once, before capture, with genuine module composition', () => {
+test('session profile is required once, before capture, with actual module composition', () => {
 	const f = fixture(undefined, false); assert.equal(f.capture(0), false); result(f.finish());
 	const g = fixture(); assert.equal(g.owner.bindSession(sessionFrames(), g.identity, 101n), false); result(g.finish());
 	assert.equal(projectionSessionProfile(sessionFrames(), '012345abcdef'), 103);

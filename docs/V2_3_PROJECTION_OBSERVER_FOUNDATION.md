@@ -65,5 +65,18 @@ Counters cover owned capture snapshots ONLY: exclude bounded session-parser
 temporaries, decoder allocations, actual transport/driver/PHP/cache/process costs.
 No numerical process-memory policy, physical cleanup or A1-A4 closure inferred.
 
+Task7: source-scoped07 discovery then07A review/strengthening of the changed
+composition only. Seven risk groups (bytes/identity/profile/credits/closure/
+clock/resources) map to actual owner/parser outcomes. No production defect found;
+42 existing positive/adversarial tests have appropriate pure-unit layer fit.
+No redundant removal, fake native success or mocked unit-under-test justified.
+Eleven permanent in-memory semantic controls now require an AssertionError for
+removed session/copy/forward/equality/result/EOF/item/byte/epoch/refusal/username
+guards. Import/syntax errors cannot count as killed controls. Redundant ceilings
+are disabled together for the corresponding logical-boundary control, not
+misrepresented as independently reachable branches. Original files never patched
+on disk; bounded synthetic arrays/bytes only. No WordPress/Database/physical proof
+or whole-plugin review. This task adds tests, not an actual transport policy.
+
 Implementation-plan progress: fixed observer ownership is being modeled, not real
 provenance. Final synthetic reconciliation must precede any proposed native proof.
