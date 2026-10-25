@@ -13,6 +13,9 @@ dashboard076abc69c7fc30ccadfd6e2944bca95e3fa32b4d.
 1. New fixed test-only29P/8N catalog: exact sidebars_widgets absence and new literal
    model-label digest; v1 and every present/hidden value remain unchanged.
    Positive tests exercise both actual builders/matchers and bidirectional refusal.
+2. Permanent exhaustive field-removal/value corruption and exact absence tests:
+   aliases, duplicates, order/keys, present/hidden overlap and out-of-domain names
+   refuse through the actual matcher. This is array provenance, not physical SQL.
 
 The catalog has no native consumer. An absent name in a synthetic array is not
 proof of a missing backing-store row, permission denial, pre-owner containment or
