@@ -57,3 +57,12 @@ cross-owner/epoch reuse, snapshots data properties without invoking getters or
 proxy traps, and tests half-open original deadline/monotonicity, sticky refusal
 and one-shot finish. Symbols are synthetic correlation, never authentication;
 module isolation is not an unforgeable native provenance mechanism.
+
+Task6 makes final synthetic match depend on all five terminal enums (natural
+shutdown, engine/process completion and both EOFs); order may vary, missing,
+early, unknown, duplicate or marker-only closure fails. Separate model-event,
+API-call, completed-emitted-operation and successful-wire-result counters retain
+accepted work across refusal. Exact zero/one-wire/empty/nonempty counts are tested.
+These count invented successful obligations, not observed SQL/bytes, failed
+physical work, memory or native budgets. Maximum16 model events does not change
+the worker32-query/4096-SQL-byte/time fences or old observer capture limits.

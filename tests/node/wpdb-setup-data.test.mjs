@@ -82,12 +82,14 @@ test('mode read or write replay refuses rather than overwriting branch history',
 	assert.equal(f.send('mode-write-result', 'ok-fixed-filtered'), false);
 });
 
-function selected(f, mode = 'one-empty-string', wire = 'ok-zero-wire') {
+const terminalNames = ['natural-shutdown', 'engine-complete', 'process-exit-zero', 'client-eof', 'server-eof'];
+function selected(f, mode = 'one-empty-string', wire = 'ok-zero-wire', close = true) {
 	prelude(f, wire); assert.equal(f.send('mode-read-result', mode), true);
 	if (mode === 'one-filterable-nonempty') assert.equal(f.send('mode-write-result', 'ok-fixed-filtered'), true);
 	assert.equal(f.send('schema-intent', 'owned-synthetic'), true);
 	assert.equal(f.send('schema-result', 'ok'), true);
 	assert.equal(f.send('data-profile', 'synthetic-separate-result-grammar'), true);
+	if (close) for (const name of terminalNames) assert.equal(f.send('terminal', name), true);
 }
 for (const mode of ['one-empty-string', 'one-filterable-nonempty']) for (const wire of ['ok-zero-wire', 'ok-one-wire']) {
 	test(`non-vacuous selected setup ${mode}/${wire} reaches DATA match only`, () => {
@@ -165,4 +167,35 @@ test('configuration snapshot is detached; malformed/untrusted configuration neve
 test('finish is one-shot and no accepted event can revive a closed owner', () => {
 	const f = fixture(); selected(f); assert.equal(f.finish().synthetic_match, true);
 	assert.equal(f.finish(), false); assert.equal(f.send('connect', 'fresh-nonpersistent-no-database'), false);
+});
+
+for (const mode of ['one-empty-string', 'one-filterable-nonempty']) for (const wire of ['ok-zero-wire', 'ok-one-wire']) {
+	test(`model accounting separates API/emitted/result units ${mode}/${wire}`, () => {
+		const f = fixture(); selected(f, mode, wire); const result = f.finish();
+		const nonempty = Number(mode === 'one-filterable-nonempty'), emitted = Number(wire === 'ok-one-wire');
+		assert.deepEqual(result.model_accounting, { model_events: 12 + nonempty + emitted, api_calls: 4 + nonempty,
+			emitted_operations: 3 + nonempty + emitted, successful_wire_results: 3 + nonempty + emitted });
+		assert.equal(result.synthetic_match, true); assert.equal(Object.isFrozen(result.model_accounting), true);
+		assert.equal(result.resource_closure_proven, false);
+	});
+}
+for (const missing of terminalNames) test(`terminal closure requires ${missing}`, () => {
+	const f = fixture(); selected(f, 'one-empty-string', 'ok-zero-wire', false);
+	for (const name of terminalNames.filter((n) => n !== missing)) assert.equal(f.send('terminal', name), true);
+	assert.equal(f.finish().synthetic_match, false);
+});
+test('terminal joins may reorder but duplicate/early/unknown/marker-only closure refuses', () => {
+	const positive = fixture(); selected(positive, 'one-empty-string', 'ok-zero-wire', false);
+	for (const name of [...terminalNames].reverse()) assert.equal(positive.send('terminal', name), true);
+	assert.equal(positive.finish().synthetic_match, true);
+	for (const value of ['quit', 'candidate-marker', 'timeout', 'unknown']) {
+		const f = fixture(); selected(f, 'one-empty-string', 'ok-zero-wire', false); assert.equal(f.send('terminal', value), false);
+	}
+	const early = fixture(); assert.equal(early.send('terminal', 'client-eof'), false);
+	const duplicate = fixture(); selected(duplicate, 'one-empty-string', 'ok-zero-wire', false);
+	assert.equal(duplicate.send('terminal', 'client-eof'), true); assert.equal(duplicate.send('terminal', 'client-eof'), false);
+});
+test('refusal does not erase accepted work or give fresh cumulative model credit', () => {
+	const f = fixture(); prelude(f); assert.equal(f.send('mode-read-result', 'error'), false);
+	assert.deepEqual(f.finish().model_accounting, { model_events: 3, api_calls: 2, emitted_operations: 1, successful_wire_results: 1 });
 });

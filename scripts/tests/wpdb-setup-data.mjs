@@ -39,6 +39,9 @@ export function createWpdbSetupData(options) {
 		new Set(identityKeys.map((k) => config[k])).size !== identityKeys.length) throw new TypeError('Unsupported synthetic setup context.');
 	for (const key of identityKeys) consumedIdentities.add(config[key]);
 	let stage = 'fresh', refused = false, closed = false, last = config.startedNs;
+	const accounting = { model_events: 0, api_calls: 0, emitted_operations: 0, successful_wire_results: 0 };
+	const terminal = new Set();
+	const terminalNames = ['natural-shutdown', 'engine-complete', 'process-exit-zero', 'client-eof', 'server-eof'];
 	const fail = () => { refused = true; return false; };
 	const context = (identity, now) => {
 		if (closed || refused) return false;
@@ -52,6 +55,7 @@ export function createWpdbSetupData(options) {
 			const fields = record(event, ['kind', 'value']);
 			if (!fields || typeof fields.kind !== 'string' || typeof fields.value !== 'string') return fail();
 			const { kind, value } = fields;
+			if (accounting.model_events >= 16) return fail();
 			if (stage === 'fresh' && kind === 'connect' && value === 'fresh-nonpersistent-no-database') stage = 'authentication';
 			else if (stage === 'authentication' && kind === 'auth-result' && value === 'synthetic-ok') stage = 'charset';
 			else if (stage === 'charset' && kind === 'charset-api' && value === 'ok-zero-wire') stage = 'mode-read';
@@ -63,13 +67,22 @@ export function createWpdbSetupData(options) {
 			else if (stage === 'select-schema' && kind === 'schema-intent' && value === config.schema) stage = 'schema-result';
 			else if (stage === 'schema-result' && kind === 'schema-result' && value === 'ok') stage = 'selected-data';
 			else if (stage === 'selected-data' && kind === 'data-profile' && value === 'synthetic-separate-result-grammar') stage = 'data-admitted';
+			else if (stage === 'data-admitted' && kind === 'terminal' && terminalNames.includes(value) && !terminal.has(value)) {
+				terminal.add(value); if (terminal.size === terminalNames.length) stage = 'complete';
+			}
 			else return fail();
+			accounting.model_events++;
+			if (['connect', 'charset-api', 'mode-read-result', 'mode-write-result', 'schema-intent'].includes(kind)) accounting.api_calls++;
+			if (['auth-result', 'charset-statement-result', 'mode-read-result', 'mode-write-result', 'schema-result'].includes(kind)) {
+				accounting.emitted_operations++; accounting.successful_wire_results++;
+			}
 			return true;
 		},
 		finish(identity, now) {
 			if (closed) return false;
 			const valid = context(identity, now); closed = true;
-			return Object.freeze({ synthetic_match: valid && stage === 'data-admitted', synthetic_only: true, stage, refused,
+			return Object.freeze({ synthetic_match: valid && stage === 'complete', synthetic_only: true, stage, refused,
+				model_accounting: Object.freeze({ ...accounting }),
 				source_proven: false, authentication_proven: false, native_proven: false, forwarding_proven: false,
 				backing_absence_proven: false, resource_closure_proven: false, storage_supported: false,
 				wiring_supported: false, execution_supported: false });
