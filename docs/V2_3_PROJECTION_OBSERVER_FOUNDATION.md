@@ -57,5 +57,13 @@ post-EOF traffic and missing EOF refuse. Partial/empty exchanges cannot become
 matches even after both EOFs. Finish is consuming/one-shot. These model EOFs are
 not actual socket EOF, process exit, WordPress shutdown or resource closure proof.
 
+Task6: cumulative capture event ceiling512 (not reset by observation), copied
+bytes16KiB and pending caps now have exact frozen scalar accounting at finish.
+Captured/released bytes, pending0 after disposal and queue byte/item peaks are
+checked across full chunks, bytewise fragments, cap/refusal and empty finish.
+Counters cover owned capture snapshots ONLY: exclude bounded session-parser
+temporaries, decoder allocations, actual transport/driver/PHP/cache/process costs.
+No numerical process-memory policy, physical cleanup or A1-A4 closure inferred.
+
 Implementation-plan progress: fixed observer ownership is being modeled, not real
 provenance. Final synthetic reconciliation must precede any proposed native proof.

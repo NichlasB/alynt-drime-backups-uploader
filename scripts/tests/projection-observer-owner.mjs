@@ -20,9 +20,10 @@ export function createProjectionObserverOwner(options) {
 	const owned = Object.fromEntries(identities.map((key) => [key, config[key]]));
 	const deadline = config.startedNs + 20000000000n;
 	let last = config.startedNs, refused = false, closed = false, copied = 0, pending = 0, sessionBound = false;
+	let released = 0, events = 0, peakBytes = 0, peakItems = 0;
 	const entries = new Map(), order = [];
 	const ended = { client: false, server: false };
-	const clear = () => { for (const entry of entries.values()) entry.copy.fill(0); entries.clear(); order.length = 0; pending = 0; };
+	const clear = () => { for (const entry of entries.values()) { released += entry.copy.length; entry.copy.fill(0); } entries.clear(); order.length = 0; pending = 0; };
 	const disposeDecoder = () => { if (decoder) decoder.finish(owned, last); decoder = null; };
 	const fail = () => { refused = true; clear(); disposeDecoder(); return false; };
 	const context = (identity, now) => {
@@ -40,10 +41,11 @@ export function createProjectionObserverOwner(options) {
 		capture(direction, chunk, identity, now) {
 			if (!context(identity, now)) return false;
 			if (!sessionBound || !['client', 'server'].includes(direction) || ended[direction] || !bytes(chunk) || chunk.length < 1 ||
-				chunk.length > 16384 || copied + chunk.length > 16384 || pending + chunk.length > 16384 || order.length >= 512) return fail();
+				chunk.length > 16384 || copied + chunk.length > 16384 || pending + chunk.length > 16384 || events >= 512 || order.length >= 512) return fail();
 			const copy = Buffer.alloc(chunk.length); Buffer.prototype.copy.call(chunk, copy);
 			const credit = Symbol('projection-copy'); entries.set(credit, { direction, copy, forwarded: false }); order.push(credit);
 			copied += copy.length; pending += copy.length;
+			events++; peakBytes = Math.max(peakBytes, pending); peakItems = Math.max(peakItems, order.length);
 			return credit;
 		},
 		forwarded(credit, chunk, identity, now) {
@@ -59,7 +61,7 @@ export function createProjectionObserverOwner(options) {
 			const entry = entries.get(credit);
 			if (!entry.forwarded) return fail();
 			if (!decoder.feed(entry.direction, entry.copy, owned, now)) return fail();
-			pending -= entry.copy.length; entry.copy.fill(0); entries.delete(credit); order.shift();
+			pending -= entry.copy.length; released += entry.copy.length; entry.copy.fill(0); entries.delete(credit); order.shift();
 			return true;
 		},
 		end(direction, identity, now) {
@@ -75,7 +77,9 @@ export function createProjectionObserverOwner(options) {
 			disposeDecoder(); clear(); closed = true;
 			return Object.freeze({ synthetic_match: matched, synthetic_only: true, authentication_proven: false,
 				native_proven: false, forwarding_proven: false, delivery_proven: false, backing_absence_proven: false,
-				resource_closure_proven: false, storage_supported: false, wiring_supported: false, execution_supported: false });
+				resource_closure_proven: false, storage_supported: false, wiring_supported: false, execution_supported: false,
+				capture_accounting: Object.freeze({ copied_bytes: copied, released_bytes: released, pending_bytes: pending,
+					peak_pending_bytes: peakBytes, peak_pending_items: peakItems, events }) });
 		},
 	});
 }

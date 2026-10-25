@@ -6,7 +6,9 @@ import { projectionSessionProfile } from '../../scripts/tests/projection-session
 
 function result(receipt, match = false) {
 	assert.equal(receipt.synthetic_match, match); assert.equal(receipt.synthetic_only, true); assert.equal(Object.isFrozen(receipt), true);
-	for (const [key, value] of Object.entries(receipt)) if (!['synthetic_match', 'synthetic_only'].includes(key)) assert.equal(value, false, key);
+	for (const [key, value] of Object.entries(receipt)) if (!['synthetic_match', 'synthetic_only', 'capture_accounting'].includes(key)) assert.equal(value, false, key);
+	assert.equal(Object.isFrozen(receipt.capture_accounting), true);
+	assert.equal(receipt.capture_accounting.pending_bytes, 0); assert.equal(receipt.capture_accounting.copied_bytes, receipt.capture_accounting.released_bytes);
 }
 test('fixed owner composes the actual decoder with detached bytes and opaque credits', () => {
 	const f = fixture();
@@ -122,4 +124,24 @@ test('either EOF order is valid, but empty/partial exchanges and foreign EOF are
 	const g = fixture(); result(g.finish());
 	const h = fixture(); assert.equal(h.send(0, packets()[0].subarray(0, 2)), true); result(h.finish());
 	const f = fixture(); assert.equal(f.owner.end('client', { ...f.identity, pair: Symbol() }, 101n), false); result(f.finish());
+});
+
+test('capture accounting is exact for bulk/bytewise copies and final disposal', () => {
+	const total = packets().reduce((n, packet) => n + packet.length, 0);
+	for (const width of [1, 7, 16384]) {
+		const f = fixture(); let events = 0, peak = 0;
+		for (const [i, packet] of packets().entries()) for (let at = 0; at < packet.length; at += width) {
+			const chunk = packet.subarray(at, at + width); assert.equal(f.send(i, chunk), true); events++; peak = Math.max(peak, chunk.length);
+		}
+		const receipt = f.finish(); result(receipt, true);
+		assert.deepEqual(receipt.capture_accounting, { copied_bytes: total, released_bytes: total, pending_bytes: 0, peak_pending_bytes: peak, peak_pending_items: 1, events });
+	}
+});
+test('maximum queued bytes/items are bounded, fully disposed, never reset or claimed physical', () => {
+	const f = fixture(); assert.equal(typeof f.capture(0, Buffer.alloc(16384)), 'symbol'); assert.equal(f.capture(0, Buffer.from([1])), false);
+	const a = f.finish(); result(a); assert.equal(a.capture_accounting.copied_bytes, 16384); assert.equal(a.capture_accounting.peak_pending_bytes, 16384);
+	const g = fixture(); for (let i = 0; i < 512; i++) assert.equal(typeof g.capture(0, Buffer.from([1])), 'symbol');
+	assert.equal(g.capture(0, Buffer.from([1])), false); const b = g.finish(); result(b);
+	assert.equal(b.capture_accounting.events, 512); assert.equal(b.capture_accounting.peak_pending_items, 512); assert.equal(b.capture_accounting.released_bytes, 512);
+	const h = fixture(); result(h.finish());
 });
