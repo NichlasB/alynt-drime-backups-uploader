@@ -1,5 +1,16 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Genuine wpdb Setup DATA Foundation — 2026-10-25
+
+See [owning foundation](V2_3_WPDB_SETUP_DATA_FOUNDATION.md). Eight finite safe-local
+tasks model fixed source/evidence identities, fresh/post-connect setup, typed
+mode branches, later schema selection, original-context lifetime, separate cost
+units/terminal join, semantic controls and static dormancy. No actual parser,
+worker/storage/auth/native/wiring change. Plan advances the approved successor
+DATA contract; A1-A4/native GO remain Blocked, not solved by synthetic completion.
+Next: repository-only Genuine wpdb Setup Wire Grammar and Profile Residual Design,
+before a successor decoder or separately approved owned native proof.
+
 ## V2.3 Genuine wpdb Session/Setup and Source-Rebaseline Design — 2026-10-25
 
 Dashboard owns docs/V2_3_GENUINE_WPDB_SESSION_SETUP_REBASELINE_DESIGN.md. Design

@@ -73,3 +73,41 @@ AssertionError for removed profile/branch/order/result/epoch/refusal/context/
 terminal/reuse guards, not syntax/import failure. No source file is overwritten.
 Every required positive event omission and adjacent setup swap is also checked.
 This is pure model sensitivity, not genuine authentication or physical proof.
+
+## Task8 source-scoped review and readiness
+
+Static dependency/runtime scans and a successful exact frozen-receipt contract
+test enforce no driver/observer bridge, runtime hook or write-capable handle.
+This is repository source evidence, not inspection of an installed runtime.
+Parent design and both implementation plans point to this completed DATA lane.
+
+Canonical Feature Light scope: uploader956fdc4..task8 (one91-line pure model,
+three focused test files, owner/plan records), dashboard0eb373b..task8 (plan and
+parent design only). Other/test-only; no UI, REST/AJAX, SQL/storage, cron, driver,
+remote or public API changes. Review all state transitions, exact snapshots,
+private identity reuse, successful branch reachability, failed-result exclusion,
+counter units and terminal/refusal behavior. No confirmed scoped non-security
+defect remains. No meaningful Bloat trigger: cohesive small model, no runtime
+file splitting, debug debris or duplicated implementation; no UI/UX trigger.
+Test sensitivity additions are ordinary engineering validation, not a claim that
+canonical DS3 07/07A, Database Review or whole-plugin readiness were rerun.
+
+Final focused Feature Security: no confirmed scoped security issue or security
+fix handoff. Fixed finite values, descriptor-only snapshots/proxy refusal,
+synthetic private context and frozen bounded receipts; no request endpoint,
+credential/raw SQL, IO, callable provider or protected read/write handle. This
+does not establish a security sandbox against code in the same JS process.
+Caller object allocation/reflection and bigint work are not physical resource
+admission. Keep all actual claims false and all old helpers/workers unchanged.
+
+Exact-head CI counts/links for each task are recorded in the toolkit's new
+source-scoped section, not historical whole-plugin release rows. Full release
+suite remains due for a coherent RC before any package/publication. No release
+is warranted for this test-only batch; no tag/package/deployment performed.
+
+Implementation-plan progress: this batch implements the bounded DATA successor
+specified by the genuine-wpdb design; A1-A4/source/build/profile/native evidence
+remain unresolved. Next preferred action: repository-only **V2.3 Genuine wpdb
+Setup Wire Grammar and Profile Residual Design**. Define fixed result framing,
+capability/setup lineage and remaining source/ownership conditions before any
+parser/adapter implementation; do not seek native GO from invented model events.
