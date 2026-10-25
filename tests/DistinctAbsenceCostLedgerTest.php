@@ -15,6 +15,7 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
             $events[] = array( 1002, 'core', 'read_attempt', $name, 'ok', 0 );
             $events[] = array( 1002, 'core', 'miss', $name, 'ok', 0 );
         }
+        $events[] = array( 1003, 'core', 'finish', '-', 'ok', 0 );
         return $events;
     }
     private function runLedger( $events, $mode = 'autoload' ) {
@@ -33,7 +34,7 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         }
     }
     public function test_exact_names_result_success_and_zero_rows_are_independent_guards() {
-        $base = $this->events(); $miss = count( $base ) - 1;
+        $base = $this->events(); $miss = count( $base ) - 2;
         foreach ( array( 'SIDEbars_widgets', 'sidebars_widgets ', 'sidebar_widgets', "sidebars_widgets\0", 'siteurl',
             'alynt_drime_backups_settings', 'proof_owner', str_repeat( 'x', 81 ), '', null, false, array(), new stdClass() ) as $name ) {
             $bad = $base; $bad[$miss][3] = $name; $this->assertFalse( $this->runLedger( $bad ) );
@@ -57,11 +58,12 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $catalog, $this->args(), 'autoload', $base ) );
     }
     public function test_api_and_genuine_learned_cache_counts_cannot_substitute_for_distinct_misses() {
-        $events = $this->events(); $miss = count( $events ) - 1;
+        $events = $this->events(); $miss = count( $events ) - 2; $finish = array_pop( $events );
         foreach ( array( 'sidebars_widgets', 'siteurl', 'sidebars_widgets' ) as $name ) {
             $events[] = array( 1003, 'core', 'api', $name, 'ok', 0 );
             $events[] = array( 1003, 'core', 'cache', $name, 'ok', 0 );
         }
+        $events[] = $finish;
         $result = $this->runLedger( $events );
         $this->assertSame( 4, $result['api_visits'] ); $this->assertSame( 3, $result['cache_hits'] );
         $this->assertSame( array( 'sidebars_widgets' ), $result['distinct_absent'] );
@@ -84,20 +86,34 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
             $bad = $this->events(); $bad[$index][1] = 'verifier'; $this->assertFalse( $this->runLedger( $bad ) );
             $bad = $this->events(); $bad[$index][3] = 'unlisted'; $this->assertFalse( $this->runLedger( $bad ) );
         }
-        $bad = $this->events(); $bad[count( $bad ) - 1][1] = 'verifier'; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $this->events(); $bad[count( $bad ) - 2][1] = 'verifier'; $this->assertFalse( $this->runLedger( $bad ) );
         $bad = $events; $bad[0][1] = 'core'; $this->assertFalse( $this->runLedger( $bad ) );
     }
     public function test_attempt_result_pairing_and_replay_refusal_cannot_be_replaced_by_counts() {
-        $events = $this->events(); $miss = count( $events ) - 1;
+        $events = $this->events(); $miss = count( $events ) - 2;
         $result = $this->runLedger( $events );
         $this->assertSame( 2, $result['option_select_attempts'] ); $this->assertSame( 2, $result['data_results'] );
         $this->assertSame( 2, $result['conditional_option_subtotal'] );
         $bad = $events; unset( $bad[$miss - 1] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
-        $bad = $events; array_pop( $bad ); $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $events; unset( $bad[$miss] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
         $bad = $events; array_splice( $bad, $miss, 0, array( $bad[$miss - 1] ) ); $this->assertFalse( $this->runLedger( $bad ) );
         foreach ( array( 'replay', 'reconnect', 'default', 'query_filter_visit', 'num_queries', 'unknown' ) as $kind ) {
             $bad = $events; $bad[$miss - 1][2] = $kind; $this->assertFalse( $this->runLedger( $bad ) );
         }
         $bad = $events; $bad[$miss - 1][3] = 'category_base'; $this->assertFalse( $this->runLedger( $bad ) );
+    }
+    public function test_finish_original_epoch_and_late_effects_are_mandatory() {
+        $events = $this->events(); $last = count( $events ) - 1;
+        $bad = $events; array_pop( $bad ); $this->assertFalse( $this->runLedger( $bad ) );
+        foreach ( array( 1001, 21000, PHP_INT_MAX, -1, 1003.0, '1003', null, false ) as $tick ) {
+            $bad = $events; $bad[$last][0] = $tick; $this->assertFalse( $this->runLedger( $bad ) );
+        }
+        $near = $events; $near[$last][0] = 20999;
+        $this->assertTrue( $this->runLedger( $near )['synthetic_match'] );
+        foreach ( array( 'api', 'driver', 'finish', 'http', 'diagnostic', 'query', 'unknown' ) as $kind ) {
+            $bad = $events; $bad[] = array( 1004, 'core', $kind, '-', 'ok', 0 );
+            $this->assertFalse( $this->runLedger( $bad ) );
+        }
+        $bad = $events; array_unshift( $bad, $bad[$last] ); $this->assertFalse( $this->runLedger( $bad ) );
     }
 }

@@ -16,9 +16,9 @@ final class Alynt_Test_Distinct_Absence_Cost_Ledger {
             count( $events ) < 1 || count( $events ) > self::MODEL_EVENT_LIMIT || array_keys( $events ) !== range( 0, count( $events ) - 1 ) ) return false;
         $last = $args[4]; $stage = 0; $bulk = 0; $absent = array(); $pending = null; $api = 0; $cache = 0;
         $driver = 0; $driver_api = 0; $driver_sql = 0; $verifier = 0;
-        $inflight = null; $attempts = 0; $results = 0;
+        $inflight = null; $attempts = 0; $results = 0; $finished = false;
         foreach ( $events as $event ) {
-            if ( ! is_array( $event ) || array_keys( $event ) !== range( 0, 5 ) ) return false;
+            if ( $finished || ! is_array( $event ) || array_keys( $event ) !== range( 0, 5 ) ) return false;
             list( $tick, $session, $kind, $name, $outcome, $rows ) = $event;
             if ( ! is_int( $tick ) || $tick < $last || $tick - $args[3] >= 20000 ||
                 ! in_array( $session, array( 'core', 'verifier' ), true ) || ! is_string( $kind ) || ! is_string( $name ) || strlen( $name ) > 80 ||
@@ -35,6 +35,9 @@ final class Alynt_Test_Distinct_Absence_Cost_Ledger {
                 continue;
             }
             if ( count( self::MODEL_DRIVER_SEQUENCE ) !== $driver ) return false;
+            if ( 'finish' === $kind && '-' === $name && 0 === $rows && 2 === $stage && null === $pending && null === $inflight ) {
+                $finished = true; continue;
+            }
             if ( 'bulk' === $kind && '-' === $name ) {
                 if ( 0 === $stage && 'fallback' === $mode && 0 === $rows ) { $stage = 1; $bulk++; $attempts++; $results++; continue; }
                 if ( ( ( 0 === $stage && 'autoload' === $mode ) || ( 1 === $stage && 'fallback' === $mode ) ) && 29 === $rows ) {
@@ -57,7 +60,7 @@ final class Alynt_Test_Distinct_Absence_Cost_Ledger {
             $absent[$name] = true;
             $pending = null; $inflight = null; $results++;
         }
-        if ( 2 !== $stage || null !== $pending || null !== $inflight ) return false;
+        if ( ! $finished || 2 !== $stage || null !== $pending || null !== $inflight ) return false;
         return array( 'model' => 'alynt.absence-cost.model.v1', 'synthetic_match' => true,
             'bulk_attempts' => $bulk, 'distinct_absent' => array_keys( $absent ), 'option_select_attempts' => $attempts,
             'data_results' => $results, 'conditional_option_subtotal' => $bulk + count( $absent ),

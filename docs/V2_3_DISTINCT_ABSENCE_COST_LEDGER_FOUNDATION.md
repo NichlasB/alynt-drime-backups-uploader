@@ -26,6 +26,9 @@ dashboarddb2df8bcfad51db285cd4d5c43029ac49a4d8724.
 5. Separate named read intent from successful empty result; missing/doubled/
    mismatched/replayed intent cannot become absence. Modeled attempts/results and
    conditional B+D arithmetic are separate fields, never native-total certificates.
+6. Mandatory one-shot synthetic finish under the original20s virtual epoch; partial
+   or late traces, repeated finish, backwards/non-integer clocks and expiry refuse.
+   Finish is a model marker, not engine shutdown, process/EOF or cleanup evidence.
 
 The128-event bound is a synthetic fixture domain, not an actual query/resource
 budget. Existing v1/v2 transcript, actual worker and32-query guard stay unchanged.
