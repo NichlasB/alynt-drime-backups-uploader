@@ -41,5 +41,14 @@ Layout reference: [MariaDB connection](https://mariadb.com/docs/server/reference
 No actual handshake/session, account or driver operation, and old profiles remain
 unchanged. Permanent tests include the real new parser, not an injected provider.
 
+Task4: the oldest opaque capture credit now needs a one-time exact-length/equal-
+byte synthetic forwarding acknowledgement before observation. Missing, duplicate,
+partial, changed, foreign, out-of-order, stale and expired completion poison.
+Detached bytes remain private; acknowledgement buffers cannot overwrite them.
+This closes the modeled capture/credit/result ordering gap, NOT real forwarding
+or delivery proof and never a transport-control instruction. Existing positive
+fixtures now perform the actual new acknowledgement path; negative cases bypass
+it deliberately to ensure the guard fails closed rather than mocking the owner.
+
 Implementation-plan progress: fixed observer ownership is being modeled, not real
 provenance. Final synthetic reconciliation must precede any proposed native proof.

@@ -41,14 +41,22 @@ export function createProjectionObserverOwner(options) {
 			if (!sessionBound || !['client', 'server'].includes(direction) || !bytes(chunk) || chunk.length < 1 ||
 				chunk.length > 16384 || copied + chunk.length > 16384 || pending + chunk.length > 16384 || order.length >= 512) return fail();
 			const copy = Buffer.alloc(chunk.length); Buffer.prototype.copy.call(chunk, copy);
-			const credit = Symbol('projection-copy'); entries.set(credit, { direction, copy }); order.push(credit);
+			const credit = Symbol('projection-copy'); entries.set(credit, { direction, copy, forwarded: false }); order.push(credit);
 			copied += copy.length; pending += copy.length;
 			return credit;
+		},
+		forwarded(credit, chunk, identity, now) {
+			if (!context(identity, now)) return false;
+			if (credit !== order[0] || !entries.has(credit)) return fail();
+			const entry = entries.get(credit);
+			if (entry.forwarded || !bytes(chunk) || chunk.length !== entry.copy.length || !Buffer.prototype.equals.call(chunk, entry.copy)) return fail();
+			entry.forwarded = true; return true; // Synthetic acknowledgement, never a transport instruction/proof.
 		},
 		observe(credit, identity, now) {
 			if (!context(identity, now)) return false;
 			if (credit !== order[0] || !entries.has(credit)) return fail();
 			const entry = entries.get(credit);
+			if (!entry.forwarded) return fail();
 			if (!decoder.feed(entry.direction, entry.copy, owned, now)) return fail();
 			pending -= entry.copy.length; entry.copy.fill(0); entries.delete(credit); order.shift();
 			return true;

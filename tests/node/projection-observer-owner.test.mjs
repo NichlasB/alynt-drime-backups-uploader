@@ -13,10 +13,10 @@ test('fixed owner composes the actual decoder with detached bytes and opaque cre
 	for (let i = 0; i < 5; i++) {
 		const input = packets()[i], before = Buffer.from(input), credit = f.capture(i, input);
 		assert.equal(typeof credit, 'symbol'); assert.equal(Symbol.keyFor(credit), undefined); assert.deepEqual(input, before);
-		input.fill(0); assert.equal(f.owner.observe(credit, f.identity, 101n), true);
+		input.fill(0); assert.equal(f.owner.forwarded(credit, before, f.identity, 101n), true); assert.equal(f.owner.observe(credit, f.identity, 101n), true);
 	}
 	result(f.finish(), true); assert.equal(f.finish(), false); assert.equal(f.send(0), false);
-	assert.equal(Object.isFrozen(f.owner), true); assert.deepEqual(Object.keys(f.owner), ['bindSession', 'capture', 'observe', 'finish']);
+	assert.equal(Object.isFrozen(f.owner), true); assert.deepEqual(Object.keys(f.owner), ['bindSession', 'capture', 'forwarded', 'observe', 'finish']);
 });
 test('fragmented copied bytes remain ordered and preserve the selected exchange', () => {
 	const f = fixture(); for (const [i, packet] of packets().entries()) for (const byte of packet) assert.equal(f.send(i, Buffer.from([byte])), true);
@@ -25,7 +25,7 @@ test('fragmented copied bytes remain ordered and preserve the selected exchange'
 test('extra/foreign/reused/out-of-order credits poison and never become result credit', () => {
 	for (const mode of ['foreign', 'replay', 'reorder']) {
 		const f = fixture(), first = f.capture(0);
-		if (mode === 'replay') assert.equal(f.owner.observe(first, f.identity, 101n), true);
+		if (mode === 'replay') { assert.equal(f.owner.forwarded(first, packets()[0], f.identity, 101n), true); assert.equal(f.owner.observe(first, f.identity, 101n), true); }
 		const credit = mode === 'foreign' ? Symbol('foreign') : mode === 'reorder' ? f.capture(1) : first;
 		assert.equal(f.owner.observe(credit, f.identity, 101n), false); result(f.finish()); assert.equal(f.send(0), false);
 	}
@@ -82,4 +82,23 @@ test('session array getters/proxies never execute; auth bytes remain opaque and 
 	assert.equal(projectionSessionProfile(new Proxy(sessionFrames(), { ownKeys() { throw Error('no'); } }), '012345abcdef'), false);
 	const opaque = sessionFrames(), at = 36 + Buffer.from('alynt_ro_012345abcdef_i\0').length + 1; opaque[1].fill(99, at, at + 20);
 	assert.equal(projectionSessionProfile(opaque, '012345abcdef'), 103); // Not a password-validation claim.
+});
+
+for (const mode of ['missing', 'duplicate', 'partial', 'changed', 'foreign', 'out-of-order', 'mutated-after-capture']) test(`forwarding ${mode} cannot become observation credit`, () => {
+	const f = fixture(), original = packets()[0], token = f.capture(0, original);
+	if (mode === 'missing') assert.equal(f.owner.observe(token, f.identity, 101n), false);
+	else if (mode === 'duplicate') { assert.equal(f.owner.forwarded(token, original, f.identity, 101n), true); assert.equal(f.owner.forwarded(token, original, f.identity, 101n), false); }
+	else {
+		const ack = Buffer.from(original); if (mode === 'changed' || mode === 'mutated-after-capture') ack[ack.length - 1] ^= 1;
+		if (mode === 'mutated-after-capture') original.fill(0);
+		const credit = mode === 'foreign' ? Symbol() : mode === 'out-of-order' ? f.capture(1) : token;
+		assert.equal(f.owner.forwarded(credit, mode === 'partial' ? ack.subarray(0, -1) : ack, f.identity, 101n), false);
+	}
+	result(f.finish()); assert.equal(f.send(0), false);
+});
+test('acknowledgement is bound to every context field and its original clock', () => {
+	for (const key of identityKeys) {
+		const f = fixture(), token = f.capture(0); assert.equal(f.owner.forwarded(token, packets()[0], { ...f.identity, [key]: Symbol() }, 101n), false); result(f.finish());
+	}
+	const f = fixture(), token = f.capture(0); assert.equal(f.owner.forwarded(token, packets()[0], f.identity, 20000000100n), false); result(f.finish(20000000100n));
 });
