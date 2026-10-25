@@ -66,3 +66,10 @@ accepted work across refusal. Exact zero/one-wire/empty/nonempty counts are test
 These count invented successful obligations, not observed SQL/bytes, failed
 physical work, memory or native budgets. Maximum16 model events does not change
 the worker32-query/4096-SQL-byte/time fences or old observer capture limits.
+
+Task7 uses nine in-memory source mutations, each first exercised against the
+actual unmodified helper then imported as an isolated mutant. Tests require an
+AssertionError for removed profile/branch/order/result/epoch/refusal/context/
+terminal/reuse guards, not syntax/import failure. No source file is overwritten.
+Every required positive event omission and adjacent setup swap is also checked.
+This is pure model sensitivity, not genuine authentication or physical proof.
