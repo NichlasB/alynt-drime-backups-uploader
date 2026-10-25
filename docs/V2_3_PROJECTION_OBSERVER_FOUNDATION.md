@@ -1,5 +1,10 @@
 # V2.3 Socket-Free Projection Observer Composition Foundation
 
+Genuine-path design successor2026-10-25: dashboard owns
+docs/V2_3_GENUINE_WPDB_SESSION_SETUP_REBASELINE_DESIGN.md. A separate versioned
+source/setup/result contract is required; no old-profile mask/schema translation
+or code change here. Current foundation remains synthetic-only and native NO-GO.
+
 2026-10-25. R2 synthetic-only safe-local batch. Dashboard owner/design:
 docs/V2_3_PROJECTION_OBSERVER_ADAPTER_DESIGN.md. Excluded coherent bases uploader
 33b1e0a0d95ada4227597be938ac45ae243d4a07, dashboard

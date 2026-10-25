@@ -1,5 +1,15 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Genuine wpdb Session/Setup and Source-Rebaseline Design — 2026-10-25
+
+Dashboard owns docs/V2_3_GENUINE_WPDB_SESSION_SETUP_REBASELINE_DESIGN.md. Design
+only: versioned source/setup/result domains, genuine post-connect database
+selection, explicit mode-result branches and bounded source-claim carry-forward.
+No parser/worker/storage/native/wiring changes or actual profile admission.
+Plan advances a separate successor contract; A1-A4 stay Blocked. Next gate:
+local-only Genuine wpdb Source-Profile Catalog and Setup Admission DATA Safety
+Foundation, synthetic primitive contexts/events/clocks only, no SQL/packet parsing.
+
 ## V2.3 Fixed Projection Session/Profile Read-Only Audit — 2026-10-25
 
 Dashboard owns docs/V2_3_PROJECTION_SESSION_PROFILE_READ_ONLY_AUDIT.md. Confirmed
