@@ -1,5 +1,12 @@
 # V2.3 Genuine wpdb Setup Wire Grammar and Profile Residuals
 
+Successor2026-10-25: dashboard
+`docs/V2_3_SETUP_OBSERVATION_ADMISSION_SOURCE_OWNERSHIP_DESIGN.md` specifies real
+admission/source-lease requirements and a separately owned sealed-image candidate.
+This does not qualify the synthetic profile or change this implementation. Next
+gate is an explicitly approved owned source-image feasibility/denial proof,
+before any actual WordPress/session observation or production wiring.
+
 2026-10-25. R1/R2 repository-only batch; synthetic bytes/private contexts/virtual
 clocks only. Excluded coherent bases uploader02f14552af6de38b9a41b55d232e92b8d0b8b936,
 dashboardb5575de8823c0f0aa9801fa2ee56f4ebaf95fbfa,
