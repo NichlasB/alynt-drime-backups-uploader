@@ -1,5 +1,13 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Projection Observer Adapter Safe-Local Batch — 2026-10-25
+
+Dashboard owns docs/V2_3_PROJECTION_OBSERVER_ADAPTER_DESIGN.md. Eight finite
+repository-only tasks progress detached bytes/session/ordered-credit/closure/
+resource modeling and adversarial/readiness evidence. Actual worker/storage/
+native execution and wiring unchanged; A1-A4/native observation still Blocked.
+Task1 specifies the contract; no actual observer attachment authorized.
+
 ## V2.3 Socket-Free Projection Zero-Row / Provenance Foundation — 2026-10-25
 
 See [owning foundation](V2_3_PROJECTION_ZERO_ROW_PROVENANCE_FOUNDATION.md).
