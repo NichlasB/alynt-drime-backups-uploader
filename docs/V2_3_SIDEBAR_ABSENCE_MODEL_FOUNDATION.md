@@ -33,6 +33,10 @@ dashboard076abc69c7fc30ccadfd6e2944bca95e3fa32b4d.
    missing/duplicate close/EOF, skipped phases, cache-close omission, clock reversal
    and original-epoch expiry all refuse permanently. Existing v1 tests still run;
    no exit0-only success, relaxed deadline or native completion claim.
+7. Non-vacuity/source composition: independently hash the label and bind PHP/JS
+   constants; five source-backed in-memory JS guard variants expose acceptance
+   after bypassing profile, eight-N, original deadline, process close and sticky
+   violation guards. No source files modified by those permanent controls.
 
 The catalog has no native consumer. An absent name in a synthetic array is not
 proof of a missing backing-store row, permission denial, pre-owner containment or

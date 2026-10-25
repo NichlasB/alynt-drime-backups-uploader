@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { createSidebarProjectionShutdownTranscript as create, parseSidebarProjectionCandidate as parse,
 	sidebarProjectionProfile as profile, projectionProfile as oldProfile, parseProjectionCandidate as oldParse,
 	createProjectionShutdownTranscript as oldCreate } from '../../scripts/tests/projection-shutdown-transcript.mjs';
@@ -104,5 +106,39 @@ test('v2 lifecycle refusal stays latched across late effects, caught failures an
 		const p = create(root,'autoload',0); let tick = 0;
 		for (const [kind,value] of events) p.event(kind,value,tick++);
 		assert.equal(p.event('stdout',bytes,tick),false); authorityFree(p.finish(10),false);
+	}
+});
+test('PHP/JS profile composition is fixed and semantic guard controls are non-vacuous', async () => {
+	assert.equal(profile, createHash('sha256').update('alynt-fixed-projection.wp7.1.2.theme.v2.sidebar-absent').digest('hex'));
+	const php = readFileSync(new URL('../../scripts/tests/sidebar-projection-catalog.php',import.meta.url),'utf8');
+	assert.equal(php.match(/const PROFILE = '([a-f0-9]{64})';/)[1],profile);
+	const source = readFileSync(new URL('../../scripts/tests/projection-shutdown-transcript.mjs',import.meta.url),'utf8');
+	const controls = [
+		['m[4] !== projectionProfile','false', m => { const f=frame(); f[4]=oldProfile; return m.parseSidebarProjectionCandidate(JSON.stringify(f)+'\n',root,'autoload') !== false; }],
+		['(projectionProfile === sidebarProjectionProfile && m[6][4] !== 8)','false', m => { const f=frame(); f[6][4]=7; f[6][5]=7; return m.parseSidebarProjectionCandidate(JSON.stringify(f)+'\n',root,'autoload') !== false; }],
+		['tick - start < 20000','true', m => {
+			const p=m.createSidebarProjectionShutdownTranscript(root,'autoload',0);
+			p.event('fenced',profile,0);p.event('core_returned',true,1);p.event('core_shutdown_returned',[1,1],2);
+			p.event('stdout',JSON.stringify(frame())+'\n',20000);
+			for(const kind of orders[0])p.event(kind,kind==='close'?[0,null]:null,20001);
+			return p.finish(20002).synthetic_match;
+		}],
+		['stage === 4 && closed && stdoutEof && stderrEof','stage === 4 && stdoutEof && stderrEof', m => {
+			const p=m.createSidebarProjectionShutdownTranscript(root,'autoload',0);
+			p.event('fenced',profile,0);p.event('core_returned',true,1);p.event('core_shutdown_returned',[1,1],2);
+			p.event('stdout',JSON.stringify(frame())+'\n',3);p.event('stdout_eof',null,4);p.event('stderr_eof',null,4);
+			return p.finish(5).synthetic_match;
+		}],
+		['violation() { refuse();','violation() {', m => {
+			const p=m.createSidebarProjectionShutdownTranscript(root,'autoload',0);
+			p.event('fenced',profile,0);p.event('core_returned',true,1);p.event('core_shutdown_returned',[1,1],2);
+			p.event('stdout',JSON.stringify(frame())+'\n',3);assert.throws(()=>p.violation());
+			return closed(p).synthetic_match;
+		}],
+	];
+	for (let index=0;index<controls.length;index++) {
+		const [from,to,exposes]=controls[index]; assert.equal(source.split(from).length,2,from);
+		const mutated=await import('data:text/javascript;base64,'+Buffer.from(source.replace(from,to)+`\n// v2 control ${index}`).toString('base64'));
+		assert.equal(exposes(mutated),true,from);
 	}
 });
