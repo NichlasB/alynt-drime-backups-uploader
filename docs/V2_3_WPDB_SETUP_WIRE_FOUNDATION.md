@@ -119,3 +119,10 @@ Frozen outcome/copy counters contain no callable/storage/connection handle; all
 physical/source/native claims stay false. Counters cover retained frame snapshots,
 not parser scratch space, caller buffers, process/heap closure or actual forwarding.
 This owner cannot be attached to the DATA model or native worker by this batch.
+
+Task7 adds fourteen assertion-killed in-memory source controls: length/sequence,
+complete OK, metadata/row/EOF, request, profile/context/deadline/refusal, snapshot
+budget/release and an always-unavailable success mutant. Each assertion first
+passes against the actual helper; mutant imports must succeed before assertions
+kill semantic weakening. Every single-byte mutation of a complete positive
+nonempty exchange is also rejected. No on-disk source mutation or native proof.
