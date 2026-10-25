@@ -103,3 +103,10 @@ are checked. Positive empty and fixed nonempty values classify independently;
 NULL/zero/dynamic/missing/extra/error/alternate terminators refuse. Plain array
 descriptors prevent getter/proxy reads; total copies bounded and cleared finally.
 No actual SQL-mode semantics or installed metadata/profile qualification claimed.
+
+Task5 joins exact sequence0 request bytes with only the corresponding fixed
+response family. Schema success requires command2/exact owned_synthetic plus
+OK sequence1; mode success requires fixed command3/query plus five responses.
+Cross-family/dynamic query/foreign schema/extra/error packets refuse. Request
+validation precedes response inspection, without accessor invocation. These
+stateless predicates supply no source/context/native authority or actual writes.

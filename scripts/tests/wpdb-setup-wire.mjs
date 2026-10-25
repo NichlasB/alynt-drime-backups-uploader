@@ -27,15 +27,19 @@ const modeColumn = Buffer.concat([Buffer.from([3]), Buffer.from('def'), Buffer.f
 	Buffer.from('@@SESSION.sql_mode'), Buffer.from([0, 12, 45, 0, 0, 4, 0, 0, 253, 0, 0, 0, 0, 0])]);
 const ordinaryEOF = Buffer.from([254, 0, 0, 2, 0]);
 const nonemptyMode = Buffer.from('\x13STRICT_TRANS_TABLES');
-export function decodeWpdbModeResult(frames) {
+const frameList = (frames, count) => {
 	if (!Array.isArray(frames) || types.isProxy(frames) || Object.getPrototypeOf(frames) !== Array.prototype ||
-		frames.length !== 5 || Reflect.ownKeys(frames).length !== 6) return false;
+		frames.length !== count || Reflect.ownKeys(frames).length !== count + 1) return false;
 	const fields = Object.getOwnPropertyDescriptors(frames);
-	if (![0, 1, 2, 3, 4].every((i) => Object.hasOwn(fields, i) && Object.hasOwn(fields[i], 'value'))) return false;
+	const indexes = Array.from({ length: count }, (_, i) => i);
+	return indexes.every((i) => Object.hasOwn(fields, i) && Object.hasOwn(fields[i], 'value')) ? indexes.map((i) => fields[i].value) : false;
+};
+export function decodeWpdbModeResult(frames) {
+	const list = frameList(frames, 5); if (!list) return false;
 	const bodies = []; let total = 0;
 	try {
 		for (let i = 0; i < 5; i++) {
-			const frame = fields[i].value;
+			const frame = list[i];
 			if (!ordinaryBytes(frame) || total + frame.length > 16384) return false;
 			total += frame.length;
 			const body = copyWpdbSetupPayload(frame, i + 1); if (!body) return false; bodies.push(body);
@@ -46,4 +50,17 @@ export function decodeWpdbModeResult(frames) {
 		if (bodies[3].equals(nonemptyMode)) return 'one-filterable-nonempty';
 		return false;
 	} finally { for (const body of bodies) body.fill(0); }
+}
+
+const modeRequest = Buffer.from('\x03SELECT @@SESSION.sql_mode');
+const schemaRequest = Buffer.from('\x02owned_synthetic');
+export function decodeWpdbSetupExchange(kind, request, responses) {
+	if (kind !== 'mode-read' && kind !== 'schema-select') return false;
+	const payload = copyWpdbSetupPayload(request, 0); if (!payload) return false;
+	try {
+		if (!payload.equals(kind === 'mode-read' ? modeRequest : schemaRequest)) return false;
+		if (kind === 'mode-read') return decodeWpdbModeResult(responses);
+		const list = frameList(responses, 1);
+		return list && decodeWpdbSetupOK(list[0]) ? 'schema-selected' : false;
+	} finally { payload.fill(0); }
 }

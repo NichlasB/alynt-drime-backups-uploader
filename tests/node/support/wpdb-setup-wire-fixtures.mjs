@@ -11,3 +11,7 @@ export function modeFrames(value = '') {
 	return [Buffer.from([1]), Buffer.from(modeColumnHex, 'hex'), Buffer.from([254, 0, 0, 2, 0]),
 		Buffer.concat([Buffer.from([row.length]), row]), Buffer.from([254, 0, 0, 2, 0])].map((body, index) => packet(body, index + 1));
 }
+export function exchange(kind = 'mode-read', value = '') {
+	return { request: packet(Buffer.from(kind === 'mode-read' ? '\x03SELECT @@SESSION.sql_mode' : '\x02owned_synthetic'), 0),
+		responses: kind === 'mode-read' ? modeFrames(value) : [packet([0, 0, 0, 2, 0, 0, 0], 1)] };
+}

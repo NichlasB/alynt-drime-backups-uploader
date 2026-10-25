@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { copyWpdbSetupPayload, decodeWpdbSetupOK, decodeWpdbModeResult } from '../../scripts/tests/wpdb-setup-wire.mjs';
-import { packet, modeFrames, modeColumnHex } from './support/wpdb-setup-wire-fixtures.mjs';
+import { copyWpdbSetupPayload, decodeWpdbSetupOK, decodeWpdbModeResult, decodeWpdbSetupExchange } from '../../scripts/tests/wpdb-setup-wire.mjs';
+import { packet, modeFrames, modeColumnHex, exchange } from './support/wpdb-setup-wire-fixtures.mjs';
 
 test('packet copy is detached and header/sequence exact', () => {
 	const frame = packet([1, 2, 3], 1), copy = copyWpdbSetupPayload(frame, 1);
@@ -102,4 +102,37 @@ test('array descriptors reject holes/getters/proxies and excess keys without rea
 		assert.equal(decodeWpdbModeResult(frames), false);
 	}
 	assert.equal(calls, 0);
+});
+
+for (const [kind, value, expected] of [['mode-read', '', 'one-empty-string'], ['mode-read', 'STRICT_TRANS_TABLES', 'one-filterable-nonempty'],
+	['schema-select', '', 'schema-selected']]) test(`exact ${kind}/${value} request/result pair succeeds synthetically`, () => {
+	const f = exchange(kind, value); assert.equal(decodeWpdbSetupExchange(kind, f.request, f.responses), expected);
+});
+test('schema OK alone, wrong command/schema, old handshake or a generic USE query cannot select schema', () => {
+	const f = exchange('schema-select');
+	for (const request of [f.responses[0], packet(Buffer.from('\x02foreign'), 0), packet(Buffer.from('\x03USE owned_synthetic'), 0),
+		packet(Buffer.from('\x02owned_synthetic\0'), 0), packet([0x02], 0), packet(Buffer.from('owned_synthetic'), 0)]) {
+		assert.equal(decodeWpdbSetupExchange('schema-select', request, f.responses), false);
+	}
+});
+test('mode commands cannot substitute schema result or unbound dynamic query', () => {
+	const mode = exchange(), schema = exchange('schema-select');
+	assert.equal(decodeWpdbSetupExchange('mode-read', mode.request, schema.responses), false);
+	assert.equal(decodeWpdbSetupExchange('schema-select', schema.request, mode.responses), false);
+	for (const query of ['SELECT @@sql_mode', 'SELECT @@SESSION.sql_mode;', 'SELECT @@SESSION.sql_mode --', 'SELECT 1']) {
+		assert.equal(decodeWpdbSetupExchange('mode-read', packet(Buffer.from('\x03' + query), 0), mode.responses), false);
+	}
+});
+test('schema response missing/extra/error/getter forms refuse', () => {
+	let calls = 0; const f = exchange('schema-select'), getter = [null]; Object.defineProperty(getter, 0, { get() { calls++; } });
+	for (const responses of [[], [...f.responses, ...f.responses], [packet([255, 1, 0], 1)], getter, null]) {
+		assert.equal(decodeWpdbSetupExchange('schema-select', f.request, responses), false);
+	}
+	assert.equal(calls, 0);
+});
+test('unsupported kind or malformed request never reads response accessors', () => {
+	let calls = 0; const responses = new Proxy([], { get() { calls++; throw Error('response read'); } });
+	const f = exchange();
+	for (const kind of ['mode-write', 'connect', 'commit', {}, undefined]) assert.equal(decodeWpdbSetupExchange(kind, f.request, responses), false);
+	assert.equal(decodeWpdbSetupExchange('mode-read', packet([3], 0), responses), false); assert.equal(calls, 0);
 });
