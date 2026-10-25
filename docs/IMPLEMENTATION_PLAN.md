@@ -1,5 +1,14 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Driver/Session Observation and Provenance Design — 2026-10-25
+
+Dashboard owns docs/V2_3_DRIVER_SESSION_OBSERVATION_PROVENANCE_DESIGN.md.
+Design-only reuse limits/provenance chain for actual command/result observation;
+existing model, relay/witness, native worker/storage/wiring remain untouched.
+Implementation-plan progress: feasibility specified, native observation still
+Blocked. Next: local-only Socket-Free Projection Zero-Row Response and Provenance
+Safety Foundation, synthetic bytes/contexts/virtual clocks only, before real integration.
+
 ## V2.3 Socket-Free Distinct Absence and Cost Ledger — 2026-10-25
 
 See [owning foundation](V2_3_DISTINCT_ABSENCE_COST_LEDGER_FOUNDATION.md). Test-only

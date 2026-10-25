@@ -1,5 +1,11 @@
 # V2.3 Socket-Free Distinct Absence and Cost Ledger Foundation
 
+Successor design (2026-10-25): dashboard
+docs/V2_3_DRIVER_SESSION_OBSERVATION_PROVENANCE_DESIGN.md distinguishes synthetic
+session/outcome labels from actual source/pair/request/result/backing/lifetime
+provenance and documents existing relay reuse limits. No helper/native/wiring
+change. Next: socket-free Projection Zero-Row Response and Provenance Foundation.
+
 2026-10-25. Autonomous safe-local batch, R2 test-only primitive model. No actual
 authentication, WordPress, SQL, storage, driver/clock IO, native execution, handles,
 privileges, production wiring, activation, rollback, package, release or deploy.
