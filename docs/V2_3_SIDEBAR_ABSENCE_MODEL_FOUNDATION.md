@@ -1,5 +1,11 @@
 # V2.3 Versioned Sidebar-Absence Model Foundation
 
+Successor (2026-10-25): dashboard
+docs/V2_3_REVISED_PROJECTION_READ_ABSENCE_DRIVER_COST_DESIGN.md. Design distinguishes
+v2 eight-N fixture counters from natural reached-name subsets and successful
+physical absence; driver/session/replay and API/cache work need separate ledgers.
+No helper/worker/counter/storage/wiring change or native GO in that design slice.
+
 2026-10-25. R2 repository-only batch; synthetic values/bytes/virtual clocks only.
 No actual authentication, WordPress, SQL, storage, fixtures, native execution,
 permissions, production wiring, activation, rollback, release or deployment.

@@ -1,5 +1,15 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Revised Read/Absence and Driver Cost Admission Design — 2026-10-25
+
+Dashboard owns docs/V2_3_REVISED_PROJECTION_READ_ABSENCE_DRIVER_COST_DESIGN.md.
+Design-only distinct-name successful absence, conditional1+D/2+D option arithmetic
+and separate driver/session/replay namespaces. Existing eight-key worker, v1/v2
+helpers/counters, storage/native execution/production wiring remain unchanged.
+Implementation-plan progress: admission contract specified, not physical GO.
+Next: local-only Socket-Free Distinct Absence and Cost Ledger Safety Foundation,
+synthetic values/virtual clocks only, before any native qualification request.
+
 ## V2.3 Versioned Sidebar-Absence Model — 2026-10-25
 
 See [owning foundation](V2_3_SIDEBAR_ABSENCE_MODEL_FOUNDATION.md). Repository-only
