@@ -27,4 +27,28 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
             }
         }
     }
+    public function test_exact_names_result_success_and_zero_rows_are_independent_guards() {
+        $base = $this->events();
+        foreach ( array( 'SIDEbars_widgets', 'sidebars_widgets ', 'sidebar_widgets', "sidebars_widgets\0", 'siteurl',
+            'alynt_drime_backups_settings', 'proof_owner', str_repeat( 'x', 81 ), '', null, false, array(), new stdClass() ) as $name ) {
+            $bad = $base; $bad[1][3] = $name; $this->assertFalse( $this->runLedger( $bad ) );
+        }
+        foreach ( array( 'failed', 'cancelled', 'unknown', 'default', false, null ) as $outcome ) {
+            $bad = $base; $bad[1][4] = $outcome; $this->assertFalse( $this->runLedger( $bad ) );
+        }
+        foreach ( array( 1, 29, -1, '0', false, null, array(), new stdClass() ) as $rows ) {
+            $bad = $base; $bad[1][5] = $rows; $this->assertFalse( $this->runLedger( $bad ) );
+        }
+        $bad = $base; $bad[] = $bad[1]; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = array_merge( array( $base[0] ), array_fill( 0, 8, $base[1] ) );
+        $this->assertFalse( $this->runLedger( $bad ) );
+        foreach ( array( 'profile', 'present', 'absent', 'hidden' ) as $group ) {
+            $catalog = $this->catalog(); unset( $catalog[$group] );
+            $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $catalog, $this->args(), 'autoload', $base ) );
+        }
+        $old = Alynt_Fixed_Projection_Catalog::build( ...$this->args() );
+        $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $old, $this->args(), 'autoload', $base ) );
+        $catalog = $this->catalog(); $catalog['present']['sidebars_widgets'] = 'a:0:{}';
+        $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $catalog, $this->args(), 'autoload', $base ) );
+    }
 }

@@ -13,6 +13,9 @@ dashboarddb2df8bcfad51db285cd4d5c43029ac49a4d8724.
 1. Fixed v2 catalog composition and bounded primitive event trace; distinguish
    populated bulk from empty-autoload/fallback and distinct named zero-row misses.
    Positive subset/full-domain tests earn only synthetic matches, never authority.
+2. Permanent distinct-name/result provenance regressions: repeated one-name-as-eight,
+   aliases/overlap/protected names, wrong catalog, failed/default/unknown outcomes
+   and present/non-integer rows refuse independently. No SQL or actual absence proof.
 
 The128-event bound is a synthetic fixture domain, not an actual query/resource
 budget. Existing v1/v2 transcript, actual worker and32-query guard stay unchanged.
