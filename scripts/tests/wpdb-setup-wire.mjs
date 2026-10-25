@@ -31,7 +31,7 @@ const modeColumn = Buffer.concat([Buffer.from([3]), Buffer.from('def'), Buffer.f
 const ordinaryEOF = Buffer.from([254, 0, 0, 2, 0]);
 const nonemptyMode = Buffer.from('\x13STRICT_TRANS_TABLES');
 const frameList = (frames, count) => {
-	if (!Array.isArray(frames) || types.isProxy(frames) || Object.getPrototypeOf(frames) !== Array.prototype ||
+	if (types.isProxy(frames) || !Array.isArray(frames) || Object.getPrototypeOf(frames) !== Array.prototype ||
 		frames.length !== count || Reflect.ownKeys(frames).length !== count + 1) return false;
 	const fields = Object.getOwnPropertyDescriptors(frames);
 	const indexes = Array.from({ length: count }, (_, i) => i);

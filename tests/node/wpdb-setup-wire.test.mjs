@@ -104,6 +104,14 @@ test('array descriptors reject holes/getters/proxies and excess keys without rea
 	assert.equal(calls, 0);
 });
 
+test('revoked array and byte proxies refuse without evaluating revoked targets', () => {
+	const array = Proxy.revocable([], {}), bytes = Proxy.revocable(packet([1], 1), {});
+	array.revoke(); bytes.revoke();
+	assert.equal(copyWpdbSetupPayload(bytes.proxy, 1), false);
+	assert.equal(decodeWpdbModeResult(array.proxy), false);
+	const f = exchange('schema-select'); assert.equal(decodeWpdbSetupExchange('schema-select', f.request, array.proxy), false);
+});
+
 for (const [kind, value, expected] of [['mode-read', '', 'one-empty-string'], ['mode-read', 'STRICT_TRANS_TABLES', 'one-filterable-nonempty'],
 	['schema-select', '', 'schema-selected']]) test(`exact ${kind}/${value} request/result pair succeeds synthetically`, () => {
 	const f = exchange(kind, value); assert.equal(decodeWpdbSetupExchange(kind, f.request, f.responses), expected);

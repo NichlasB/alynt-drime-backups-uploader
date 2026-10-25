@@ -13,6 +13,10 @@ function fixture(module) {
 	return { owner, identity, frames, send: (i, frame = frames[i], now = 101n) => owner.capture(i ? 'server' : 'client', frame, identity, now) };
 }
 const controls = [
+	['revoked proxy guard order', 'types.isProxy(frames) || !Array.isArray(frames)', '!Array.isArray(frames) || types.isProxy(frames)', (m) => {
+		const f = Proxy.revocable([], {}); f.revoke(); let result;
+		assert.doesNotThrow(() => { result = m.decodeWpdbModeResult(f.proxy); }); assert.equal(result, false);
+	}],
 	['declared length', 'frame.length === length + 4', 'true', (m) => {
 		const frame = packet([1], 1); frame[0] = 2; assert.equal(m.copyWpdbSetupPayload(frame, 1), false);
 	}],

@@ -139,11 +139,15 @@ helper, fixture, four focused tests, owner/plan) plus dashboard plan; explicit
 bases above, not merely the latest docs commit. Other/test-only. Reviewed fixed
 byte grammar and sequence, result/metadata/warning boundaries, branch/request
 pairing, copied buffers, original private epoch/refusal/cleanup, receipt claims,
-test sensitivity and scope. No confirmed scoped non-security defect remains.
+test sensitivity and scope. One error-handling issue found/fixed in final task8:
+Array.isArray on a revoked proxy threw before the proxy guard. Reproduced red
+with the exact TypeError, reordered proxy refusal first, added a revoked-array/
+byte regression and a fifteenth assertion-killed guard-order control. No other
+confirmed scoped non-security defect remains; this is not an auth/native change.
 No meaningful Bloat trigger: small cohesive helper/test files, no duplicated
 implementation/debug debris or unnecessary split. No UI/UX trigger.
 
-Final focused Feature Security after validation: no confirmed scoped issue or
+Final focused Feature Security rerun after guard-order repair/validation: no confirmed scoped issue or
 security-fix regression handoff. Inputs have exact bounded bytes/descriptors/
 enums; unsupported cases refuse, temporaries clear finally and receipts cannot
 grant execution. No actual endpoint/SQL/file/network/credential operation or
