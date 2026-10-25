@@ -1,5 +1,13 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Versioned Sidebar-Absence Model — 2026-10-25
+
+See [owning foundation](V2_3_SIDEBAR_ABSENCE_MODEL_FOUNDATION.md). Repository-only
+successor to dashboard's residual decision: new fixed29P/8N model, not a silent v1
+change. Present/hidden rows, actual worker and production wiring remain unchanged.
+Implementation-plan progress: missing sidebar dependency modeled, not native GO;
+full A1-A4 source/lifetime/cost/installed ownership still unresolved.
+
 ## V2.3 Pinned Bootstrap Reachability / Lifetime / Effect-Cost Audit — 2026-10-25
 
 Dashboard owns docs/V2_3_PINNED_BOOTSTRAP_REACHABILITY_LIFETIME_COST_AUDIT.md.
