@@ -1,5 +1,14 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Fixed Projection Session/Profile Read-Only Audit — 2026-10-25
+
+Dashboard owns docs/V2_3_PROJECTION_SESSION_PROFILE_READ_ONLY_AUDIT.md. Confirmed
+Plugin Tester source/configuration-only audit: genuine wpdb uses post-connect
+database selection/setup, unlike the unchanged synthetic profile. Current file/
+metadata markers7.1.3/PHP8.5.12 need rebaseline, not inferred wire/auth proof.
+No worker/parser/storage/native/wiring change; all A1-A4 remain Blocked. Next
+gate: design-only Genuine wpdb Session/Setup Profile and Source-Rebaseline Design.
+
 ## V2.3 Projection Observer Adapter Safe-Local Batch — 2026-10-25
 
 Dashboard owns docs/V2_3_PROJECTION_OBSERVER_ADAPTER_DESIGN.md. Eight finite
