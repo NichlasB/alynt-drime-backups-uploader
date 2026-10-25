@@ -1,5 +1,12 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Socket-Free Distinct Absence and Cost Ledger — 2026-10-25
+
+See [owning foundation](V2_3_DISTINCT_ABSENCE_COST_LEDGER_FOUNDATION.md). Test-only
+synthetic event accounting follows the revised admission design; fixed catalog,
+distinct names/results and separate cost lanes, not native proof. Actual worker,
+storage, native execution and production wiring remain untouched. A1-A4 still open.
+
 ## V2.3 Revised Read/Absence and Driver Cost Admission Design — 2026-10-25
 
 Dashboard owns docs/V2_3_REVISED_PROJECTION_READ_ABSENCE_DRIVER_COST_DESIGN.md.
