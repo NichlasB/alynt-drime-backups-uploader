@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import * as projectionExports from '../../scripts/tests/projection-shutdown-transcript.mjs';
 import { createSidebarProjectionShutdownTranscript as create, parseSidebarProjectionCandidate as parse,
 	sidebarProjectionProfile as profile, projectionProfile as oldProfile, parseProjectionCandidate as oldParse,
 	createProjectionShutdownTranscript as oldCreate } from '../../scripts/tests/projection-shutdown-transcript.mjs';
@@ -141,4 +142,15 @@ test('PHP/JS profile composition is fixed and semantic guard controls are non-va
 		const mutated=await import('data:text/javascript;base64,'+Buffer.from(source.replace(from,to)+`\n// v2 control ${index}`).toString('base64'));
 		assert.equal(exposes(mutated),true,from);
 	}
+});
+test('review regression: fixed API exposes no generic profile selector and accepted values are immutable', () => {
+	assert.deepEqual(Object.keys(projectionExports).sort(), ['createProjectionShutdownTranscript','createSidebarProjectionShutdownTranscript',
+		'parseProjectionCandidate','parseSidebarProjectionCandidate','projectionProfile','sidebarProjectionProfile'].sort());
+	const parsed = parse(JSON.stringify(frame())+'\n',root,'autoload');
+	assert.equal(Object.isFrozen(parsed),true); assert.equal(Object.isFrozen(parsed[6]),true);
+	assert.throws(()=>{parsed[4]=oldProfile;},TypeError);
+	assert.throws(()=>{parsed[6][4]=7;},TypeError);
+	const p=ready();assert.equal(Object.isFrozen(p),true);p.event('stdout',JSON.stringify(frame())+'\n',3);
+	const result=closed(p);authorityFree(result,true);assert.equal(Object.isFrozen(result),true);
+	assert.throws(()=>{result.native_proven=true;},TypeError);
 });

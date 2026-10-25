@@ -7,6 +7,9 @@ successor to dashboard's residual decision: new fixed29P/8N model, not a silent 
 change. Present/hidden rows, actual worker and production wiring remain unchanged.
 Implementation-plan progress: missing sidebar dependency modeled, not native GO;
 full A1-A4 source/lifetime/cost/installed ownership still unresolved.
+Eight implementation/test-support/review tasks complete the versioned model;
+actual native worker remains unchanged. Next: repository-only Revised Projection
+Read/Absence and Driver Cost Admission Design, before any physical qualification.
 
 ## V2.3 Pinned Bootstrap Reachability / Lifetime / Effect-Cost Audit — 2026-10-25
 
