@@ -7,6 +7,7 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
     private function catalog() { return Alynt_Sidebar_Projection_Catalog::build( ...$this->args() ); }
     private function events( $mode = 'autoload', $names = array( 'sidebars_widgets' ) ) {
         $events = array();
+        foreach ( array( 'connect', 'charset_api', 'charset_sql', 'mode_read', 'mode_write', 'select_db' ) as $family ) $events[] = array( 1001, 'core', 'driver', $family, 'ok', 0 );
         if ( 'fallback' === $mode ) $events[] = array( 1001, 'core', 'bulk', '-', 'ok', 0 );
         $events[] = array( 1001, 'core', 'bulk', '-', 'ok', 29 );
         foreach ( $names as $name ) {
@@ -31,16 +32,16 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         }
     }
     public function test_exact_names_result_success_and_zero_rows_are_independent_guards() {
-        $base = $this->events();
+        $base = $this->events(); $miss = count( $base ) - 1;
         foreach ( array( 'SIDEbars_widgets', 'sidebars_widgets ', 'sidebar_widgets', "sidebars_widgets\0", 'siteurl',
             'alynt_drime_backups_settings', 'proof_owner', str_repeat( 'x', 81 ), '', null, false, array(), new stdClass() ) as $name ) {
-            $bad = $base; $bad[2][3] = $name; $this->assertFalse( $this->runLedger( $bad ) );
+            $bad = $base; $bad[$miss][3] = $name; $this->assertFalse( $this->runLedger( $bad ) );
         }
         foreach ( array( 'failed', 'cancelled', 'unknown', 'default', false, null ) as $outcome ) {
-            $bad = $base; $bad[2][4] = $outcome; $this->assertFalse( $this->runLedger( $bad ) );
+            $bad = $base; $bad[$miss][4] = $outcome; $this->assertFalse( $this->runLedger( $bad ) );
         }
         foreach ( array( 1, 29, -1, '0', false, null, array(), new stdClass() ) as $rows ) {
-            $bad = $base; $bad[2][5] = $rows; $this->assertFalse( $this->runLedger( $bad ) );
+            $bad = $base; $bad[$miss][5] = $rows; $this->assertFalse( $this->runLedger( $bad ) );
         }
         $bad = $base; $bad[] = $bad[1]; $this->assertFalse( $this->runLedger( $bad ) );
         $bad = array_merge( array( $base[0] ), array_fill( 0, 8, $base[1] ) );
@@ -55,7 +56,7 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $catalog, $this->args(), 'autoload', $base ) );
     }
     public function test_api_and_genuine_learned_cache_counts_cannot_substitute_for_distinct_misses() {
-        $events = $this->events();
+        $events = $this->events(); $miss = count( $events ) - 1;
         foreach ( array( 'sidebars_widgets', 'siteurl', 'sidebars_widgets' ) as $name ) {
             $events[] = array( 1003, 'core', 'api', $name, 'ok', 0 );
             $events[] = array( 1003, 'core', 'cache', $name, 'ok', 0 );
@@ -64,11 +65,25 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $this->assertSame( 4, $result['api_visits'] ); $this->assertSame( 3, $result['cache_hits'] );
         $this->assertSame( array( 'sidebars_widgets' ), $result['distinct_absent'] );
         $this->assertSame( 2, $result['option_select_attempts'] );
-        $bad = $this->events(); $bad[2][2] = 'cache'; $this->assertFalse( $this->runLedger( $bad ) );
-        $bad = $this->events(); unset( $bad[1] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
-        $bad = $this->events(); $bad[] = $bad[1]; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $this->events(); $bad[$miss][2] = 'cache'; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $this->events(); unset( $bad[$miss - 1] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
+        $bad = $this->events(); $bad[] = $bad[$miss - 1]; $this->assertFalse( $this->runLedger( $bad ) );
         $bad = $events; $bad[] = array( 1003, 'core', 'cache', 'sidebars_widgets', 'ok', 0 );
         $this->assertFalse( $this->runLedger( $bad ) );
-        $bad = $this->events(); $bad[] = $bad[1]; $bad[] = $bad[2]; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $this->events(); $bad[] = $bad[$miss - 1]; $bad[] = $bad[$miss]; $this->assertFalse( $this->runLedger( $bad ) );
+    }
+    public function test_driver_setup_and_verifier_audit_are_separate_fixed_namespaces() {
+        $events = $this->events(); array_unshift( $events, array( 1001, 'verifier', 'audit', 'identity_grants', 'ok', 0 ) );
+        $result = $this->runLedger( $events );
+        $this->assertSame( 3, $result['core_driver_api'] ); $this->assertSame( 3, $result['core_driver_sql'] );
+        $this->assertSame( 1, $result['verifier_audits'] ); $this->assertSame( 2, $result['option_select_attempts'] );
+        $this->assertFalse( $result['driver_complete'] );
+        for ( $index = 0; $index < 6; $index++ ) {
+            $bad = $this->events(); unset( $bad[$index] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
+            $bad = $this->events(); $bad[$index][1] = 'verifier'; $this->assertFalse( $this->runLedger( $bad ) );
+            $bad = $this->events(); $bad[$index][3] = 'unlisted'; $this->assertFalse( $this->runLedger( $bad ) );
+        }
+        $bad = $this->events(); $bad[count( $bad ) - 1][1] = 'verifier'; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $events; $bad[0][1] = 'core'; $this->assertFalse( $this->runLedger( $bad ) );
     }
 }

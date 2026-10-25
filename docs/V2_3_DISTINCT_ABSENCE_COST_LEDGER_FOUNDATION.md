@@ -19,6 +19,10 @@ dashboarddb2df8bcfad51db285cd4d5c43029ac49a4d8724.
 3. Explicit paired API/result events and learned-cache behavior: repeated API and
    cache hits count work without adding SELECT/distinct credit; pending/missing/
    mismatched results or cache absence without a prior successful miss refuse.
+4. Separate core driver API/SQL and verifier audit namespaces. One illustrative
+   six-family successful setup branch is fixed/ordered; missing/aliased/wrong-
+   session families cannot donate credit. This is not an exhaustive driver profile
+   or native readiness proof; driver_complete stays false even on positives.
 
 The128-event bound is a synthetic fixture domain, not an actual query/resource
 budget. Existing v1/v2 transcript, actual worker and32-query guard stay unchanged.
