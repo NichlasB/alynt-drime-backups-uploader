@@ -90,3 +90,9 @@ Header/sequence/ordinary non-shared Buffer checks precede allocation; payload
 exotic/proxy/getter/shared inputs refuse. Returned bytes are caller-owned test
 data, not a storage/connection handle or provenance receipt. Owner cleanup and
 cumulative limits remain separate obligations in task6.
+
+Task3 requires exact seven-byte OK payload/response sequence1, zero affected/
+insert counts/warnings and status2 only. Every payload bit mutation, noncanonical
+length, error/infile/EOF/alternate OK, wrong sequence and suffix refuses. Temporary
+copies clear in finally without altering caller bytes. This is a fixed synthetic
+completion predicate, not general authentication/COMMIT or schema-selection proof.

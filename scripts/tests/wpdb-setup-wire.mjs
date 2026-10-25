@@ -14,3 +14,11 @@ export function copyWpdbSetupPayload(frame, sequence) {
 	Buffer.prototype.copy.call(frame, copy, 0, 4);
 	return copy;
 }
+
+const setupOK = Buffer.from([0, 0, 0, 2, 0, 0, 0]);
+export function decodeWpdbSetupOK(frame) {
+	const payload = copyWpdbSetupPayload(frame, 1);
+	if (!payload) return false;
+	try { return payload.equals(setupOK); }
+	finally { payload.fill(0); }
+}
