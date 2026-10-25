@@ -81,3 +81,41 @@ test('mode read or write replay refuses rather than overwriting branch history',
 	const f = fixture(); prelude(f); f.send('mode-read-result', 'one-filterable-nonempty'); f.send('mode-write-result', 'ok-fixed-filtered');
 	assert.equal(f.send('mode-write-result', 'ok-fixed-filtered'), false);
 });
+
+function selected(f, mode = 'one-empty-string', wire = 'ok-zero-wire') {
+	prelude(f, wire); assert.equal(f.send('mode-read-result', mode), true);
+	if (mode === 'one-filterable-nonempty') assert.equal(f.send('mode-write-result', 'ok-fixed-filtered'), true);
+	assert.equal(f.send('schema-intent', 'owned-synthetic'), true);
+	assert.equal(f.send('schema-result', 'ok'), true);
+	assert.equal(f.send('data-profile', 'synthetic-separate-result-grammar'), true);
+}
+for (const mode of ['one-empty-string', 'one-filterable-nonempty']) for (const wire of ['ok-zero-wire', 'ok-one-wire']) {
+	test(`non-vacuous selected setup ${mode}/${wire} reaches DATA match only`, () => {
+		const f = fixture(); selected(f, mode, wire); const result = f.finish();
+		assert.equal(result.synthetic_match, true); assert.equal(result.refused, false); assert.equal(Object.isFrozen(result), true);
+		for (const [key, value] of Object.entries(result)) if (key.endsWith('_proven') || key.endsWith('_supported')) assert.equal(value, false);
+	});
+}
+for (const [kind, value] of [['schema-result', 'ok'], ['data-profile', 'synthetic-separate-result-grammar'], ['schema-intent', 'foreign']]) {
+	test(`later schema selection refuses ${kind}/${value}`, () => {
+		const f = fixture(); prelude(f); f.send('mode-read-result', 'one-empty-string'); assert.equal(f.send(kind, value), false);
+		assert.equal(f.finish().synthetic_match, false);
+	});
+}
+test('schema error and old data grammar never obtain selected-data admission', () => {
+	for (const result of ['error', 'partial', 'unknown']) {
+		const f = fixture(); prelude(f); f.send('mode-read-result', 'one-empty-string'); f.send('schema-intent', 'owned-synthetic');
+		assert.equal(f.send('schema-result', result), false); assert.equal(f.finish().synthetic_match, false);
+	}
+	const f = fixture(); prelude(f); f.send('mode-read-result', 'one-empty-string'); f.send('schema-intent', 'owned-synthetic'); f.send('schema-result', 'ok');
+	assert.equal(f.send('data-profile', 'projection-text41-ordinary-eof-v1'), false);
+});
+test('every selected-setup prefix remains incomplete and post-completion extra event refuses', () => {
+	const events = [['connect', 'fresh-nonpersistent-no-database'], ['auth-result', 'synthetic-ok'], ['charset-api', 'ok-zero-wire'],
+		['mode-read-result', 'one-empty-string'], ['schema-intent', 'owned-synthetic'], ['schema-result', 'ok'], ['data-profile', 'synthetic-separate-result-grammar']];
+	for (let length = 0; length < events.length; length++) {
+		const f = fixture(); for (const [kind, value] of events.slice(0, length)) assert.equal(f.send(kind, value), true);
+		assert.equal(f.finish().synthetic_match, false, `prefix ${length}`);
+	}
+	const f = fixture(); selected(f); assert.equal(f.send('schema-result', 'ok'), false); assert.equal(f.finish().synthetic_match, false);
+});

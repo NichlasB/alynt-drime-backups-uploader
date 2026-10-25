@@ -58,13 +58,16 @@ export function createWpdbSetupData(options) {
 			else if (stage === 'mode-read' && kind === 'mode-read-result' && value === 'one-empty-string') stage = 'select-schema';
 			else if (stage === 'mode-read' && kind === 'mode-read-result' && value === 'one-filterable-nonempty') stage = 'mode-write';
 			else if (stage === 'mode-write' && kind === 'mode-write-result' && value === 'ok-fixed-filtered') stage = 'select-schema';
+			else if (stage === 'select-schema' && kind === 'schema-intent' && value === config.schema) stage = 'schema-result';
+			else if (stage === 'schema-result' && kind === 'schema-result' && value === 'ok') stage = 'selected-data';
+			else if (stage === 'selected-data' && kind === 'data-profile' && value === 'synthetic-separate-result-grammar') stage = 'data-admitted';
 			else return fail();
 			return true;
 		},
 		finish(identity, now) {
 			if (closed) return false;
-			context(identity, now); closed = true;
-			return Object.freeze({ synthetic_match: false, synthetic_only: true, stage, refused,
+			const valid = context(identity, now); closed = true;
+			return Object.freeze({ synthetic_match: valid && stage === 'data-admitted', synthetic_only: true, stage, refused,
 				source_proven: false, authentication_proven: false, native_proven: false, forwarding_proven: false,
 				backing_absence_proven: false, resource_closure_proven: false, storage_supported: false,
 				wiring_supported: false, execution_supported: false });

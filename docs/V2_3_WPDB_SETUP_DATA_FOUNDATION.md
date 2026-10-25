@@ -45,3 +45,9 @@ Only the latter requires a fixed filtered-write success; failed/no/multi-row,
 NULL/zero-string/dynamic-filter outcomes are not empty success. No SQL value or
 packet interpretation is implemented. Reordered/duplicate/unnecessary writes
 refuse, preserving branch history and later schema-selection requirements.
+
+Task4 admits selected DATA only after exact synthetic schema intent and separate
+successful result. Four empty/nonempty and zero/one-wire paths reach a non-vacuous
+synthetic setup match; every prefix, failed selection, old grammar and extra event
+refuses. This stage match is not a packet/result decoder or lifetime/native proof;
+task6 will require the separately modeled terminal join before final match.
