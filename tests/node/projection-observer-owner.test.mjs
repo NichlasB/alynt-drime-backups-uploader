@@ -16,7 +16,7 @@ test('fixed owner composes the actual decoder with detached bytes and opaque cre
 		input.fill(0); assert.equal(f.owner.forwarded(credit, before, f.identity, 101n), true); assert.equal(f.owner.observe(credit, f.identity, 101n), true);
 	}
 	result(f.finish(), true); assert.equal(f.finish(), false); assert.equal(f.send(0), false);
-	assert.equal(Object.isFrozen(f.owner), true); assert.deepEqual(Object.keys(f.owner), ['bindSession', 'capture', 'forwarded', 'observe', 'finish']);
+	assert.equal(Object.isFrozen(f.owner), true); assert.deepEqual(Object.keys(f.owner), ['bindSession', 'capture', 'forwarded', 'observe', 'end', 'finish']);
 });
 test('fragmented copied bytes remain ordered and preserve the selected exchange', () => {
 	const f = fixture(); for (const [i, packet] of packets().entries()) for (const byte of packet) assert.equal(f.send(i, Buffer.from([byte])), true);
@@ -101,4 +101,25 @@ test('acknowledgement is bound to every context field and its original clock', (
 		const f = fixture(), token = f.capture(0); assert.equal(f.owner.forwarded(token, packets()[0], { ...f.identity, [key]: Symbol() }, 101n), false); result(f.finish());
 	}
 	const f = fixture(), token = f.capture(0); assert.equal(f.owner.forwarded(token, packets()[0], f.identity, 20000000100n), false); result(f.finish(20000000100n));
+});
+
+for (const mode of ['none', 'client-only', 'server-only', 'duplicate', 'after-eof', 'pending', 'expired']) test(`terminal ${mode} refuses without a synthetic closure match`, () => {
+	const f = fixture(); for (let i = 0; i < 5; i++) assert.equal(f.send(i), true);
+	if (mode === 'client-only') assert.equal(f.owner.end('client', f.identity, 101n), true);
+	if (mode === 'server-only') assert.equal(f.owner.end('server', f.identity, 101n), true);
+	if (mode === 'duplicate') { assert.equal(f.owner.end('client', f.identity, 101n), true); assert.equal(f.owner.end('client', f.identity, 101n), false); }
+	if (mode === 'after-eof') { assert.equal(f.owner.end('server', f.identity, 101n), true); assert.equal(f.capture(1), false); }
+	if (mode === 'pending') { assert.equal(typeof f.capture(1), 'symbol'); assert.equal(f.owner.end('server', f.identity, 101n), false); }
+	if (mode === 'expired') assert.equal(f.owner.end('client', f.identity, 20000000100n), false);
+	result(f.owner.finish(f.identity, mode === 'expired' ? 20000000100n : 101n)); assert.equal(f.owner.finish(f.identity, 101n), false);
+});
+test('either EOF order is valid, but empty/partial exchanges and foreign EOF are not', () => {
+	for (const order of [['server', 'client'], ['client', 'server']]) {
+		const f = fixture(); for (let i = 0; i < 5; i++) assert.equal(f.send(i), true);
+		for (const dir of order) assert.equal(f.owner.end(dir, f.identity, 101n), true);
+		result(f.owner.finish(f.identity, 101n), true);
+	}
+	const g = fixture(); result(g.finish());
+	const h = fixture(); assert.equal(h.send(0, packets()[0].subarray(0, 2)), true); result(h.finish());
+	const f = fixture(); assert.equal(f.owner.end('client', { ...f.identity, pair: Symbol() }, 101n), false); result(f.finish());
 });

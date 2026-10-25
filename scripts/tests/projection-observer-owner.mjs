@@ -21,6 +21,7 @@ export function createProjectionObserverOwner(options) {
 	const deadline = config.startedNs + 20000000000n;
 	let last = config.startedNs, refused = false, closed = false, copied = 0, pending = 0, sessionBound = false;
 	const entries = new Map(), order = [];
+	const ended = { client: false, server: false };
 	const clear = () => { for (const entry of entries.values()) entry.copy.fill(0); entries.clear(); order.length = 0; pending = 0; };
 	const disposeDecoder = () => { if (decoder) decoder.finish(owned, last); decoder = null; };
 	const fail = () => { refused = true; clear(); disposeDecoder(); return false; };
@@ -38,7 +39,7 @@ export function createProjectionObserverOwner(options) {
 		},
 		capture(direction, chunk, identity, now) {
 			if (!context(identity, now)) return false;
-			if (!sessionBound || !['client', 'server'].includes(direction) || !bytes(chunk) || chunk.length < 1 ||
+			if (!sessionBound || !['client', 'server'].includes(direction) || ended[direction] || !bytes(chunk) || chunk.length < 1 ||
 				chunk.length > 16384 || copied + chunk.length > 16384 || pending + chunk.length > 16384 || order.length >= 512) return fail();
 			const copy = Buffer.alloc(chunk.length); Buffer.prototype.copy.call(chunk, copy);
 			const credit = Symbol('projection-copy'); entries.set(credit, { direction, copy, forwarded: false }); order.push(credit);
@@ -61,9 +62,15 @@ export function createProjectionObserverOwner(options) {
 			pending -= entry.copy.length; entry.copy.fill(0); entries.delete(credit); order.shift();
 			return true;
 		},
+		end(direction, identity, now) {
+			if (!context(identity, now)) return false;
+			if (!sessionBound || !['client', 'server'].includes(direction) || ended[direction] ||
+				[...entries.values()].some((entry) => entry.direction === direction)) return fail();
+			ended[direction] = true; return true;
+		},
 		finish(identity, now) {
 			if (closed) return false;
-			const valid = context(identity, now) && entries.size === 0;
+			const valid = context(identity, now) && sessionBound && ended.client && ended.server && entries.size === 0;
 			const matched = valid && decoder.finish(owned, now).synthetic_match;
 			disposeDecoder(); clear(); closed = true;
 			return Object.freeze({ synthetic_match: matched, synthetic_only: true, authentication_proven: false,

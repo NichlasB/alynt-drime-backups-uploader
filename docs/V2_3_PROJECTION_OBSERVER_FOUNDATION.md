@@ -50,5 +50,12 @@ or delivery proof and never a transport-control instruction. Existing positive
 fixtures now perform the actual new acknowledgement path; negative cases bypass
 it deliberately to ensure the guard fails closed rather than mocking the owner.
 
+Task5: finish now requires both directional EOF model events, bound session,
+no pending credits and the actual decoder's exact completed result. Either EOF
+order is supported; duplicate/foreign/late EOF, same-direction pending data,
+post-EOF traffic and missing EOF refuse. Partial/empty exchanges cannot become
+matches even after both EOFs. Finish is consuming/one-shot. These model EOFs are
+not actual socket EOF, process exit, WordPress shutdown or resource closure proof.
+
 Implementation-plan progress: fixed observer ownership is being modeled, not real
 provenance. Final synthetic reconciliation must precede any proposed native proof.

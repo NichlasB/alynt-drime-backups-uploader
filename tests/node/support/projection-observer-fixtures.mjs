@@ -25,5 +25,7 @@ export function fixture(factory = createProjectionObserverOwner, bind = true) {
 	if (bind && !owner.bindSession(sessionFrames(), identity, 100n)) throw Error('synthetic fixture session refused');
 	const capture = (index, chunk = packets()[index], now = 101n) => owner.capture(index ? 'server' : 'client', chunk, identity, now);
 	const send = (index, chunk = packets()[index], now = 101n) => { const credit = capture(index, chunk, now); return typeof credit === 'symbol' && owner.forwarded(credit, chunk, identity, now) && owner.observe(credit, identity, now); };
-	return { c, identity, owner, capture, send, finish: (now = 101n) => owner.finish(identity, now) };
+	return { c, identity, owner, capture, send, finish: (now = 101n) => {
+		owner.end('client', identity, now); owner.end('server', identity, now); return owner.finish(identity, now);
+	} };
 }
