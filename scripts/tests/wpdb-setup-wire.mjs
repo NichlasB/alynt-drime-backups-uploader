@@ -5,12 +5,15 @@ export const WPDB_SETUP_WIRE_PROFILE = 'wpdb-setup-wire.synthetic.v1';
 const ordinaryBytes = (value) => !types.isProxy(value) && Buffer.isBuffer(value) && Object.getPrototypeOf(value) === Buffer.prototype &&
 	!Object.hasOwn(value, 'buffer') && !Object.hasOwn(value, 'length') && !(value.buffer instanceof SharedArrayBuffer);
 
-// Caller owns this detached copy. Command owners must clear it after use.
-export function copyWpdbSetupPayload(frame, sequence) {
+const validFrame = (frame, sequence) => {
 	if (!Number.isInteger(sequence) || sequence < 0 || sequence > 8 || !ordinaryBytes(frame) || frame.length < 5 || frame.length > 4100) return false;
 	const length = Buffer.prototype.readUIntLE.call(frame, 0, 3);
-	if (length < 1 || length > 4096 || frame.length !== length + 4 || frame[3] !== sequence) return false;
-	const copy = Buffer.alloc(length);
+	return length >= 1 && length <= 4096 && frame.length === length + 4 && frame[3] === sequence;
+};
+// Caller owns this detached copy. Command owners must clear it after use.
+export function copyWpdbSetupPayload(frame, sequence) {
+	if (!validFrame(frame, sequence)) return false;
+	const copy = Buffer.alloc(frame.length - 4);
 	Buffer.prototype.copy.call(frame, copy, 0, 4);
 	return copy;
 }
@@ -63,4 +66,49 @@ export function decodeWpdbSetupExchange(kind, request, responses) {
 		const list = frameList(responses, 1);
 		return list && decodeWpdbSetupOK(list[0]) ? 'schema-selected' : false;
 	} finally { payload.fill(0); }
+}
+
+const identities = ['attempt', 'pair', 'generation', 'request', 'session', 'command'];
+const usedIdentities = new WeakSet();
+const dataRecord = (value, keys) => {
+	if (!value || typeof value !== 'object' || types.isProxy(value) || Object.getPrototypeOf(value) !== Object.prototype || Reflect.ownKeys(value).length !== keys.length) return false;
+	const fields = Object.getOwnPropertyDescriptors(value);
+	return keys.every((k) => Object.hasOwn(fields, k) && Object.hasOwn(fields[k], 'value')) ? Object.fromEntries(keys.map((k) => [k, fields[k].value])) : false;
+};
+export function createWpdbSetupWireOwner(options) {
+	const config = dataRecord(options, [...identities, 'profile', 'kind', 'startedNs']);
+	if (!config || config.profile !== WPDB_SETUP_WIRE_PROFILE || !['mode-read', 'schema-select'].includes(config.kind) ||
+		typeof config.startedNs !== 'bigint' || config.startedNs < 0n ||
+		!identities.every((k) => typeof config[k] === 'symbol' && Symbol.keyFor(config[k]) === undefined && !usedIdentities.has(config[k])) ||
+		new Set(identities.map((k) => config[k])).size !== identities.length) throw new TypeError('Unsupported synthetic wire context.');
+	for (const key of identities) usedIdentities.add(config[key]);
+	const frames = [], count = config.kind === 'mode-read' ? 6 : 2;
+	let last = config.startedNs, closed = false, refused = false, copied = 0, released = 0, peak = 0;
+	const clear = () => { for (const frame of frames) { released += frame.length; frame.fill(0); } frames.length = 0; };
+	const fail = () => { refused = true; clear(); return false; };
+	const context = (identity, now) => {
+		if (closed || refused) return false;
+		const fields = dataRecord(identity, identities);
+		if (!fields || !identities.every((k) => fields[k] === config[k]) || typeof now !== 'bigint' || now < last || now >= config.startedNs + 20000000000n) return fail();
+		last = now; return true;
+	};
+	return Object.freeze({
+		capture(direction, frame, identity, now) {
+			if (!context(identity, now)) return false;
+			if (frames.length >= count || direction !== (frames.length ? 'server' : 'client') || !validFrame(frame, frames.length) || copied + frame.length > 16384) return fail();
+			const copy = Buffer.alloc(frame.length); Buffer.prototype.copy.call(frame, copy);
+			frames.push(copy); copied += copy.length; peak = Math.max(peak, copied - released); return true;
+		},
+		finish(identity, now) {
+			if (closed) return false;
+			let outcome = false;
+			try { if (context(identity, now) && frames.length === count) outcome = decodeWpdbSetupExchange(config.kind, frames[0], frames.slice(1)); }
+			finally { clear(); closed = true; }
+			return Object.freeze({ synthetic_match: outcome !== false, synthetic_only: true, outcome: outcome || null, refused,
+				profile: WPDB_SETUP_WIRE_PROFILE, source_proven: false, authentication_proven: false, native_proven: false,
+				forwarding_proven: false, backing_absence_proven: false, resource_closure_proven: false,
+				storage_supported: false, wiring_supported: false, execution_supported: false,
+				capture_accounting: Object.freeze({ copied_bytes: copied, released_bytes: released, pending_bytes: copied - released, peak_bytes: peak }) });
+		},
+	});
 }

@@ -110,3 +110,12 @@ OK sequence1; mode success requires fixed command3/query plus five responses.
 Cross-family/dynamic query/foreign schema/extra/error packets refuse. Request
 validation precedes response inspection, without accessor invocation. These
 stateless predicates supply no source/context/native authority or actual writes.
+
+Task6 owns one fixed synthetic command only: six private original identities,
+fresh command symbol, exact profile/kind, original20s epoch, FIFO direction and
+sequence. Frame/16KiB/count checks precede snapshot allocation. Caller mutation
+cannot alter captured bytes; refusal/finish zero and release all owned copies.
+Frozen outcome/copy counters contain no callable/storage/connection handle; all
+physical/source/native claims stay false. Counters cover retained frame snapshots,
+not parser scratch space, caller buffers, process/heap closure or actual forwarding.
+This owner cannot be attached to the DATA model or native worker by this batch.
