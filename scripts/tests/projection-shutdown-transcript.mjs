@@ -1,5 +1,6 @@
 // Pure synthetic events/ASCII bytes/virtual milliseconds. No process, I/O or core APIs.
 export const projectionProfile = '8c8eb406d22d6e0033b64c2cd1255e64925fd08450e1c4965fbacdb36189cacc';
+export const sidebarProjectionProfile = 'a066782b53b105be3386bc2f186b90a59c262cfe47b9bccdd07a180cf62828e0';
 const tickShape = (n) => Number.isSafeInteger(n) && n >= 0;
 const rootShape = (s) => typeof s === 'string' && /^[a-f0-9]{24}$/.test(s) && s.length === 24;
 // attempted SQL, completed data SQL, bulk, P provenance, N requests, empty N results,
@@ -10,7 +11,14 @@ function countersShape(c) {
 		c[6] >= 1 && c[6] <= 1900 && c[7] === 0 && c[8] === 0 && c[9] === 0 && c[10] === 1 && c[11] === 1;
 }
 export function parseProjectionCandidate(line, root, mode) {
-	if (arguments.length !== 3 || !rootShape(root) || !['autoload', 'fallback'].includes(mode) || typeof line !== 'string' ||
+	return arguments.length === 3 && parseForProfile(line, root, mode, projectionProfile);
+}
+export function parseSidebarProjectionCandidate(line, root, mode) {
+	return arguments.length === 3 && parseForProfile(line, root, mode, sidebarProjectionProfile);
+}
+// Private fixed-profile composition only. No exported caller-selectable profile parameter.
+function parseForProfile(line, root, mode, projectionProfile) {
+	if (!rootShape(root) || !['autoload', 'fallback'].includes(mode) || typeof line !== 'string' ||
 		line.length > 4096 || !/^\x5b[\x20-\x7e]*\x5d\n$/.test(line) || line.includes('\\')) return false;
 	let m;
 	try { m = JSON.parse(line); } catch { return false; }
@@ -20,7 +28,13 @@ export function parseProjectionCandidate(line, root, mode) {
 	return Object.freeze(m.map((v) => Array.isArray(v) ? Object.freeze([...v]) : v));
 }
 export function createProjectionShutdownTranscript(root, mode, start) {
-	if (arguments.length !== 3 || !rootShape(root) || !['autoload', 'fallback'].includes(mode) || !tickShape(start)) return false;
+	return arguments.length === 3 && createForProfile(root, mode, start, projectionProfile);
+}
+export function createSidebarProjectionShutdownTranscript(root, mode, start) {
+	return arguments.length === 3 && createForProfile(root, mode, start, sidebarProjectionProfile);
+}
+function createForProfile(root, mode, start, projectionProfile) {
+	if (!rootShape(root) || !['autoload', 'fallback'].includes(mode) || !tickShape(start)) return false;
 	let stage = 0, last = start, failed = false, spent = false, line = '', closed = false, stdoutEof = false, stderrEof = false;
 	const refuse = () => { failed = true; line = ''; return false; };
 	const clock = (tick) => tickShape(tick) && tick >= last && tick >= start && tick - start < 20000;
@@ -35,7 +49,7 @@ export function createProjectionShutdownTranscript(root, mode, start) {
 				if (!/^[\x20-\x7e\n]+$/.test(value)) return refuse();
 				line += value;
 				if (line.includes('\n')) {
-					if (!parseProjectionCandidate(line, root, mode)) return refuse();
+					if (!parseForProfile(line, root, mode, projectionProfile)) return refuse();
 					stage = 4; line = '';
 				}
 				return true;

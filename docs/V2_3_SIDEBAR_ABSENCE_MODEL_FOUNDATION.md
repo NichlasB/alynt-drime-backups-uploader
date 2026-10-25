@@ -19,6 +19,11 @@ dashboard076abc69c7fc30ccadfd6e2944bca95e3fa32b4d.
 3. Parameter/clock and downgrade regressions: strict primitive domains, extra
    arguments, original20s epoch, same catalog near expiry, forged old/new labels
    and stale seven-name evidence refuse. No refreshed deadlines or new clock IO.
+4. Matching fixed v2 transcript/parser exports compose the existing private state
+   machine, without an exported profile selector or duplicated lifecycle logic.
+   Existing v1 exports retain their fixed profile; both modes, all six close/EOF
+   orders and fragmented bytes produce only authority-free synthetic matches.
+   Protocol layout/counters remain synthetic domains, not physical measurements.
 
 The catalog has no native consumer. An absent name in a synthetic array is not
 proof of a missing backing-store row, permission denial, pre-owner containment or
