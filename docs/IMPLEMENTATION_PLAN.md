@@ -1,5 +1,13 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Setup Wire Grammar and Profile Residuals — 2026-10-25
+
+See [owning design/batch](V2_3_WPDB_SETUP_WIRE_FOUNDATION.md). Finite synthetic-only
+packet/result/request/provenance tasks; no negotiated native-profile assertion or
+old-mask translation. Ordinary-EOF fixture subset is separate from actual driver
+compatibility. Plan advances the source/result boundary; A1-A4/native GO remain
+Blocked. No actual worker, storage, authentication or production wiring change.
+
 ## V2.3 Genuine wpdb Setup DATA Foundation — 2026-10-25
 
 See [owning foundation](V2_3_WPDB_SETUP_DATA_FOUNDATION.md). Eight finite safe-local
