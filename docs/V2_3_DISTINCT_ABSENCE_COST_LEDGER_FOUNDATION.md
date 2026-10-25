@@ -23,6 +23,9 @@ dashboarddb2df8bcfad51db285cd4d5c43029ac49a4d8724.
    six-family successful setup branch is fixed/ordered; missing/aliased/wrong-
    session families cannot donate credit. This is not an exhaustive driver profile
    or native readiness proof; driver_complete stays false even on positives.
+5. Separate named read intent from successful empty result; missing/doubled/
+   mismatched/replayed intent cannot become absence. Modeled attempts/results and
+   conditional B+D arithmetic are separate fields, never native-total certificates.
 
 The128-event bound is a synthetic fixture domain, not an actual query/resource
 budget. Existing v1/v2 transcript, actual worker and32-query guard stay unchanged.

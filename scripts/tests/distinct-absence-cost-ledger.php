@@ -16,6 +16,7 @@ final class Alynt_Test_Distinct_Absence_Cost_Ledger {
             count( $events ) < 1 || count( $events ) > self::MODEL_EVENT_LIMIT || array_keys( $events ) !== range( 0, count( $events ) - 1 ) ) return false;
         $last = $args[4]; $stage = 0; $bulk = 0; $absent = array(); $pending = null; $api = 0; $cache = 0;
         $driver = 0; $driver_api = 0; $driver_sql = 0; $verifier = 0;
+        $inflight = null; $attempts = 0; $results = 0;
         foreach ( $events as $event ) {
             if ( ! is_array( $event ) || array_keys( $event ) !== range( 0, 5 ) ) return false;
             list( $tick, $session, $kind, $name, $outcome, $rows ) = $event;
@@ -35,9 +36,9 @@ final class Alynt_Test_Distinct_Absence_Cost_Ledger {
             }
             if ( count( self::MODEL_DRIVER_SEQUENCE ) !== $driver ) return false;
             if ( 'bulk' === $kind && '-' === $name ) {
-                if ( 0 === $stage && 'fallback' === $mode && 0 === $rows ) { $stage = 1; $bulk++; continue; }
+                if ( 0 === $stage && 'fallback' === $mode && 0 === $rows ) { $stage = 1; $bulk++; $attempts++; $results++; continue; }
                 if ( ( ( 0 === $stage && 'autoload' === $mode ) || ( 1 === $stage && 'fallback' === $mode ) ) && 29 === $rows ) {
-                    $stage = 2; $bulk++; continue;
+                    $stage = 2; $bulk++; $attempts++; $results++; continue;
                 }
                 return false;
             }
@@ -46,16 +47,20 @@ final class Alynt_Test_Distinct_Absence_Cost_Ledger {
                 $pending = $name; $api++; continue;
             }
             if ( $pending !== $name ) return false;
-            if ( 'cache' === $kind && ( isset( $absent[$name] ) || isset( $catalog['present'][$name] ) ) ) {
+            if ( 'read_attempt' === $kind && null === $inflight && in_array( $name, $catalog['absent'], true ) && ! isset( $absent[$name] ) ) {
+                $inflight = $name; $attempts++; continue;
+            }
+            if ( 'cache' === $kind && null === $inflight && ( isset( $absent[$name] ) || isset( $catalog['present'][$name] ) ) ) {
                 $pending = null; $cache++; continue;
             }
-            if ( 'miss' !== $kind || ! in_array( $name, $catalog['absent'], true ) || isset( $absent[$name] ) ) return false;
+            if ( 'miss' !== $kind || $inflight !== $name || ! in_array( $name, $catalog['absent'], true ) || isset( $absent[$name] ) ) return false;
             $absent[$name] = true;
-            $pending = null;
+            $pending = null; $inflight = null; $results++;
         }
-        if ( 2 !== $stage || null !== $pending ) return false;
+        if ( 2 !== $stage || null !== $pending || null !== $inflight ) return false;
         return array( 'model' => 'alynt.absence-cost.model.v1', 'synthetic_match' => true,
-            'bulk_attempts' => $bulk, 'distinct_absent' => array_keys( $absent ), 'option_select_attempts' => $bulk + count( $absent ),
+            'bulk_attempts' => $bulk, 'distinct_absent' => array_keys( $absent ), 'option_select_attempts' => $attempts,
+            'data_results' => $results, 'conditional_option_subtotal' => $bulk + count( $absent ),
             'api_visits' => $api, 'cache_hits' => $cache,
             'core_driver_api' => $driver_api, 'core_driver_sql' => $driver_sql, 'verifier_audits' => $verifier,
             'native_proven' => false, 'absence_proven' => false, 'driver_complete' => false,

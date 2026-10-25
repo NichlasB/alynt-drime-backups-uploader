@@ -12,6 +12,7 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $events[] = array( 1001, 'core', 'bulk', '-', 'ok', 29 );
         foreach ( $names as $name ) {
             $events[] = array( 1002, 'core', 'api', $name, 'ok', 0 );
+            $events[] = array( 1002, 'core', 'read_attempt', $name, 'ok', 0 );
             $events[] = array( 1002, 'core', 'miss', $name, 'ok', 0 );
         }
         return $events;
@@ -44,7 +45,7 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
             $bad = $base; $bad[$miss][5] = $rows; $this->assertFalse( $this->runLedger( $bad ) );
         }
         $bad = $base; $bad[] = $bad[1]; $this->assertFalse( $this->runLedger( $bad ) );
-        $bad = array_merge( array( $base[0] ), array_fill( 0, 8, $base[1] ) );
+        $bad = $this->events( 'autoload', array_fill( 0, 8, 'sidebars_widgets' ) );
         $this->assertFalse( $this->runLedger( $bad ) );
         foreach ( array( 'profile', 'present', 'absent', 'hidden' ) as $group ) {
             $catalog = $this->catalog(); unset( $catalog[$group] );
@@ -66,11 +67,11 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $this->assertSame( array( 'sidebars_widgets' ), $result['distinct_absent'] );
         $this->assertSame( 2, $result['option_select_attempts'] );
         $bad = $this->events(); $bad[$miss][2] = 'cache'; $this->assertFalse( $this->runLedger( $bad ) );
-        $bad = $this->events(); unset( $bad[$miss - 1] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
-        $bad = $this->events(); $bad[] = $bad[$miss - 1]; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $this->events(); unset( $bad[$miss - 2] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
+        $bad = $this->events(); $bad[] = $bad[$miss - 2]; $this->assertFalse( $this->runLedger( $bad ) );
         $bad = $events; $bad[] = array( 1003, 'core', 'cache', 'sidebars_widgets', 'ok', 0 );
         $this->assertFalse( $this->runLedger( $bad ) );
-        $bad = $this->events(); $bad[] = $bad[$miss - 1]; $bad[] = $bad[$miss]; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $this->events(); $bad[] = $bad[$miss - 2]; $bad[] = $bad[$miss - 1]; $bad[] = $bad[$miss]; $this->assertFalse( $this->runLedger( $bad ) );
     }
     public function test_driver_setup_and_verifier_audit_are_separate_fixed_namespaces() {
         $events = $this->events(); array_unshift( $events, array( 1001, 'verifier', 'audit', 'identity_grants', 'ok', 0 ) );
@@ -85,5 +86,18 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         }
         $bad = $this->events(); $bad[count( $bad ) - 1][1] = 'verifier'; $this->assertFalse( $this->runLedger( $bad ) );
         $bad = $events; $bad[0][1] = 'core'; $this->assertFalse( $this->runLedger( $bad ) );
+    }
+    public function test_attempt_result_pairing_and_replay_refusal_cannot_be_replaced_by_counts() {
+        $events = $this->events(); $miss = count( $events ) - 1;
+        $result = $this->runLedger( $events );
+        $this->assertSame( 2, $result['option_select_attempts'] ); $this->assertSame( 2, $result['data_results'] );
+        $this->assertSame( 2, $result['conditional_option_subtotal'] );
+        $bad = $events; unset( $bad[$miss - 1] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
+        $bad = $events; array_pop( $bad ); $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $events; array_splice( $bad, $miss, 0, array( $bad[$miss - 1] ) ); $this->assertFalse( $this->runLedger( $bad ) );
+        foreach ( array( 'replay', 'reconnect', 'default', 'query_filter_visit', 'num_queries', 'unknown' ) as $kind ) {
+            $bad = $events; $bad[$miss - 1][2] = $kind; $this->assertFalse( $this->runLedger( $bad ) );
+        }
+        $bad = $events; $bad[$miss - 1][3] = 'category_base'; $this->assertFalse( $this->runLedger( $bad ) );
     }
 }
