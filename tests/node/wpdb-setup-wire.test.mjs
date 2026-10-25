@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { copyWpdbSetupPayload, decodeWpdbSetupOK } from '../../scripts/tests/wpdb-setup-wire.mjs';
-import { packet } from './support/wpdb-setup-wire-fixtures.mjs';
+import { copyWpdbSetupPayload, decodeWpdbSetupOK, decodeWpdbModeResult } from '../../scripts/tests/wpdb-setup-wire.mjs';
+import { packet, modeFrames, modeColumnHex } from './support/wpdb-setup-wire-fixtures.mjs';
 
 test('packet copy is detached and header/sequence exact', () => {
 	const frame = packet([1, 2, 3], 1), copy = copyWpdbSetupPayload(frame, 1);
@@ -56,4 +56,50 @@ test('OK cannot hide wrong sequence, trailing frame or length mismatch', () => {
 	assert.equal(decodeWpdbSetupOK(packet([0, 0, 0, 2, 0, 0, 0], 2)), false);
 	assert.equal(decodeWpdbSetupOK(Buffer.concat([frame, frame])), false);
 	for (let cut = 0; cut < frame.length; cut++) assert.equal(decodeWpdbSetupOK(frame.subarray(0, cut)), false);
+});
+
+for (const [value, expected] of [['', 'one-empty-string'], ['STRICT_TRANS_TABLES', 'one-filterable-nonempty']]) {
+	test(`exact one-value mode ${expected} has non-vacuous positive grammar`, () => {
+		const frames = modeFrames(value), original = frames.map((f) => Buffer.from(f));
+		assert.equal(decodeWpdbModeResult(frames), expected); assert.deepEqual(frames, original);
+	});
+}
+test('every fixed column metadata byte is significant', () => {
+	const column = Buffer.from(modeColumnHex, 'hex');
+	for (let i = 0; i < column.length; i++) {
+		const frames = modeFrames(); const changed = Buffer.from(column); changed[i] ^= 1; frames[1] = packet(changed, 2);
+		assert.equal(decodeWpdbModeResult(frames), false, `metadata byte ${i}`);
+	}
+});
+for (const row of [[251], [], [1, 48], [1, 0], [252, 0, 0], [255, 1], [0, 0]]) {
+	test(`NULL/error/noncanonical mode row ${Buffer.from(row).toString('hex')} refuses`, () => {
+		const frames = modeFrames(); frames[3] = packet(row, 4); assert.equal(decodeWpdbModeResult(frames), false);
+	});
+}
+for (const value of ['0', 'STRICT_ALL_TABLES', 'STRICT_TRANS_TABLES,NO_ZERO_DATE', 'strict_trans_tables', ' ', 'é']) {
+	test(`unqualified dynamic mode ${value} refuses`, () => assert.equal(decodeWpdbModeResult(modeFrames(value)), false));
+}
+test('metadata/row EOF errors, warnings, more-results and alternate terminators refuse', () => {
+	for (const index of [2, 4]) for (const body of [[254, 1, 0, 2, 0], [254, 0, 0, 10, 0], [254, 0, 0, 2],
+		[0, 0, 0, 2, 0, 0, 0], [255, 1, 0], [254, 0, 0, 2, 0, 0]]) {
+		const frames = modeFrames(); frames[index] = packet(body, index + 1); assert.equal(decodeWpdbModeResult(frames), false);
+	}
+});
+test('missing/additional rows, packets, wrong sequences or counts refuse', () => {
+	for (let index = 0; index < 5; index++) {
+		const frames = modeFrames(); assert.equal(decodeWpdbModeResult(frames.filter((_, i) => i !== index)), false);
+		frames[index][3] = 0; assert.equal(decodeWpdbModeResult(frames), false);
+	}
+	for (const count of [[0], [2], [251], [252, 1, 0]]) {
+		const frames = modeFrames(); frames[0] = packet(count, 1); assert.equal(decodeWpdbModeResult(frames), false);
+	}
+	assert.equal(decodeWpdbModeResult([...modeFrames(), packet([0], 6)]), false);
+});
+test('array descriptors reject holes/getters/proxies and excess keys without reading protected values', () => {
+	let calls = 0; const getter = modeFrames(); Object.defineProperty(getter, '0', { get() { calls++; throw Error('getter'); } });
+	const extra = modeFrames(); extra[Symbol()] = true; const hole = modeFrames(); delete hole[2];
+	for (const frames of [getter, extra, hole, new Proxy([], { get() { calls++; throw Error('trap'); } }), null, {}]) {
+		assert.equal(decodeWpdbModeResult(frames), false);
+	}
+	assert.equal(calls, 0);
 });

@@ -96,3 +96,10 @@ insert counts/warnings and status2 only. Every payload bit mutation, noncanonica
 length, error/infile/EOF/alternate OK, wrong sequence and suffix refuses. Temporary
 copies clear in finally without altering caller bytes. This is a fixed synthetic
 completion predicate, not general authentication/COMMIT or schema-selection proof.
+
+Task4 adds exact five-packet one-column/one-row ordinary-EOF grammar. Every
+metadata byte and sequence matters; EOF status/warnings and canonical row bytes
+are checked. Positive empty and fixed nonempty values classify independently;
+NULL/zero/dynamic/missing/extra/error/alternate terminators refuse. Plain array
+descriptors prevent getter/proxy reads; total copies bounded and cleared finally.
+No actual SQL-mode semantics or installed metadata/profile qualification claimed.

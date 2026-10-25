@@ -22,3 +22,28 @@ export function decodeWpdbSetupOK(frame) {
 	try { return payload.equals(setupOK); }
 	finally { payload.fill(0); }
 }
+
+const modeColumn = Buffer.concat([Buffer.from([3]), Buffer.from('def'), Buffer.from([0, 0, 0, 18]),
+	Buffer.from('@@SESSION.sql_mode'), Buffer.from([0, 12, 45, 0, 0, 4, 0, 0, 253, 0, 0, 0, 0, 0])]);
+const ordinaryEOF = Buffer.from([254, 0, 0, 2, 0]);
+const nonemptyMode = Buffer.from('\x13STRICT_TRANS_TABLES');
+export function decodeWpdbModeResult(frames) {
+	if (!Array.isArray(frames) || types.isProxy(frames) || Object.getPrototypeOf(frames) !== Array.prototype ||
+		frames.length !== 5 || Reflect.ownKeys(frames).length !== 6) return false;
+	const fields = Object.getOwnPropertyDescriptors(frames);
+	if (![0, 1, 2, 3, 4].every((i) => Object.hasOwn(fields, i) && Object.hasOwn(fields[i], 'value'))) return false;
+	const bodies = []; let total = 0;
+	try {
+		for (let i = 0; i < 5; i++) {
+			const frame = fields[i].value;
+			if (!ordinaryBytes(frame) || total + frame.length > 16384) return false;
+			total += frame.length;
+			const body = copyWpdbSetupPayload(frame, i + 1); if (!body) return false; bodies.push(body);
+		}
+		if (!bodies[0].equals(Buffer.from([1])) || !bodies[1].equals(modeColumn) ||
+			!bodies[2].equals(ordinaryEOF) || !bodies[4].equals(ordinaryEOF)) return false;
+		if (bodies[3].equals(Buffer.from([0]))) return 'one-empty-string';
+		if (bodies[3].equals(nonemptyMode)) return 'one-filterable-nonempty';
+		return false;
+	} finally { for (const body of bodies) body.fill(0); }
+}
