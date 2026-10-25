@@ -9,7 +9,10 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $events = array();
         if ( 'fallback' === $mode ) $events[] = array( 1001, 'core', 'bulk', '-', 'ok', 0 );
         $events[] = array( 1001, 'core', 'bulk', '-', 'ok', 29 );
-        foreach ( $names as $name ) $events[] = array( 1002, 'core', 'miss', $name, 'ok', 0 );
+        foreach ( $names as $name ) {
+            $events[] = array( 1002, 'core', 'api', $name, 'ok', 0 );
+            $events[] = array( 1002, 'core', 'miss', $name, 'ok', 0 );
+        }
         return $events;
     }
     private function runLedger( $events, $mode = 'autoload' ) {
@@ -31,13 +34,13 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $base = $this->events();
         foreach ( array( 'SIDEbars_widgets', 'sidebars_widgets ', 'sidebar_widgets', "sidebars_widgets\0", 'siteurl',
             'alynt_drime_backups_settings', 'proof_owner', str_repeat( 'x', 81 ), '', null, false, array(), new stdClass() ) as $name ) {
-            $bad = $base; $bad[1][3] = $name; $this->assertFalse( $this->runLedger( $bad ) );
+            $bad = $base; $bad[2][3] = $name; $this->assertFalse( $this->runLedger( $bad ) );
         }
         foreach ( array( 'failed', 'cancelled', 'unknown', 'default', false, null ) as $outcome ) {
-            $bad = $base; $bad[1][4] = $outcome; $this->assertFalse( $this->runLedger( $bad ) );
+            $bad = $base; $bad[2][4] = $outcome; $this->assertFalse( $this->runLedger( $bad ) );
         }
         foreach ( array( 1, 29, -1, '0', false, null, array(), new stdClass() ) as $rows ) {
-            $bad = $base; $bad[1][5] = $rows; $this->assertFalse( $this->runLedger( $bad ) );
+            $bad = $base; $bad[2][5] = $rows; $this->assertFalse( $this->runLedger( $bad ) );
         }
         $bad = $base; $bad[] = $bad[1]; $this->assertFalse( $this->runLedger( $bad ) );
         $bad = array_merge( array( $base[0] ), array_fill( 0, 8, $base[1] ) );
@@ -50,5 +53,22 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $old, $this->args(), 'autoload', $base ) );
         $catalog = $this->catalog(); $catalog['present']['sidebars_widgets'] = 'a:0:{}';
         $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $catalog, $this->args(), 'autoload', $base ) );
+    }
+    public function test_api_and_genuine_learned_cache_counts_cannot_substitute_for_distinct_misses() {
+        $events = $this->events();
+        foreach ( array( 'sidebars_widgets', 'siteurl', 'sidebars_widgets' ) as $name ) {
+            $events[] = array( 1003, 'core', 'api', $name, 'ok', 0 );
+            $events[] = array( 1003, 'core', 'cache', $name, 'ok', 0 );
+        }
+        $result = $this->runLedger( $events );
+        $this->assertSame( 4, $result['api_visits'] ); $this->assertSame( 3, $result['cache_hits'] );
+        $this->assertSame( array( 'sidebars_widgets' ), $result['distinct_absent'] );
+        $this->assertSame( 2, $result['option_select_attempts'] );
+        $bad = $this->events(); $bad[2][2] = 'cache'; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $this->events(); unset( $bad[1] ); $this->assertFalse( $this->runLedger( array_values( $bad ) ) );
+        $bad = $this->events(); $bad[] = $bad[1]; $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $events; $bad[] = array( 1003, 'core', 'cache', 'sidebars_widgets', 'ok', 0 );
+        $this->assertFalse( $this->runLedger( $bad ) );
+        $bad = $this->events(); $bad[] = $bad[1]; $bad[] = $bad[2]; $this->assertFalse( $this->runLedger( $bad ) );
     }
 }

@@ -16,6 +16,9 @@ dashboarddb2df8bcfad51db285cd4d5c43029ac49a4d8724.
 2. Permanent distinct-name/result provenance regressions: repeated one-name-as-eight,
    aliases/overlap/protected names, wrong catalog, failed/default/unknown outcomes
    and present/non-integer rows refuse independently. No SQL or actual absence proof.
+3. Explicit paired API/result events and learned-cache behavior: repeated API and
+   cache hits count work without adding SELECT/distinct credit; pending/missing/
+   mismatched results or cache absence without a prior successful miss refuse.
 
 The128-event bound is a synthetic fixture domain, not an actual query/resource
 budget. Existing v1/v2 transcript, actual worker and32-query guard stay unchanged.

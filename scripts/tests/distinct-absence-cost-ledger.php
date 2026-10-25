@@ -12,7 +12,7 @@ final class Alynt_Test_Distinct_Absence_Cost_Ledger {
             ! Alynt_Sidebar_Projection_Catalog::matches( $catalog, ...$args ) ||
             ! in_array( $mode, array( 'autoload', 'fallback' ), true ) || ! is_array( $events ) ||
             count( $events ) < 1 || count( $events ) > self::MODEL_EVENT_LIMIT || array_keys( $events ) !== range( 0, count( $events ) - 1 ) ) return false;
-        $last = $args[4]; $stage = 0; $bulk = 0; $absent = array();
+        $last = $args[4]; $stage = 0; $bulk = 0; $absent = array(); $pending = null; $api = 0; $cache = 0;
         foreach ( $events as $event ) {
             if ( ! is_array( $event ) || array_keys( $event ) !== range( 0, 5 ) ) return false;
             list( $tick, $session, $kind, $name, $outcome, $rows ) = $event;
@@ -27,12 +27,22 @@ final class Alynt_Test_Distinct_Absence_Cost_Ledger {
                 }
                 return false;
             }
-            if ( 'miss' !== $kind || 2 !== $stage || 0 !== $rows || ! in_array( $name, $catalog['absent'], true ) || isset( $absent[$name] ) ) return false;
+            if ( 2 !== $stage || 0 !== $rows ) return false;
+            if ( 'api' === $kind && null === $pending && ( isset( $catalog['present'][$name] ) || in_array( $name, $catalog['absent'], true ) ) ) {
+                $pending = $name; $api++; continue;
+            }
+            if ( $pending !== $name ) return false;
+            if ( 'cache' === $kind && ( isset( $absent[$name] ) || isset( $catalog['present'][$name] ) ) ) {
+                $pending = null; $cache++; continue;
+            }
+            if ( 'miss' !== $kind || ! in_array( $name, $catalog['absent'], true ) || isset( $absent[$name] ) ) return false;
             $absent[$name] = true;
+            $pending = null;
         }
-        if ( 2 !== $stage ) return false;
+        if ( 2 !== $stage || null !== $pending ) return false;
         return array( 'model' => 'alynt.absence-cost.model.v1', 'synthetic_match' => true,
             'bulk_attempts' => $bulk, 'distinct_absent' => array_keys( $absent ), 'option_select_attempts' => $bulk + count( $absent ),
+            'api_visits' => $api, 'cache_hits' => $cache,
             'native_proven' => false, 'absence_proven' => false, 'driver_complete' => false,
             'resource_proven' => false, 'wiring_supported' => false, 'execution_supported' => false );
     }
