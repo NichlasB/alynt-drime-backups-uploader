@@ -1,6 +1,7 @@
 // Socket-free composition candidate only. No transport/worker or arbitrary observer callback.
 import { types } from 'node:util';
 import { createProjectionZeroRowDecoder } from './projection-zero-row-decoder.mjs';
+import { projectionSessionProfile } from './projection-session-profile.mjs';
 
 const identities = ['attempt', 'pair', 'generation', 'request', 'session'];
 const configKeys = [...identities, 'startedNs', 'seed', 'schema', 'name', 'catalog', 'protocol', 'capabilities'];
@@ -18,7 +19,7 @@ export function createProjectionObserverOwner(options) {
 	let decoder = createProjectionZeroRowDecoder(config);
 	const owned = Object.fromEntries(identities.map((key) => [key, config[key]]));
 	const deadline = config.startedNs + 20000000000n;
-	let last = config.startedNs, refused = false, closed = false, copied = 0, pending = 0;
+	let last = config.startedNs, refused = false, closed = false, copied = 0, pending = 0, sessionBound = false;
 	const entries = new Map(), order = [];
 	const clear = () => { for (const entry of entries.values()) entry.copy.fill(0); entries.clear(); order.length = 0; pending = 0; };
 	const disposeDecoder = () => { if (decoder) decoder.finish(owned, last); decoder = null; };
@@ -30,9 +31,14 @@ export function createProjectionObserverOwner(options) {
 		last = now; return true;
 	};
 	return Object.freeze({
+		bindSession(frames, identity, now) {
+			if (!context(identity, now)) return false;
+			if (sessionBound || entries.size !== 0 || !projectionSessionProfile(frames, config.seed)) return fail();
+			sessionBound = true; return true;
+		},
 		capture(direction, chunk, identity, now) {
 			if (!context(identity, now)) return false;
-			if (!['client', 'server'].includes(direction) || !bytes(chunk) || chunk.length < 1 ||
+			if (!sessionBound || !['client', 'server'].includes(direction) || !bytes(chunk) || chunk.length < 1 ||
 				chunk.length > 16384 || copied + chunk.length > 16384 || pending + chunk.length > 16384 || order.length >= 512) return fail();
 			const copy = Buffer.alloc(chunk.length); Buffer.prototype.copy.call(chunk, copy);
 			const credit = Symbol('projection-copy'); entries.set(credit, { direction, copy }); order.push(credit);

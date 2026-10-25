@@ -12,8 +12,17 @@ export function packets() {
 	return [Buffer.from("\x03SELECT option_value FROM wp_alynt_ro_012345abcdef_options WHERE option_name = 'sidebars_widgets' LIMIT 1"),
 		Buffer.from([1]), column, Buffer.from([254, 0, 0, 2, 0]), Buffer.from([254, 0, 0, 2, 0])].map(frame);
 }
-export function fixture(factory = createProjectionObserverOwner) {
+export function sessionFrames() {
+	const fixed = Buffer.alloc(31); fixed.writeUInt32LE(103); fixed.fill(65, 4, 12); fixed.writeUInt16LE(0xa209, 13);
+	fixed[15] = 45; fixed.writeUInt16LE(2, 16); fixed.writeUInt16LE(8, 18); fixed[20] = 21;
+	const hello = Buffer.alloc(32); hello.writeUInt32LE(0x88209); hello.writeUInt32LE(16384, 4); hello[8] = 45;
+	return [Buffer.concat([Buffer.from('\x0a5.5.5-10.6.23-MariaDB\0'), fixed, Buffer.from('BBBBBBBBBBBB\0mysql_native_password\0')]),
+		Buffer.concat([hello, Buffer.from('alynt_ro_012345abcdef_i\0'), Buffer.from([20]), Buffer.alloc(20, 67), Buffer.from('local\0mysql_native_password\0')]),
+		Buffer.from([0, 0, 0, 2, 0, 0, 0])].map(frame);
+}
+export function fixture(factory = createProjectionObserverOwner, bind = true) {
 	const c = config(), identity = Object.fromEntries(identityKeys.map((key) => [key, c[key]])), owner = factory(c);
+	if (bind && !owner.bindSession(sessionFrames(), identity, 100n)) throw Error('synthetic fixture session refused');
 	const capture = (index, chunk = packets()[index], now = 101n) => owner.capture(index ? 'server' : 'client', chunk, identity, now);
 	const send = (index, chunk = packets()[index], now = 101n) => { const credit = capture(index, chunk, now); return typeof credit === 'symbol' && owner.observe(credit, identity, now); };
 	return { c, identity, owner, capture, send, finish: (now = 101n) => owner.finish(identity, now) };

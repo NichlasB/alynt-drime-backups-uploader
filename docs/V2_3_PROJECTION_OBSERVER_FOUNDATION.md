@@ -31,5 +31,15 @@ find no outstanding issue in this test-only boundary; pending-finish decoder
 disposal was tightened before publication. No UI/UX or meaningful Bloat trigger.
 No whole-plugin/FULL/Database/physical readiness refresh or package/release.
 
+Task3: fixed synthetic three-packet session profile now precedes capture. Same
+seed-derived limited username/schema, exact client flags/collation/max packet,
+bounded greeting/OK/sequence/plugin and one-time binding. Root/foreign/malformed/
+unsupported/replayed input poisons; temporary copies are zeroed. Authentication
+response bytes are opaque and unreported; a positive only correlates invented
+bytes, never proves credentials/grants or genuine installed compatibility.
+Layout reference: [MariaDB connection](https://mariadb.com/docs/server/reference/clientserver-protocol/1-connecting/connection).
+No actual handshake/session, account or driver operation, and old profiles remain
+unchanged. Permanent tests include the real new parser, not an injected provider.
+
 Implementation-plan progress: fixed observer ownership is being modeled, not real
 provenance. Final synthetic reconciliation must precede any proposed native proof.

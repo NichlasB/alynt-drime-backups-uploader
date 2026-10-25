@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createProjectionObserverOwner } from '../../scripts/tests/projection-observer-owner.mjs';
-import { config, fixture, packets, identityKeys } from './support/projection-observer-fixtures.mjs';
+import { config, fixture, packets, identityKeys, sessionFrames } from './support/projection-observer-fixtures.mjs';
+import { projectionSessionProfile } from '../../scripts/tests/projection-session-profile.mjs';
 
 function result(receipt, match = false) {
 	assert.equal(receipt.synthetic_match, match); assert.equal(receipt.synthetic_only, true); assert.equal(Object.isFrozen(receipt), true);
@@ -15,7 +16,7 @@ test('fixed owner composes the actual decoder with detached bytes and opaque cre
 		input.fill(0); assert.equal(f.owner.observe(credit, f.identity, 101n), true);
 	}
 	result(f.finish(), true); assert.equal(f.finish(), false); assert.equal(f.send(0), false);
-	assert.equal(Object.isFrozen(f.owner), true); assert.deepEqual(Object.keys(f.owner), ['capture', 'observe', 'finish']);
+	assert.equal(Object.isFrozen(f.owner), true); assert.deepEqual(Object.keys(f.owner), ['bindSession', 'capture', 'observe', 'finish']);
 });
 test('fragmented copied bytes remain ordered and preserve the selected exchange', () => {
 	const f = fixture(); for (const [i, packet] of packets().entries()) for (const byte of packet) assert.equal(f.send(i, Buffer.from([byte])), true);
@@ -53,4 +54,32 @@ test('original clock and cumulative copy ceilings are not refreshed by disposal'
 	const f = fixture(); assert.equal(f.capture(0, undefined, 20000000100n), false); result(f.finish(20000000100n));
 	const g = fixture(); const token = g.capture(0, undefined, 200n); assert.equal(g.owner.observe(token, g.identity, 199n), false); result(g.finish(200n));
 	const h = fixture(); assert.equal(typeof h.capture(0, Buffer.alloc(16384)), 'symbol'); assert.equal(h.capture(0, Buffer.from([1])), false); result(h.finish());
+});
+
+test('session profile is required once, before capture, with genuine module composition', () => {
+	const f = fixture(undefined, false); assert.equal(f.capture(0), false); result(f.finish());
+	const g = fixture(); assert.equal(g.owner.bindSession(sessionFrames(), g.identity, 101n), false); result(g.finish());
+	assert.equal(projectionSessionProfile(sessionFrames(), '012345abcdef'), 103);
+});
+for (const kind of ['root', 'schema', 'flags', 'plugin', 'max-packet', 'thread', 'server-flags', 'error', 'sequence', 'extra', 'truncated']) test(`session ${kind} refuses before selected bytes`, () => {
+	const f = fixture(undefined, false), frames = sessionFrames();
+	if (kind === 'root') frames[1].write('root', 36);
+	if (kind === 'schema') frames[1][frames[1].indexOf(Buffer.from('local'))] ^= 1;
+	if (kind === 'flags') frames[1][4] ^= 0x20;
+	if (kind === 'plugin') frames[1][frames[1].length - 2] ^= 1;
+	if (kind === 'max-packet') frames[1][8] ^= 1;
+	if (kind === 'thread') frames[0].fill(0, 4 + Buffer.from('\x0a5.5.5-10.6.23-MariaDB\0').length, 8 + Buffer.from('\x0a5.5.5-10.6.23-MariaDB\0').length);
+	if (kind === 'server-flags') frames[0][4 + Buffer.from('\x0a5.5.5-10.6.23-MariaDB\0').length + 13] ^= 0x20;
+	if (kind === 'error') frames[2][4] = 255;
+	if (kind === 'sequence') frames[1][3] = 0;
+	if (kind === 'extra') frames.push(Buffer.from([1]));
+	if (kind === 'truncated') frames[1] = frames[1].subarray(0, -1);
+	assert.equal(f.owner.bindSession(frames, f.identity, 101n), false); assert.equal(f.capture(0), false); result(f.finish());
+});
+test('session array getters/proxies never execute; auth bytes remain opaque and unreported', () => {
+	let invoked = false; const frames = sessionFrames(); Object.defineProperty(frames, 1, { get() { invoked = true; throw Error('no'); } });
+	assert.equal(projectionSessionProfile(frames, '012345abcdef'), false); assert.equal(invoked, false);
+	assert.equal(projectionSessionProfile(new Proxy(sessionFrames(), { ownKeys() { throw Error('no'); } }), '012345abcdef'), false);
+	const opaque = sessionFrames(), at = 36 + Buffer.from('alynt_ro_012345abcdef_i\0').length + 1; opaque[1].fill(99, at, at + 20);
+	assert.equal(projectionSessionProfile(opaque, '012345abcdef'), 103); // Not a password-validation claim.
 });
