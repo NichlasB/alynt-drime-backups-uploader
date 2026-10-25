@@ -80,3 +80,42 @@ or whole-plugin review. This task adds tests, not an actual transport policy.
 
 Implementation-plan progress: fixed observer ownership is being modeled, not real
 provenance. Final synthetic reconciliation must precede any proposed native proof.
+
+Task8 readiness reconciliation: the fixed owner composes the actual unchanged
+zero-row decoder with detached bytes, synthetic session/profile, exact ordered
+acknowledgements, model EOFs and bounded capture accounting. Static tests pin the
+imports and reject observer references in runtime PHP/runner sources; not an
+installed-site attestation. Positive receipts explicitly deny all actual authority.
+No existing relay, passive sink, worker, source group, catalog, decoder or ledger
+is changed; no real transport forwarding, handshake or shutdown path exercised.
+
+Canonical Feature Light/final focused Feature Security, explicit coherent bases
+above, only new helper/tests/docs plus directly referenced unchanged contracts:
+no outstanding scoped defect or new security-regression handoff. Final owner85
+and profile34 lines remain cohesive; no meaningful Bloat/UI/UX trigger.07/07A
+source-scoped evidence is task7, no whole-plugin/Database/FULL refresh. The test
+anchor correction was a control-harness issue, not a production defect or killed
+guard. Final test/CI counts and each exact commit are recorded in toolkit evidence.
+
+Completion decision: synthetic foundation only, native NO-GO/A1-A4 still open.
+The mask/server greeting/max-packet/one-request fixtures are invented, not observed
+installed driver behavior; existing generic/root-role relay is not qualified for
+this candidate. Do not go directly to a native experiment, change features to fit
+the parser, or claim immutable arbitrary-observer isolation from the old sink.
+
+Recommended next gated slice: **Plugin Tester local-only Fixed Projection
+Session/Profile Read-Only Feasibility Audit**, with exact target confirmation,
+before planning any owned native proof. Inspect only approved non-secret installed
+source/configuration/profile facts; no SQL, actual authentication, fixture/account/
+permission writes, listeners, selected loss or driver/server changes. A later
+owned no-fault proof needs its own qualified plan and fixture/operation authority.
+Actual worker/storage/native execution/production wiring remain unchanged.
+
+Final executed local validation: new observer suites56 tests, plus unchanged
+zero-row613 =669 targeted; full Node1733/1733; related PHP20/1538; all skip-free.
+Uploader PHPCS255/build/runner verification/generated-asset preservation passed;
+existing functionWhitelist configuration deprecation remains, no new lint issue.
+Dashboard299/1423 with two existing local Sodium skips, PHPCS138/structure passed.
+Full Windows uploader PHP suite is not claimed; exact-head Linux7.4/8.3 CI results
+for each task are the separate publication gate in toolkit evidence. No RC/full-
+plugin review, package, tag, release, deployment or native operation occurred.

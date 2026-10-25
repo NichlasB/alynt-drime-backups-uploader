@@ -7,6 +7,11 @@ repository-only tasks progress detached bytes/session/ordered-credit/closure/
 resource modeling and adversarial/readiness evidence. Actual worker/storage/
 native execution and wiring unchanged; A1-A4/native observation still Blocked.
 Task1 specifies the contract; no actual observer attachment authorized.
+Tasks2-8 implement/test the fixed synthetic composition with11 semantic guard
+controls and final static dormancy/readiness reconciliation; exact-head CI for
+each commit is tracked source-scoped in toolkit evidence. Native NO-GO remains.
+Next gate: Plugin Tester local-only Fixed Projection Session/Profile Read-Only
+Feasibility Audit, exact target confirmation, before any owned native proof.
 
 ## V2.3 Socket-Free Projection Zero-Row / Provenance Foundation — 2026-10-25
 
