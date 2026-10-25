@@ -83,3 +83,10 @@ No actual SQL/authentication, WordPress/LocalWP/native runs, fixtures/accounts/
 permissions/listeners/processes/services, storage/wiring, package/release/tag/deploy.
 Restore OptionA checked clean02f1455/existing external20261024-161220 archive;
 no new backup/checkpoint/restore created. Static site workflow/registry only.
+
+Task2 implements only complete-packet validation and detached payload copying.
+Header/sequence/ordinary non-shared Buffer checks precede allocation; payload
+1..4096, exact total length, sequence0..8. Fragment/continuation/concatenation,
+exotic/proxy/getter/shared inputs refuse. Returned bytes are caller-owned test
+data, not a storage/connection handle or provenance receipt. Owner cleanup and
+cumulative limits remain separate obligations in task6.
