@@ -29,6 +29,10 @@ dashboarddb2df8bcfad51db285cd4d5c43029ac49a4d8724.
 6. Mandatory one-shot synthetic finish under the original20s virtual epoch; partial
    or late traces, repeated finish, backwards/non-integer clocks and expiry refuse.
    Finish is a model marker, not engine shutdown, process/EOF or cleanup evidence.
+7. Strict primitive/shape/arity and exact128-event fixture-domain tests: objects,
+   sparse/reordered/extra slots, malformed contexts and129 events refuse before
+   traversal. Max-size positive audit trace never increases core option credit;
+   returned copies do not leak mutable state between evaluations.
 
 The128-event bound is a synthetic fixture domain, not an actual query/resource
 budget. Existing v1/v2 transcript, actual worker and32-query guard stay unchanged.

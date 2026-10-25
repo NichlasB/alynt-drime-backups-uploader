@@ -116,4 +116,33 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         }
         $bad = $events; array_unshift( $bad, $bad[$last] ); $this->assertFalse( $this->runLedger( $bad ) );
     }
+    public function test_bounded_primitive_shapes_and_exact_fixture_limit() {
+        $base = $this->events();
+        foreach ( array( null, false, 'trace', new stdClass(), array(), array_reverse( $base, true ), array( 9 => $base[0] ) ) as $events ) {
+            $this->assertFalse( $this->runLedger( $events ) );
+        }
+        foreach ( $base as $index => $event ) {
+            foreach ( array( null, false, 'event', new stdClass(), array(), array_reverse( $event, true ), $event + array( 6 => 'extra' ) ) as $row ) {
+                $bad = $base; $bad[$index] = $row; $this->assertFalse( $this->runLedger( $bad ) );
+            }
+            foreach ( range( 0, 5 ) as $slot ) foreach ( array( null, false, new stdClass(), array() ) as $value ) {
+                $bad = $base; $bad[$index][$slot] = $value; $this->assertFalse( $this->runLedger( $bad ), $index . ':' . $slot );
+            }
+        }
+        foreach ( array( 'AUTOLOAD', '', null, false, array() ) as $mode ) $this->assertFalse( $this->runLedger( $base, $mode ) );
+        foreach ( range( 0, 5 ) as $slot ) {
+            $args = $this->args(); $args[$slot] = new stdClass();
+            $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $this->catalog(), $args, 'autoload', $base ) );
+        }
+        $audit = array( 1001, 'verifier', 'audit', 'identity_grants', 'ok', 0 );
+        $exact = array_merge( array_fill( 0, 128 - count( $base ), $audit ), $base );
+        $this->assertCount( 128, $exact );
+        $result = $this->runLedger( $exact ); $this->assertTrue( $result['synthetic_match'] );
+        $this->assertSame( 128 - count( $base ), $result['verifier_audits'] );
+        $this->assertSame( 2, $result['option_select_attempts'] );
+        array_unshift( $exact, $audit ); $this->assertFalse( $this->runLedger( $exact ) );
+        $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $this->catalog(), $this->args(), 'autoload', $base, 'extra' ) );
+        $changed = $this->runLedger( $base ); $changed['distinct_absent'][] = 'fake';
+        $this->assertSame( array( 'sidebars_widgets' ), $this->runLedger( $base )['distinct_absent'] );
+    }
 }
