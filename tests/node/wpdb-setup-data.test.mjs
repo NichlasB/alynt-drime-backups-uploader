@@ -119,3 +119,50 @@ test('every selected-setup prefix remains incomplete and post-completion extra e
 	}
 	const f = fixture(); selected(f); assert.equal(f.send('schema-result', 'ok'), false); assert.equal(f.finish().synthetic_match, false);
 });
+
+test('private context cannot be rebound to a replacement owner or renewed epoch', () => {
+	const f = fixture(); assert.throws(() => createWpdbSetupData({ ...f.config, startedNs: 500n }), TypeError);
+	for (const key of keys) {
+		const other = fixture(); const mixed = { ...other.config, [key]: f.identity[key] };
+		assert.throws(() => createWpdbSetupData(mixed), TypeError);
+	}
+});
+for (const key of keys) test(`foreign ${key} poisons original owner without replacement context`, () => {
+	const f = fixture(); const foreign = { ...f.identity, [key]: Symbol(key) };
+	assert.equal(f.owner.accept({ kind: 'connect', value: 'fresh-nonpersistent-no-database' }, foreign, 101n), false);
+	assert.equal(f.send('connect', 'fresh-nonpersistent-no-database'), false); assert.equal(f.finish().synthetic_match, false);
+});
+for (const now of [99n, 20000000100n, 20000000101n, 101, null]) test(`original half-open epoch refuses ${String(now)}`, () => {
+	const f = fixture(); assert.equal(f.send('connect', 'fresh-nonpersistent-no-database', now), false); assert.equal(f.finish().refused, true);
+});
+test('last tick before expiry remains valid, but regression and expired finish refuse', () => {
+	const edge = fixture(); selected(edge); assert.equal(edge.finish(20000000099n).synthetic_match, true);
+	const expired = fixture(); selected(expired); assert.equal(expired.finish(20000000100n).synthetic_match, false);
+	const f = fixture(); f.send('connect', 'fresh-nonpersistent-no-database', 300n);
+	assert.equal(f.send('auth-result', 'synthetic-ok', 299n), false);
+});
+test('input snapshots never invoke getters/proxy traps and reject extra/prototype fields', () => {
+	let calls = 0;
+	const f = fixture(); const getter = { kind: 'connect', get value() { calls++; throw Error('must not read'); } };
+	assert.equal(f.owner.accept(getter, f.identity, 101n), false); assert.equal(calls, 0);
+	for (const event of [new Proxy({}, { ownKeys() { calls++; throw Error('trap'); } }),
+		Object.assign(Object.create(null), { kind: 'connect', value: 'fresh-nonpersistent-no-database' }),
+		{ kind: 'connect', value: 'fresh-nonpersistent-no-database', [Symbol()]: true }]) {
+		const other = fixture(); assert.equal(other.owner.accept(event, other.identity, 101n), false);
+	}
+	assert.equal(calls, 0);
+	const other = fixture(); const identity = { ...other.identity }; Object.defineProperty(identity, 'attempt', { get() { calls++; } });
+	assert.equal(other.owner.accept({ kind: 'connect', value: 'fresh-nonpersistent-no-database' }, identity, 101n), false); assert.equal(calls, 0);
+});
+test('configuration snapshot is detached; malformed/untrusted configuration never constructs', () => {
+	const f = fixture(); f.config.startedNs = 999n; f.config.attempt = Symbol(); selected(f); assert.equal(f.finish().synthetic_match, true);
+	for (const patch of [{ startedNs: -1n }, { startedNs: 100 }, { profile: 'old' }, { schema: 'foreign' },
+		{ attempt: Symbol.for('registered') }, { attempt: 'label' }]) {
+		const own = Object.fromEntries(keys.map((k) => [k, Symbol(k)]));
+		assert.throws(() => createWpdbSetupData({ ...own, startedNs: 100n, profile, schema: 'owned-synthetic', ...patch }), TypeError);
+	}
+});
+test('finish is one-shot and no accepted event can revive a closed owner', () => {
+	const f = fixture(); selected(f); assert.equal(f.finish().synthetic_match, true);
+	assert.equal(f.finish(), false); assert.equal(f.send('connect', 'fresh-nonpersistent-no-database'), false);
+});

@@ -23,6 +23,7 @@ export function wpdbSetupCatalog(profile) {
 }
 
 const identityKeys = ['attempt', 'pair', 'generation', 'request', 'session'];
+const consumedIdentities = new WeakSet();
 const record = (value, keys) => {
 	if (!value || typeof value !== 'object' || types.isProxy(value) || Object.getPrototypeOf(value) !== Object.prototype || Reflect.ownKeys(value).length !== keys.length) return null;
 	const descriptors = Object.getOwnPropertyDescriptors(value);
@@ -34,8 +35,9 @@ export function createWpdbSetupData(options) {
 	const config = record(options, [...identityKeys, 'startedNs', 'profile', 'schema']);
 	if (!config || config.profile !== WPDB_SETUP_DATA_PROFILE || config.schema !== 'owned-synthetic' ||
 		typeof config.startedNs !== 'bigint' || config.startedNs < 0n ||
-		!identityKeys.every((k) => typeof config[k] === 'symbol' && Symbol.keyFor(config[k]) === undefined) ||
+		!identityKeys.every((k) => typeof config[k] === 'symbol' && Symbol.keyFor(config[k]) === undefined && !consumedIdentities.has(config[k])) ||
 		new Set(identityKeys.map((k) => config[k])).size !== identityKeys.length) throw new TypeError('Unsupported synthetic setup context.');
+	for (const key of identityKeys) consumedIdentities.add(config[key]);
 	let stage = 'fresh', refused = false, closed = false, last = config.startedNs;
 	const fail = () => { refused = true; return false; };
 	const context = (identity, now) => {

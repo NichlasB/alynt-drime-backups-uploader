@@ -51,3 +51,9 @@ successful result. Four empty/nonempty and zero/one-wire paths reach a non-vacuo
 synthetic setup match; every prefix, failed selection, old grammar and extra event
 refuses. This stage match is not a packet/result decoder or lifetime/native proof;
 task6 will require the separately modeled terminal join before final match.
+
+Task5 consumes private unregistered identities once per module instance, rejects
+cross-owner/epoch reuse, snapshots data properties without invoking getters or
+proxy traps, and tests half-open original deadline/monotonicity, sticky refusal
+and one-shot finish. Symbols are synthetic correlation, never authentication;
+module isolation is not an unforgeable native provenance mechanism.
