@@ -29,6 +29,10 @@ dashboard076abc69c7fc30ccadfd6e2944bca95e3fa32b4d.
    assertion when a relabeled seven-N trace was accepted, then passed after the
    fixed-profile guard. Every slot/type/counter and all truncated prefixes tested.
    Counts still do not identify actual rows or prove physical absence.
+6. V2 lifecycle failure qualification: post-candidate effects, caught violations,
+   missing/duplicate close/EOF, skipped phases, cache-close omission, clock reversal
+   and original-epoch expiry all refuse permanently. Existing v1 tests still run;
+   no exit0-only success, relaxed deadline or native completion claim.
 
 The catalog has no native consumer. An absent name in a synthetic array is not
 proof of a missing backing-store row, permission denial, pre-owner containment or

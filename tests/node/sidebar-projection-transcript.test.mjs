@@ -72,3 +72,37 @@ test('canonical bytes, every frame/counter slot and extra profile arguments refu
 	assert.equal(parse(bytes, root, 'fallback'), false);
 	assert.equal(parse(bytes, 'b'.repeat(24), 'autoload'), false);
 });
+test('v2 lifecycle refusal stays latched across late effects, caught failures and closure gaps', () => {
+	const bytes = JSON.stringify(frame()) + '\n';
+	for (const [kind,value] of [['query',null],['http',null],['diagnostic',null],['stderr',''],['stdout',' '],['stdout',bytes],
+		['fenced',profile],['core_returned',true],['core_shutdown_returned',[1,1]],['close',[1,null]],['close',[0,'SIGTERM']]]) {
+		const p = ready(); assert.equal(p.event('stdout', bytes, 3), true);
+		assert.equal(p.event(kind, value, 4), false);
+		authorityFree(p.finish(11), false);
+	}
+	for (const omit of ['close','stdout_eof','stderr_eof']) {
+		const p = ready(); assert.equal(p.event('stdout', bytes, 3), true);
+		for (const kind of orders[0].filter(k => k !== omit)) assert.equal(p.event(kind,kind === 'close' ? [0,null] : null,4),true);
+		authorityFree(p.finish(5), false);
+	}
+	for (const duplicate of orders[0]) {
+		const p = ready(); p.event('stdout',bytes,3); const value = duplicate === 'close' ? [0,null] : null;
+		assert.equal(p.event(duplicate,value,4),true); assert.equal(p.event(duplicate,value,5),false);
+		authorityFree(p.finish(6),false);
+	}
+	const caught = ready(); caught.event('stdout',bytes,3);
+	assert.throws(() => caught.violation('discarded secret'), {message:'projection_refused'});
+	assert.equal(caught.event('close',[0,null],4),false); authorityFree(caught.finish(5),false);
+	for (const tick of [1,20000,NaN,Infinity,'3',-1]) {
+		const p = ready(); assert.equal(p.event('stdout',bytes,tick),false); authorityFree(p.finish(19999),false);
+	}
+	const expiry = ready('autoload',1000); expiry.event('stdout',bytes,20999);
+	for (const kind of orders[0]) assert.equal(expiry.event(kind,kind === 'close' ? [0,null] : null,20999),true);
+	authorityFree(expiry.finish(21000),false);
+	for (const events of [[], [['core_returned',true]], [['fenced',profile],['core_shutdown_returned',[1,1]]],
+		[['fenced',profile],['core_returned',true],['core_shutdown_returned',[1,0]]]]) {
+		const p = create(root,'autoload',0); let tick = 0;
+		for (const [kind,value] of events) p.event(kind,value,tick++);
+		assert.equal(p.event('stdout',bytes,tick),false); authorityFree(p.finish(10),false);
+	}
+});
