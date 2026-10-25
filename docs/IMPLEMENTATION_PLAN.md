@@ -8,6 +8,11 @@ old-mask translation. Ordinary-EOF fixture subset is separate from actual driver
 compatibility. Plan advances the source/result boundary; A1-A4/native GO remain
 Blocked. No actual worker, storage, authentication or production wiring change.
 
+Tasks1-8 complete the bounded framing/OK/mode/request/command-owner/semantic/
+dormancy lane; source-scoped exact-head CI evidence lives in toolkit records.
+Next: repository-only Fixed Genuine Setup Observation Admission and Source-
+Ownership Closure Design, before any actual session/native qualification.
+
 ## V2.3 Genuine wpdb Setup DATA Foundation — 2026-10-25
 
 See [owning foundation](V2_3_WPDB_SETUP_DATA_FOUNDATION.md). Eight finite safe-local

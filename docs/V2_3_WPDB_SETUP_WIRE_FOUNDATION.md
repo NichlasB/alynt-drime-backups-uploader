@@ -126,3 +126,39 @@ budget/release and an always-unavailable success mutant. Each assertion first
 passes against the actual helper; mutant imports must succeed before assertions
 kill semantic weakening. Every single-byte mutation of a complete positive
 nonempty exchange is also rejected. No on-disk source mutation or native proof.
+
+## Task8 source-scoped checkpoint and next boundary
+
+Static imports/runtime scans, exact frozen receipt shape and old-profile/mask/
+handshake negatives enforce dormant synthetic scope. Caller-selected labels do
+not establish installed source/session/native authority. All previous DATA/
+observer/worker/runtime files stay unchanged; no new production contract.
+
+Canonical Feature Light: eight uploader files (one114-line cohesive byte/owner
+helper, fixture, four focused tests, owner/plan) plus dashboard plan; explicit
+bases above, not merely the latest docs commit. Other/test-only. Reviewed fixed
+byte grammar and sequence, result/metadata/warning boundaries, branch/request
+pairing, copied buffers, original private epoch/refusal/cleanup, receipt claims,
+test sensitivity and scope. No confirmed scoped non-security defect remains.
+No meaningful Bloat trigger: small cohesive helper/test files, no duplicated
+implementation/debug debris or unnecessary split. No UI/UX trigger.
+
+Final focused Feature Security after validation: no confirmed scoped issue or
+security-fix regression handoff. Inputs have exact bounded bytes/descriptors/
+enums; unsupported cases refuse, temporaries clear finally and receipts cannot
+grant execution. No actual endpoint/SQL/file/network/credential operation or
+protected read/write handle. Not a sandbox against same-process monkey-patching,
+not native heap/resource qualification. Ordinary adversarial tests do not claim
+canonical DS3 07/07A, Database Review or physical transaction/authentication proof.
+Keep historical whole-plugin checklist rows unchanged. FULL remains due before
+packaging a coherent RC; no release is warranted for this synthetic-only batch.
+
+Implementation-plan progress: fixed complete-packet setup result/request ownership
+subset now exercises byte obligations omitted by the primitive DATA model. Native
+source/build/negotiation/ownership and A1-A4 are still unresolved, not maintenance
+items to mask with more synthetic success. Target ceiling8 reached, not a claim
+that every safe-local task is exhausted. Preferred next action: **repository-only
+V2.3 Fixed Genuine Setup Observation Admission and Source-Ownership Closure
+Design**. Specify how actual negotiated/session/source evidence would be admitted
+without changing driver behavior or treating this fixture profile as compatible,
+before seeking separate exact-target/owned-fixture/native observation approval.
