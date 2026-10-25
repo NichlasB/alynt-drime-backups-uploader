@@ -1,5 +1,14 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Socket-Free Projection Zero-Row / Provenance Foundation — 2026-10-25
+
+See [owning foundation](V2_3_PROJECTION_ZERO_ROW_PROVENANCE_FOUNDATION.md).
+Fixed one-column ordinary-EOF response and exact selected request/private-context
+decoder, synthetic bytes/virtual clocks only; positive and adversarial controls.
+Plan advances narrow response/provenance modeling, not native observation or
+A1-A4 closure. Worker/storage/native/wiring unchanged. Next gated slice: design-only
+Fixed Projection Observer Adapter and Session Provenance Integration Design.
+
 ## V2.3 Driver/Session Observation and Provenance Design — 2026-10-25
 
 Dashboard owns docs/V2_3_DRIVER_SESSION_OBSERVATION_PROVENANCE_DESIGN.md.
