@@ -55,6 +55,9 @@ export function createWpdbSetupData(options) {
 			else if (stage === 'charset' && kind === 'charset-api' && value === 'ok-zero-wire') stage = 'mode-read';
 			else if (stage === 'charset' && kind === 'charset-api' && value === 'ok-one-wire') stage = 'charset-wire';
 			else if (stage === 'charset-wire' && kind === 'charset-statement-result' && value === 'ok') stage = 'mode-read';
+			else if (stage === 'mode-read' && kind === 'mode-read-result' && value === 'one-empty-string') stage = 'select-schema';
+			else if (stage === 'mode-read' && kind === 'mode-read-result' && value === 'one-filterable-nonempty') stage = 'mode-write';
+			else if (stage === 'mode-write' && kind === 'mode-write-result' && value === 'ok-fixed-filtered') stage = 'select-schema';
 			else return fail();
 			return true;
 		},

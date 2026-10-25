@@ -39,3 +39,9 @@ Task2 adds exact primitive context/event snapshots, ordered fresh/no-database
 connect, invented auth outcome and explicit zero/one-wire charset mappings.
 Unknown mappings and failed results refuse. Checkpoint is reachable but cannot
 complete before the still-required mode/schema/terminal obligations exist.
+
+Task3 distinguishes successful invented one-empty-string/nonempty mode outcomes.
+Only the latter requires a fixed filtered-write success; failed/no/multi-row,
+NULL/zero-string/dynamic-filter outcomes are not empty success. No SQL value or
+packet interpretation is implemented. Reordered/duplicate/unnecessary writes
+refuse, preserving branch history and later schema-selection requirements.

@@ -53,3 +53,31 @@ test('unknown API/wire mapping and failed charset result are not zero work', () 
 	const f = fixture(); f.send('connect', 'fresh-nonpersistent-no-database'); f.send('auth-result', 'synthetic-ok'); f.send('charset-api', 'ok-one-wire');
 	assert.equal(f.send('charset-statement-result', 'error'), false);
 });
+
+for (const mode of ['one-empty-string', 'one-filterable-nonempty']) test(`successful typed mode branch ${mode} reaches schema checkpoint`, () => {
+	const f = fixture(); prelude(f); assert.equal(f.send('mode-read-result', mode), true);
+	if (mode === 'one-filterable-nonempty') assert.equal(f.send('mode-write-result', 'ok-fixed-filtered'), true);
+	assert.equal(f.finish().stage, 'select-schema');
+});
+for (const value of ['error', 'no-result', 'zero-rows', 'null', 'zero-string', 'multi-rows', 'unknown', '', 'one-nonempty-dynamic-filter']) {
+	test(`mode result ${value} cannot masquerade as successful empty`, () => {
+		const f = fixture(); prelude(f); assert.equal(f.send('mode-read-result', value), false);
+		assert.equal(f.send('mode-read-result', 'one-empty-string'), false); assert.equal(f.finish().refused, true);
+	});
+}
+test('empty branch cannot accept unnecessary write; nonempty cannot skip or accept generic write', () => {
+	const empty = fixture(); prelude(empty); empty.send('mode-read-result', 'one-empty-string');
+	assert.equal(empty.send('mode-write-result', 'ok-fixed-filtered'), false);
+	for (const [kind, value] of [['select-schema-result', 'owned-synthetic'], ['mode-write-result', 'ok'], ['mode-write-result', 'error']]) {
+		const f = fixture(); prelude(f); f.send('mode-read-result', 'one-filterable-nonempty');
+		assert.equal(f.send(kind, value), false);
+	}
+});
+test('mode read or write replay refuses rather than overwriting branch history', () => {
+	for (const mode of ['one-empty-string', 'one-filterable-nonempty']) {
+		const f = fixture(); prelude(f); f.send('mode-read-result', mode);
+		assert.equal(f.send('mode-read-result', mode), false);
+	}
+	const f = fixture(); prelude(f); f.send('mode-read-result', 'one-filterable-nonempty'); f.send('mode-write-result', 'ok-fixed-filtered');
+	assert.equal(f.send('mode-write-result', 'ok-fixed-filtered'), false);
+});
