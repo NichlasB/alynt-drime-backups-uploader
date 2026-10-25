@@ -16,6 +16,9 @@ dashboard076abc69c7fc30ccadfd6e2944bca95e3fa32b4d.
 2. Permanent exhaustive field-removal/value corruption and exact absence tests:
    aliases, duplicates, order/keys, present/hidden overlap and out-of-domain names
    refuse through the actual matcher. This is array provenance, not physical SQL.
+3. Parameter/clock and downgrade regressions: strict primitive domains, extra
+   arguments, original20s epoch, same catalog near expiry, forged old/new labels
+   and stale seven-name evidence refuse. No refreshed deadlines or new clock IO.
 
 The catalog has no native consumer. An absent name in a synthetic array is not
 proof of a missing backing-store row, permission denial, pre-owner containment or

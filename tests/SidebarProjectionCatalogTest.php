@@ -19,6 +19,34 @@ final class SidebarProjectionCatalogTest extends PHPUnit\Framework\TestCase {
         $this->assertFalse( Alynt_Sidebar_Projection_Catalog::matches( $old, ...$this->args() ) );
         $this->assertFalse( Alynt_Fixed_Projection_Catalog::matches( $new, ...$this->args() ) );
     }
+    public function test_original_epoch_strict_arguments_and_profile_downgrade_refuse() {
+        $args = $this->args(); $base = Alynt_Sidebar_Projection_Catalog::build( ...$args );
+        foreach ( $args as $index => $unused ) foreach ( array( null, false, -1, 1.5, '1', array(), new stdClass(), PHP_INT_MAX ) as $value ) {
+            $bad = $args; $bad[$index] = $value;
+            $this->assertFalse( Alynt_Sidebar_Projection_Catalog::build( ...$bad ) );
+            $this->assertFalse( Alynt_Sidebar_Projection_Catalog::matches( $base, ...$bad ) );
+        }
+        foreach ( array( array( 0, str_repeat( 'A', 12 ) ), array( 1, str_repeat( 'b', 24 ) . "\n" ),
+            array( 2, 9999999999 ), array( 4, 999 ), array( 4, 21000 ), array( 5, 1799913601 ) ) as $change ) {
+            $bad = $args; $bad[$change[0]] = $change[1];
+            $this->assertFalse( Alynt_Sidebar_Projection_Catalog::build( ...$bad ) );
+        }
+        $later = $args; $later[4] = 20999; $later[5] += 19;
+        $this->assertSame( $base, Alynt_Sidebar_Projection_Catalog::build( ...$later ) );
+        $this->assertTrue( Alynt_Sidebar_Projection_Catalog::matches( $base, ...$later ) );
+        $this->assertFalse( Alynt_Sidebar_Projection_Catalog::build( ...array_merge( $args, array( 'extra' ) ) ) );
+        $this->assertFalse( Alynt_Sidebar_Projection_Catalog::matches( $base, ...array_merge( $args, array( 'extra' ) ) ) );
+        foreach ( array( Alynt_Fixed_Projection_Catalog::PROFILE, '', str_repeat( '0', 64 ), null, false ) as $profile ) {
+            $bad = $base; $bad['profile'] = $profile;
+            $this->assertFalse( Alynt_Sidebar_Projection_Catalog::matches( $bad, ...$args ) );
+        }
+        $old = Alynt_Fixed_Projection_Catalog::build( ...$args );
+        $old['profile'] = Alynt_Sidebar_Projection_Catalog::PROFILE;
+        $this->assertFalse( Alynt_Sidebar_Projection_Catalog::matches( $old, ...$args ) );
+        $bad = $base; $bad['profile'] = Alynt_Fixed_Projection_Catalog::PROFILE;
+        $this->assertFalse( Alynt_Fixed_Projection_Catalog::matches( $bad, ...$args ) );
+        $this->assertSame( $base, Alynt_Sidebar_Projection_Catalog::build( ...$args ) );
+    }
     public function test_exact_absence_and_every_inherited_field_reject_mutation() {
         $base = Alynt_Sidebar_Projection_Catalog::build( ...$this->args() );
         $this->assertSame( array( 'hack_file', 'wp_attachment_pages_enabled', 'category_base', 'tag_base',
