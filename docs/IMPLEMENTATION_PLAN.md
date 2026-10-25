@@ -6,6 +6,10 @@ See [owning foundation](V2_3_DISTINCT_ABSENCE_COST_LEDGER_FOUNDATION.md). Test-o
 synthetic event accounting follows the revised admission design; fixed catalog,
 distinct names/results and separate cost lanes, not native proof. Actual worker,
 storage, native execution and production wiring remain untouched. A1-A4 still open.
+Eight implementation/test-support/review slices completed the fixed model, with
+distinct named result credit and independent cost lanes; not physical admission.
+Next: repository-only Driver/Session Observation Feasibility and Provenance
+Integration Design before any actual observer/worker or native proof changes.
 
 ## V2.3 Revised Read/Absence and Driver Cost Admission Design — 2026-10-25
 

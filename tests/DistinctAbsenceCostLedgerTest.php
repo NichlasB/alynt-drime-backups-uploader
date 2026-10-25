@@ -88,6 +88,7 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         }
         $bad = $this->events(); $bad[count( $bad ) - 2][1] = 'verifier'; $this->assertFalse( $this->runLedger( $bad ) );
         $bad = $events; $bad[0][1] = 'core'; $this->assertFalse( $this->runLedger( $bad ) );
+        $this->assertFalse( $this->runLedger( array_slice( $this->events(), 6 ) ) );
     }
     public function test_attempt_result_pairing_and_replay_refusal_cannot_be_replaced_by_counts() {
         $events = $this->events(); $miss = count( $events ) - 2;
@@ -144,5 +145,20 @@ final class DistinctAbsenceCostLedgerTest extends PHPUnit\Framework\TestCase {
         $this->assertFalse( Alynt_Test_Distinct_Absence_Cost_Ledger::evaluate( $this->catalog(), $this->args(), 'autoload', $base, 'extra' ) );
         $changed = $this->runLedger( $base ); $changed['distinct_absent'][] = 'fake';
         $this->assertSame( array( 'sidebars_widgets' ), $this->runLedger( $base )['distinct_absent'] );
+    }
+    public function test_review_bulk_branch_results_cannot_be_counted_as_hydration() {
+        foreach ( array( 'autoload', 'fallback' ) as $mode ) {
+            $base = $this->events( $mode ); $populated = 'fallback' === $mode ? 7 : 6;
+            foreach ( array( 0, 1, 28, 30, '29', null ) as $rows ) {
+                $bad = $base; $bad[$populated][5] = $rows; $this->assertFalse( $this->runLedger( $bad, $mode ) );
+            }
+            $bad = $base; array_splice( $bad, $populated + 1, 0, array( $bad[$populated] ) );
+            $this->assertFalse( $this->runLedger( $bad, $mode ) );
+            $bad = $base; $bad[$populated][1] = 'verifier'; $this->assertFalse( $this->runLedger( $bad, $mode ) );
+        }
+        $bad = $this->events( 'fallback' ); unset( $bad[6] );
+        $this->assertFalse( $this->runLedger( array_values( $bad ), 'fallback' ) );
+        $bad = $this->events( 'fallback' ); $bad[6][5] = 29;
+        $this->assertFalse( $this->runLedger( $bad, 'fallback' ) );
     }
 }
