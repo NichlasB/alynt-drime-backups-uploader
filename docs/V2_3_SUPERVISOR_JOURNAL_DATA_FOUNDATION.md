@@ -123,7 +123,7 @@ cases; final93/93 passed. No production/native defect or physical red-to-green
 claim. Unchanged setup DATA/wire preservation and exact-head CI are recorded in
 the source-scoped toolkit evidence.
 
-First local full Node run failed with an exit assertion tail (actual null,
+First local full Node run failed with an assertion tail (actual null,
 expected0); its failing test name was lost by a Last9 output filter. Two bounded
 identical diagnostic repeats, with full output captured in memory, each passed
 1987/1987 with no failures/skips and no code/timeout/assertion change between them.
