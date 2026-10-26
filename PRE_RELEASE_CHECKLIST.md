@@ -2,6 +2,16 @@
 
 Updated: 2026-09-12
 
+## Source-scoped repository organization — 2026-10-26
+
+U1/U2/U3 source moves are implemented and exact-head Quality verified. See
+[current paths, actual CI counts and evidence limits](docs/REPOSITORY_ORGANIZATION_MIGRATION.md).
+Historical paths/checkboxes/dates below retain their original release/source
+scope; no whole-plugin pre-release completion is refreshed. The admin source
+settings trait is now includes/admin/trait-admin-page-source-settings.php.
+This navigation note is not UI/lifecycle/native/package requalification or
+permission to resume deferred V2.3. Shared toolkit checklist is untouched.
+
 Use this checklist to track workflow progress for the `Alynt Drime Backups Uploader` plugin before release or release-candidate promotion. Mark a workflow complete only after its verification gate has passed or after confirming the workflow is not needed because the equivalent work is already complete.
 
 ## Toolkit Workflows

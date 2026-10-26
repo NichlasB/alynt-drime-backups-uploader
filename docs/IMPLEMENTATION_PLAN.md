@@ -1,5 +1,21 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## Approved path-organization closeout — 2026-10-26
+
+U1 Drime11, U2 admin13 and U3 producers10 are byte-identically moved; see the
+[exact maps, source-scoped reviews, CI receipts and proof limits](REPOSITORY_ORGANIZATION_MIGRATION.md).
+Sources2129300/2fb3489/24fed61 passed exact-head Quality40412785811/
+40413498188/40414117502: each PHP7.4=2311/55847, PHP8.3=2311/55598,
+no failures/skips; Node1987/1987 and all configured gates.125 loader entries
+keep exact order; no protected-source/test/manifest rebaseline or runtime change.
+Historical paths below are recorded-source citations; use the current map for
+navigation rather than rewriting history. Kept/deferred219 includes and test/
+proof/runner layouts remain unchanged. No whole-plugin readiness is refreshed.
+Dashboard owns the return gate: unapproved Plugin Tester local-only Retention
+Cleanup, Latest-Snapshot Preservation and Failure-Reporting Owned Proof.
+Product count stays4/8; no site/SQL/native/backup/schedule/package/deploy authority.
+V2.3 research below remains deferred, not resumed by organization.
+
 ## Current V2.3 Product/Threat-Model Rebaseline — 2026-10-26
 
 Dashboard owns docs/V2_3_PRODUCT_THREAT_MODEL_REBASELINE.md. User-approved docs-
