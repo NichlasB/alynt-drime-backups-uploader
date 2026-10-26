@@ -270,7 +270,7 @@ msgstr ""
 msgid "Drime backup upload failed"
 msgstr ""
 
-#: includes/class-generic-outbox-producer.php:94
+#: includes/producers/class-generic-outbox-producer.php:94
 msgid "The backup outbox directory is not readable."
 msgstr ""
 
@@ -370,11 +370,11 @@ msgstr ""
 msgid "Workspace %d"
 msgstr ""
 
-#: includes/class-wpvivid-producer.php:151
+#: includes/producers/class-wpvivid-producer.php:151
 msgid "The WPvivid backup directory is not readable."
 msgstr ""
 
-#: includes/class-wpvivid-producer.php:187
+#: includes/producers/class-wpvivid-producer.php:187
 msgid "The WPvivid backup scan state could not be saved. Confirm the site database is writable, then try again."
 msgstr ""
 
@@ -1808,7 +1808,7 @@ msgstr ""
 msgid "The selected Drime base folder could not be found."
 msgstr ""
 
-#: includes/trait-generic-outbox-producer-scan.php:62
+#: includes/producers/trait-generic-outbox-producer-scan.php:62
 msgid "The backup outbox scan state could not be saved. Confirm the site database is writable, then try again."
 msgstr ""
 
