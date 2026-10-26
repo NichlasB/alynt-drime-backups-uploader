@@ -246,11 +246,11 @@ msgstr ""
 msgid "The dashboard status credential is not valid."
 msgstr ""
 
-#: includes/class-drime-client.php:162
+#: includes/drime/class-drime-client.php:162
 msgid "A Drime folder hash is required."
 msgstr ""
 
-#: includes/class-drime-client.php:284
+#: includes/drime/class-drime-client.php:284
 msgid "A Drime file entry ID is required before remote retention can run."
 msgstr ""
 
@@ -365,7 +365,7 @@ msgid "There are no queued backups to upload."
 msgstr ""
 
 #. translators: %d: Drime workspace ID.
-#: includes/class-workspace-browser.php:90
+#: includes/drime/class-workspace-browser.php:90
 #, php-format
 msgid "Workspace %d"
 msgstr ""
@@ -1692,47 +1692,47 @@ msgstr ""
 msgid "The dashboard action opt-in token has expired."
 msgstr ""
 
-#: includes/trait-drime-client-direct-upload-response.php:82
+#: includes/drime/trait-drime-client-direct-upload-response.php:82
 msgid "Drime rejected the direct upload request."
 msgstr ""
 
-#: includes/trait-drime-client-direct-upload.php:32
+#: includes/drime/trait-drime-client-direct-upload.php:32
 msgid "The PHP cURL extension is required for direct small-file uploads."
 msgstr ""
 
-#: includes/trait-drime-client-direct-upload.php:39
+#: includes/drime/trait-drime-client-direct-upload.php:39
 msgid "Add a Drime API token before uploading."
 msgstr ""
 
-#: includes/trait-drime-client-direct-upload.php:100
+#: includes/drime/trait-drime-client-direct-upload.php:100
 msgid "The direct upload request could not be initialized."
 msgstr ""
 
-#: includes/trait-drime-client-direct-upload.php:131
+#: includes/drime/trait-drime-client-direct-upload.php:131
 msgid "The direct upload request failed. Check the server network connection and try again."
 msgstr ""
 
-#: includes/trait-drime-client-multipart.php:128
+#: includes/drime/trait-drime-client-multipart.php:128
 msgid "A Drime upload part failed."
 msgstr ""
 
-#: includes/trait-drime-client-multipart.php:133
+#: includes/drime/trait-drime-client-multipart.php:133
 msgid "Drime did not return an ETag for the uploaded part."
 msgstr ""
 
-#: includes/trait-drime-client-multipart.php:157
+#: includes/drime/trait-drime-client-multipart.php:157
 msgid "Drime returned an unsafe upload URL."
 msgstr ""
 
-#: includes/trait-drime-client-response-helpers.php:49
+#: includes/drime/trait-drime-client-response-helpers.php:49
 msgid "Drime returned an error response."
 msgstr ""
 
-#: includes/trait-drime-client-response-helpers.php:81
+#: includes/drime/trait-drime-client-response-helpers.php:81
 msgid "Drime returned an unexpected response shape."
 msgstr ""
 
-#: includes/trait-drime-client-transport.php:65
+#: includes/drime/trait-drime-client-transport.php:65
 msgid "Add a Drime API token before connecting."
 msgstr ""
 
@@ -1793,18 +1793,18 @@ msgstr ""
 msgid "WordPress Site"
 msgstr ""
 
-#: includes/trait-folder-browser-normalization.php:155
-#: includes/trait-folder-browser-normalization.php:225
+#: includes/drime/trait-folder-browser-normalization.php:155
+#: includes/drime/trait-folder-browser-normalization.php:225
 msgid "Selected Drime folder"
 msgstr ""
 
-#: includes/trait-folder-browser-path-helpers.php:88
-#: includes/trait-folder-browser-path-helpers.php:91
-#: includes/trait-folder-browser-preview.php:48
+#: includes/drime/trait-folder-browser-path-helpers.php:88
+#: includes/drime/trait-folder-browser-path-helpers.php:91
+#: includes/drime/trait-folder-browser-preview.php:48
 msgid "Drime root"
 msgstr ""
 
-#: includes/trait-folder-browser-preview.php:37
+#: includes/drime/trait-folder-browser-preview.php:37
 msgid "The selected Drime base folder could not be found."
 msgstr ""
 
