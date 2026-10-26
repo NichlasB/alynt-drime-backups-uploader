@@ -6,8 +6,11 @@ Dashboard owns docs/V2_3_ELEVATED_OWNED_PRINCIPAL_SUPERVISOR_DESIGN.md. Design-o
 protected handoff, finite supervisor/probe authority, exact identity and ambiguous-
 creation/quarantine/cleanup-only contract; no generic elevated execution channel.
 No helper/worker/storage/OS/site/native/wiring change or physical proof. A1-A4/
-native GO remain Blocked. Next gated slice: local-only Supervisor Intent and Cleanup-
-Journal DATA Safety Foundation, in-memory only; no Windows imports or OS adapters.
+native GO remain Blocked. Distinct trusted administrator/bootstrap availability is
+unresolved; same-identity UAC separation is insufficient. Next gated slice: Plugin
+Tester local-only Trusted Supervisor Identity and Protected Handoff Read-Only
+Feasibility Audit, no authentication/UAC/SQL/fixture/permission changes. Do not
+substitute further synthetic modeling before that actual feasibility decision.
 
 ## V2.3 Source-Image Ownership Feasibility Preflight — 2026-10-26
 
