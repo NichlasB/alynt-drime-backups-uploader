@@ -8,6 +8,11 @@ docs/V2_3_ELEVATED_OWNED_PRINCIPAL_SUPERVISOR_DESIGN.md and
 docs/V2_3_TRUSTED_SUPERVISOR_HANDOFF_READ_ONLY_AUDIT.md. The dated human/host
 metadata is context only; no renewed target inspection or operational authority.
 
+Successor: dashboard docs/V2_3_FIXED_SUPERVISOR_WINDOWS_ADAPTER_BOOTSTRAP_DESIGN.md
+specifies the independent native/bootstrap boundary without changing this helper
+or promoting DATA receipts to permission. Its next physical admission/staging gate
+is separate; this foundation's authority fields remain false.
+
 ## Implemented contract and scope
 
 `scripts/tests/supervisor-journal-data.mjs` is a separate test-only Node DATA

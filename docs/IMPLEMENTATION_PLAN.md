@@ -1,5 +1,16 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Fixed Supervisor Windows Adapter / Protected Bootstrap Design — 2026-10-26
+
+Dashboard owns docs/V2_3_FIXED_SUPERVISOR_WINDOWS_ADAPTER_BOOTSTRAP_DESIGN.md.
+Repository-only design separates DATA receipts from native authority, specifies
+fixed call/result ownership and exposes bootstrap/launch/cancellation prerequisites.
+No helper/worker/storage/native/wiring changes; A1-A4/native GO stay Blocked.
+Next gated slice: Plugin Tester local-only Protected Bootstrap Staging and Fixed
+Read-Only Supervisor Admission Foundation/Owned Cleanup Proof, separate R3 exact
+staging/permissions/human handoff/read-only execution/cleanup scope; no SAM or probe.
+The safe-local plan lane stops here rather than adding low-value synthetic tasks.
+
 ## V2.3 Supervisor Intent/Cleanup-Journal DATA Foundation — 2026-10-26
 
 See [owning foundation](V2_3_SUPERVISOR_JOURNAL_DATA_FOUNDATION.md). Separate pure
