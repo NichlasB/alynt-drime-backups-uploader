@@ -1,5 +1,17 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Supervisor Intent/Cleanup-Journal DATA Foundation — 2026-10-26
+
+See [owning foundation](V2_3_SUPERVISOR_JOURNAL_DATA_FOUNDATION.md). Separate pure
+test-only fixed intent/event grammar, private identity/receipt lineage, bounded
+model counters/epoch and ambiguous-intent quarantine/one-use cleanup continuation.
+No OS adapter/auth/account/permission/storage/native/wiring change; all actual
+authority flags stay false. Scoped93 tests/25 assertion-killed controls; A1-A4/
+native GO remain Blocked. First local full Node exit assertion unexplained; two
+unchanged1987-test repeats passed, not a claimed harness fix. Next gated slice:
+repository-only Fixed Supervisor Windows Adapter and Protected Bootstrap
+Integration Design, design-only; no physical execution or model-to-authority promotion.
+
 ## V2.3 Trusted Supervisor/Handoff Read-Only Audit — 2026-10-26
 
 Dashboard owns docs/V2_3_TRUSTED_SUPERVISOR_HANDOFF_READ_ONLY_AUDIT.md. Existing
