@@ -1,5 +1,14 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## V2.3 Elevated Owned-Principal Supervisor Handoff Design — 2026-10-26
+
+Dashboard owns docs/V2_3_ELEVATED_OWNED_PRINCIPAL_SUPERVISOR_DESIGN.md. Design-only
+protected handoff, finite supervisor/probe authority, exact identity and ambiguous-
+creation/quarantine/cleanup-only contract; no generic elevated execution channel.
+No helper/worker/storage/OS/site/native/wiring change or physical proof. A1-A4/
+native GO remain Blocked. Next gated slice: local-only Supervisor Intent and Cleanup-
+Journal DATA Safety Foundation, in-memory only; no Windows imports or OS adapters.
+
 ## V2.3 Source-Image Ownership Feasibility Preflight — 2026-10-26
 
 Dashboard owns docs/V2_3_SOURCE_IMAGE_OWNERSHIP_FEASIBILITY_AUDIT.md. Confirmed
