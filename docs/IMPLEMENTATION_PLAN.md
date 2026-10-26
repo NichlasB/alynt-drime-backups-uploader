@@ -1,5 +1,20 @@
 # Alynt Drime Backups Uploader Implementation Plan
 
+## Current V2.3 Product/Threat-Model Rebaseline — 2026-10-26
+
+Dashboard owns docs/V2_3_PRODUCT_THREAT_MODEL_REBASELINE.md. User-approved docs-
+only reset parks the Windows-native supervisor/bootstrap/toolchain and related
+model/native proof branch; old next-action instructions below are historical.
+Rollback remains deferred/reserved/rejected, all existing source/test/profile
+guards and unavailable entries unchanged. A1-A4 remain Unproven/Blocked for their
+old native profile; no transfer of model receipts into runtime authority. Retain
+meaningful auth/provenance/concurrency/recovery evidence and WP-Cron limitations.
+
+Recommended next action: retain deferral; reopen only for a concrete operator
+need beyond guarded reverse apply, then separately review one WordPress-native
+design with explicit trust/writer/recovery/environment limits. No automatic
+installation, new research batch, dependency, fixture, native or wiring change.
+
 ## V2.3 Protected Bootstrap / Read-Only Admission Feasibility Audit — 2026-10-26
 
 Dashboard owns docs/V2_3_PROTECTED_BOOTSTRAP_ADMISSION_FEASIBILITY_AUDIT.md.
